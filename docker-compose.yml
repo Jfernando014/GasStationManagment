@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend        
+      dockerfile: Dockerfile.dev
+    container_name: gas-station-backend-dev
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    volumes:
+      - ./backend:/app         
+      - ~/.m2:/root/.m2
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=${SERVER_PORT}
+      - DB_URL=jdbc:postgresql://db:5432/${POSTGRES_DB_NAME}
+      - DB_USER=${POSTGRES_DB_USER}
+      - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
+      - JPA_DDL_AUTO=${JPA_DDL_AUTO}
+      - JPA_SHOW_SQL=${JPA_SHOW_SQL}
+      - SWAGGER_PATH=${SWAGGER_PATH}
+      - API_DOCS_PATH=${API_DOCS_PATH}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: gas-station-db-dev
+    ports:
+      - "${POSTGRES_LOCAL_PORT}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_NAME}
+      - POSTGRES_USER=${POSTGRES_DB_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_DB_PASSWORD}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_DB_USER} -d ${POSTGRES_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_dev_data:
