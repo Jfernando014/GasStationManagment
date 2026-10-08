@@ -1,7 +1,6 @@
+# --- Estructura del proyecto ---
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
 ### STS ###
 .apt_generated
@@ -25,8 +24,13 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+
+### Variables de entorno ###
+.env
+
+### Docker locales (Opcional pero recomendado) ###
+# Si cambias el volumen de Postgres a una carpeta local (Bind Mount), descomenta la siguiente línea:
+# /data_postgres/
