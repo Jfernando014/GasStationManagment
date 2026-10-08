@@ -1,0 +1,394 @@
+/* css/layout.css · extraído de styles.css (paso 5, sin modificaciones) */
+
+    /* ==========================================================================
+       VISTAS: LOGIN (HU-1) VS. PANEL PRINCIPAL (HU-7/DASHBOARD)
+       Demuestra la consistencia atómica transversal de la aplicación
+       ========================================================================== */
+    .view-container {
+      display: none;
+      width: 100%;
+      height: 100%;
+      transition: opacity var(--duration-normal) var(--spring);
+    }
+
+    .view-container.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       MÓDULO HU-7 / DASHBOARD: PANEL PRINCIPAL CON SIDEBAR Y HEADER FLOTANTES
+       ========================================================================== */
+    #view-dashboard {
+      gap: 14px;
+      width: 100%;
+      height: 100%;
+    }
+
+    body.modal-open #view-dashboard {
+      transform: scale(0.982) translateY(4px);
+      filter: brightness(0.95) contrast(0.98);
+      border-radius: var(--radius-floating);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* SIDEBAR FLOTANTE EN DEEP PETROLEUM NAVY SÓLIDO */
+    .app-floating-sidebar {
+      width: 290px;
+      background-color: var(--surface-navy);
+      border: 1px solid var(--surface-navy-border);
+      border-radius: var(--radius-floating);
+      box-shadow: var(--shadow-shell);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 22px 18px;
+      z-index: 20;
+      transition: background-color var(--duration-normal) ease;
+    }
+
+    .sidebar-brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding: 2px 4px;
+    }
+
+    .brand-logo-tile {
+      width: 44px;
+      height: 44px;
+      background-color: var(--brand-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+    }
+
+    .brand-meta-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name-text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--surface-navy-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--brand-primary);
+      display: inline-block;
+    }
+
+    .brand-desc-text {
+      font-size: 11px;
+      color: var(--surface-navy-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Scroll de Navegación */
+    .sidebar-nav-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
+    }
+
+    .sidebar-nav-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar-nav-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .nav-label-pill {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--surface-navy-muted);
+      padding: 14px 10px 8px 10px;
+    }
+
+    /* Botón Activo con Naranja Energía y Barra Indicadora Derecha */
+    .sidebar-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      color: var(--surface-navy-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease, transform 100ms var(--spring-fast);
+      position: relative;
+    }
+
+    .sidebar-action-btn:hover {
+      background-color: var(--surface-navy-hover);
+      color: var(--surface-navy-text);
+    }
+
+    .sidebar-action-btn:active {
+      transform: scale(0.975);
+    }
+
+    .sidebar-action-btn.active {
+      background-color: var(--brand-primary);
+      color: #FFFFFF;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35);
+    }
+
+    .sidebar-action-btn.active .sidebar-btn-icon {
+      color: #FFFFFF;
+    }
+
+    .active-notch {
+      display: none;
+      width: 4px;
+      height: 18px;
+      background-color: #FFFFFF;
+      border-radius: var(--radius-pill);
+      margin-left: 6px;
+    }
+
+    .sidebar-action-btn.active .active-notch {
+      display: block;
+    }
+
+    .btn-prefix-stack {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-btn-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--surface-navy-muted);
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .alert-counter-badge {
+      background-color: var(--semantic-red);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+
+    .chevron-arrow {
+      width: 14px;
+      height: 14px;
+      color: var(--surface-navy-muted);
+      stroke-width: 2;
+      transition: transform var(--duration-normal) var(--spring);
+    }
+
+    .collapsible-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .collapsible-group.open .chevron-arrow {
+      transform: rotate(90deg);
+    }
+
+    .collapsible-sub-menu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--duration-normal) var(--spring);
+      padding-left: 42px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .collapsible-group.open .collapsible-sub-menu {
+      max-height: 380px;
+      margin-bottom: 6px;
+    }
+
+    .sub-item-link {
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--surface-navy-muted);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
+    }
+
+    .sub-item-link:hover {
+      background-color: var(--surface-navy-hover);
+      color: var(--surface-navy-text);
+    }
+
+    .sidebar-bottom-pill {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--surface-navy-text);
+    }
+
+    .dot-green-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--semantic-green);
+    }
+
+    /* ==========================================================================
+       LADO DERECHO: HEADER FLOTANTE Y CONTENIDO DASHBOARD
+       ========================================================================== */
+    .canvas-right-stack {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    /* HEADER FLOTANTE BLANCO CON BORDES REDONDEADOS */
+    .app-floating-header {
+      height: 64px;
+      background-color: var(--surface-card);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    .header-trail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .trail-root {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .trail-sep {
+      color: var(--text-light);
+    }
+
+    .trail-active {
+      font-weight: 700;
+      color: var(--text-heading);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+    }
+
+    .header-action-tray {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* CONTENIDO DEL DASHBOARD */
+    .dashboard-scroll-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .dashboard-scroll-viewport::-webkit-scrollbar {
+      width: 6px;
+    }
+    .dashboard-scroll-viewport::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.14);
+      border-radius: 6px;
+    }
+
+    .dashboard-content-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ==========================================================================
+       SUB-VISTAS DE INVENTARIO (HE-02 · HU-2 a HU-8)
+       Cero degradados, física Apple WWDC, bordes hairline y números tabulares
+       ========================================================================== */
+    .inv-subview {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: subviewFadeIn var(--duration-normal) var(--spring);
+    }
+
+    .inv-subview.active {
+      display: flex;
+    }
+
+    @keyframes subviewFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================================================================
+       ESTILOS DEL MÓDULO INVENTARIO (HE-02, HU-2 a HU-8)
+       100% Sólidos · Cero Degradados · Apple Design
+       ======================================================================== */
+    .inv-subview {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeInSub var(--duration-fast) var(--spring);
+    }
+
+    .inv-subview.active {
+      display: flex;
+    }
+
+    @keyframes fadeInSub {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Sub-nav activo en sidebar */
+    .sub-item-link.sub-nav-item.active {
+      color: #FFFFFF !important;
+      font-weight: 700 !important;
+      background-color: rgba(255, 255, 255, 0.08);
+      border-left: 2px solid var(--brand-primary);
+      padding-left: 14px;
+    }
