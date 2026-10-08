@@ -1,0 +1,108 @@
+.stepper-container {
+  width: 100%;
+  background: var(--surface-card, #ffffff);
+  border-radius: var(--radius-md, 8px);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.stepper {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #f8f9fa; /* Línea gris de fondo en toda la barra */
+}
+
+.stepper li {
+  display: flex;
+  flex: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  padding: 1rem 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px; /* Superponer sobre la línea gris */
+}
+
+.stepper li:hover {
+  opacity: 1;
+}
+
+/* Estado Activo (La ruta seleccionada en Angular) */
+.stepper li.active-route {
+  opacity: 1;
+  border-bottom: 3px solid #ff7900; /* Naranja corporativo */
+}
+
+.stepper li.active-route .step-circle {
+  background-color: #ff7900;
+  border-color: #ff7900;
+  color: white;
+}
+
+.stepper li.active-route .step-subtitle,
+.stepper li.active-route .step-label {
+  color: #212529;
+  font-weight: 700;
+}
+
+.step-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.step-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-subtitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #adb5bd;
+  text-transform: uppercase;
+}
+
+.step-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+/* Estado Completado */
+.stepper li.stepper-completed .step-circle {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+.stepper li.stepper-completed .step-subtitle,
+.stepper li.stepper-completed .step-label {
+  opacity: 0.7;
+}
+
+/* Estado PENDIENTE (futuro) */
+.stepper li.stepper-pending .step-circle {
+  background-color: white;
+  border: 2px solid #dee2e6;
+  color: #adb5bd;
+}
