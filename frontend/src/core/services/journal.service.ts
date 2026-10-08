@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { JournalResponse, JournalStepResponse } from '../../shared/models/journal.model';
