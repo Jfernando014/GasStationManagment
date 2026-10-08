@@ -1,0 +1,28 @@
+<div class="journal-page-container">
+  <div class="header">
+    <h2>Jornada Diaria</h2>
+    <div class="journal-info" *ngIf="journal">
+      <span class="badge status-open" *ngIf="journal.status === 'OPEN'">Abierta</span>
+      <span class="badge status-closed" *ngIf="journal.status === 'CLOSED'">Cerrada</span>
+      <span class="consecutive">Planilla #{{ journal.consecutive }}</span>
+      <span class="date">{{ journal.date }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="!journal && !errorMessage" class="loading">
+    Cargando jornada...
+  </div>
+
+  <ng-container *ngIf="journal">
+    <app-journal-stepper [steps]="journal.steps"></app-journal-stepper>
+    
+    <!-- Aquí se inyectan las pantallas de cada paso -->
+    <div class="step-content-container">
+      <router-outlet></router-outlet>
+    </div>
+  </ng-container>
+</div>
