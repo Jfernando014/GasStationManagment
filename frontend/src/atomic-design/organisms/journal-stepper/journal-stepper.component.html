@@ -1,13 +1,23 @@
 <div class="stepper-container">
   <ul class="stepper">
     <li *ngFor="let step of steps" 
-        [ngClass]="getStepClass(step.status)"
+        [ngClass]="getStepClass(step.status, step.stepNumber)"
         [routerLink]="['./', getRouteForStep(step.stepNumber)]"
         routerLinkActive="active-route">
-      <div class="step-circle">{{ step.stepNumber }}</div>
-      <div class="step-label">{{ step.name }}</div>
-      <!-- Line to next step -->
-      <div class="step-line" *ngIf="step.stepNumber < 6"></div>
+      
+      <div class="step-content">
+        <div class="step-circle">
+          <!-- TODO: En el futuro agregar lógica de candado (locked) si aplica -->
+          <span *ngIf="step.status === 'COMPLETED'">✓</span>
+          <span *ngIf="step.status !== 'COMPLETED'">{{ step.stepNumber }}</span>
+        </div>
+        
+        <div class="step-text-group">
+          <span class="step-subtitle">PASO {{ step.stepNumber }}</span>
+          <span class="step-label">{{ getStepName(step.stepNumber) }}</span>
+        </div>
+      </div>
+      
     </li>
   </ul>
 </div>

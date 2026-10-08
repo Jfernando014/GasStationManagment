@@ -1,10 +1,8 @@
 .stepper-container {
   width: 100%;
-  padding: 1.5rem 0;
   background: var(--surface-card, #ffffff);
   border-radius: var(--radius-md, 8px);
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   overflow-x: auto;
 }
 
@@ -14,80 +12,97 @@
   margin: 0;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  position: relative;
+  border-bottom: 2px solid #f8f9fa; /* Línea gris de fondo en toda la barra */
 }
 
 .stepper li {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
   flex: 1;
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.3s, transform 0.2s;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  padding: 1rem 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px; /* Superponer sobre la línea gris */
 }
 
-.stepper li:hover, .stepper li.active-route {
+.stepper li:hover {
   opacity: 1;
-  transform: translateY(-2px);
 }
 
-.step-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--surface-ground, #f8f9fa);
-  border: 2px solid var(--text-color-secondary, #6c757d);
-  color: var(--text-color-secondary, #6c757d);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  z-index: 2;
-  margin-bottom: 0.5rem;
-  transition: all 0.3s;
+/* Estado Activo (La ruta seleccionada en Angular) */
+.stepper li.active-route {
+  opacity: 1;
+  border-bottom: 3px solid #ff7900; /* Naranja corporativo */
 }
 
-.step-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-align: center;
-  color: var(--text-color, #212529);
-  max-width: 100px;
-}
-
-.step-line {
-  position: absolute;
-  top: 18px;
-  left: calc(50% + 18px);
-  right: calc(-50% + 18px);
-  height: 2px;
-  background-color: var(--text-color-secondary, #6c757d);
-  z-index: 1;
-  transition: background-color 0.3s;
-}
-
-/* Status variants */
-.stepper-completed .step-circle {
-  background-color: var(--primary-color, #0d6efd);
-  border-color: var(--primary-color, #0d6efd);
+.stepper li.active-route .step-circle {
+  background-color: #ff7900;
+  border-color: #ff7900;
   color: white;
 }
 
-.stepper-completed .step-line {
-  background-color: var(--primary-color, #0d6efd);
+.stepper li.active-route .step-subtitle,
+.stepper li.active-route .step-label {
+  color: #212529;
+  font-weight: 700;
 }
 
-.stepper-active .step-circle {
+.step-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.step-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-subtitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #adb5bd;
+  text-transform: uppercase;
+}
+
+.step-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+/* Estado Completado */
+.stepper li.stepper-completed .step-circle {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+.stepper li.stepper-completed .step-subtitle,
+.stepper li.stepper-completed .step-label {
+  opacity: 0.7;
+}
+
+/* Estado PENDIENTE (futuro) */
+.stepper li.stepper-pending .step-circle {
   background-color: white;
-  border-color: var(--primary-color, #0d6efd);
-  color: var(--primary-color, #0d6efd);
-  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
-}
-
-.stepper-active .step-label {
-  font-weight: bold;
-  color: var(--primary-color, #0d6efd);
+  border: 2px solid #dee2e6;
+  color: #adb5bd;
 }

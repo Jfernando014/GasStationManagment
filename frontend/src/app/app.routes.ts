@@ -19,7 +19,10 @@ export const routes: Routes = [
           // { path: 'step-2-asignacion-turnos', component: ... }
         ]
       },
-      { path: '', redirectTo: 'journal', pathMatch: 'full' }
+      {
+        path: '',
+        loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
+      }
     ]
   },
   { path: '**', redirectTo: '' }

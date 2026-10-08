@@ -13,27 +13,36 @@ import { JournalStepResponse, StepStatus } from '../../../shared/models/journal.
 export class JournalStepperComponent {
   @Input() steps: JournalStepResponse[] = [];
 
-  getStepClass(status: StepStatus): string {
-    switch (status) {
-      case StepStatus.COMPLETED:
-        return 'stepper-completed';
-      case StepStatus.IN_PROGRESS:
-        return 'stepper-active';
-      case StepStatus.PENDING:
-      default:
-        return 'stepper-pending';
+  getStepClass(status: StepStatus, stepNumber: number): string {
+    if (status === StepStatus.COMPLETED) {
+      return 'stepper-completed';
     }
+    // We assume the first PENDING or IN_PROGRESS is active.
+    // For now, we will rely on routerLinkActive to highlight the active tab,
+    // but we can add a base class.
+    return 'stepper-pending';
+  }
+
+  getStepName(stepNumber: number): string {
+    const names: Record<number, string> = {
+      1: 'Personal',
+      2: 'Vendedores',
+      3: 'Electrónicos',
+      4: 'Caja',
+      5: 'Inventario',
+      6: 'Cierre'
+    };
+    return names[stepNumber] || `Paso ${stepNumber}`;
   }
 
   getRouteForStep(stepNumber: number): string {
-    // Definimos las rutas hijas para cada paso
     const routes: Record<number, string> = {
-      1: 'step-1-medicion-inicial',
-      2: 'step-2-asignacion-turnos',
-      3: 'step-3-apertura-surtidores',
-      4: 'step-4-registro-lecturas',
-      5: 'step-5-cierre-surtidores',
-      6: 'step-6-cuadre-caja'
+      1: 'personal',
+      2: 'vendedores',
+      3: 'electronicos',
+      4: 'caja',
+      5: 'inventario',
+      6: 'cierre'
     };
     return routes[stepNumber] || '';
   }
