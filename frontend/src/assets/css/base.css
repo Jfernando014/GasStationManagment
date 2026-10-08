@@ -1,0 +1,42 @@
+/* css/base.css · extraído de styles.css (paso 5, sin modificaciones) */
+
+
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text", sans-serif;
+      background-color: var(--canvas-outer);
+      color: var(--text-body);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      padding: 14px;
+      user-select: none;
+    }
+
+    .tnum {
+      font-feature-settings: "tnum" 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Reducción de movimiento accesible (§14 Apple Design) */
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .dropdown-floating-menu, .apple-dialog-card, .apple-toast-banner {
+        transform: none !important;
+        transition: opacity 150ms ease !important;
+      }
+      body.modal-open #view-dashboard {
+        filter: none !important;
+      }
+    }
