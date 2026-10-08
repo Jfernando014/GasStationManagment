@@ -61,7 +61,7 @@
               <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <input type="text" formControlName="username" class="login-input" placeholder="admin">
             </div>
-            <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" style="color: #ef233c; font-size: 12px; margin-top: 4px;">Usuario requerido</div>
+            <div *ngIf="loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)" style="color: #ef233c; font-size: 12px; margin-top: 4px;">Usuario requerido</div>
           </div>
 
           <div class="login-input-group">
@@ -73,7 +73,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
-            <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" style="color: #ef233c; font-size: 12px; margin-top: 4px;">Contraseña requerida</div>
+            <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" style="color: #ef233c; font-size: 12px; margin-top: 4px;">Contraseña requerida</div>
           </div>
 
           <div *ngIf="errorMessage" style="color: #ef233c; background: rgba(239,35,60,0.1); padding: 10px; border-radius: 8px; font-size: 13px;">
