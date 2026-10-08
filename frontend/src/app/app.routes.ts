@@ -11,7 +11,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
-        path: 'journal',
+        path: 'jornada',
         loadComponent: () => import('../atomic-design/pages/journal/journal-page.component').then(m => m.JournalPageComponent),
         children: [
           // Pantallas de cada paso como rutas hijas (a ser implementadas por los dueños)
