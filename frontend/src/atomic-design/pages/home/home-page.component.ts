@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
     <div class="home-placeholder">
       <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" alt="Funny cat working" class="funny-img">
       <h2>¡Módulo Principal en Producción!</h2>
-      <p>Nuestros mejores ingenieros (y gatos) están trabajando duro en el panel principal.</p>
+      <p>Trabajando en ello :D</p>
     </div>
   `,
   styles: [`
@@ -35,4 +35,4 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class HomePageComponent {}
+export class HomePageComponent { }
