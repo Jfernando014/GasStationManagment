@@ -3,3 +3,5 @@
 
 ### Variables de entorno ###
 .env
+# Ignorar contexto de IA
+.agents/
