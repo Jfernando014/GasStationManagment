@@ -91,7 +91,7 @@ public class InventoryExceptionHandler {
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
     public ResponseEntity<Map<String, Object>> handleInvalidParameter(HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Datos inválidos",
+        return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "Invalid or missing parameters: check fuelType (MOTOR, DIESEL, EXTRA, MAX_PRO) and date (yyyy-MM-dd)",
                 request);
     }
