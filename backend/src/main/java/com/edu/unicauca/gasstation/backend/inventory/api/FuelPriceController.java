@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory/fuel-prices")
+@RequestMapping("/api/v1/inventory/fuel-prices")
 @Tag(name = "Fuel prices", description = "Fuel prices with validity start dates")
 public class FuelPriceController {
 

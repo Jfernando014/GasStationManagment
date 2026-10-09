@@ -19,10 +19,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class FuelPriceRequest {
 
-    private static final String PRICE_MESSAGE = "The price must be greater than 0.";
+    private static final String PRICE_MESSAGE = "The price must be a positive numerical value";
 
     @Schema(example = "MOTOR")
-    @NotNull(message = "El tipo de combustible es obligatorio")
+    @NotNull(message = "The fuel type is required")
     private FuelType fuelType;
 
     @Schema(example = "16330")
@@ -32,7 +32,7 @@ public class FuelPriceRequest {
     private BigDecimal pricePerGallon;
 
     @Schema(example = "2026-08-01")
-    @NotNull(message = "La fecha de vigencia es obligatoria")
+    @NotNull(message = "The validity date is required")
     private LocalDate validFrom;
 
 }
