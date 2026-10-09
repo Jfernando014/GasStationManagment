@@ -8,14 +8,18 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.services.TankService
 import com.edu.unicauca.gasstation.backend.inventory.exception.DuplicateTankCodeException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.TankNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.mappers.TankMapperImpl;
+import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -32,12 +36,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TankController.class)
+@WebMvcTest(
+        controllers = TankController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
+
 @Import(TankMapperImpl.class)
+@TestPropertySource(properties = "server.port=0")
 class TankControllerTest {
 
-    private static final String BASE_URL = "/api/inventory/tanks";
+    private static final String BASE_URL = "/api/v1/inventory/tanks";
 
     @Autowired
     private MockMvc mockMvc;
@@ -68,7 +78,7 @@ class TankControllerTest {
         postTank(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("maxCapacityGallons"))
-                .andExpect(jsonPath("$.fields[0].message").value("La capacidad debe ser un valor numérico positivo"));
+                .andExpect(jsonPath("$.fields[0].message").value("The capacity must be a positive numerical value"));
         verifyNoInteractions(tankService);
     }
 
@@ -80,7 +90,7 @@ class TankControllerTest {
         postTank(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("name"))
-                .andExpect(jsonPath("$.fields[0].message").value("Los campos NOMBRE y CAPACIDAD son obligatorios"));
+                .andExpect(jsonPath("$.fields[0].message").value("The NAME and CAPACITY fields are required"));
         verifyNoInteractions(tankService);
     }
 
@@ -92,7 +102,7 @@ class TankControllerTest {
         postTank(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("maxCapacityGallons"))
-                .andExpect(jsonPath("$.fields[0].message").value("Los campos NOMBRE y CAPACIDAD son obligatorios"));
+                .andExpect(jsonPath("$.fields[0].message").value("The NAME and CAPACITY fields are required"));
         verifyNoInteractions(tankService);
     }
 
@@ -104,7 +114,7 @@ class TankControllerTest {
         postTank(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("toleranceCm"))
-                .andExpect(jsonPath("$.fields[0].message").value("La tolerancia debe ser un valor numérico mayor o igual a cero"));
+                .andExpect(jsonPath("$.fields[0].message").value("The tolerance must be a numeric value greater than or equal to zero"));
         verifyNoInteractions(tankService);
     }
 
@@ -118,7 +128,7 @@ class TankControllerTest {
         mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Datos inválidos"));
+                .andExpect(jsonPath("$.error").value("Invalid data"));
         verifyNoInteractions(tankService);
     }
 
@@ -128,7 +138,7 @@ class TankControllerTest {
 
         postTank(validRequest())
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Ya existe un tanque con el identificador T1C1"));
+                .andExpect(jsonPath("$.message").value("A tank with code T1C1 already exists"));
     }
 
     @Test
@@ -149,7 +159,7 @@ class TankControllerTest {
 
         mockMvc.perform(get(BASE_URL + "/99"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No existe un tanque con identificador 99"));
+                .andExpect(jsonPath("$.message").value("Tank with code 99 not found"));
     }
 
     @Test
