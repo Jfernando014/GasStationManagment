@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Shift catalog", description = "Read-only catalog of shift codes")
 @RestController
-@RequestMapping("/api/v1/shifts/catalog")
+@RequestMapping("/api/shifts/catalog")
 @RequiredArgsConstructor
 public class ShiftCodeController {
 
