@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence;
 
 import com.edu.unicauca.gasstation.backend.inventory.TankTestData;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

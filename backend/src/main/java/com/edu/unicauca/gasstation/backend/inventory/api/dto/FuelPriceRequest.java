@@ -1,6 +1,5 @@
 package com.edu.unicauca.gasstation.backend.inventory.api.dto;
 
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +11,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 
 @Getter
 @Setter

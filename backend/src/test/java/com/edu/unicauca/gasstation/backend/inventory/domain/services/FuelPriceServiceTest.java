@@ -1,8 +1,9 @@
 package com.edu.unicauca.gasstation.backend.inventory.domain.services;
 
+import com.edu.unicauca.gasstation.backend.inventory.FuelPriceInfo;
 import com.edu.unicauca.gasstation.backend.inventory.FuelPriceTestData;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.exception.FuelPriceNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.FuelPriceRepository;
 import org.junit.jupiter.api.Test;
@@ -91,5 +92,34 @@ class FuelPriceServiceTest {
         when(fuelPriceRepository.findByFuelTypeOrderByValidFromDesc(FuelType.EXTRA)).thenReturn(List.of(price));
 
         assertThat(fuelPriceService.findHistory(FuelType.EXTRA)).containsExactly(price);
+    }
+    @Test
+    void findEffectivePriceReturnsPublicInfoOfThePriceInForce() {
+        FuelPrice price = FuelPriceTestData.price(1L, FuelType.MOTOR, "16330", AUGUST_1);
+        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
+                FuelType.MOTOR, AUGUST_5)).thenReturn(Optional.of(price));
+
+        Optional<FuelPriceInfo> info = fuelPriceService.findEffectivePrice(FuelType.MOTOR, AUGUST_5);
+
+        assertThat(info).isPresent();
+        assertThat(info.get().getFuelType()).isEqualTo(FuelType.MOTOR);
+        assertThat(info.get().getPricePerGallon()).isEqualByComparingTo("16330");
+        assertThat(info.get().getValidFrom()).isEqualTo(AUGUST_1);
+    }
+
+    @Test
+    void findEffectivePriceIsEmptyWhenNoPriceHasStarted() {
+        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
+                FuelType.MOTOR, AUGUST_1)).thenReturn(Optional.empty());
+
+        assertThat(fuelPriceService.findEffectivePrice(FuelType.MOTOR, AUGUST_1)).isEmpty();
+    }
+
+    @Test
+    void findEffectivePriceRejectsNullArguments() {
+        assertThatThrownBy(() -> fuelPriceService.findEffectivePrice(null, AUGUST_5))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> fuelPriceService.findEffectivePrice(FuelType.MOTOR, null))
+                .isInstanceOf(NullPointerException.class);
     }
 }

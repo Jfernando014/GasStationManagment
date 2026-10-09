@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.inventory.api.dto;
 
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;

@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.inventory.domain.models;
 
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
