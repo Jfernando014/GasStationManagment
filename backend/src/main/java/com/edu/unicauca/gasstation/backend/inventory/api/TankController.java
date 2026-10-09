@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory/tanks")
+@RequestMapping("/api/v1/inventory/tanks")
 public class TankController {
     private final TankService tankService;
     private final TankMapper tankMapper;
