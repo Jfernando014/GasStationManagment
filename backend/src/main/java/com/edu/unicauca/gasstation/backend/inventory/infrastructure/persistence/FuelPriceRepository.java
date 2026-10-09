@@ -17,6 +17,4 @@ public interface FuelPriceRepository extends JpaRepository<FuelPrice, Long> {
     //Devuelve el historial completo de precios de un combustible
     List<FuelPrice> findByFuelTypeOrderByValidFromDesc(FuelType fuelType);
 
-    //Responde si ya hay un precio de ese combustible con esa fecha de inicio exacta
-    boolean existsByFuelTypeAndValidFrom(FuelType fuelType, LocalDate validFrom);
 }
