@@ -7,15 +7,20 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.services.FuelPriceService;
 import com.edu.unicauca.gasstation.backend.inventory.exception.FuelPriceNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.mappers.FuelPriceMapper;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.mappers.FuelPriceMapperImpl;
+import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -32,12 +37,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(FuelPriceController.class)
+@WebMvcTest(
+        controllers = FuelPriceController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-@Import(FuelPriceMapper.class)
+@Import(FuelPriceMapperImpl.class)
+@TestPropertySource(properties = "server.port=0")
 class FuelPriceControllerTest {
 
-    private static final String BASE_URL = "/api/inventory/fuel-prices";
+    private static final String BASE_URL = "/api/v1/inventory/fuel-prices";
     private static final LocalDate AUGUST_1 = LocalDate.of(2026, 8, 1);
     private static final LocalDate AUGUST_5 = LocalDate.of(2026, 8, 5);
 
@@ -70,7 +80,7 @@ class FuelPriceControllerTest {
         postPrice(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("pricePerGallon"))
-                .andExpect(jsonPath("$.fields[0].message").value("El precio debe ser un valor numérico positivo"));
+                .andExpect(jsonPath("$.fields[0].message").value("The price must be a positive numerical value"));
         verifyNoInteractions(fuelPriceService);
     }
 
@@ -82,7 +92,7 @@ class FuelPriceControllerTest {
         postPrice(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields[0].field").value("validFrom"))
-                .andExpect(jsonPath("$.fields[0].message").value("La fecha de vigencia es obligatoria"));
+                .andExpect(jsonPath("$.fields[0].message").value("The validity date is required"));
         verifyNoInteractions(fuelPriceService);
     }
 
@@ -93,7 +103,7 @@ class FuelPriceControllerTest {
 
         postPrice(validRequest())
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Conflicto"));
+                .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
     @Test
@@ -116,7 +126,7 @@ class FuelPriceControllerTest {
 
         putPrice(99L, validRequest())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No existe un precio con identificador 99"));
+                .andExpect(jsonPath("$.message").value("There is no price with that ID 99"));
     }
 
     @Test
@@ -137,14 +147,14 @@ class FuelPriceControllerTest {
 
         mockMvc.perform(get(BASE_URL + "/effective?fuelType=MOTOR&date=2026-08-05"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No hay un precio vigente de MOTOR para la fecha 2026-08-05"));
+                .andExpect(jsonPath("$.message").value("There is no current price for MOTOR as of 2026-08-05"));
     }
 
     @Test
     void findEffectiveRejectsUnknownFuelType() throws Exception {
         mockMvc.perform(get(BASE_URL + "/effective?fuelType=GAS"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Datos inválidos"));
+                .andExpect(jsonPath("$.error").value("Invalid data"));
         verifyNoInteractions(fuelPriceService);
     }
 
