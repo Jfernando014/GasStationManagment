@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.inventory;
 
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 
 import java.math.BigDecimal;

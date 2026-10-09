@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.inventory;
 
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

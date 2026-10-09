@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence;
 
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

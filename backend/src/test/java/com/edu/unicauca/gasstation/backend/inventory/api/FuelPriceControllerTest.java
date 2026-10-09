@@ -3,7 +3,7 @@ package com.edu.unicauca.gasstation.backend.inventory.api;
 import com.edu.unicauca.gasstation.backend.inventory.FuelPriceTestData;
 import com.edu.unicauca.gasstation.backend.inventory.api.dto.FuelPriceRequest;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.services.FuelPriceService;
 import com.edu.unicauca.gasstation.backend.inventory.exception.FuelPriceNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.mappers.FuelPriceMapper;

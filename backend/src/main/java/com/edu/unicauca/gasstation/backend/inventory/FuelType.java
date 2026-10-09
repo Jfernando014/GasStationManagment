@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.inventory.domain.models;
+package com.edu.unicauca.gasstation.backend.inventory;
 
 public enum FuelType {
     MOTOR,

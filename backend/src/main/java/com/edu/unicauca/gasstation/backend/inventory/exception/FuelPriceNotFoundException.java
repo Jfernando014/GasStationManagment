@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.inventory.exception;
 
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 
 import java.time.LocalDate;
 

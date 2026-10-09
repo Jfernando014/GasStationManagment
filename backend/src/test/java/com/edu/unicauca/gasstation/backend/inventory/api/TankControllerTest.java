@@ -2,7 +2,7 @@ package com.edu.unicauca.gasstation.backend.inventory.api;
 
 import com.edu.unicauca.gasstation.backend.inventory.TankTestData;
 import com.edu.unicauca.gasstation.backend.inventory.api.dto.TankRequest;
-import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.domain.services.TankService;
 import com.edu.unicauca.gasstation.backend.inventory.exception.DuplicateTankCodeException;
