@@ -1,6 +1,13 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
+import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidDateRangeException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidRotationLengthException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.PastDateException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.RotationNotAllowedException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ScheduleWorkerNotFoundException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +72,48 @@ public class ShiftExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ShiftCodeNotFoundException.class)
     public ProblemDetail handleShiftCodeNotFound(ShiftCodeNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "SHIFT_CODE_NOT_FOUND", ex.getMessage());
+    }
+
+    /** A shift was scheduled on a past day (400). */
+    @ExceptionHandler(PastDateException.class)
+    public ProblemDetail handlePastDate(PastDateException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "PAST_DATE", ex.getMessage());
+    }
+
+    /** The end of a date range is before its start (400). */
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ProblemDetail handleInvalidDateRange(InvalidDateRangeException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_DATE_RANGE", ex.getMessage());
+    }
+
+    /** The rotation range is shorter than one full cycle or longer than a quarter (400). */
+    @ExceptionHandler(InvalidRotationLengthException.class)
+    public ProblemDetail handleInvalidRotationLength(InvalidRotationLengthException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_ROTATION_LENGTH", ex.getMessage());
+    }
+
+    /** The worker to schedule does not exist (404). */
+    @ExceptionHandler(ScheduleWorkerNotFoundException.class)
+    public ProblemDetail handleWorkerNotFound(ScheduleWorkerNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "WORKER_NOT_FOUND", ex.getMessage());
+    }
+
+    /** The worker to schedule is inactive (409). */
+    @ExceptionHandler(WorkerNotAvailableException.class)
+    public ProblemDetail handleWorkerNotAvailable(WorkerNotAvailableException ex) {
+        return problem(HttpStatus.CONFLICT, "WORKER_INACTIVE", ex.getMessage());
+    }
+
+    /** The shift code belongs to a role different from the worker's role (409). */
+    @ExceptionHandler(ShiftRoleMismatchException.class)
+    public ProblemDetail handleRoleMismatch(ShiftRoleMismatchException ex) {
+        return problem(HttpStatus.CONFLICT, "ROLE_MISMATCH", ex.getMessage());
+    }
+
+    /** A rotation was requested for a worker who is not TITULAR (409). */
+    @ExceptionHandler(RotationNotAllowedException.class)
+    public ProblemDetail handleRotationNotAllowed(RotationNotAllowedException ex) {
+        return problem(HttpStatus.CONFLICT, "ROTATION_NOT_ALLOWED", ex.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String detail) {
