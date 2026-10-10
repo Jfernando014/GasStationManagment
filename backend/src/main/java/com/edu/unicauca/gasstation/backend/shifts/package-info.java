@@ -1,11 +1,16 @@
 /**
- * Shifts module: catalog of shift codes and roles (S1-22).
+ * Shifts module: catalog of shift codes and roles (S1-22), Colombian holidays and the monthly shift schedule (S1-27).
  *
  * <p>Public API (usable by other modules): {@link com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService}
  * and the records {@link com.edu.unicauca.gasstation.backend.shifts.RoleInfo} and
  * {@link com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo}. Every subpackage is internal.
  *
- * <p>Layers: {@code api} (REST controller and DTOs) → {@code domain} (entities and use cases) →
+ * <p>{@link com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory} and its record
+ * {@link com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo} go the other way: this module declares them
+ * and {@code workers} implements them, so the schedule can read workers without {@code shifts} depending on
+ * {@code workers}.
+ *
+ * <p>Layers: {@code api} (REST controllers and DTOs) → {@code domain} (entities and use cases) →
  * {@code infrastructure} (Spring Data repositories and DTO mappers).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Shifts")
