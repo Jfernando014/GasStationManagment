@@ -1,6 +1,5 @@
 package com.edu.unicauca.gasstation.backend.shifts;
 
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +8,13 @@ import java.util.UUID;
 
 /**
  * Only entry point other modules may use to query the shift catalog and roles.
+ * Returns only UUIDs and the public records of this package, never internal classes.
  */
 public interface ShiftExternalService {
 
     Optional<UUID> findShiftCodeIdByCode(String code);
 
-    List<ShiftCodeResponse> getActiveCatalog();
+    List<ShiftCodeInfo> getActiveCatalog();
 
     /**
      * Looks up several roles in a single query.

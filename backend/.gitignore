@@ -34,3 +34,6 @@ build/
 ### Docker locales (Opcional pero recomendado) ###
 # Si cambias el volumen de Postgres a una carpeta local (Bind Mount), descomenta la siguiente línea:
 # /data_postgres/
+
+### IDE local (OpenBPM Studio) ###
+openbpm-studio.xml
