@@ -1,10 +1,11 @@
-package com.edu.unicauca.gasstation.backend.workers.domain;
+package com.edu.unicauca.gasstation.backend.workers.domain.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,13 +13,18 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 /**
- * Seller of the station.
+ * Seller of the station. Mapped to the {@code worker} table (migration V7).
  *
- * <p>The role is stored as a plain {@code roleId}: the {@code role} table belongs to the {@code shifts}
- * module, so there is no {@code @ManyToOne} to it. The foreign key exists only in the database.
- * The dispenser and the products are derived from the role and are never stored here.
- *
- * <p>A worker is never deleted; it is deactivated so its sales, closings and shifts history is kept.
+ * <p>Rules that belong to the worker itself:
+ * <ul>
+ *   <li>Name and document are always kept without leading or trailing spaces.</li>
+ *   <li>A new worker starts active.</li>
+ *   <li>It is never deleted; it is deactivated so its sales, closings and shifts history is kept.</li>
+ *   <li>It can be edited even when inactive.</li>
+ * </ul>
+ * The role is stored as a plain {@code roleId}, without {@code @ManyToOne}: the {@code role} table belongs to
+ * the {@code shifts} module. The foreign key exists only in the database (V7). The dispenser and the products
+ * are derived from the role and are never stored here.
  */
 @Entity
 @Table(name = "worker", uniqueConstraints = @UniqueConstraint(
@@ -27,7 +33,7 @@ import org.hibernate.annotations.UuidGenerator;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Worker {
 
-    /** Name of the UNIQUE constraint on {@code document}, used to recognize it when it is violated. */
+    /** Name of the UNIQUE constraint on {@code document} (V7), used to recognize it when it is violated. */
     public static final String UNIQUE_DOCUMENT_CONSTRAINT = "uk_worker_document";
 
     @Id
@@ -48,20 +54,18 @@ public class Worker {
     private boolean active;
 
     /**
-     * Creates a new worker. Every new worker starts active.
+     * Creates a new worker, always active.
      */
     public Worker(String fullName, String document, UUID roleId) {
-        this.fullName = fullName;
-        this.document = document;
-        this.roleId = roleId;
+        updateDetails(fullName, document, roleId);
         this.active = true;
     }
 
-    /** Replaces the editable data. Allowed even when the worker is inactive. */
+    /** Replaces the editable data, removing leading and trailing spaces. */
     public void updateDetails(String fullName, String document, UUID roleId) {
-        this.fullName = fullName;
-        this.document = document;
-        this.roleId = roleId;
+        this.fullName = Objects.requireNonNull(fullName, "fullName").strip();
+        this.document = Objects.requireNonNull(document, "document").strip();
+        this.roleId = Objects.requireNonNull(roleId, "roleId");
     }
 
     /** Marks the worker as active. Does nothing if it already is. */

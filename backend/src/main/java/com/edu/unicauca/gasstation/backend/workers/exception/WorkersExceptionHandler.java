@@ -1,11 +1,7 @@
-package com.edu.unicauca.gasstation.backend.workers.api;
+package com.edu.unicauca.gasstation.backend.workers.exception;
 
+import com.edu.unicauca.gasstation.backend.workers.api.WorkerController;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.ErrorResponse;
-import com.edu.unicauca.gasstation.backend.workers.domain.Worker;
-import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
-import com.edu.unicauca.gasstation.backend.workers.exception.RoleNotFoundException;
-import com.edu.unicauca.gasstation.backend.workers.exception.WorkerNotFoundException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -42,22 +38,12 @@ public class WorkersExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(ex.getMessage()));
     }
 
-    /** The document belongs to another worker (409). */
+    /**
+     * The document belongs to another worker (409). Raised by the service check, or by the service when the
+     * database UNIQUE constraint rejects a concurrent duplicate.
+     */
     @ExceptionHandler(DuplicateDocumentException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateDocument(DuplicateDocumentException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(ex.getMessage()));
-    }
-
-    /**
-     * Last line of defense for the unique document: two concurrent requests passed the service check
-     * and the database rejected the second one (409, same message). Any other integrity error is rethrown.
-     */
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        String cause = ex.getMostSpecificCause().getMessage();
-        if (cause != null && cause.contains(Worker.UNIQUE_DOCUMENT_CONSTRAINT)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(DuplicateDocumentException.MESSAGE));
-        }
-        throw ex;
     }
 }

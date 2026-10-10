@@ -1,8 +1,10 @@
 /**
  * Infrastructure of the workers module.
- *
- * <p>{@code persistence} holds the Spring Data repository of {@code Worker}, with the queries needed to
- * check that the document is unique and to list workers with optional filters (specifications).
+ * <ul>
+ *   <li>{@code mappers}: REST DTOs to domain models and back (MapStruct).</li>
+ *   <li>{@code persistence}: Spring Data repository of {@code Worker} and the specifications that build the
+ *       list with optional filters.</li>
+ * </ul>
  *
  * <p>Internal to the module: other modules must not use these classes.
  */
