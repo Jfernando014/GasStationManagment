@@ -5,8 +5,8 @@
  * and the records {@link com.edu.unicauca.gasstation.backend.shifts.RoleInfo} and
  * {@link com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo}. Every subpackage is internal.
  *
- * <p>Layers: {@code api} (REST controller and DTOs) → {@code domain} (entities and use cases) →
- * {@code infrastructure} (Spring Data repositories and DTO mappers).
+ * <p>Layers: {@code api} (REST controllers and DTOs) and {@code infrastructure} (persistence and mappers) depend
+ * on {@code domain} (pure models, repository interfaces and use cases); {@code domain} depends on neither.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Shifts")
 package com.edu.unicauca.gasstation.backend.shifts;

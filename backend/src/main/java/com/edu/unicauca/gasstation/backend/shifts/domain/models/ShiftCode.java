@@ -1,85 +1,56 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
 
 /**
- * Catalog entry for a shift code (DIA, DIA6, NOCHE, 12-7...). Mapped to the {@code shift_code} table (migration V6).
+ * Catalog entry for a shift code (DIA, DIA6, NOCHE, 12-7...).
  *
  * <p>A shift has up to two segments of hours. Segment 1 may cross midnight (end &lt; start) only for a
- * NIGHT shift with a single segment. The schedule is validated when the object is built and again before
- * it is saved; the table CHECK constraints apply the same rules.
+ * NIGHT shift with a single segment. The schedule is validated every time an instance is built, so an invalid
+ * shift code cannot exist in the domain; the table CHECK constraints apply the same rules.
  */
-@Entity
-@Table(name = "shift_code")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShiftCode {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    /** Null until the shift code is saved. */
+    private final UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String code;
+    private final String code;
 
-    @Column(nullable = false)
-    private String name;
+    private final String name;
 
     /** Null for DESCANSO. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private Role role;
+    private final Role role;
 
     /** Null for DESCANSO. */
-    @Enumerated(EnumType.STRING)
-    private ShiftPeriod period;
+    private final ShiftPeriod period;
 
-    @Column(name = "start_hour_1")
-    private Short startHour1;
+    private final Short startHour1;
 
-    @Column(name = "end_hour_1")
-    private Short endHour1;
+    private final Short endHour1;
 
     /** Second segment, only for split shifts (6-9y5-9, 6-9y2-6). */
-    @Column(name = "start_hour_2")
-    private Short startHour2;
+    private final Short startHour2;
 
-    @Column(name = "end_hour_2")
-    private Short endHour2;
+    private final Short endHour2;
 
     /** True for titular codes that need a support worker (DIA6, 9-6). */
-    @Column(name = "requires_support", nullable = false)
-    private boolean requiresSupport;
+    private final boolean requiresSupport;
 
-    /** Only on support codes: the titular code it pairs with (12-7 -> DIA6). Plain column, no JPA relation. */
-    @Column(name = "paired_with_id")
-    private UUID pairedWithId;
+    /** Only on support codes: the titular code it pairs with (12-7 -> DIA6). */
+    private final UUID pairedWithId;
 
-    @Column(nullable = false)
-    private boolean active;
+    private final boolean active;
 
     @Builder
-    private ShiftCode(String code, String name, Role role, ShiftPeriod period,
+    private ShiftCode(UUID id, String code, String name, Role role, ShiftPeriod period,
                       Short startHour1, Short endHour1, Short startHour2, Short endHour2,
                       boolean requiresSupport, UUID pairedWithId, boolean active) {
+        this.id = id;
         this.code = code;
         this.name = name;
         this.role = role;
@@ -96,7 +67,7 @@ public class ShiftCode {
 
     /**
      * Working segments: segment 1 and, for split shifts, segment 2. Empty for DESCANSO.
-     * The only place where the four hour columns become segments.
+     * The only place where the four hour fields become segments.
      */
     public List<ShiftSegment> segments() {
         List<ShiftSegment> segments = new ArrayList<>(2);
@@ -126,9 +97,7 @@ public class ShiftCode {
      * hours in range, start different from end, only a single-segment NIGHT shift crosses midnight,
      * and segment 2 never crosses midnight and starts after segment 1 ends.
      */
-    @PrePersist
-    @PreUpdate
-    void validateSchedule() {
+    private void validateSchedule() {
         if (startHour1 == null || endHour1 == null) {
             if (startHour1 != null || endHour1 != null || startHour2 != null || endHour2 != null) {
                 throw invalid("segment 1 must have both hours, or the shift must have no segments");
