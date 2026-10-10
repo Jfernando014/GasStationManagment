@@ -5,9 +5,9 @@ import com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.RoleRepository;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.ShiftCodeRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +34,7 @@ public class ShiftCatalogService implements ShiftExternalService {
 
     /** Every active shift code, with its role. */
     public List<ShiftCode> listActive() {
-        return shiftCodeRepository.findByActiveTrue();
+        return shiftCodeRepository.findActive();
     }
 
     /**
@@ -58,10 +58,7 @@ public class ShiftCatalogService implements ShiftExternalService {
 
     @Override
     public Map<UUID, RoleInfo> getRolesByIds(Collection<UUID> roleIds) {
-        if (roleIds.isEmpty()) {
-            return Map.of();
-        }
-        return roleRepository.findAllById(roleIds).stream()
+        return roleRepository.findAllByIds(roleIds).stream()
                 .map(ShiftCatalogService::toInfo)
                 .collect(Collectors.toMap(RoleInfo::id, roleInfo -> roleInfo));
     }
