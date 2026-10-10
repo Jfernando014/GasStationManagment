@@ -5,7 +5,7 @@ import com.edu.unicauca.gasstation.backend.inventory.FuelPriceTestData;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
 import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.exception.FuelPriceNotFoundException;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.FuelPriceRepository;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelPriceRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +48,7 @@ class FuelPriceServiceTest {
         FuelPrice existing = FuelPriceTestData.price(1L, FuelType.MOTOR, "16330", AUGUST_1);
         FuelPrice changes = FuelPriceTestData.price(null, FuelType.EXTRA, "20390", AUGUST_5);
         when(fuelPriceRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(fuelPriceRepository.saveAndFlush(existing)).thenReturn(existing);
+        when(fuelPriceRepository.save(existing)).thenReturn(existing);
 
         FuelPrice updated = fuelPriceService.update(1L, changes);
 
@@ -65,22 +65,22 @@ class FuelPriceServiceTest {
                 FuelPriceTestData.price(null, FuelType.MOTOR, "16330", AUGUST_1)))
                 .isInstanceOf(FuelPriceNotFoundException.class)
                 .hasMessageContaining("99");
-        verify(fuelPriceRepository, never()).saveAndFlush(any());
+        verify(fuelPriceRepository, never()).save(any());
     }
 
     @Test
     void findEffectiveReturnsThePriceFromTheRepository() {
         FuelPrice price = FuelPriceTestData.price(1L, FuelType.MOTOR, "16330", AUGUST_1);
-        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
-                FuelType.MOTOR, AUGUST_5)).thenReturn(Optional.of(price));
+        when(fuelPriceRepository.findEffective(FuelType.MOTOR, AUGUST_5))
+                .thenReturn(Optional.of(price));
 
         assertThat(fuelPriceService.findEffective(FuelType.MOTOR, AUGUST_5)).isSameAs(price);
     }
 
     @Test
     void findEffectiveThrowsWhenNoPriceHasStartedYet() {
-        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
-                FuelType.MOTOR, AUGUST_1)).thenReturn(Optional.empty());
+        when(fuelPriceRepository.findEffective(FuelType.MOTOR, AUGUST_1))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fuelPriceService.findEffective(FuelType.MOTOR, AUGUST_1))
                 .isInstanceOf(FuelPriceNotFoundException.class);
@@ -89,15 +89,15 @@ class FuelPriceServiceTest {
     @Test
     void findHistoryFiltersByFuelTypeWhenProvided() {
         FuelPrice price = FuelPriceTestData.price(1L, FuelType.EXTRA, "20390", AUGUST_1);
-        when(fuelPriceRepository.findByFuelTypeOrderByValidFromDesc(FuelType.EXTRA)).thenReturn(List.of(price));
+        when(fuelPriceRepository.findHistory(FuelType.EXTRA)).thenReturn(List.of(price));
 
         assertThat(fuelPriceService.findHistory(FuelType.EXTRA)).containsExactly(price);
     }
     @Test
     void findEffectivePriceReturnsPublicInfoOfThePriceInForce() {
         FuelPrice price = FuelPriceTestData.price(1L, FuelType.MOTOR, "16330", AUGUST_1);
-        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
-                FuelType.MOTOR, AUGUST_5)).thenReturn(Optional.of(price));
+        when(fuelPriceRepository.findEffective(FuelType.MOTOR, AUGUST_5))
+                .thenReturn(Optional.of(price));
 
         Optional<FuelPriceInfo> info = fuelPriceService.findEffectivePrice(FuelType.MOTOR, AUGUST_5);
 
@@ -109,8 +109,8 @@ class FuelPriceServiceTest {
 
     @Test
     void findEffectivePriceIsEmptyWhenNoPriceHasStarted() {
-        when(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
-                FuelType.MOTOR, AUGUST_1)).thenReturn(Optional.empty());
+        when(fuelPriceRepository.findEffective(FuelType.MOTOR, AUGUST_1))
+                .thenReturn(Optional.empty());
 
         assertThat(fuelPriceService.findEffectivePrice(FuelType.MOTOR, AUGUST_1)).isEmpty();
     }

@@ -3,6 +3,10 @@ package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence
 import com.edu.unicauca.gasstation.backend.inventory.TankTestData;
 import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.adapters.TankRepositoryAdapter;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.mappers.TankPersistenceMapper;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -10,7 +14,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Sort;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -23,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
+@Import({TankRepositoryAdapter.class, TankPersistenceMapper.class})
 class TankRepositoryTest {
 
     @Container
@@ -63,16 +68,20 @@ class TankRepositoryTest {
         tankRepository.save(TankTestData.tank(null, "T2C1", "Tanque 2 Comp. 1"));
         tankRepository.save(TankTestData.tank(null, "T1C1", "Tanque 1 Comp. 1"));
 
-        List<Tank> tanks = tankRepository.findAll(Sort.by("code"));
+        List<Tank> tanks = tankRepository.findAllOrderByCode();
 
-        assertThat(tanks).extracting(Tank::getCode).containsExactly("T1C1", "T2C1");
+        assertThat(tanks).extracting("code").containsExactly("T1C1", "T2C1");
     }
 
     @Test
     void saveRejectsDuplicateCode() {
-        tankRepository.saveAndFlush(TankTestData.tank(null, "T1C1", "Tanque 1 Comp. 1"));
+        tankRepository.save(TankTestData.tank(null, "T1C1", "Tanque 1 Comp. 1"));
+        entityManager.flush();
 
-        assertThatThrownBy(() -> tankRepository.saveAndFlush(TankTestData.tank(null, "T1C1", "Duplicado")))
+        assertThatThrownBy(() -> {
+            tankRepository.save(TankTestData.tank(null, "T1C1", "Duplicado"));
+            entityManager.flush();
+        })
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

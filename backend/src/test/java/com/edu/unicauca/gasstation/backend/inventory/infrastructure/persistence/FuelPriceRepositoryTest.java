@@ -2,12 +2,17 @@ package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence
 
 import com.edu.unicauca.gasstation.backend.inventory.FuelPriceTestData;
 import com.edu.unicauca.gasstation.backend.inventory.FuelType;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelPriceRepository;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.adapters.FuelPriceRepositoryAdapter;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.mappers.FuelPricePersistenceMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -21,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
+@Import({FuelPriceRepositoryAdapter.class, FuelPricePersistenceMapper.class})
 class FuelPriceRepositoryTest {
 
     @Container
@@ -29,6 +35,9 @@ class FuelPriceRepositoryTest {
 
     @Autowired
     private FuelPriceRepository fuelPriceRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Test
     void findEffectiveReturnsThePriceInForceOnEachDate() {
@@ -44,8 +53,8 @@ class FuelPriceRepositoryTest {
     void findEffectiveIsEmptyBeforeTheFirstPrice() {
         fuelPriceRepository.save(FuelPriceTestData.price(null, FuelType.MOTOR, "16330", LocalDate.of(2026, 8, 1)));
 
-        assertThat(fuelPriceRepository.findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
-                FuelType.MOTOR, LocalDate.of(2026, 7, 31))).isEmpty();
+        assertThat(fuelPriceRepository.findEffective(FuelType.MOTOR, LocalDate.of(2026, 7, 31)))
+                .isEmpty();
     }
 
     @Test
@@ -59,16 +68,20 @@ class FuelPriceRepositoryTest {
     @Test
     void saveRejectsTwoPricesForTheSameFuelAndDate() {
         LocalDate date = LocalDate.of(2026, 8, 1);
-        fuelPriceRepository.saveAndFlush(FuelPriceTestData.price(null, FuelType.MOTOR, "16330", date));
+        fuelPriceRepository.save(FuelPriceTestData.price(null, FuelType.MOTOR, "16330", date));
+        entityManager.flush();
 
-        assertThatThrownBy(() -> fuelPriceRepository.saveAndFlush(
-                FuelPriceTestData.price(null, FuelType.MOTOR, "17000", date)))
+        assertThatThrownBy(() -> {
+            fuelPriceRepository.save(
+                    FuelPriceTestData.price(null, FuelType.MOTOR, "17000", date));
+            entityManager.flush();
+        })
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     private BigDecimal effectivePrice(FuelType fuelType, LocalDate date) {
         return fuelPriceRepository
-                .findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(fuelType, date)
+                .findEffective(fuelType, date)
                 .orElseThrow()
                 .getPricePerGallon();
     }

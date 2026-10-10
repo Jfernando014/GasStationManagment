@@ -1,11 +1,10 @@
 package com.edu.unicauca.gasstation.backend.inventory.domain.services;
 
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import com.edu.unicauca.gasstation.backend.inventory.exception.DuplicateTankCodeException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.TankNotFoundException;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.TankRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,7 +32,7 @@ public class TankService {
 
     @Transactional
     public List<Tank> findAllTanks() {
-        return tankRepository.findAll(Sort.by("code"));
+        return tankRepository.findAllOrderByCode();
     }
     @Transactional
     public Tank updateTank(Long id, Tank changes) {
