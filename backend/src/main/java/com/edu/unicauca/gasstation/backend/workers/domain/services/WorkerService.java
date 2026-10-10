@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.workers.domain.services;
 import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
+import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerChanges;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerDetail;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerFilter;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
@@ -58,20 +59,20 @@ public class WorkerService {
     /**
      * Replaces name, document and role of a worker. Inactive workers can be edited too.
      *
-     * @param changes new values; only name, document and role are read from it
+     * @param changes new name, document and role, already without leading or trailing spaces
      * @throws WorkerNotFoundException    if the worker does not exist
      * @throws DuplicateDocumentException if a different worker already has the document
      * @throws RoleNotFoundException      if the role does not exist
      */
     @Transactional
-    public WorkerDetail update(UUID id, Worker changes) {
+    public WorkerDetail update(UUID id, WorkerChanges changes) {
         Worker worker = findWorker(id);
-        if (workerRepository.existsByDocumentAndIdNot(changes.getDocument(), id)) {
-            throw new DuplicateDocumentException(changes.getDocument());
+        if (workerRepository.existsByDocumentAndIdNot(changes.document(), id)) {
+            throw new DuplicateDocumentException(changes.document());
         }
-        RoleInfo role = findRole(changes.getRoleId());
+        RoleInfo role = findRole(changes.roleId());
 
-        worker.updateDetails(changes.getFullName(), changes.getDocument(), role.id());
+        worker.updateDetails(changes.fullName(), changes.document(), role.id());
         return new WorkerDetail(saveChecked(worker), role);
     }
 
