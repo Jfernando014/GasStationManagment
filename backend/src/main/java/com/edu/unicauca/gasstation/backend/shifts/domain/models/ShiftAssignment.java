@@ -1,59 +1,52 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
 
 /**
- * Shift code a worker has on a given day. Mapped to the {@code shift_assignment} table (migration V8).
+ * Shift code a worker has on a given day.
  *
  * <p>A worker has a single assignment per day; changing a day means replacing its shift code. DESCANSO is stored
  * as an assignment too, so a day without assignment is "not scheduled".
  *
- * <p>{@code workerId} is a plain UUID, without {@code @ManyToOne}: workers belong to the {@code workers} module.
- * The foreign key exists only in the database (V8).
+ * <p>{@code workerId} is a plain UUID: workers belong to the {@code workers} module.
  */
-@Entity
-@Table(name = "shift_assignment", uniqueConstraints = @UniqueConstraint(
-        name = "uk_shift_assignment_worker_date", columnNames = {"worker_id", "work_date"}))
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShiftAssignment {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    /** Null until the assignment is saved. */
+    private final UUID id;
 
-    @Column(name = "worker_id", nullable = false)
-    private UUID workerId;
+    private final UUID workerId;
 
-    @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
+    private final LocalDate workDate;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "shift_code_id", nullable = false)
     private ShiftCode shiftCode;
 
     /** Optional reason for the change; null when there is none. */
-    @Column(length = 255)
     private String note;
 
+    /**
+     * Creates a new assignment.
+     */
     public ShiftAssignment(UUID workerId, LocalDate workDate, ShiftCode shiftCode, String note) {
+        this(null, workerId, workDate, shiftCode, note);
+    }
+
+    private ShiftAssignment(UUID id, UUID workerId, LocalDate workDate, ShiftCode shiftCode, String note) {
+        this.id = id;
         this.workerId = Objects.requireNonNull(workerId, "workerId");
         this.workDate = Objects.requireNonNull(workDate, "workDate");
         change(shiftCode, note);
+    }
+
+    /**
+     * Rebuilds an assignment that already exists (for example, read from the database).
+     */
+    public static ShiftAssignment restore(UUID id, UUID workerId, LocalDate workDate, ShiftCode shiftCode, String note) {
+        return new ShiftAssignment(Objects.requireNonNull(id, "id"), workerId, workDate, shiftCode, note);
     }
 
     /**

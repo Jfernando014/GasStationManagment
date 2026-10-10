@@ -1,6 +1,6 @@
-package com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence;
+package com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.repositories;
 
-import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
+import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.entities.ShiftAssignmentEntity;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -12,15 +12,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
- * Spring Data repository of {@link ShiftAssignment}.
+ * Spring Data repository of {@link ShiftAssignmentEntity}. Used only by {@code ShiftAssignmentRepositoryImpl}.
+ * Queries load the shift code and its role in the same query ({@code @EntityGraph}) to avoid extra round trips.
  */
-public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment, UUID> {
+public interface JpaShiftAssignmentRepository extends JpaRepository<ShiftAssignmentEntity, UUID> {
 
-    /** Every assignment between both dates (inclusive), with its shift code and role loaded in the same query. */
     @EntityGraph(attributePaths = {"shiftCode", "shiftCode.role"})
-    List<ShiftAssignment> findByWorkDateBetween(LocalDate from, LocalDate to);
+    List<ShiftAssignmentEntity> findByWorkDateBetween(LocalDate from, LocalDate to);
 
-    Optional<ShiftAssignment> findByWorkerIdAndWorkDate(UUID workerId, LocalDate workDate);
+    @EntityGraph(attributePaths = {"shiftCode", "shiftCode.role"})
+    Optional<ShiftAssignmentEntity> findByWorkerIdAndWorkDate(UUID workerId, LocalDate workDate);
 
     /**
      * Deletes the assignments of a worker between both dates (inclusive) with a single DELETE, run immediately.
@@ -30,6 +31,6 @@ public interface ShiftAssignmentRepository extends JpaRepository<ShiftAssignment
      * @return number of deleted rows
      */
     @Modifying
-    @Query("delete from ShiftAssignment a where a.workerId = :workerId and a.workDate between :from and :to")
+    @Query("delete from ShiftAssignmentEntity a where a.workerId = :workerId and a.workDate between :from and :to")
     int deleteByWorkerInRange(@Param("workerId") UUID workerId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }

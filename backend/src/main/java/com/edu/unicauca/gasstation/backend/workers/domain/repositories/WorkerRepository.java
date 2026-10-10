@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.workers.domain.repositories;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerFilter;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +23,9 @@ public interface WorkerRepository {
     Worker save(Worker worker);
 
     Optional<Worker> findById(UUID id);
+
+    /** Workers whose id is in {@code ids}; ids that do not exist are simply not returned. */
+    List<Worker> findAllByIds(Collection<UUID> ids);
 
     /** Used when creating: is the document already taken by any worker? */
     boolean existsByDocument(String document);

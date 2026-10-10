@@ -18,9 +18,9 @@ import com.edu.unicauca.gasstation.backend.shifts.exception.ScheduleWorkerNotFou
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.RoleRepository;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.ShiftAssignmentRepository;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.ShiftCodeRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftAssignmentRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
