@@ -8,6 +8,7 @@ import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.Wo
 import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.entities.WorkerEntity;
 import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.mappers.WorkerPersistenceMapper;
 import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.repositories.JpaWorkerRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +47,14 @@ public class WorkerRepositoryImpl implements WorkerRepository {
     @Override
     public Optional<Worker> findById(UUID id) {
         return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Worker> findAllByIds(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return repository.findAllById(ids).stream().map(mapper::toDomain).toList();
     }
 
     @Override

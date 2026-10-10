@@ -3,7 +3,7 @@ package com.edu.unicauca.gasstation.backend.workers.domain.services;
 import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
 import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
-import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.WorkerRepository;
+import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRepository;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -25,10 +25,7 @@ public class WorkerScheduleDirectory implements ScheduleWorkerDirectory {
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, ScheduleWorkerInfo> getWorkersByIds(Collection<UUID> workerIds) {
-        if (workerIds.isEmpty()) {
-            return Map.of();
-        }
-        return workerRepository.findAllById(workerIds).stream()
+        return workerRepository.findAllByIds(workerIds).stream()
                 .map(WorkerScheduleDirectory::toInfo)
                 .collect(Collectors.toMap(ScheduleWorkerInfo::id, info -> info));
     }
