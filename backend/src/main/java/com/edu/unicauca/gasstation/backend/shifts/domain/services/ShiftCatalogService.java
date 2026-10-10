@@ -8,7 +8,6 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.ShiftCodeRepository;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -72,13 +71,9 @@ public class ShiftCatalogService implements ShiftExternalService {
     }
 
     private static ShiftCodeInfo toInfo(ShiftCode shiftCode) {
-        List<ShiftCodeInfo.Segment> segments = new ArrayList<>();
-        if (shiftCode.getStartHour1() != null) {
-            segments.add(new ShiftCodeInfo.Segment(shiftCode.getStartHour1(), shiftCode.getEndHour1()));
-        }
-        if (shiftCode.getStartHour2() != null) {
-            segments.add(new ShiftCodeInfo.Segment(shiftCode.getStartHour2(), shiftCode.getEndHour2()));
-        }
+        List<ShiftCodeInfo.Segment> segments = shiftCode.segments().stream()
+                .map(segment -> new ShiftCodeInfo.Segment(segment.startHour(), segment.endHour()))
+                .toList();
         return new ShiftCodeInfo(
                 shiftCode.getId(),
                 shiftCode.getCode(),

@@ -11,6 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -92,15 +94,30 @@ public class ShiftCode {
         validateSchedule();
     }
 
-    /** Sum of the hours of each segment; DESCANSO returns 0. */
-    public int totalHours() {
-        return segmentHours(startHour1, endHour1) + segmentHours(startHour2, endHour2);
+    /**
+     * Working segments: segment 1 and, for split shifts, segment 2. Empty for DESCANSO.
+     * The only place where the four hour columns become segments.
+     */
+    public List<ShiftSegment> segments() {
+        List<ShiftSegment> segments = new ArrayList<>(2);
+        if (startHour1 != null) {
+            segments.add(new ShiftSegment(startHour1, endHour1));
+        }
+        if (startHour2 != null) {
+            segments.add(new ShiftSegment(startHour2, endHour2));
+        }
+        return List.copyOf(segments);
     }
 
-    private static int segmentHours(Short start, Short end) {
-        if (start == null || end == null) {
-            return 0;
-        }
+    /** Sum of the hours of each segment; DESCANSO returns 0. */
+    public int totalHours() {
+        return segments().stream().mapToInt(ShiftCode::segmentHours).sum();
+    }
+
+    /** Hours of one segment, counting past midnight when it ends the next day (NOCHE 18 -> 6 = 12). */
+    private static int segmentHours(ShiftSegment segment) {
+        int start = segment.startHour();
+        int end = segment.endHour();
         return end > start ? end - start : 24 - start + end;
     }
 
