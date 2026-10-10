@@ -1,8 +1,10 @@
 /**
  * Infrastructure of the shifts module.
- *
- * <p>{@code persistence} holds the Spring Data repositories of {@code Role} and {@code ShiftCode}. Shift code
- * queries load the role in the same query ({@code @EntityGraph}) to avoid extra round trips.
+ * <ul>
+ *   <li>{@code mappers}: domain models to REST DTOs (MapStruct).</li>
+ *   <li>{@code persistence}: Spring Data repositories of {@code Role} and {@code ShiftCode}. Shift code queries
+ *       load the role in the same query ({@code @EntityGraph}) to avoid extra round trips.</li>
+ * </ul>
  *
  * <p>Internal to the module: other modules must not use these classes.
  */

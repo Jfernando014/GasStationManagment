@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.shifts.domain;
+package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,20 +12,23 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 /**
- * Catalog entry for a shift code (DIA, DIA6, NOCHE, 12-7...).
- * A shift has up to two segments; segment 1 may cross midnight (end < start) only for a NIGHT shift.
+ * Catalog entry for a shift code (DIA, DIA6, NOCHE, 12-7...). Mapped to the {@code shift_code} table (migration V6).
+ *
+ * <p>A shift has up to two segments of hours. Segment 1 may cross midnight (end &lt; start) only for a
+ * NIGHT shift with a single segment. The schedule is validated when the object is built and again before
+ * it is saved; the table CHECK constraints apply the same rules.
  */
 @Entity
 @Table(name = "shift_code")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShiftCode {
 
     @Id
@@ -43,6 +46,7 @@ public class ShiftCode {
     @JoinColumn(name = "role_id")
     private Role role;
 
+    /** Null for DESCANSO. */
     @Enumerated(EnumType.STRING)
     private ShiftPeriod period;
 
@@ -52,21 +56,41 @@ public class ShiftCode {
     @Column(name = "end_hour_1")
     private Short endHour1;
 
+    /** Second segment, only for split shifts (6-9y5-9, 6-9y2-6). */
     @Column(name = "start_hour_2")
     private Short startHour2;
 
     @Column(name = "end_hour_2")
     private Short endHour2;
 
+    /** True for titular codes that need a support worker (DIA6, 9-6). */
     @Column(name = "requires_support", nullable = false)
     private boolean requiresSupport;
 
-    /** Only on support codes: the titular code it pairs with (12-7 -> DIA6). */
+    /** Only on support codes: the titular code it pairs with (12-7 -> DIA6). Plain column, no JPA relation. */
     @Column(name = "paired_with_id")
     private UUID pairedWithId;
 
     @Column(nullable = false)
     private boolean active;
+
+    @Builder
+    private ShiftCode(String code, String name, Role role, ShiftPeriod period,
+                      Short startHour1, Short endHour1, Short startHour2, Short endHour2,
+                      boolean requiresSupport, UUID pairedWithId, boolean active) {
+        this.code = code;
+        this.name = name;
+        this.role = role;
+        this.period = period;
+        this.startHour1 = startHour1;
+        this.endHour1 = endHour1;
+        this.startHour2 = startHour2;
+        this.endHour2 = endHour2;
+        this.requiresSupport = requiresSupport;
+        this.pairedWithId = pairedWithId;
+        this.active = active;
+        validateSchedule();
+    }
 
     /** Sum of the hours of each segment; DESCANSO returns 0. */
     public int totalHours() {
@@ -80,6 +104,11 @@ public class ShiftCode {
         return end > start ? end - start : 24 - start + end;
     }
 
+    /**
+     * Same rules as the CHECK constraints of the shift_code table:
+     * hours in range, start different from end, only a single-segment NIGHT shift crosses midnight,
+     * and segment 2 never crosses midnight and starts after segment 1 ends.
+     */
     @PrePersist
     @PreUpdate
     void validateSchedule() {

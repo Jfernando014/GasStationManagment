@@ -1,7 +1,8 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeResponse;
-import com.edu.unicauca.gasstation.backend.shifts.application.ShiftCatalogService;
+import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftCatalogService;
+import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftCodeMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Read-only endpoints of the shift catalog. Delegates to {@link ShiftCatalogService} and converts the
+ * domain models with {@link ShiftCodeMapper}.
+ */
 @Tag(name = "Shift catalog", description = "Read-only catalog of shift codes")
 @RestController
 @RequestMapping("/api/shifts/catalog")
@@ -18,16 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShiftCodeController {
 
     private final ShiftCatalogService shiftCatalogService;
+    private final ShiftCodeMapper shiftCodeMapper;
 
     @Operation(summary = "List active shift codes")
     @GetMapping
     public List<ShiftCodeResponse> listActive() {
-        return shiftCatalogService.listActive();
+        return shiftCatalogService.listActive().stream().map(shiftCodeMapper::toResponse).toList();
     }
 
     @Operation(summary = "Get a shift code by its code (e.g. DIA6, 12-7)")
     @GetMapping("/{code}")
     public ShiftCodeResponse getByCode(@PathVariable String code) {
-        return shiftCatalogService.getByCode(code);
+        return shiftCodeMapper.toResponse(shiftCatalogService.getByCode(code));
     }
 }
