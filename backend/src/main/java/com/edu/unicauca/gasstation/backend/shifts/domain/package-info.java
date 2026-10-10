@@ -1,5 +1,5 @@
 /**
- * Domain of the shifts module.
+ * Domain of the shifts module. Pure Java: no JPA, no DTOs, no Spring Data.
  * <ul>
  *   <li>{@code models}: JPA entities with their own rules. {@code Role} (TITULAR or APOYO with its dispenser),
  *       {@code ShiftCode} (each of the 11 codes with up to two segments, its role, the pairing rule and the
