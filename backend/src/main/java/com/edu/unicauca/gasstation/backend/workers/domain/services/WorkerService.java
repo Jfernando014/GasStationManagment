@@ -6,19 +6,16 @@ import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerChanges;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerDetail;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerFilter;
+import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRepository;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
 import com.edu.unicauca.gasstation.backend.workers.exception.RoleNotFoundException;
 import com.edu.unicauca.gasstation.backend.workers.exception.WorkerNotFoundException;
-import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.WorkerRepository;
-import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.WorkerSpecifications;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +50,7 @@ public class WorkerService {
             throw new DuplicateDocumentException(newWorker.getDocument());
         }
         RoleInfo role = findRole(newWorker.getRoleId());
-        return new WorkerDetail(saveChecked(newWorker), role);
+        return new WorkerDetail(workerRepository.save(newWorker), role);
     }
 
     /**
@@ -73,7 +70,7 @@ public class WorkerService {
         RoleInfo role = findRole(changes.roleId());
 
         worker.updateDetails(changes.fullName(), changes.document(), role.id());
-        return new WorkerDetail(saveChecked(worker), role);
+        return new WorkerDetail(workerRepository.save(worker), role);
     }
 
     /**
@@ -108,7 +105,7 @@ public class WorkerService {
      */
     @Transactional(readOnly = true)
     public List<WorkerDetail> list(WorkerFilter filter) {
-        List<Worker> workers = workerRepository.findAll(WorkerSpecifications.matching(filter), Sort.by("fullName"));
+        List<Worker> workers = workerRepository.findAll(filter);
 
         // A single call to shifts for every role in the list, not one per worker
         Set<UUID> roleIds = workers.stream().map(Worker::getRoleId).collect(Collectors.toSet());
@@ -117,22 +114,6 @@ public class WorkerService {
         return workers.stream()
                 .map(worker -> new WorkerDetail(worker, requireRole(roles, worker)))
                 .toList();
-    }
-
-    /**
-     * Saves with {@code saveAndFlush} so the INSERT/UPDATE is sent now: if two concurrent requests passed the
-     * document check, the database UNIQUE constraint rejects the second one here and it becomes a 409.
-     */
-    private Worker saveChecked(Worker worker) {
-        try {
-            return workerRepository.saveAndFlush(worker);
-        } catch (DataIntegrityViolationException ex) {
-            String cause = ex.getMostSpecificCause().getMessage();
-            if (cause != null && cause.contains(Worker.UNIQUE_DOCUMENT_CONSTRAINT)) {
-                throw new DuplicateDocumentException(worker.getDocument());
-            }
-            throw ex;
-        }
     }
 
     private Worker findWorker(UUID id) {
