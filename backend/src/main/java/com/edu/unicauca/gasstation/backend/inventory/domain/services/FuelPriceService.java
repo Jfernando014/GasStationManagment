@@ -4,12 +4,10 @@ import com.edu.unicauca.gasstation.backend.inventory.FuelPriceInfo;
 import com.edu.unicauca.gasstation.backend.inventory.FuelPriceQuery;
 import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelPriceRepository;
 import com.edu.unicauca.gasstation.backend.inventory.exception.FuelPriceNotFoundException;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.FuelPriceRepository;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +34,7 @@ public class FuelPriceService implements FuelPriceQuery {
         price.setFuelType(changes.getFuelType());
         price.setPricePerGallon(changes.getPricePerGallon());
         price.setValidFrom(changes.getValidFrom());
-        return fuelPriceRepository.saveAndFlush(price);
+        return fuelPriceRepository.save(price);
     }
 
     @Transactional(readOnly = true)
@@ -61,13 +59,12 @@ public class FuelPriceService implements FuelPriceQuery {
     @Transactional(readOnly = true)
     public List<FuelPrice> findHistory(FuelType fuelType) {
         if (fuelType == null) {
-            return fuelPriceRepository.findAll(Sort.by(Sort.Order.asc("fuelType"), Sort.Order.desc("validFrom")));
+            return fuelPriceRepository.findHistory();
         }
-        return fuelPriceRepository.findByFuelTypeOrderByValidFromDesc(fuelType);
+        return fuelPriceRepository.findHistory(fuelType);
     }
 
     private Optional<FuelPrice> findEffectiveEntity(FuelType fuelType, LocalDate date) {
-        return fuelPriceRepository
-                .findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(fuelType, date);
+        return fuelPriceRepository.findEffective(fuelType, date);
     }
 }
