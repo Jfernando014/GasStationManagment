@@ -4,7 +4,7 @@ import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelPrice;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelPriceRepository;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.mappers.FuelPricePersistenceMapper;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.SpringDataFuelPriceRepository;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.JpaFuelPriceRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -14,11 +14,11 @@ import java.util.Optional;
 @Repository
 public class FuelPriceRepositoryAdapter implements FuelPriceRepository {
 
-    private final SpringDataFuelPriceRepository repository;
+    private final JpaFuelPriceRepository repository;
     private final FuelPricePersistenceMapper mapper;
 
     public FuelPriceRepositoryAdapter(
-            SpringDataFuelPriceRepository repository,
+            JpaFuelPriceRepository repository,
             FuelPricePersistenceMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;

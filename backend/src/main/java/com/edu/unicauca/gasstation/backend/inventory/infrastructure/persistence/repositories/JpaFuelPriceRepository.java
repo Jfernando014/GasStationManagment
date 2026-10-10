@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface SpringDataFuelPriceRepository extends JpaRepository<FuelPriceEntity, Long> {
+public interface JpaFuelPriceRepository extends JpaRepository<FuelPriceEntity, Long> {
 
     Optional<FuelPriceEntity> findFirstByFuelTypeAndValidFromLessThanEqualOrderByValidFromDesc(
             FuelType fuelType, LocalDate date);
