@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+
+  frontend:
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile.dev
+        args:
+          - FRONTEND_PORT=${FRONTEND_PORT}
+      container_name: gas-station-frontend-dev
+      ports:
+        - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      volumes:
+        - ./frontend:/app
+        - /app/node_modules
+      environment:
+        - NODE_ENV=development
+      depends_on:
+        - backend
+
   backend:
     build:
       context: ./backend        
