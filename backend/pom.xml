@@ -20,6 +20,7 @@
         <spring-modulith.version>1.1.3</spring-modulith.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <testcontainers.version>1.21.4</testcontainers.version>
+        <jollyday.version>2.21.0</jollyday.version>
     </properties>
 
     <dependencies>
@@ -119,6 +120,19 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.5</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Colombian holidays (shifts module). jollyday-jaxb is the provider that reads each country's calendar;
+             it uses JAXB instead of jollyday-jackson, which needs Jackson 3 and newer annotations than Spring Boot 3.2 -->
+        <dependency>
+            <groupId>de.focus-shift</groupId>
+            <artifactId>jollyday-core</artifactId>
+            <version>${jollyday.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.focus-shift</groupId>
+            <artifactId>jollyday-jaxb</artifactId>
+            <version>${jollyday.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
