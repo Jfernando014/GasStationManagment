@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface SpringDataTankRepository extends JpaRepository<TankEntity, Long> {
+public interface JpaTankRepository extends JpaRepository<TankEntity, Long> {
 
     boolean existsByCode(String code);
 

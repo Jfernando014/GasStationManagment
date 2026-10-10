@@ -3,7 +3,7 @@ package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.mappers.TankPersistenceMapper;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.SpringDataTankRepository;
+import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.JpaTankRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,10 +12,10 @@ import java.util.Optional;
 @Repository
 public class TankRepositoryAdapter implements TankRepository {
 
-    private final SpringDataTankRepository repository;
+    private final JpaTankRepository repository;
     private final TankPersistenceMapper mapper;
 
-    public TankRepositoryAdapter(SpringDataTankRepository repository, TankPersistenceMapper mapper) {
+    public TankRepositoryAdapter(JpaTankRepository repository, TankPersistenceMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }
