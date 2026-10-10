@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.shifts.domain;
+package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
 /**
  * Time-of-day block a shift code belongs to.
