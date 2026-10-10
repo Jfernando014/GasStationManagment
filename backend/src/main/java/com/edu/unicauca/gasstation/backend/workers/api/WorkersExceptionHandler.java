@@ -1,63 +1,100 @@
 package com.edu.unicauca.gasstation.backend.workers.api;
 
-import com.edu.unicauca.gasstation.backend.workers.api.dtos.ErrorResponse;
-import com.edu.unicauca.gasstation.backend.workers.domain.Worker;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
 import com.edu.unicauca.gasstation.backend.workers.exception.RoleNotFoundException;
 import com.edu.unicauca.gasstation.backend.workers.exception.WorkerNotFoundException;
-import org.springframework.dao.DataIntegrityViolationException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
- * Translates the errors of {@link WorkerController} to HTTP responses with an {@link ErrorResponse} body.
- * Limited to this controller; other modules keep their own handling.
+ * Translates the errors of the workers API into RFC 9457 problem details ({@code application/problem+json}).
+ *
+ * <p>Every response carries {@code status}, {@code title}, a {@code detail} in Spanish for the end user and a
+ * stable {@code code} in English. Validation errors also carry {@code errors}: every invalid field with its
+ * message. Spring fills in {@code instance} with the request path.
+ *
+ * <p>Limited to the controllers of this package; other modules keep their own handling.
  */
-@RestControllerAdvice(assignableTypes = WorkerController.class)
-public class WorkersExceptionHandler {
+@RestControllerAdvice(basePackageClasses = WorkerController.class)
+public class WorkersExceptionHandler extends ResponseEntityExceptionHandler {
 
-    /** Body validation failed (400). Reports the first invalid field. */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        FieldError error = ex.getBindingResult().getFieldError();
-        ErrorResponse body = error == null
-                ? ErrorResponse.of("La solicitud no es válida")
-                : new ErrorResponse(error.getDefaultMessage(), error.getField());
-        return ResponseEntity.badRequest().body(body);
+    /** Request body failed bean validation (400). Lists every invalid field. */
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
+                "La solicitud contiene datos no válidos");
+        List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(WorkersExceptionHandler::toFieldError)
+                .toList();
+        problem.setProperty("errors", errors);
+        return handleExceptionInternal(ex, problem, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    /** Request body is not valid JSON or does not match the expected types (400). */
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
+                "El cuerpo de la solicitud no es válido");
+        return handleExceptionInternal(ex, problem, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    /** A path or query parameter has the wrong type, for example an id that is not a UUID (400). */
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER",
+                "El valor del parámetro '" + ex.getPropertyName() + "' no es válido");
+        return handleExceptionInternal(ex, problem, headers, HttpStatus.BAD_REQUEST, request);
     }
 
     /** The role sent does not exist (400). */
     @ExceptionHandler(RoleNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleRoleNotFound(RoleNotFoundException ex) {
-        return ResponseEntity.badRequest().body(ErrorResponse.of(ex.getMessage()));
+    public ProblemDetail handleRoleNotFound(RoleNotFoundException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "ROLE_NOT_FOUND", ex.getMessage());
     }
 
     /** The worker does not exist (404). */
     @ExceptionHandler(WorkerNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleWorkerNotFound(WorkerNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(ex.getMessage()));
-    }
-
-    /** The document belongs to another worker (409). */
-    @ExceptionHandler(DuplicateDocumentException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateDocument(DuplicateDocumentException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(ex.getMessage()));
+    public ProblemDetail handleWorkerNotFound(WorkerNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "WORKER_NOT_FOUND", ex.getMessage());
     }
 
     /**
-     * Last line of defense for the unique document: two concurrent requests passed the service check
-     * and the database rejected the second one (409, same message). Any other integrity error is rethrown.
+     * The document belongs to another worker (409). Raised by the service check, or by the service when the
+     * database UNIQUE constraint rejects a concurrent duplicate.
      */
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
-        String cause = ex.getMostSpecificCause().getMessage();
-        if (cause != null && cause.contains(Worker.UNIQUE_DOCUMENT_CONSTRAINT)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(DuplicateDocumentException.MESSAGE));
-        }
-        throw ex;
+    @ExceptionHandler(DuplicateDocumentException.class)
+    public ProblemDetail handleDuplicateDocument(DuplicateDocumentException ex) {
+        return problem(HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT", ex.getMessage());
+    }
+
+    private static ProblemDetail problem(HttpStatus status, String code, String detail) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(status.getReasonPhrase());
+        problem.setProperty("code", code);
+        return problem;
+    }
+
+    private static Map<String, String> toFieldError(FieldError error) {
+        Map<String, String> fieldError = new LinkedHashMap<>();
+        fieldError.put("field", error.getField());
+        fieldError.put("message", error.getDefaultMessage());
+        return fieldError;
     }
 }

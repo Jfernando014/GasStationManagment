@@ -1,10 +1,10 @@
 package com.edu.unicauca.gasstation.backend.shifts.config;
 
-import com.edu.unicauca.gasstation.backend.shifts.domain.Role;
-import com.edu.unicauca.gasstation.backend.shifts.domain.ShiftCode;
-import com.edu.unicauca.gasstation.backend.shifts.domain.ShiftPeriod;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.RoleRepository;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.ShiftCodeRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Loads the 2 roles and 11 shift codes if they do not exist yet (matched by name and code),
- * so it can run on every startup without duplicating rows.
+ * so it can run on every startup without duplicating rows. Works only through the domain repositories.
  * Hours come from the "PARAMETROS" sheet (hour/shift matrix) of OBJETIVOS VENDEDORES AGOSTO 2026.
  */
 @Component
@@ -50,7 +50,7 @@ class ShiftDataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         ROLES.forEach((name, dispenser) -> {
             if (roleRepository.findByName(name).isEmpty()) {
-                roleRepository.save(new Role(name, dispenser));
+                roleRepository.save(new Role(null, name, dispenser));
             }
         });
 
@@ -58,21 +58,21 @@ class ShiftDataInitializer implements ApplicationRunner {
             if (shiftCodeRepository.findByCode(seed.code()).isPresent()) {
                 continue;
             }
-            ShiftCode shiftCode = new ShiftCode();
-            shiftCode.setCode(seed.code());
-            shiftCode.setName(seed.name());
-            shiftCode.setRole(seed.role() == null ? null : roleRepository.findByName(seed.role()).orElseThrow());
-            shiftCode.setPeriod(seed.period());
-            shiftCode.setStartHour1(toShort(seed.startHour1()));
-            shiftCode.setEndHour1(toShort(seed.endHour1()));
-            shiftCode.setStartHour2(toShort(seed.startHour2()));
-            shiftCode.setEndHour2(toShort(seed.endHour2()));
-            shiftCode.setRequiresSupport(seed.requiresSupport());
-            shiftCode.setPairedWithId(seed.pairedWith() == null
-                    ? null
-                    : shiftCodeRepository.findByCode(seed.pairedWith()).orElseThrow().getId());
-            shiftCode.setActive(true);
-            shiftCodeRepository.save(shiftCode);
+            shiftCodeRepository.save(ShiftCode.builder()
+                    .code(seed.code())
+                    .name(seed.name())
+                    .role(seed.role() == null ? null : roleRepository.findByName(seed.role()).orElseThrow())
+                    .period(seed.period())
+                    .startHour1(toShort(seed.startHour1()))
+                    .endHour1(toShort(seed.endHour1()))
+                    .startHour2(toShort(seed.startHour2()))
+                    .endHour2(toShort(seed.endHour2()))
+                    .requiresSupport(seed.requiresSupport())
+                    .pairedWithId(seed.pairedWith() == null
+                            ? null
+                            : shiftCodeRepository.findByCode(seed.pairedWith()).orElseThrow().getId())
+                    .active(true)
+                    .build());
         }
     }
 
