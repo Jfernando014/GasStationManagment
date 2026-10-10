@@ -5,13 +5,12 @@ import com.edu.unicauca.gasstation.backend.inventory.FuelType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.exception.DuplicateTankCodeException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.TankNotFoundException;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.TankRepository;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -77,7 +76,7 @@ class TankServiceTest {
     void findAllReturnsTanksOrderedByCode() {
         Tank first = TankTestData.tank(1L, "T1C1", "Tanque 1 Comp. 1");
         Tank second = TankTestData.tank(2L, "T1C2", "Tanque 1 Comp. 2");
-        when(tankRepository.findAll(Sort.by("code"))).thenReturn(List.of(first, second));
+        when(tankRepository.findAllOrderByCode()).thenReturn(List.of(first, second));
 
         assertThat(tankService.findAllTanks()).containsExactly(first, second);
     }
