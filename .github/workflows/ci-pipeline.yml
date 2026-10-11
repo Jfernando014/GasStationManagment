@@ -1,0 +1,43 @@
+name: Pruebas de pull request a la rama main
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-application:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Descargar código de la rama que realiza el pull request
+        uses: actions/checkout@v4
+
+      - name: Configurar variables de entorno temporales
+        run: |
+          echo "FRONTEND_PORT=4200" >> .env
+          echo "SERVER_PORT=8080" >> .env
+          echo "POSTGRES_LOCAL_PORT=5432" >> .env
+          echo "POSTGRES_DB_NAME=gas_station_db" >> .env
+          echo "POSTGRES_DB_USER=postgres" >> .env
+          echo "POSTGRES_DB_PASSWORD=postgres" >> .env
+          echo "JPA_DDL_AUTO=update" >> .env
+          echo "JPA_SHOW_SQL=true" >> .env
+          echo "SWAGGER_PATH=/swagger-ui.html" >> .env
+          echo "API_DOCS_PATH=/v3/api-docs" >> .env
+
+      - name: Construir y levantar contenedores con Docker Compose
+        run: docker-compose up -d --build
+
+      - name: Esperar a que los servicios estén listos
+        run: sleep 25
+
+      - name: Ejecutar pruebas del Backend (Java)
+        run: docker exec gas-station-backend-dev mvn test
+
+      - name: Ejecutar pruebas del Frontend (Node)
+        run: docker exec -e CI=true gas-station-frontend-dev npm test -- --watchAll=false --watch=false
+
+      - name: Apagar contenedores
+        if: always()
+        run: docker-compose down
