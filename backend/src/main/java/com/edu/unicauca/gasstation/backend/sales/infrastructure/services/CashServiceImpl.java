@@ -24,11 +24,11 @@ public class CashServiceImpl implements CashService {
     @Transactional
     public CashMovement register(CashMovementType type, LocalDate date, BigDecimal amount, String description) {
         if (amount.signum() == 0) {
-            throw new InvalidCashMovementException("Amount must not be zero");
+            throw new InvalidCashMovementException("El valor del movimiento no puede ser cero");
         }
         if (amount.signum() < 0 && !type.allowsNegativeAmount()) {
             throw new InvalidCashMovementException(
-                    "Amount must be positive for " + type + "; only ADJUSTMENT can be negative");
+                    "El valor debe ser positivo para " + type + "; solo el tipo AJUSTE puede ser negativo");
         }
         return repository.save(CashMovement.create(type, date, amount, normalize(description)));
     }
