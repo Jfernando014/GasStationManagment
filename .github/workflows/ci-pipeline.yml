@@ -44,7 +44,7 @@ jobs:
           done
 
       - name: Ejecutar pruebas del Backend (Java)
-        run: docker exec --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test
+        run: docker exec --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test -Dmaven.compiler.useIncrementalCompilation=false
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: docker exec gas-station-frontend-dev npx vitest run --globals --environment jsdom
