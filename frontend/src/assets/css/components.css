@@ -1717,3 +1717,38 @@
     .jr-solo-lectura .jr-input:focus { border-color: transparent !important; box-shadow: none; }
     .jr-solo-lectura .jr-cell--dominus::after { display: none; }
     .jr-solo-lectura .jr-archivo { border-style: solid; }
+
+    /* ==========================================================================
+       CAMPOS DE FORMULARIO CON ERROR (moléculas form-field y select-field)
+       ========================================================================== */
+    .flat-input.is-invalid, .flat-select.is-invalid {
+      border-color: var(--semantic-red);
+      background-color: var(--semantic-red-subtle);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    }
+    .field-error { margin: 0; font-size: 11.5px; font-weight: 600; color: var(--semantic-red-strong); animation: subviewFadeIn var(--duration-fast) var(--spring); }
+    .field-hint { margin: 0; font-size: 11px; color: var(--text-muted); }
+
+    /* ==========================================================================
+       ESTADO VACÍO CON ICONO (molécula empty-state)
+       ========================================================================== */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 28px 18px; text-align: center;
+      animation: subviewFadeIn var(--duration-normal) var(--spring) both;
+    }
+    .empty-state-icon {
+      display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin-bottom: 6px;
+      border-radius: 50%; background: var(--brand-primary-subtle); color: var(--brand-primary-strong);
+      animation: emptyStateIconIn var(--duration-normal) var(--spring) 80ms both;
+    }
+    .empty-state-icon--error { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); }
+    .empty-state-icon svg { width: 22px; height: 22px; }
+    .empty-state-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; color: var(--text-heading); }
+    .empty-state-text { max-width: 280px; margin: 0; font-size: 12px; line-height: 1.45; color: var(--text-muted); }
+    .empty-state-actions { display: flex; gap: 8px; margin-top: 6px; }
+    .empty-state-actions:empty { display: none; }
+    @keyframes emptyStateIconIn {
+      from { opacity: 0; transform: scale(0.6); }
+      to { opacity: 1; transform: scale(1); }
+    }

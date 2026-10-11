@@ -1,0 +1,66 @@
+/* The menu uses the app dropdown classes (components.css); here only what a form field needs. */
+.select-wrap {
+  width: 100%;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.select-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.select-trigger.is-prompt .select-value {
+  color: var(--text-muted);
+}
+.apple-dropdown-wrap.open .select-trigger {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15);
+}
+
+.select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--duration-normal) var(--spring);
+}
+.apple-dropdown-wrap.open .select-chevron {
+  transform: rotate(180deg);
+}
+
+/* Anchored to the field, at least as wide as it */
+.select-menu {
+  left: 0;
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(320px, 90vw);
+  max-height: 260px;
+  overflow-y: auto;
+  transform-origin: top left;
+}
+
+/* The option reached with the keyboard looks like the hovered one */
+.select-menu .dropdown-menu-opt.is-active {
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+}
+.select-menu .dropdown-menu-opt + .dropdown-menu-opt {
+  margin-top: 2px;
+}
+.select-menu .dropdown-menu-opt svg {
+  flex-shrink: 0;
+  margin-left: 12px;
+}

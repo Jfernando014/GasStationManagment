@@ -1,0 +1,23 @@
+<label class="item-label" [for]="fieldId()">
+  {{ label() }}
+  @if (required()) {
+    <span class="star">*</span>
+  }
+</label>
+<input
+  class="flat-input"
+  [class.is-invalid]="errorMessage()"
+  [id]="fieldId()"
+  [type]="type()"
+  [placeholder]="placeholder()"
+  [formControl]="control()"
+  [attr.maxlength]="nativeMaxLength()"
+  [attr.inputmode]="inputMode()"
+  [attr.aria-invalid]="errorMessage() ? true : null"
+  [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : null"
+  (input)="onInput($event)">
+@if (errorMessage(); as message) {
+  <p class="field-error" [id]="fieldId() + '-help'">{{ message }}</p>
+} @else if (hint()) {
+  <p class="field-hint" [id]="fieldId() + '-help'">{{ hint() }}</p>
+}
