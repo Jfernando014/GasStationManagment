@@ -4,7 +4,7 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: increments 1 and 2 provide pure domain types; 3A adds the schema and decimal policy; 3B adds Java registration/query persistence and Hibernate validation. REST endpoints remain outside scope.
+- HU-14: increments 1 and 2 provide pure domain types; 3A adds the schema and decimal policy; 3B adds Java registration/query persistence and Hibernate validation; 3C adds authenticated REST registration and queries with an explicit ADMIN write guard. Excel calculations remain outside scope.
 - HU-16: pending; requires real historical sales from the owning sales module.
 - HU-17: pending; requires approved scenario rules and the same real sales source.
 
@@ -65,8 +65,8 @@ No conversion or dependency on inventory is introduced in this increment.
 - Whether zero remains valid as a final business rule and any future business amount limits or rounding policy;
   the provisional technical storage limits are approved for increment 3A.
 - Whether configured fuel targets will be broken down by individual product.
-- REST API, authorization, additional audit requirements and future schema evolution.
-- Editing lock rules, permitted operations and authorized users.
+- Additional audit requirements and future schema evolution. Registration HTTP authorization is implemented in 3C.
+- Editing lock rules and any future edit/delete operations; neither operation is exposed by the targets API.
 - Monthly consistency rules, if any, relative to an annual target.
 - Hourly weights, parameter versions, titular/support split applicability and individual results.
 - Manual adjustments, holidays, operational date of night shifts and historical-average denominator.
@@ -276,3 +276,130 @@ Java representability policy; this existing boundary remains unchanged. Changing
 - Increment 3B: implemented registration/query persistence; validated the real V9 mapping with PostgreSQL,
   Flyway and Hibernate validate, and confirmed all 84 selected cases passed after correcting one test mock.
   No commits or push.
+
+## Increment 3C: REST registration and queries
+
+Baseline verified: clean Git checkout at `2dcf6aa`, branch `feature/back/sales-targets-statistics`.
+The application is intended for a single administrator. Only sales sources, sales tests and this document
+were changed. Security, other modules, V1-V9, dependencies, Docker and configuration files are unchanged.
+
+### Files
+
+Production files under `backend/src/main/java/com/edu/unicauca/gasstation/backend/`:
+
+- `sales/api/SalesTargetController.java`: the four REST operations and explicit ADMIN registration guard.
+- `sales/api/dto/CreateSalesTargetRequest.java`: year, optional month, category, BigDecimal value and unit;
+  Jakarta validation. ID and createdAt are not request DTO fields and cannot affect generated metadata.
+- `sales/api/dto/SalesTargetResponse.java`: immutable HTTP response with database ID and creation Instant.
+- `sales/infrastructure/mappers/SalesTargetApiMapper.java`: HTTP/domain conversion without rounding or normalization.
+- `sales/api/SalesTargetExceptionHandler.java`: ProblemDetail handling scoped exclusively to this controller.
+- `sales/exception/SalesTargetNotFoundException.java`: absent individual query result.
+
+Tests under `backend/src/test/java/com/edu/unicauca/gasstation/backend/`:
+
+- `sales/api/SalesTargetControllerTest.java`: 25 MVC and local-guard cases.
+- `sales/api/SalesTargetApiIntegrationTest.java`: 2 servlet HTTP/PostgreSQL integration cases.
+- `sales/infrastructure/mappers/SalesTargetApiMapperTest.java`: 2 mapper cases.
+
+### HTTP contract
+
+| Method and route | Behavior |
+| --- | --- |
+| POST `/api/v1/sales/targets` | ADMIN only; 201, response body and Location pointing to the generated ID. |
+| GET `/api/v1/sales/targets/{id}` | 200 for a stored target, 404 if absent. |
+| GET `/api/v1/sales/targets/by-identity?year=2026&category=FUEL_AGGREGATE` | Exact annual lookup; omitted month means annual, not all months. |
+| GET `/api/v1/sales/targets/by-identity?year=2026&month=8&category=BASKET` | Exact monthly lookup; 404 if absent. |
+| GET `/api/v1/sales/targets?year=2026` | 200 with annual/monthly targets, or [] for an empty year. |
+
+All GET routes retain authentication from the existing global security chain. The controller delegates all
+registration and queries to SalesTargetService within the same sales module. No cross-module domain access
+or direct persistence access is introduced by the controller. No PUT, PATCH or DELETE is exposed.
+Month 0/13, empty/blank month and nonnumeric month are rejected. No new business year limits are imposed.
+
+Monthly fuel example (example data, not a default):
+
+```json
+{"year":2026,"month":8,"category":"FUEL_AGGREGATE","value":26920,"unit":"GALLONS"}
+```
+
+Annual basket example:
+
+```json
+{"year":2026,"month":null,"category":"BASKET","value":8400000,"unit":"COP"}
+```
+
+Response fields are `id`, `year`, nullable `month`, `category`, `value`, `unit`, `createdAt`.
+createdAt is the database-generated Instant serialized as ISO-8601. Amounts are JSON numbers bound directly
+to BigDecimal. Clients must avoid lossy floating-point conversion. Original domain scale is preserved during
+HTTP mapping; after PostgreSQL retrieval only numeric equality is guaranteed, as approved in 3A.
+Zero remains accepted. Category/unit invariants remain in SalesTarget. Exact representability remains enforced
+by SalesTargetService and the persistence adapter; no @Digits annotation rejects otherwise valid extra zeros.
+There are no individual calculations, automatic annual division, maximum-sales fields or edit locks.
+
+### Security and errors
+
+The sole targets POST method calls requireAdmin(Authentication) before mapping or invoking register.
+It rejects null, unauthenticated and anonymous authentication, even an anonymous token carrying ADMIN;
+authenticated principals need the exact authority ADMIN. ROLE_ADMIN is rejected. No client role is read.
+There is no @PreAuthorize dependency, no new filter, no copied JWT implementation and no security configuration change.
+MVC tests inspect the registered routes: exactly one targets POST maps to this guarded method, with no edit/delete routes.
+Existing journal POST operations are separate and do not call SalesTargetService or register targets.
+
+With the real existing security chain and JWT filter active, valid ADMIN requests succeed; authenticated
+READ_ONLY/ROLE_ADMIN requests produce 403 ProblemDetail and no service call. Anonymous POST and GET requests
+produce 403 from the unchanged global security chain and no service call. This is the actual observed behavior,
+not a promise of 401. The local missing-authentication exception maps to 401 only if execution reaches the controller.
+
+Sales errors use application/problem+json. Bean validation is 400 with code VALIDATION_ERROR and field errors;
+domain/storage argument errors are 400 INVALID_SALES_TARGET; specific duplicates are 409 DUPLICATE_SALES_TARGET;
+individual misses are 404 SALES_TARGET_NOT_FOUND; local permission failures are 403 ACCESS_DENIED.
+Malformed JSON, missing query parameters and type mismatches use inherited ResponseEntityExceptionHandler
+ProblemDetail responses (400). Unclassified database integrity failures are not caught or mislabeled as duplicates
+or validation errors; a dedicated MVC test confirms they propagate.
+
+JWT parsing/expiry failures in the existing global filter remain outside the sales advice. Invalid or expired
+JWT behavior was not tested in 3C and is not asserted to always return 401. Login/password verification is also
+not part of these tests: they use real generated JWTs and the real filter/chain, with a mocked UserDetailsService
+and AuthenticationProvider. No new production role was added for permission-denial tests.
+
+### Execution and results
+
+Executed offline from backend, using existing dependencies and disposable PostgreSQL 16 containers:
+
+```powershell
+mvn -o '-Dtest=SalesTarget*Test' test
+```
+
+Final result: **BUILD SUCCESS**, **113 tests, 0 failures, 0 errors, 0 skipped**.
+Existing regression suite: 84 cases. New cases: 25 controller/security, 2 HTTP integration, 2 mapper = 29.
+The individual existing suite counts remain 19 + 3 + 15 + 22 + 7 + 6 + 1 + 6 + 5 = 84.
+Results were confirmed from existing Surefire XML/text reports in backend/target/surefire-reports.
+
+Coverage includes ADMIN 201/Location/metadata; non-ADMIN and anonymous denials without registration calls;
+local null/anonymous/unauthenticated defenses; route inventory; malformed/invalid bodies, null fields,
+negative values, incorrect units, months, query parameters, duplicate/missing results; decimal scale and
+representability. Integration uses real controller/service/JPA with MockMvc, active security, PostgreSQL
+16.13, Flyway V1-V9 and Hibernate ddl-auto=validate. It checks both duplicate indexes, annual/monthly queries,
+numeric equality on retrieval, no inserted rows for rejected decimals, and acceptance of zero COP.
+It is servlet HTTP integration, not a live TCP server or an end-to-end login test. The development database
+was not accessed and no migrations were run against it.
+
+Earlier runs passed 109 and then 113 cases but emitted Hikari shutdown warnings followed by Surefire's
+`Surefire is going to kill self fork JVM. The exit has elapsed 30 seconds after System.exit(0).`
+The new HTTP integration test now closes its context with @DirtiesContext(AFTER_CLASS), so resources close
+before its container is removed. The final full 113-case rerun completed normally in 34.868 seconds without
+that shutdown message. No tests failed or were skipped in any of these runs.
+
+The existing Flyway warning persists:
+
+```text
+Flyway upgrade recommended: PostgreSQL 16.13 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 15.
+```
+
+Mockito/Java dynamic-agent and class-sharing warnings persist; initial compilation also reported implicit
+annotation-processing warnings. Expected unique-constraint SQL errors appear in duplicate test logs.
+No dependencies were installed or security settings changed to suppress warnings.
+
+- Increment 3C: completed target registration/query REST API within sales, validated ADMIN protection with
+  active existing filters and all 113 selected tests. Business decisions listed above remain pending.
+  No commit or push.
