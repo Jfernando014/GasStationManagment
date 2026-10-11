@@ -1,0 +1,62 @@
+<label class="item-label" [class.jr-sr]="labelHidden()" [id]="fieldId() + '-label'" [for]="fieldId()">
+  {{ label() }}
+  @if (required()) {
+    <span class="star">*</span>
+  }
+</label>
+<div class="apple-dropdown-wrap select-wrap" [class.open]="open()">
+  <button
+    #trigger
+    type="button"
+    class="flat-select select-trigger"
+    role="combobox"
+    aria-haspopup="listbox"
+    [id]="fieldId()"
+    [class.is-invalid]="errorMessage()"
+    [class.is-prompt]="showsPrompt()"
+    [disabled]="control().disabled"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="fieldId() + '-listbox'"
+    [attr.aria-activedescendant]="open() && activeIndex() >= 0 ? fieldId() + '-option-' + activeIndex() : null"
+    [attr.aria-invalid]="errorMessage() ? true : null"
+    [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : null"
+    (click)="toggle()"
+    (keydown)="onKeydown($event)">
+    <span class="select-value">{{ selectedLabel() }}</span>
+    <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  </button>
+  <div
+    class="dropdown-floating-menu select-menu"
+    role="listbox"
+    [id]="fieldId() + '-listbox'"
+    [attr.aria-labelledby]="fieldId() + '-label'"
+    [attr.inert]="open() ? null : ''">
+    @for (option of items(); track option.value; let index = $index) {
+      <button
+        type="button"
+        role="option"
+        tabindex="-1"
+        class="dropdown-menu-opt"
+        [id]="fieldId() + '-option-' + index"
+        [class.selected]="isSelected(option)"
+        [class.is-active]="index === activeIndex()"
+        [attr.aria-selected]="isSelected(option)"
+        (click)="choose(option)"
+        (mouseenter)="activeIndex.set(index)">
+        <span>{{ option.label }}</span>
+        @if (isSelected(option)) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        }
+      </button>
+    }
+  </div>
+</div>
+@if (errorMessage(); as message) {
+  <p class="field-error" [id]="fieldId() + '-help'">{{ message }}</p>
+} @else if (hint()) {
+  <p class="field-hint" [id]="fieldId() + '-help'">{{ hint() }}</p>
+}
