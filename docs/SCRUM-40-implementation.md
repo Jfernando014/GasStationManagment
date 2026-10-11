@@ -4,9 +4,9 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: increments 1-3C provide configured targets and authenticated REST persistence; the workbook distribution increment below adds a pure calculation engine, sourced parameter snapshots and ADMIN calculation endpoints. Automatic live-history/schedule retrieval and unconfirmed exceptions remain unavailable.
-- HU-16: pending; requires real historical sales from the owning sales module.
-- HU-17: pending; requires approved scenario rules and the same real sales source.
+- HU-14: partial against the original acceptance criteria: configured annual/monthly targets, authenticated REST persistence and parameterized individual distribution exist. Venta maxima, the final period-lock contract and unconditional annual 70/30 behavior remain unresolved; see the original-requirements traceability matrix below.
+- HU-16: exact day/night mathematics with explicit inputs implemented; live historical query and end-to-end consultation remain blocked by the missing journey sales source.
+- HU-17: exact two-scenario mathematics with explicit inputs implemented; live data integration is blocked and the comparison graph belongs to the excluded frontend scope.
 
 Increment 3A baseline: clean Git checkout at `49aae77` on `feature/back/sales-targets-statistics`; V9 was available.
 V9 now defines `sales_targets`; it was executed only in a disposable test container.
@@ -717,3 +717,106 @@ workers/shifts son mocks explícitos. No se conectaron agendas o ventas reales e
 Las migraciones se ejecutaron solo en bases desechables de Testcontainers. Persisten las advertencias
 anteriores de compatibilidad Flyway/PostgreSQL y agente Mockito; no causaron fallos.
 No se instalaron dependencias, modificaron módulos de compañeros ni realizaron commits o push.
+
+### 2026-10-11 — Trazabilidad de requisitos originales: HU-14, HU-16 y HU-17
+
+Verificación inicial: rama `feature/back/sales-targets-statistics`, HEAD `d7a191c`, Git limpio.
+Ambos libros originales se leyeron directamente como OOXML mediante .NET, sin instalar dependencias
+ni alterar los Excel. Se comprobaron todas las hojas, las celdas de las historias y las fórmulas
+originales, incluyendo referencias y fórmulas compartidas. Las filas vacías 11, 16 y 18 confirman
+los límites de las historias; HU-15 y HU-18 no se incorporan a SCRUM-40.
+
+Fuente principal: `docs/references/Historias Usuario Estacion.xlsx`, hoja **Estadísticas y Ventas**.
+El Excel operativo verifica matemáticas, no añade historias ni sustituye criterios.
+
+#### Descripción y propósito literales de las historias
+
+- HU-14, `B9:E9`: rol «Yo como ADMINISTRADOR»; descripción (`D9`): «Necesito registrar las metas
+  del año, separadas en combustibles y en lubricantes y otros, con su reparto entre titular y apoyo»;
+  propósito (`E9`): «Para que queden fijas durante el período y sirvan de referencia en todos los reportes.»
+- HU-16, `B15:E15`: rol «Yo como ADMINISTRADOR»; descripción (`D15`): «Necesito ver el promedio
+  de ventas separado por jornada diurna y nocturna.»; propósito (`E15`): «Para comparar el comportamiento
+  de cada turno.»
+- HU-17, `B17:E17`: rol «Yo como ADMINISTRADOR»; descripción (`D17`): «Necesito comparar escenarios
+  específicos de venta (ej. lunes día vs. lunes noche).»; propósito (`E17`): «Para entender patrones de
+  venta según día y horario.»
+
+#### Matriz de trazabilidad de criterios completos
+
+Los estados finales califican el criterio completo, no solo su núcleo matemático.
+
+| Historia / ubicación original | Criterio textual completo (G, H, I, J) | Implementación concreta | Prueba | Estado inicial → final / dependencia |
+| --- | --- | --- | --- | --- |
+| HU-14, escenario 1, `F9:J9` | **Registro exitoso de metas anuales.** Contexto: «Dado que el administrador ingresa meta y venta máxima válidas para combustibles y para lubricantes y otros.» Evento: «Clic en el botón GUARDAR.» Resultado: «El sistema muestra 'Metas del año guardadas correctamente' y las bloquea contra edición para ese período.» | Existente: `SalesTargetController.register`, `POST /api/v1/sales/targets`, `SalesTargetService.register`, V9 y `SalesTargetRepository` sin edición/eliminación. No implementa venta máxima ni el mensaje literal de interfaz. | `SalesTargetApiIntegrationTest.httpRegistersQueriesAndRejectsBothKindsOfDuplicates`; `SalesTargetControllerTest.decimalAndAnnualBasketAreMappedWithoutNormalization`, `onlyOneRegistrationRouteAndNoEditOrDelete`. | **PARCIAL → PARCIAL**. Definir venta máxima y alcance contractual del bloqueo. La ausencia de operaciones de edición no equivale a un bloqueo SQL o una regla temporal. Confirmar la correspondencia completa entre BASKET y «lubricantes y otros». El mensaje visual pertenece al frontend excluido. |
+| HU-14, escenario 2, `F10:J10` | **Reparto entre titular y apoyo.** Contexto: «Dado que existe una meta global.» Evento: «El sistema genera las metas individuales.» Resultado: «Reparte 70 % al titular y 30 % al apoyo.» | Existente: `SalesTargetDistributionEngine.calculate`, perfiles explícitos 0.7/0.3 y `POST /api/v1/sales/targets/{id}/distribution`. Calcula metas mensuales con cobertura y normaliza coeficientes entre activos. | `SalesTargetDistributionEngineTest.explicitSharesMatchExcelOfficialAndReferenceWithSingleAndPairedWorkers`, `matchesOriginalWorkbookCachedSharesUsingOriginalParametersAndSchedule`. | **PARCIAL → PARCIAL**. El perfil parametrizable permite otros porcentajes y un único activo recibe el 100 %; no demuestra un 70/30 incondicional. El motor rechaza metas anuales. Resolver la relación entre el criterio literal, las condiciones del Excel y las decisiones previas; no se cambió el motor ni se dividió una meta anual. |
+| HU-16, escenario 1, `F15:J15` | **Visualización de promedios por jornada.** Contexto: «En caso de seleccionar un RANGO DE FECHAS en la pantalla PROMEDIOS DÍA/NOCHE.» Evento: «Clic en el botón CONSULTAR.» Resultado: «El sistema despliega el promedio de ventas de la jornada diurna y de la jornada nocturna para el rango seleccionado.» | Nuevo: `SalesJourneyStatistics.averages(from, to, category, explicitSales)`, con resultados DAY y NIGHT, total, número de observaciones y promedio racional opcional. No es un endpoint de ventas reales. | `SalesTargetJourneyStatisticsTest.hu16SeparatesJourneysAndFiltersInclusiveDates`, `numericZerosCountAsObservationsUnlikeMissingJourneys`, `repeatingAverageUsesExistingExactFractionWithoutRounding`. | **PENDIENTE → PARCIAL**; núcleo matemático **IMPLEMENTADO**. Consulta real **BLOQUEADA**: falta fuente de cantidades por fecha/jornada/categoría. Visualización queda fuera del backend. |
+| HU-17, escenario 2 tal como figura en `F17:J17` | **Comparación exitosa de escenarios.** Contexto: «En caso de seleccionar dos ESCENARIOS (día de la semana + turno) en la pantalla COMPARAR ESCENARIOS.» Evento: «Clic en el botón COMPARAR.» Resultado: «El sistema despliega una gráfica comparativa de ventas entre los dos escenarios seleccionados.» | Nuevo: `SalesJourneyStatistics.compare(from, to, category, first, second, explicitSales)`, con dos escenarios explícitos y sus totales, observaciones y promedios. No genera gráficas ni consulta datos ficticios por HTTP. | `SalesTargetJourneyStatisticsTest.hu17ComparesOnlyTheTwoRequestedWeekdayJourneyScenarios`, `emptyAndSameScenarioComparisonsAreExplicitAndDeterministic`. | **PENDIENTE → PARCIAL**; núcleo matemático **IMPLEMENTADO**. Fuente real **BLOQUEADA** por la misma dependencia; gráfica excluida por alcance. Política de festivos pendiente, sin inferir excepciones. |
+
+#### Matemáticas verificadas y límites del nuevo componente
+
+El Excel operativo `6 OBJETIVOS VENDEDORES BELLAVISTA AGOSTO 2026 (2).xlsx` contiene:
+
+- `BASE DE DATOS!F1`: «venta turno»; `D2`: `IF(ISEVEN(ROW()),"dia","noche")`.
+- `ESCENARIOS!B3`: `AVERAGEIF('BASE DE DATOS'!H:H,A3,'BASE DE DATOS'!F:F)` para lunes día.
+- `ESCENARIOS!B4`: `AVERAGEIF('BASE DE DATOS'!H:H,A4,'BASE DE DATOS'!F:F)` para lunes noche.
+  B5:B16 repiten ese cálculo para los otros días/turnos.
+- `BASE DE DATOS!H2`: `IF(C2="festivo","festivo - "&D2,B2&" - "&D2)`.
+  Esa clasificación especial no se aplica automáticamente en el nuevo componente: no existe
+  una decisión aprobada para resolverla dentro de los escenarios calendáricos de HU-17.
+- `PROM DIA!B2` promedia ventas por día de semana; no separa por sí solo jornada diurna/nocturna.
+  `PROM DIA!E2` filtra apoyo por `>=10`; ese umbral es ajeno a los dos criterios y no se añadió.
+- `ESCENARIOS!E2:E8` excluye cero para históricos diarios de distribución. Se mantiene intacto
+  `HistoricalDayAverages`; esa regla NO se copia al promedio de ventas por turno de B3:B16.
+
+Fórmula implementada: `promedio = suma de valores numéricos seleccionados / número de observaciones`.
+HU-16 selecciona por rango inclusivo y jornada; HU-17 añade día de semana y los dos escenarios.
+Se reutiliza `ExactFraction`, sin `double`, MathContext ni división decimal redondeada. Los ceros
+numéricos cuentan; un dato ausente no se inventa como cero. Sin observaciones se devuelve
+`Optional.empty()`, total cero y contador cero. No se divide por días calendario sin registro.
+
+Las entradas son totales ya consolidados por fecha/jornada para una categoría homogénea. Se rechazan
+duplicados de fecha/jornada dentro del rango; no se suman silenciosamente filas de vendedores.
+No se atribuyen horas a DAY/NIGHT ni se deducen fechas operativas nocturnas. La función matemática
+admite importes explícitos con signo, como AVERAGEIF; no calcula devoluciones, ajustes ni una política
+de ventas negativas. Conserva precisión y no aplica la política de almacenamiento porque no persiste.
+La unidad del resultado reutiliza GALLONS para FUEL_AGGREGATE y COP para BASKET.
+
+#### Dependencias y alcance conservado
+
+`SalesHistoryReadPort` no tiene implementación y solo describe totales diarios, insuficientes para
+separar jornadas. Falta una fuente real de registros con fecha, clasificación de jornada, categoría
+y cantidad ya consolidada. No se creó otro puerto hipotético, tabla ni endpoint de ventas simuladas.
+Los journals existentes contienen estado/pasos, no importes vendidos. Workers/shifts aportan catálogo
+y validación de personas, no esa fuente de ventas. No se accedió a repositorios internos de otros módulos.
+
+Se conservan los endpoints, autorización ADMIN, perfiles, reparto, precisión y persistencia existentes.
+No se desarrolló HU-15, HU-18, incentivos, dashboards, gráficos ni importación general del Excel.
+No se modificó HU-14 al aparecer la diferencia entre su criterio literal de 70/30 y el motor aprobado:
+se documentó como parcial y se continuó con los criterios matemáticos independientes de HU-16/HU-17.
+
+#### Archivos y verificación real
+
+Creado:
+- `backend/src/main/java/com/edu/unicauca/gasstation/backend/sales/domain/calculation/SalesJourneyStatistics.java`
+- `backend/src/test/java/com/edu/unicauca/gasstation/backend/sales/domain/services/SalesTargetJourneyStatisticsTest.java`
+
+Modificado: `docs/SCRUM-40-implementation.md` (estado actual y esta matriz).
+
+Ejecutado desde backend: `mvn -o '-Dtest=SalesTarget*Test' test`.
+**BUILD SUCCESS: 148 pruebas, 0 fallos, 0 errores, 0 omitidas; 43.800 segundos.**
+Son las 140 anteriores y ocho nuevas de HU-16/HU-17: separación/rango inclusivo, dos escenarios,
+cero frente a ausencia, exactitud 4/3, escenarios iguales/reordenamiento/inmutabilidad, duplicados/rango
+inválido, datos obligatorios y precisión/signo. Los nuevos valores son fixtures sintéticos explícitos.
+La regresión existente ejecutó PostgreSQL 16/Testcontainers, Flyway V1–V10 y Hibernate validate;
+no se ejecutaron migraciones en desarrollo. No se añadieron pruebas de persistencia para una función
+sin persistencia nueva. Persisten advertencias Flyway/PostgreSQL y Mockito, y apareció una advertencia
+al destruir el registro Modulith en el contexto reducido de pruebas (`UnknownEntityException` para
+`JpaEventPublication`); no produjo errores de pruebas y no se cambió la configuración ajena al alcance.
+
+SHA256 de las fuentes leídas:
+- Historias: `7F8F5626A8194549ED28DE8023F0B1A83B1E7D974F78BE12AAC1F83915B40245`.
+- Operativo: `3A4BBD81E2254DD61FEDC73A568DDFED29C879BD53997E437EF72AE9CABD7555`.
+
+No se modificaron Excel, dependencias, configuración, credenciales, módulos de compañeros o migraciones.
+No se realizaron commits ni push. SCRUM-40 no se declara cerrado mientras los criterios parciales
+y bloqueos anteriores continúen pendientes.
