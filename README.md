@@ -10,7 +10,7 @@ This repository contains the full-stack architecture for the **Gas Station Manag
 
 | Layer | Technology | Architecture Decision |
 |---|---|---|
-| **Backend** | Java 21, Spring Boot 3.2.x, Spring Modulith, Spring Data JPA, PostgreSQL, MapStruct, Swagger/OpenAPI | **Modular Monolith with Event Bus** |
+| **Backend** | Java 25, Spring Boot 3.2.x, Spring Modulith, Spring Data JPA, PostgreSQL, MapStruct, Swagger/OpenAPI | **Modular Monolith with Event Bus** |
 | **Frontend** | Angular 17+, TypeScript, RxJS, PWA (Progressive Web App) | **PWA + Atomic Design + Feature Modules** |
 
 ---

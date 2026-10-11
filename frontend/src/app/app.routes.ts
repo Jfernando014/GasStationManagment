@@ -20,6 +20,11 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'gastos',
+        loadComponent: () => import('../atomic-design/pages/administrative-expenses/administrative-expenses-page.component')
+          .then(m => m.AdministrativeExpensesPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }

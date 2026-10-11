@@ -1,0 +1,104 @@
+<section class="expenses-shell">
+  <div class="panel">
+    <h2>Registrar gasto administrativo</h2>
+
+    <div *ngIf="errorMessage" class="alert">
+      {{ errorMessage }}
+    </div>
+
+    <div class="field">
+      <label for="expenseDate">Fecha del gasto</label>
+      <input id="expenseDate" type="date" [(ngModel)]="expenseDate" />
+    </div>
+
+    <div class="field">
+      <label for="amount">Valor en COP</label>
+      <input id="amount" type="number" min="1" step="100" [(ngModel)]="amount" />
+    </div>
+
+    <div class="field">
+      <label for="description">Descripción</label>
+      <textarea id="description" placeholder="Ej: Servicios públicos, suministro, nómina administrativa" [(ngModel)]="description"></textarea>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="submitExpense()" [disabled]="isLoading">
+      {{ isLoading ? 'Guardando...' : 'Registrar gasto' }}
+    </button>
+  </div>
+
+  <div class="panel">
+    <h3>Gestión de gastos</h3>
+
+    <div class="toolbar">
+      <div class="field">
+        <label>Modo de filtro</label>
+        <select [(ngModel)]="filterMode" (change)="loadExpenses()">
+          <option value="fortnight">Por quincena</option>
+          <option value="date-range">Por rango de fechas</option>
+        </select>
+      </div>
+
+      <div class="field" *ngIf="filterMode === 'fortnight'">
+        <label>Mes</label>
+        <select [(ngModel)]="month" (change)="loadExpenses()">
+          <option value="2026-08">Agosto 2026</option>
+          <option value="2026-09">Septiembre 2026</option>
+        </select>
+      </div>
+
+      <div class="field" *ngIf="filterMode === 'fortnight'">
+        <label>Quincena</label>
+        <select [(ngModel)]="fortnight" (change)="loadExpenses()">
+          <option [ngValue]="1">Quincena 1</option>
+          <option [ngValue]="2">Quincena 2</option>
+        </select>
+      </div>
+
+      <div class="field" *ngIf="filterMode === 'date-range'">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="dateFrom" (change)="loadExpenses()" />
+      </div>
+
+      <div class="field" *ngIf="filterMode === 'date-range'">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="dateTo" (change)="loadExpenses()" />
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="metric">
+        <span class="metric-label">Total filtrado</span>
+        <span class="metric-value">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Cantidad de gastos</span>
+        <span class="metric-value">{{ expenses.length }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="empty-state">Cargando gastos...</div>
+
+    <div *ngIf="!isLoading && expenses.length === 0" class="empty-state">
+      No hay gastos para este filtro.
+    </div>
+
+    <table *ngIf="!isLoading && expenses.length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th class="amount">Valor</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let expense of expenses">
+          <td>{{ expense.date }}</td>
+          <td>{{ expense.description }}</td>
+          <td class="amount">{{ expense.amount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td><button class="danger-btn" type="button" (click)="deleteExpense(expense.id)">Eliminar</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
