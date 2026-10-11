@@ -18,6 +18,7 @@ public class SalesTargetService {
     public StoredSalesTarget register(SalesTarget target) {
         Objects.requireNonNull(target, "target");
         SalesTargetStoragePolicy.validate(target.value());
+        if (target.maximumSale() != null) SalesTargetStoragePolicy.validate(target.maximumSale());
         return repository.register(target);
     }
 

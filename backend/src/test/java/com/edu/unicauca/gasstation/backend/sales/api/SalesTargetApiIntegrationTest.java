@@ -51,7 +51,7 @@ class SalesTargetApiIntegrationTest {
     @Import({SalesTargetController.class, SalesTargetExceptionHandler.class, SalesTargetApiMapper.class,
             SalesTargetService.class, SalesTargetRepositoryAdapter.class, SalesTargetPersistenceMapper.class,
             SecurityConfig.class, JwtAuthenticationFilter.class, JwtService.class,
-            SalesDistributionController.class, DistributionProfileRepositoryAdapter.class, PublicShiftCoverageResolver.class,
+            SalesDistributionController.class, SalesStatisticsController.class, DistributionProfileRepositoryAdapter.class, PublicShiftCoverageResolver.class,
             com.edu.unicauca.gasstation.backend.sales.application.SalesDistributionService.class})
     static class Application { }
 
@@ -82,6 +82,7 @@ class SalesTargetApiIntegrationTest {
         for (String month : new String[]{"null", "8"}) {
             var body = SalesTargetControllerTest.BODY.replace("\"month\":8", "\"month\":" + month)
                     .replace("26920", "1.2300000000000");
+            if (month.equals("null")) body=body.replace("\"unit\":\"GALLONS\"", "\"unit\":\"GALLONS\",\"maximumSale\":10");
             var response = mvc.perform(post(base).header("Authorization", token).contentType(MediaType.APPLICATION_JSON).content(body))
                     .andExpect(status().isCreated()).andExpect(jsonPath("$.createdAt").isNotEmpty()).andReturn().getResponse();
             mvc.perform(get(response.getHeader("Location")).header("Authorization", token)).andExpect(status().isOk());
@@ -195,6 +196,39 @@ class SalesTargetApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content(prefix+row+","+row+"]}"))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(workers,shifts);
+    }
+
+    @Test
+    void annualMaximumSaleIsRequiredAndPersistsWithoutAFormulaOrRounding() throws Exception {
+        String annual=SalesTargetControllerTest.BODY.replace("\"month\":8","\"month\":null");
+        mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                .content(annual)).andExpect(status().isBadRequest());
+        for(var invalid:List.of("-1","1E18","1E-13")) {
+            mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                    .content(annual.replace("\"unit\":\"GALLONS\"","\"unit\":\"GALLONS\",\"maximumSale\":"+invalid)))
+                    .andExpect(status().isBadRequest());
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_targets",Integer.class)).isZero();
+        var response=mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                .content(annual.replace("\"unit\":\"GALLONS\"","\"unit\":\"GALLONS\",\"maximumSale\":1.2300000000000")))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.maximumSale").value(1.23))
+                .andExpect(jsonPath("$.message").value("Metas del año guardadas correctamente")).andReturn().getResponse();
+        mvc.perform(get(response.getHeader("Location")).header("Authorization",token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.maximumSale").value(1.23));
+        assertThat(jdbc.queryForObject("SELECT maximum_sale FROM sales_targets",BigDecimal.class)).isEqualByComparingTo("1.23");
+    }
+
+    @Test
+    void explicitStatisticsHttpUsesClientObservationsWithoutCreatingSalesRows() throws Exception {
+        var sales=SalesTargetStatisticsControllerTest.SALES;
+        mvc.perform(post("/api/v1/sales/averages/explicit").header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(sales))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.source").value("CLIENT_SUPPLIED_OBSERVATIONS"))
+                .andExpect(jsonPath("$.series[0].average").value(15));
+        mvc.perform(post("/api/v1/sales/scenarios/compare/explicit").header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                .content(SalesTargetStatisticsControllerTest.comparison(sales)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.series[1].average").value(8));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_targets",Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_distribution_profiles",Integer.class)).isZero();
     }
 
     @Test

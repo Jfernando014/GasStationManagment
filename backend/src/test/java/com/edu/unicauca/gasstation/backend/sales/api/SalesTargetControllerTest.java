@@ -52,6 +52,7 @@ class SalesTargetControllerTest {
         when(service.register(any())).thenAnswer(call -> {
             SalesTarget target = call.getArgument(0);
             SalesTargetStoragePolicy.validate(target.value());
+            if (target.maximumSale() != null) SalesTargetStoragePolicy.validate(target.maximumSale());
             return new StoredSalesTarget(1L, target, Instant.parse("2026-08-01T00:00:00Z"));
         });
     }
@@ -127,7 +128,7 @@ class SalesTargetControllerTest {
 
     @Test
     void decimalAndAnnualBasketAreMappedWithoutNormalization() throws Exception {
-        String body = "{\"year\":2026,\"category\":\"BASKET\",\"value\":1.2300000000000,\"unit\":\"COP\"}";
+        String body = "{\"year\":2026,\"category\":\"BASKET\",\"value\":1.2300000000000,\"unit\":\"COP\",\"maximumSale\":10}";
         mvc.perform(post(BASE).header("Authorization", bearer("ADMIN")).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.month").isEmpty());
         var captor = org.mockito.ArgumentCaptor.forClass(SalesTarget.class);

@@ -8,7 +8,12 @@ import java.util.Objects;
  * Preserves the supplied decimal value and scale without rounding or unit conversion.
  * Zero is accepted while its business rule remains pending.
  */
-public record SalesTarget(SalesTargetIdentity identity, BigDecimal value, SalesTargetUnit unit) {
+public record SalesTarget(SalesTargetIdentity identity, BigDecimal value, SalesTargetUnit unit, BigDecimal maximumSale) {
+
+    /** Legacy targets have no maximum sale; no value is inferred for them. */
+    public SalesTarget(SalesTargetIdentity identity, BigDecimal value, SalesTargetUnit unit) {
+        this(identity, value, unit, null);
+    }
 
     public SalesTarget {
         Objects.requireNonNull(identity, "identity");
@@ -17,6 +22,8 @@ public record SalesTarget(SalesTargetIdentity identity, BigDecimal value, SalesT
         if (value.signum() < 0) {
             throw new IllegalArgumentException("value must not be negative");
         }
+        if (maximumSale != null && maximumSale.signum() < 0)
+            throw new IllegalArgumentException("maximumSale must not be negative");
 
         SalesTargetUnit expectedUnit = switch (identity.category()) {
             case FUEL_AGGREGATE -> SalesTargetUnit.GALLONS;

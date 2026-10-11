@@ -14,6 +14,7 @@ public class SalesTargetPersistenceMapper {
         entity.setTargetMonth(period.month() == null ? null : period.month().shortValue());
         entity.setCategory(target.identity().category());
         entity.setTargetValue(target.value());
+        entity.setMaximumSale(target.maximumSale());
         entity.setUnit(target.unit());
         return entity;
     }
@@ -23,6 +24,6 @@ public class SalesTargetPersistenceMapper {
         SalesTargetIdentity identity = new SalesTargetIdentity(
                 new SalesTargetPeriod(entity.getTargetYear(), month), entity.getCategory());
         return new StoredSalesTarget(entity.getId(),
-                new SalesTarget(identity, entity.getTargetValue(), entity.getUnit()), entity.getCreatedAt());
+                new SalesTarget(identity, entity.getTargetValue(), entity.getUnit(), entity.getMaximumSale()), entity.getCreatedAt());
     }
 }

@@ -39,7 +39,7 @@ class SalesTargetMigrationTest {
     @Test
     void migratesEmptyDatabaseAndIsRepeatableWithoutNewMigrations() {
         Flyway flyway = flyway("public");
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("10");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("11");
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         flyway.validate();
     }
@@ -53,13 +53,41 @@ class SalesTargetMigrationTest {
             statement.execute("INSERT INTO upgrade_test.users (username, password, role) VALUES ('migration-test', 'test', 'ADMIN')");
         }
         Flyway upgrade = flyway("upgrade_test");
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(3);
         upgrade.validate();
         try (Connection connection = connection(); Statement statement = connection.createStatement();
                 var rows = statement.executeQuery("SELECT username FROM upgrade_test.users")) {
             assertThat(rows.next()).isTrue();
             assertThat(rows.getString(1)).isEqualTo("migration-test");
         }
+    }
+
+    @Test
+    void versionElevenPreservesExistingTargetsAndConstrainsMaximumSale() throws SQLException {
+        var baseline=Flyway.configure().dataSource(POSTGRES.getJdbcUrl(),POSTGRES.getUsername(),POSTGRES.getPassword())
+                .schemas("maximum_upgrade").locations("classpath:db/migration").target("10").load();
+        baseline.migrate();
+        try(var connection=connection();var statement=connection.createStatement()) {
+            statement.execute("INSERT INTO maximum_upgrade.sales_targets(target_year,category,target_value,unit) VALUES(2026,'BASKET',10,'COP')");
+        }
+        assertThat(flyway("maximum_upgrade").migrate().migrationsExecuted).isEqualTo(1);
+        try(var connection=connection();var statement=connection.createStatement();
+            var rows=statement.executeQuery("SELECT target_value,maximum_sale FROM maximum_upgrade.sales_targets")) {
+            assertThat(rows.next()).isTrue();
+            assertThat(rows.getBigDecimal(1)).isEqualByComparingTo("10");
+            assertThat(rows.getBigDecimal(2)).isNull();
+        }
+        insert(2026,8,"BASKET","10","COP");
+        for(var invalid:new String[]{"-1","NaN"})
+            assertSqlState("23514",()->{
+                try(var connection=connection();var statement=connection.createStatement()) {
+                    statement.execute("UPDATE sales_targets SET maximum_sale='"+invalid+"'::numeric");
+                }
+            });
+        try(var connection=connection();var statement=connection.createStatement()) {
+            statement.execute("UPDATE sales_targets SET maximum_sale=1.123456789012");
+        }
+        flyway("maximum_upgrade").validate();
     }
 
     @Test

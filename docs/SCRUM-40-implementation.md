@@ -4,9 +4,9 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: partial against the original acceptance criteria: configured annual/monthly targets, authenticated REST persistence and parameterized individual distribution exist. Venta maxima, the final period-lock contract and unconditional annual 70/30 behavior remain unresolved; see the original-requirements traceability matrix below.
-- HU-16: exact day/night mathematics with explicit inputs implemented; live historical query and end-to-end consultation remain blocked by the missing journey sales source.
-- HU-17: exact two-scenario mathematics with explicit inputs implemented; live data integration is blocked and the comparison graph belongs to the excluded frontend scope.
+- HU-14: backend registration now stores/exposes maximumSale via V11; new annual HTTP registrations require it. No edit/delete operations are exposed. The existing explicit-profile engine verifies conditional 70/30. No annual-to-monthly formula or universal reparto is inferred.
+- HU-16: authenticated ADMIN REST calculation of day/night averages over explicit client observations is implemented; automatic server-history retrieval remains unavailable and is not claimed.
+- HU-17: authenticated ADMIN REST comparison supplies labelled chart series over explicit client observations; the graph itself belongs to Angular, outside this backend scope. See the final acceptance matrix for the source-version limitation.
 
 Increment 3A baseline: clean Git checkout at `49aae77` on `feature/back/sales-targets-statistics`; V9 was available.
 V9 now defines `sales_targets`; it was executed only in a disposable test container.
@@ -820,3 +820,181 @@ SHA256 de las fuentes leídas:
 No se modificaron Excel, dependencias, configuración, credenciales, módulos de compañeros o migraciones.
 No se realizaron commits ni push. SCRUM-40 no se declara cerrado mientras los criterios parciales
 y bloqueos anteriores continúen pendientes.
+
+### 2026-10-11 — Fase final backend: venta máxima y HTTP HU-16/HU-17
+
+Baseline: rama `feature/back/sales-targets-statistics`, HEAD `16d6036`, Git limpio al iniciar.
+La fuente pedida en esta fase, `docs/references/Historias Usuario Estacion(1).xlsx`, NO existe.
+Se volvió a leer el original disponible `Historias Usuario Estacion.xlsx` y el operativo de 11 hojas,
+incluyendo celdas/fórmulas OOXML. Esta matriz usa los criterios verificados del original disponible,
+no afirma equivalencia con una versión `(1)` ausente. Su verificación queda **BLOQUEADA** hasta
+disponer del archivo o confirmar que es el mismo original. No se modificó ni renombró ningún Excel.
+
+#### HU-14: dato de configuración, no fórmula
+
+`H9` exige que el administrador ingrese «meta y venta máxima válidas». Por ello `maximumSale`
+se guarda como dato independiente, con la misma unidad de la categoría, sin imponer que supere
+la meta, limitar ventas, afectar repartos o representar una venta histórica observada.
+Se admite cero y se rechazan negativos; se aplica la política existente NUMERIC(30,12), con
+validación exacta antes de escribir tanto en servicio como en adaptador. No se normaliza el BigDecimal.
+
+- Nuevos registros HTTP ANUALES: `maximumSale` obligatorio; omisión/null devuelve 400.
+- Registros MENSUALES: opcional, ya que el criterio literal se refiere a metas anuales.
+- Filas anteriores a V11: permanecen NULL, sin inventar cero ni rellenar datos.
+- El dominio conserva su constructor anterior para reconstrucción de datos previos y compatibilidad
+  de llamadas Java. La exigencia de ingreso anual se valida en el DTO HTTP, no al leer filas antiguas.
+- La respuesta de meta incluye `maximumSale`; las metas anuales incluyen el mensaje literal
+  `Metas del año guardadas correctamente` para que Angular pueda mostrarlo.
+- La API sigue sin PUT, PATCH ni DELETE; el puerto solo registra/consulta y los índices conservan
+  unicidad. No se declara un bloqueo de permisos SQL para administradores directos de la base.
+- El 70/30 se configura mediante el perfil existente y se verifica con dos activos titular/apoyo.
+  No se impone como reparto universal: un activo único recibe 100 % tras normalizar coeficientes,
+  como el Excel. No se amplió el motor a distribución anual ni se dividió una meta entre doce.
+
+V11 estaba libre, después de V10. Se agregó únicamente
+`V11__add_sales_target_maximum_sale.sql`: columna nullable y CHECK no negativo/no NaN.
+La precisión del tipo rechaza valores fuera de rango; la aplicación evita redondeos antes de guardar.
+Las migraciones V1–V10 permanecen intactas.
+
+Ejemplo de nuevo registro anual, valores ilustrativos:
+
+```json
+{"year":2026,"category":"FUEL_AGGREGATE","value":100,"unit":"GALLONS","maximumSale":120}
+```
+
+IMPORTANTE PARA ANGULAR: los registros anuales nuevos deben enviar `maximumSale`; el antiguo
+POST anual sin este campo deja de ser válido. Las solicitudes mensuales anteriores siguen funcionando.
+
+#### HTTP específico con observaciones explícitas
+
+Ambas operaciones requieren autenticación y la autoridad literal ADMIN. Reutilizan
+`SalesAdminAuthorization`, `SalesJourneyStatistics` y el advice existente con ProblemDetail.
+No consultan ni guardan observaciones. No se añadieron tablas históricas, nuevas fuentes ficticias
+ni endpoints GET que pretendan recuperar ventas reales.
+
+`POST /api/v1/sales/averages/explicit` devuelve 200 con dos series ordenadas DAY y NIGHT.
+DAY corresponde a jornada «Diurna», NIGHT a «Nocturna», según las historias y el vocabulario
+`dia`/`noche` de `BASE DE DATOS!D2`. No se infieren horas ni fechas operativas nocturnas.
+
+```json
+{
+  "from":"2026-08-03","to":"2026-08-10","category":"FUEL_AGGREGATE","outputScale":2,
+  "observations":[
+    {"date":"2026-08-03","journey":"DAY","value":10},
+    {"date":"2026-08-10","journey":"DAY","value":20},
+    {"date":"2026-08-03","journey":"NIGHT","value":8}
+  ]
+}
+```
+
+`POST /api/v1/sales/scenarios/compare/explicit` recibe
+`{ "sales": <solicitud anterior>, "first": {"dayOfWeek":"MONDAY","journey":"DAY"},
+"second": {"dayOfWeek":"MONDAY","journey":"NIGHT"} }`.
+Devuelve exactamente dos series en el orden solicitado con etiquetas como `lunes / Diurna`.
+Cada serie contiene `label`, `dayOfWeek`, `journey`, `total`, `observations`, `available`, `average`
+y `exactAverage` (`numerator`/`denominator`, cadenas exactas). La respuesta común incluye
+`from`, `to`, `category`, `unit`, `source=CLIENT_SUPPLIED_OBSERVATIONS`, `outputScale`,
+`roundingMode=HALF_EVEN` y `series`. Angular utiliza etiqueta/average/unidad para su gráfica,
+respetando `available=false`; no se generan imágenes ni gráficas en el backend.
+
+El núcleo continúa calculando `sumatoria/número de observaciones` con `ExactFraction`.
+Solo el decimal de PRESENTACIÓN se calcula a la escala solicitada (0..12), con HALF_EVEN explícito.
+La fracción exacta siempre se entrega también: por ejemplo, 4/3 se muestra como 1.33 a escala 2
+y conserva `{numerator:"4",denominator:"3"}`. No se convierte a double ni se pierde precisión interna.
+
+Las fechas/turnos/categoría/escala/cantidades y campos obligatorios se validan con Jakarta y dominio.
+JSON inválido, rangos invertidos, observaciones fuera del rango, duplicados de fecha/jornada,
+cantidades negativas y escenarios inválidos producen 400. Son totales ya consolidados y homogéneos
+por categoría; no se suman registros de vendedores automáticamente. El contrato HTTP acepta solo
+cantidades no negativas; ajustes negativos requieren una semántica de origen aún no disponible.
+`observations:null`/omisión es inválido; `observations:[]` es válido: contador cero,
+`available=false`, `average=null`, `exactAverage=null`. Un cero registrado cuenta como observación
+y produce promedio cero disponible. Una serie vacía no se disfraza como venta cero.
+
+Los POST devuelven 403 para usuarios autenticados sin ADMIN, incluido ROLE_ADMIN; la cadena real
+actual devuelve 403 para anónimos en las pruebas. No se afirma que todo JWT inválido/expirado
+devuelva 401: la configuración global permanece intacta. Jakarta/deserialización anteceden al
+controlador; la comprobación ADMIN antecede al cálculo/expansión de datos dentro de él.
+
+#### MATRIZ FINAL DE ACEPTACIÓN — alcance backend autorizado
+
+Los textos son literales de la hoja **Estadísticas y Ventas** del original disponible.
+CUMPLIDO aquí significa backend en la modalidad aprobada: datos explícitos para HU-16/HU-17 y
+reparto configurado bajo condiciones verificadas para HU-14. No significa integración automática
+con ventas, aplicación universal del 70/30 ni cumplimiento del frontend excluido.
+
+| HU / ubicación | Criterio textual exacto (título, contexto, evento, resultado) | Estado backend | Código / endpoint | Pruebas | Dependencia o decisión pendiente |
+| --- | --- | --- | --- | --- | --- |
+| HU-14 / `F9:J9` | «Registro exitoso de metas anuales.» / «Dado que el administrador ingresa meta y venta máxima válidas para combustibles y para lubricantes y otros.» / «Clic en el botón GUARDAR.» / «El sistema muestra 'Metas del año guardadas correctamente' y las bloquea contra edición para ese período.» | **CUMPLIDO** para registro HTTP y ausencia de edición/eliminación expuesta | `SalesTarget`, `CreateSalesTargetRequest.isAnnualMaximumProvided`, `SalesTargetService.register`, mapeadores, V11; POST/GET `/api/v1/sales/targets` y GET por ID/identidad | `SalesTargetApiIntegrationTest.annualMaximumSaleIsRequiredAndPersistsWithoutAFormulaOrRounding`; `SalesTargetMigrationTest.versionElevenPreservesExistingTargetsAndConstrainsMaximumSale`; `SalesTargetMaximumSaleTest`; `SalesTargetControllerTest.onlyOneRegistrationRouteAndNoEditOrDelete` | El campo se almacena sin efectos adicionales. Cliente anual debe incluirlo; filas antiguas quedan desconocidas. Mostrar el mensaje corresponde a Angular. No se añadió bloqueo SQL ni cálculo de venta máxima. |
+| HU-14 / `F10:J10` | «Reparto entre titular y apoyo.» / «Dado que existe una meta global.» / «El sistema genera las metas individuales.» / «Reparte 70 % al titular y 30 % al apoyo.» | **CUMPLIDO** para perfil 0.7/0.3 en cobertura titular/apoyo verificada, conforme a la instrucción de no universalizarlo | `SalesTargetDistributionEngine.calculate`; POST `/api/v1/sales/distribution-profiles` y `/api/v1/sales/targets/{id}/distribution` | `SalesTargetDistributionEngineTest.explicitSharesMatchExcelOfficialAndReferenceWithSingleAndPairedWorkers` demuestra 100 → 70/30 y referencia 50/50; `matchesOriginalWorkbookCachedSharesUsingOriginalParametersAndSchedule` | No se declara satisfecho un cálculo individual anual directo o un 70/30 incondicional: no son reglas aprobadas para ampliar este motor mensual. Se mantiene sin dividir automáticamente metas anuales. |
+| HU-16 / `F15:J15` | «Visualización de promedios por jornada.» / «En caso de seleccionar un RANGO DE FECHAS en la pantalla PROMEDIOS DÍA/NOCHE.» / «Clic en el botón CONSULTAR.» / «El sistema despliega el promedio de ventas de la jornada diurna y de la jornada nocturna para el rango seleccionado.» | **CUMPLIDO** en modalidad explícita backend autorizada | `SalesJourneyStatistics.averages`; `SalesStatisticsController.averages`; POST `/api/v1/sales/averages/explicit` | `SalesTargetStatisticsControllerTest.averagesHaveExplicitSourceDayNightLabelsAndComparableUnits`, `repeatingDecimalsReturnBothDisplayValueAndExactFraction`, `noObservationsProduceUnavailableAveragesNotInventedSales`, validaciones/seguridad; `SalesTargetApiIntegrationTest.explicitStatisticsHttpUsesClientObservationsWithoutCreatingSalesRows` | No hay historial real recuperable; cálculo identifica datos del cliente. Recuperación automática sigue **BLOQUEADA** por falta de fuente por fecha/jornada/categoría, sin impedir este modo aprobado. |
+| HU-17 / `F17:J17` (escenario 2 en el original) | «Comparación exitosa de escenarios.» / «En caso de seleccionar dos ESCENARIOS (día de la semana + turno) en la pantalla COMPARAR ESCENARIOS.» / «Clic en el botón COMPARAR.» / «El sistema despliega una gráfica comparativa de ventas entre los dos escenarios seleccionados.» | **CUMPLIDO** para respuesta backend destinada a la gráfica en modalidad explícita; la gráfica visual está fuera de alcance | `SalesJourneyStatistics.compare`; `SalesStatisticsController.compare`; POST `/api/v1/sales/scenarios/compare/explicit`; `SalesStatisticsResponse` | `SalesTargetStatisticsControllerTest.comparisonReturnsOrderedLabelledChartSeries`, `unavailableScenarioIsNotInventedWhenTheOtherScenarioHasObservations`, `invalidScenarioAndMissingScenarioAreBadRequests`; integración HTTP y pruebas matemáticas anteriores | Angular dibuja la gráfica. No hay consulta histórica automática. No se inventó tratamiento de festivos ni horas de jornada; el cliente declara DAY/NIGHT y los escenarios usan día calendario. |
+
+Para la aceptación completa de las historias originales, además del alcance backend verificado,
+queda pendiente validar la versión `(1)` solicitada y la visualización Angular, que esta entrega
+prohíbe desarrollar. El modo automático de ventas no existe y no se presenta como terminado.
+Si la versión `(1)` impone otro comportamiento, esta matriz no permite asumirlo como aprobado.
+
+#### Pruebas finales y compilación
+
+Comandos desde backend, sin descargas ni instalación:
+
+```powershell
+mvn -o '-Dtest=SalesTarget*Test' test
+mvn -o -DskipTests compile
+```
+
+Primer recorrido: **176 pruebas aprobadas**. Después se añadió el mensaje literal anual y la prueba
+de escenario sin observaciones junto a otro disponible; recorrido FINAL:
+**BUILD SUCCESS — 177 pruebas, 0 fallos, 0 errores, 0 omitidas; 43.042 segundos**.
+Compilación completa del proyecto: **BUILD SUCCESS**, 2.040 segundos; los 227 archivos principales
+ya habían sido compilados por el recorrido de pruebas y estaban actualizados. No se ejecutaron
+pruebas de módulos ajenos ni se alteraron dependencias.
+
+La suma es 148 casos anteriores más 29 adicionales: 23 MVC nuevos, 3 de venta máxima, 2 HTTP/JPA
+y 1 de migración. Se actualizaron solicitudes positivas anuales existentes para el nuevo requisito
+`maximumSale`. Las pruebas nuevas y anteriores pasaron sin fallos en ambos recorridos.
+
+PostgreSQL 16.13 real en Testcontainers, Flyway V1–V11 y Hibernate `ddl-auto=validate` se ejecutaron
+realmente. V11 se verificó también sobre un esquema V10 con una meta previa: conserva valor e ID
+y deja maximum_sale NULL; la prueba SQL rechaza NaN/negativos. HTTP/JPA comprueba ID/fecha, escritura,
+lectura de maximumSale, precisión y rechazo de valores que exigirían redondeo. La política se prueba
+antes de escribir tanto por servicio como por puerto. No se utilizó la base de desarrollo.
+
+Persisten advertencias de Flyway/PostgreSQL 16, agente Mockito y destrucción del registro Modulith
+en el contexto reducido de pruebas (`JpaEventPublication`); no produjeron fallos. No se corrigió
+configuración global fuera del alcance.
+
+#### Lista completa de archivos de esta fase
+
+Modificados, respecto de `backend/src/main/java/com/edu/unicauca/gasstation/backend/sales/`:
+- `api/SalesTargetController.java`
+- `api/SalesTargetExceptionHandler.java`
+- `api/dto/CreateSalesTargetRequest.java`
+- `api/dto/SalesTargetResponse.java`
+- `domain/models/SalesTarget.java`
+- `domain/services/SalesTargetService.java`
+- `infrastructure/mappers/SalesTargetApiMapper.java`
+- `infrastructure/persistence/adapters/SalesTargetRepositoryAdapter.java`
+- `infrastructure/persistence/entities/SalesTargetEntity.java`
+- `infrastructure/persistence/mappers/SalesTargetPersistenceMapper.java`
+
+Creados bajo la misma raíz:
+- `api/SalesStatisticsController.java`
+- `api/dto/ExplicitSalesStatisticsRequest.java`
+- `api/dto/CompareSalesScenariosRequest.java`
+- `api/dto/SalesStatisticsResponse.java`
+
+Pruebas modificadas, respecto de `backend/src/test/java/com/edu/unicauca/gasstation/backend/sales/`:
+- `api/SalesTargetApiIntegrationTest.java`
+- `api/SalesTargetControllerTest.java`
+- `infrastructure/persistence/SalesTargetMigrationTest.java`
+
+Pruebas creadas bajo esa raíz:
+- `api/SalesTargetStatisticsControllerTest.java`
+- `domain/services/SalesTargetMaximumSaleTest.java`
+
+También creado: `backend/src/main/resources/db/migration/V11__add_sales_target_maximum_sale.sql`.
+También modificado: `docs/SCRUM-40-implementation.md`. Total: **21 archivos** (14 modificados y 7 nuevos).
+No se modificaron Excel, security, workers, shifts, inventory, incentives, statistics, migraciones
+anteriores, Docker, configuración, credenciales o dependencias. No se realizaron commits ni push.

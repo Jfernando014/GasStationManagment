@@ -24,7 +24,7 @@ public class SalesTargetController {
     private final SalesTargetApiMapper mapper;
 
     @PostMapping
-    @Operation(summary = "Register a configured target", description = "Requires the exact ADMIN authority. No automatic annual-to-monthly calculation.")
+    @Operation(summary = "Register a configured target", description = "Requires the exact ADMIN authority. maximumSale is required for annual targets, optional for monthly targets, and is configuration only. No automatic annual-to-monthly calculation.")
     public ResponseEntity<SalesTargetResponse> register(@Valid @RequestBody CreateSalesTargetRequest request,
                                                         Authentication authentication) {
         SalesAdminAuthorization.requireAdmin(authentication);

@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** V9 mapping. Partial unique indexes are owned exclusively by Flyway. */
+/** V9/V11 mapping. Partial unique indexes are owned exclusively by Flyway. */
 @Entity
 @Table(name = "sales_targets")
 @Getter
@@ -32,6 +32,9 @@ public class SalesTargetEntity {
 
     @Column(name = "target_value", nullable = false, precision = 30, scale = 12, updatable = false)
     private BigDecimal targetValue;
+
+    @Column(name = "maximum_sale", precision = 30, scale = 12, updatable = false)
+    private BigDecimal maximumSale;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10, updatable = false)

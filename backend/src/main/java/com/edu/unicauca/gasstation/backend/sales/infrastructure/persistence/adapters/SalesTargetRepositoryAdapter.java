@@ -29,6 +29,7 @@ public class SalesTargetRepositoryAdapter implements SalesTargetRepository {
     public StoredSalesTarget register(SalesTarget target) {
         // Defense for callers of the port that bypass the service.
         SalesTargetStoragePolicy.validate(target.value());
+        if (target.maximumSale() != null) SalesTargetStoragePolicy.validate(target.maximumSale());
         try {
             SalesTargetEntity saved = repository.saveAndFlush(mapper.toEntity(target));
             // Read the database default timestamp and the stored numeric representation.

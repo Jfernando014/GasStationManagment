@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
 public class SalesTargetApiMapper {
     public SalesTarget toDomain(CreateSalesTargetRequest request) {
         return new SalesTarget(new SalesTargetIdentity(new SalesTargetPeriod(request.year(), request.month()),
-                request.category()), request.value(), request.unit());
+                request.category()), request.value(), request.unit(), request.maximumSale());
     }
 
     public SalesTargetResponse toResponse(StoredSalesTarget stored) {
         var target = stored.target();
         var period = target.identity().period();
         return new SalesTargetResponse(stored.id(), period.year(), period.month(), target.identity().category(),
-                target.value(), target.unit(), stored.createdAt());
+                target.value(), target.unit(), stored.createdAt(), target.maximumSale());
     }
 }
