@@ -10,4 +10,6 @@ public interface JpaTankRepository extends JpaRepository<TankEntity, Long> {
     boolean existsByCode(String code);
 
     List<TankEntity> findAllByOrderByCodeAsc();
+
+    List<TankEntity> findByGaugeTableIdOrderByCode(Long gaugeTableId);
 }

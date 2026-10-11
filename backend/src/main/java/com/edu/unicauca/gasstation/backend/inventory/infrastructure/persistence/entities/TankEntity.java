@@ -38,4 +38,7 @@ public class TankEntity {
 
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal toleranceCm;
+
+    @Column(name = "gauge_table_id")
+    private Long gaugeTableId;
 }
