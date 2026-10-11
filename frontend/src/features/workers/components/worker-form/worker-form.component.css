@@ -1,0 +1,77 @@
+:host {
+  display: block;
+}
+
+/* On narrow panels the status button moves below the name instead of overflowing */
+.ps-perfil-cab {
+  flex-wrap: wrap;
+}
+.ps-perfil-id {
+  min-width: 160px;
+}
+
+/* Primary buttons of this screen with white text, like the modal's GUARDAR */
+.jr-btn--pri { color: #FFFFFF; }
+
+/* Name and role side by side when there is room, one below the other on narrow panels */
+.worker-fields-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Modal: the role menu may open over the footer, so the body does not clip it */
+.worker-dialog-body {
+  overflow: visible;
+}
+.dialog-footer {
+  border-radius: 0 0 var(--radius-floating) var(--radius-floating);
+}
+
+/* Modal: the fields arrive one after another once the card has opened */
+.worker-dialog-body > * {
+  animation: worker-field-in var(--duration-normal) var(--spring) both;
+}
+.worker-dialog-body > :nth-child(1) { animation-delay: 60ms; }
+.worker-dialog-body > :nth-child(2) { animation-delay: 100ms; }
+.worker-dialog-body > :nth-child(3) { animation-delay: 140ms; }
+.worker-dialog-body > :nth-child(4) { animation-delay: 180ms; }
+
+.btn-dialog-close svg {
+  transition: transform var(--duration-normal) var(--spring);
+}
+.btn-dialog-close:hover svg {
+  transform: rotate(90deg);
+}
+
+.worker-save {
+  min-width: 112px;
+  transition: background-color var(--duration-fast) ease, transform 100ms var(--spring-fast), box-shadow var(--duration-fast) ease;
+}
+.worker-save:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(255, 107, 0, 0.32);
+}
+.worker-save.is-saving {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.worker-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: worker-spin 0.7s linear infinite;
+}
+
+@keyframes worker-field-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes worker-spin {
+  to { transform: rotate(360deg); }
+}
