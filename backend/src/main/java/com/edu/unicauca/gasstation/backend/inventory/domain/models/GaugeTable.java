@@ -19,6 +19,10 @@ import java.util.Objects;
 public class GaugeTable {
     public static final int MIN_POINTS = 2;
     private static final int VOLUME_SCALE = 2;
+    private static final int MAX_HEIGHT_INTEGER_DIGITS = 4;
+    private static final int MAX_HEIGHT_DECIMALS = 1;
+    private static final int MAX_VOLUME_INTEGER_DIGITS = 6;
+    private static final int MAX_VOLUME_DECIMALS = 2;
 
     private Long id;
     private String name;
@@ -38,6 +42,16 @@ public class GaugeTable {
             }
             if (current.getHeightCm().signum() < 0 || current.getVolumeGallons().signum() < 0) {
                 throw new InvalidGaugeTableException(field, "The height and volume must be positive");
+            }
+            if (exceeds(current.getHeightCm(), MAX_HEIGHT_INTEGER_DIGITS, MAX_HEIGHT_DECIMALS)) {
+                throw new InvalidGaugeTableException(field,
+                        "The height allows for a maximum of " + MAX_HEIGHT_INTEGER_DIGITS + " integer and "
+                                + MAX_HEIGHT_DECIMALS + " decimal");
+            }
+            if (exceeds(current.getVolumeGallons(), MAX_VOLUME_INTEGER_DIGITS, MAX_VOLUME_DECIMALS)) {
+                throw new InvalidGaugeTableException(field,
+                        "The volume allows for a maximum of " + MAX_VOLUME_INTEGER_DIGITS + " integer and "
+                                + MAX_VOLUME_DECIMALS + " decimals");
             }
             if (i == 0) {
                 continue;
@@ -96,5 +110,12 @@ public class GaugeTable {
         BigDecimal volumeSpan = upper.getVolumeGallons().subtract(lower.getVolumeGallons());
         BigDecimal fraction = heightCm.subtract(lower.getHeightCm()).divide(heightSpan, MathContext.DECIMAL64);
         return lower.getVolumeGallons().add(volumeSpan.multiply(fraction)).setScale(VOLUME_SCALE, RoundingMode.HALF_UP);
+    }
+
+    private static boolean exceeds(BigDecimal value, int maxIntegerDigits, int maxDecimals) {
+        BigDecimal normalized = value.stripTrailingZeros();
+        int decimals = Math.max(normalized.scale(), 0);
+        int integerDigits = normalized.precision() - normalized.scale();
+        return decimals > maxDecimals || integerDigits > maxIntegerDigits;
     }
 }
