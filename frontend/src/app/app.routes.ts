@@ -20,6 +20,10 @@ export const routes: Routes = [
         ]
       },
       {
+        path: 'personal/vendedores',
+        loadComponent: () => import('../features/workers/pages/workers-page/workers-page.component').then(m => m.WorkersPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }
