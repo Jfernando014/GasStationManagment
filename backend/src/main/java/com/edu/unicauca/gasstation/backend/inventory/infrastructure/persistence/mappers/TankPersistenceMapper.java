@@ -16,6 +16,7 @@ public class TankPersistenceMapper {
         tank.setMaxCapacityGallons(entity.getMaxCapacityGallons());
         tank.setMaxHeightCm(entity.getMaxHeightCm());
         tank.setToleranceCm(entity.getToleranceCm());
+        tank.setGaugeTableId(entity.getGaugeTableId());
         return tank;
     }
 
@@ -28,6 +29,7 @@ public class TankPersistenceMapper {
         entity.setMaxCapacityGallons(tank.getMaxCapacityGallons());
         entity.setMaxHeightCm(tank.getMaxHeightCm());
         entity.setToleranceCm(tank.getToleranceCm());
+        entity.setGaugeTableId(tank.getGaugeTableId());
         return entity;
     }
 }
