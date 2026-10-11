@@ -1,6 +1,8 @@
 package com.edu.unicauca.gasstation.backend.inventory.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.edu.unicauca.gasstation.backend.inventory.ProductCategory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,8 +45,12 @@ public class InventoryExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleUnreadable(HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Invalid data",
+    public ResponseEntity<Map<String, Object>> handleUnreadable(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
+        boolean invalidProductCategory = ex.getCause() instanceof InvalidFormatException formatException
+                && formatException.getTargetType() == ProductCategory.class;
+        String error = invalidProductCategory ? "Datos inválidos" : "Invalid data";
+        return build(HttpStatus.BAD_REQUEST, error,
                 "The request is invalid: Please check that the numerical values and fuel type are correct",
                 request);
     }
@@ -82,17 +88,37 @@ public class InventoryExceptionHandler {
         body.put("path", request.getRequestURI());
         return body;
     }
+
     @ExceptionHandler(FuelPriceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleFuelPriceNotFound(
             FuelPriceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, "No encontrado", ex.getMessage(), request);
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
 
 
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
-    public ResponseEntity<Map<String, Object>> handleInvalidParameter(HttpServletRequest request) {
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParameter(HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "Invalid or missing parameters: check fuelType (MOTOR, DIESEL, EXTRA, MAX_PRO) and date (yyyy-MM-dd)",
                 request);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleProductNotFound(
+            ProductNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateProductCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateProductCode(
+            DuplicateProductCodeException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Datos inválidos",
+                "El valor del parámetro '" + ex.getName() + "' no es válido", request);
     }
 }
