@@ -206,7 +206,7 @@ class ProductControllerTest {
         mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Datos inválidos"));
+                .andExpect(jsonPath("$.error").value("Invalid data"));
         verifyNoInteractions(productService);
     }
 
@@ -248,8 +248,8 @@ class ProductControllerTest {
     void findAllRejectsUnknownCategory() throws Exception {
         mockMvc.perform(get(BASE_URL).param("category", "JUGUETES"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Datos inválidos"))
-                .andExpect(jsonPath("$.message").value("El valor del parámetro 'category' no es válido"));
+                .andExpect(jsonPath("$.error").value("Invalid data"))
+                .andExpect(jsonPath("$.message").value("The value of parameter 'category' is invalid"));
         verifyNoInteractions(productService);
     }
 
