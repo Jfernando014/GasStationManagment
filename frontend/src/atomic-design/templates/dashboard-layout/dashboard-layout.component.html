@@ -68,6 +68,14 @@
           <a class="sub-item-link sub-nav-item" routerLink="/personal/malla" routerLinkActive="active">Malla de turnos</a>
         </div>
       </div>
+      <div class="nav-label-pill">Resultados</div>
+      <a class="sidebar-action-btn" routerLink="/resultados/metas" routerLinkActive="active" #goalsNav="routerLinkActive" [attr.aria-current]="goalsNav.isActive ? 'page' : null">
+        <div class="btn-prefix-stack">
+          <svg class="sidebar-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+          <span>Metas y cumplimiento</span>
+        </div>
+        <span class="active-notch"></span>
+      </a>
     </div>
 
     <!-- Pie de página del sidebar -->
@@ -87,7 +95,7 @@
       <div class="header-trail">
         <span class="trail-root" routerLink="/" style="cursor: pointer; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.3s;" onmouseover="this.style.textDecorationColor='inherit'" onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">Panel principal</span>
+        <span class="trail-active">{{ goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal' }}</span>
       </div>
 
       <div class="header-action-tray">

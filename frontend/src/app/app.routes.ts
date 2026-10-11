@@ -24,6 +24,10 @@ export const routes: Routes = [
         loadComponent: () => import('../features/workers/pages/workers-page/workers-page.component').then(m => m.WorkersPageComponent)
       },
       {
+        path: 'resultados/metas',
+        loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }

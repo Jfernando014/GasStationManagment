@@ -1,0 +1,163 @@
+<div class="inv-subview rs-vista goals-page">
+  <div class="rs-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Metas y cumplimiento</h1>
+      <p>Cumplimiento individual por día, semana y mes frente a la meta global, y el cálculo de las metas.</p>
+    </div>
+    <div class="rs-cabecera-der">
+      <div class="jr-indicadores" aria-label="Indicadores del período">
+        <div class="jr-indicador"><span>Galones del periodo</span><b>Sin datos</b></div>
+        <div class="jr-indicador"><span>Meta global</span><b>{{ format(complianceGoal()) }}{{ complianceGoal() !== null ? ' gal' : '' }}</b></div>
+        <div class="jr-indicador"><span>Cumplimiento estación</span><b>Sin datos</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rs-tabs">
+    <div class="jr-tabs" role="tablist" aria-label="Metas y cumplimiento">
+      <button class="jr-tab" id="tab-cumplimiento" role="tab" type="button"
+        [class.is-activa]="tab() === 'cumplimiento'" [attr.aria-selected]="tab() === 'cumplimiento'"
+        aria-controls="panel-cumplimiento" (click)="tab.set('cumplimiento')">Cumplimiento</button>
+      <button class="jr-tab" id="tab-metas" role="tab" type="button"
+        [class.is-activa]="tab() === 'metas'" [attr.aria-selected]="tab() === 'metas'"
+        aria-controls="panel-metas" (click)="tab.set('metas')">Metas</button>
+    </div>
+  </div>
+
+  <section class="jr-tabpanel" id="panel-cumplimiento" role="tabpanel" aria-labelledby="tab-cumplimiento" [hidden]="tab() !== 'cumplimiento'">
+    <div class="rs-seccion">
+      <div class="rs-barra">
+        <div class="ps-segmento" role="group" aria-label="Periodo">
+          <button type="button" [class.is-activo]="periodMode() === 'dia'" [attr.aria-pressed]="periodMode() === 'dia'" (click)="periodMode.set('dia')">Día</button>
+          <button type="button" [class.is-activo]="periodMode() === 'semana'" [attr.aria-pressed]="periodMode() === 'semana'" (click)="periodMode.set('semana')">Semana</button>
+          <button type="button" [class.is-activo]="periodMode() === 'mes'" [attr.aria-pressed]="periodMode() === 'mes'" (click)="periodMode.set('mes')">Mes</button>
+        </div>
+        <label class="ps-campo" [hidden]="periodMode() !== 'mes'">Mes<input type="month" class="flat-input tnum" [formControl]="complianceMonth"></label>
+        <label class="ps-campo" [hidden]="periodMode() === 'mes'">Fecha<input type="date" class="flat-input tnum" [formControl]="complianceDate"></label>
+        <div class="ps-campo"><span aria-hidden="true">Vendedor</span>
+          <app-search-field fieldId="goals-seller-search" label="Vendedor" placeholder="Buscar" (searchChange)="sellerSearch.set($event)" />
+        </div>
+        <p class="rs-nota">Sin datos de jornadas cerradas</p>
+      </div>
+      <div class="rs-tabla-wrap">
+        <table class="inv-table" aria-label="Cumplimiento de vendedores">
+          <thead><tr><th class="rank">#</th><th>Vendedor</th><th class="right">Galones vendidos</th>
+            <th class="right">Meta del periodo</th><th class="compliance-column">Cumplimiento</th><th>Estado</th></tr></thead>
+          <tbody><tr><td colspan="6">
+            <app-empty-state heading="Sin datos de ventas" description="El cumplimiento estará disponible cuando se integren las ventas consolidadas y las metas de cada vendedor.">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19h16M7 15V9m5 6V5m5 10v-4" /></svg>
+            </app-empty-state>
+          </td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="jr-tabpanel" id="panel-metas" role="tabpanel" aria-labelledby="tab-metas" [hidden]="tab() !== 'metas'">
+    <div class="goals-period-toolbar">
+      <app-select-field fieldId="goals-fiscal-year" label="Año fiscal" [control]="yearControl" [options]="yearOptions" [required]="true" />
+      <label class="ps-campo">Mes de referencia
+        <select class="flat-select" [formControl]="monthControl">
+          <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+          <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+          <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </label>
+    </div>
+    @if (loading()) { <p class="goals-notice" role="status">Consultando metas del año {{ year() }}…</p> }
+    @if (loadError()) {
+      <div class="goals-notice goals-error" role="alert"><span>{{ loadError() }}</span>
+        <button type="button" class="jr-btn jr-btn--sec" (click)="retry()" [disabled]="loading() || saving()">Reintentar consulta</button>
+      </div>
+    }
+    <div class="rs-metas-grid">
+      <section class="ps-card">
+        <div class="rs-barra"><h2 class="ps-card-titulo">Cálculo de metas · {{ periodLabel() }}</h2>
+          <span class="rs-nota">Presupuesto: {{ format(monthlyFuel()?.value ?? null) }}{{ monthlyFuel() ? ' gal' : '' }} · {{ format(monthlyBasket()?.value ?? null) }}{{ monthlyBasket() ? ' COP canastilla' : '' }}</span>
+        </div>
+        <div class="rs-tabla-wrap">
+          <table class="ps-tabla" aria-label="Cálculo de metas distribuidas">
+            <thead><tr><th>Vendedor</th><th class="num">% reparto</th><th class="num">Meta galones mes</th><th class="num">Meta galones día</th><th class="num">Meta canastilla mes</th></tr></thead>
+            <tbody><tr><td colspan="5"><app-empty-state heading="Sin datos de metas distribuidas" description="Se requiere una meta mensual, un perfil de reparto y las asignaciones de turnos para calcular metas individuales.">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+            </app-empty-state></td></tr></tbody>
+            <tfoot><tr><td>Estación</td><td class="num">—</td><td class="num">{{ format(monthlyFuel()?.value ?? null) }}</td>
+              <td class="num">{{ format(dailyPreview()) }}</td><td class="num">{{ format(monthlyBasket()?.value ?? null) }}</td></tr></tfoot>
+          </table>
+        </div>
+        <p class="ps-nota">Meta individual = presupuesto del mes × % de reparto oficial 70/30 (hoja CALC METAS). Alimenta el cumplimiento y los incentivos. El reparto requiere cobertura titular/apoyo verificada; no se aplica automáticamente.</p>
+      </section>
+      <section class="ps-card">
+        <div class="rs-barra"><h2 class="ps-card-titulo">Ganancia si se cumple la meta</h2><span class="rs-nota">Sin datos de ventas e incentivos</span></div>
+        <div class="rs-tabla-wrap">
+          <table class="ps-tabla" aria-label="Ganancia al cumplir metas">
+            <thead><tr><th>Vendedor</th><th class="num">Vendido</th><th class="num">Falta para la meta</th><th class="num">Ganancia al cumplir</th><th class="num">Con podio</th></tr></thead>
+            <tbody><tr><td colspan="5"><app-empty-state heading="Datos no disponibles" description="La ganancia y el podio dependen de ventas reales y reglas vigentes de incentivos.">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 15V9m5 6V5m5 10v-4" /></svg>
+            </app-empty-state></td></tr></tbody>
+          </table>
+        </div>
+        <p class="ps-nota">Bono por cumplir la meta y premio podio: pendientes de las reglas vigentes en Resultados › Incentivos.</p>
+      </section>
+    </div>
+
+    <details class="jr-plegable">
+      <summary><svg class="jr-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+        <span>Meta anual y venta máxima de la estación</span><span class="jr-plegable-resumen">Presupuesto {{ year() }}</span>
+      </summary>
+      <div class="jr-plegable-cuerpo">
+        <form class="inv-panel-card annual-card" [formGroup]="form" (ngSubmit)="requestSave()" [attr.aria-busy]="loading() || saving()">
+          <div class="inv-panel-card-title annual-header">
+            <div class="annual-heading"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg><span>Año Fiscal · {{ year() }}</span></div>
+            <span class="state-pill-tag" [class.optimal]="annualTarget() || canRegister()" [class.warning]="!annualTarget() && !canRegister()">
+              {{ annualTarget() ? 'MODO CONSULTA · PERIODO BLOQUEADO' : canRegister() ? '✓ MODO EDICIÓN ACTIVO' : saving() ? 'GUARDANDO' : 'CONSULTA PENDIENTE' }}
+            </span>
+          </div>
+          <p class="annual-subtitle">Parametrización global anual para EDS Bellavista.</p>
+          @if (annualTarget()) {
+            <div class="goals-locked-banner visible"><div><b>PERIODO BLOQUEADO</b><p>La meta anual está registrada. Los valores se muestran en modo consulta.</p>
+              @if (annualTarget()?.maximumSale === null) { <p>Este registro anterior no contiene venta máxima.</p> }
+            </div></div>
+          }
+          <div class="goals-big-inputs-row">
+            <app-annual-goal-field fieldId="goals-target-gallons" label="META DE VENTA ANUAL (Base)"
+              subtitle="Galones requeridos para punto de equilibrio" caption="Meta base para cumplir presupuesto operacional" [control]="form.controls.value" />
+            <app-annual-goal-field fieldId="goals-max-gallons" label="VENTA MÁXIMA ANUAL"
+              subtitle="Tope máximo de despacho proyectado" caption="Capacidad de operación proyectada de la estación" [control]="form.controls.maximumSale" />
+          </div>
+          <div class="equivalences-heading"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg><span>EQUIVALENCIAS DE RENDIMIENTO</span></div>
+          <div class="goals-preview-tiles">
+            <div class="goals-tile"><span class="goals-tile-label">META DEL PERIODO · {{ periodLabel() }}</span>
+              <span class="goals-tile-value tnum monthly-figure">{{ format(monthlyFuel()?.value ?? null) }}{{ monthlyFuel() ? ' Gal' : '' }}</span>
+              <span class="tile-note">{{ monthlyFuel() ? 'Meta mensual registrada' : 'Presupuesto mensual no disponible' }}</span>
+            </div>
+            <div class="goals-tile"><span class="goals-tile-label">META DIARIA PROMEDIO</span>
+              <span class="goals-tile-value tnum daily-figure">{{ format(dailyPreview()) }}{{ dailyPreview() !== null ? ' Gal' : '' }}</span>
+              <span class="tile-note">Promedio del presupuesto mensual / días del mes; no es reparto operativo.</span>
+            </div>
+            <div class="goals-tile"><span class="goals-tile-label">MARGEN META / MÁX</span>
+              <span class="goals-tile-value tnum margin-figure">{{ format(margin()) }}{{ margin() !== null ? ' Gal' : '' }}</span>
+              <span class="tile-note">Holgura operacional (venta máxima − meta base)</span>
+            </div>
+          </div>
+          <button class="btn-action-primary goals-save" type="submit" [disabled]="!canRegister() || !form.valid || confirming()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><path d="M17 21v-8H7v8M7 3v5h8" /></svg>
+            <span>{{ saving() ? 'GUARDANDO…' : annualTarget() ? 'METAS GUARDADAS (PERIODO BLOQUEADO)' : 'GUARDAR METAS' }}</span>
+          </button>
+          @if (confirming()) {
+            <div class="goals-confirm-step visible">
+              <b>Aviso de Confirmación y Bloqueo</b>
+              <p>Al guardar, el periodo {{ year() }} quedará registrado como <strong>PERIODO BLOQUEADO</strong>. La API no permite editar ni eliminar la meta.</p>
+              <div class="confirmation-actions"><button class="btn-flat-secondary" type="button" (click)="confirming.set(false)">Cancelar</button>
+                <button class="btn-solid-primary confirm-button" type="button" (click)="confirmSave()">CONFIRMAR Y BLOQUEAR</button>
+              </div>
+            </div>
+          }
+          @if (success()) { <p class="goals-notice goals-success" role="status">{{ success() }}</p> }
+          @if (saveError()) { <p class="goals-notice goals-error" role="alert">{{ saveError() }}</p> }
+        </form>
+      </div>
+    </details>
+  </section>
+</div>
