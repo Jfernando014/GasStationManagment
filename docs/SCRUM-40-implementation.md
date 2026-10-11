@@ -4,14 +4,15 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: increments 1 and 2 provide pure domain types; increment 3A adds the PostgreSQL schema, a separate decimal storage policy, and migration/constraint tests. Registration and JPA mapping remain pending.
+- HU-14: increments 1 and 2 provide pure domain types; 3A adds the schema and decimal policy; 3B adds Java registration/query persistence and Hibernate validation. REST endpoints remain outside scope.
 - HU-16: pending; requires real historical sales from the owning sales module.
 - HU-17: pending; requires approved scenario rules and the same real sales source.
 
 Increment 3A baseline: clean Git checkout at `49aae77` on `feature/back/sales-targets-statistics`; V9 was available.
 V9 now defines `sales_targets`; it was executed only in a disposable test container.
-No JPA entities, repositories, endpoints, registration services, individual calculations or other-module changes
-are introduced. The development database and credentials were not used or modified. V1 through V8 are unchanged.
+Increment 3A introduced no Java persistence. Increment 3B starts from a clean checkout at `b49ed92`
+on the same branch and adds sales-only Java persistence. The development database and credentials were not used
+or modified. V1 through V9 are unchanged in 3B. No endpoints or individual calculations are introduced.
 
 ## Approved decisions
 
@@ -48,6 +49,7 @@ All production files below are under
 | `SalesTargetIdentity.java` | Immutable conceptual period/category identity; requires both components. Not a final database key. |
 | `SalesTargetUnit.java` | Units `GALLONS` and `COP`. Added in increment 2. |
 | `SalesTarget.java` | Immutable record containing identity, BigDecimal value and unit; validates non-null components, nonnegative values and category/unit combinations. Added in increment 2. |
+| `StoredSalesTarget.java` | Immutable result containing database ID, SalesTarget and database-generated creation instant. Added in increment 3B. |
 
 The classes use only Java types, with no Spring, JPA, Lombok or other-module imports.
 The period representation uses a nullable `Integer` month; this is an in-memory choice, not a database design.
@@ -63,7 +65,7 @@ No conversion or dependency on inventory is introduced in this increment.
 - Whether zero remains valid as a final business rule and any future business amount limits or rounding policy;
   the provisional technical storage limits are approved for increment 3A.
 - Whether configured fuel targets will be broken down by individual product.
-- JPA mapping, registration/query contracts, additional audit requirements and future schema evolution.
+- REST API, authorization, additional audit requirements and future schema evolution.
 - Editing lock rules, permitted operations and authorized users.
 - Monthly consistency rules, if any, relative to an annual target.
 - Hourly weights, parameter versions, titular/support split applicability and individual results.
@@ -71,7 +73,8 @@ No conversion or dependency on inventory is introduced in this increment.
 - Public assignment query contract in shifts and public historical-sales contract in sales.
 
 No default percentages, formulas, lock rules, maximum-sales field or individual calculations are implemented.
-Units are explicit, never inferred or converted. The only amount restriction is rejection of negative values.
+Units are explicit, never inferred or converted. The domain rejects negative values; the separate storage policy
+additionally validates the approved provisional NUMERIC limits before any application insertion.
 Valid combinations are FUEL_AGGREGATE/GALLONS and BASKET/COP.
 
 ## Tests
@@ -180,3 +183,96 @@ No dependency configuration was changed to silence them.
 
 - Increment 3A: created V9 and the separate storage policy with unit and real PostgreSQL migration tests;
   documented the successful 66-case execution. No migrations against the development database, commits or push.
+
+## Increment 3B: Java registration and query persistence
+
+Files created under `backend/src/main/java/com/edu/unicauca/gasstation/backend/sales/`:
+
+- `domain/models/StoredSalesTarget.java`
+- `domain/repositories/SalesTargetRepository.java`
+- `domain/services/SalesTargetService.java`
+- `exception/DuplicateSalesTargetException.java`
+- `infrastructure/persistence/entities/SalesTargetEntity.java`
+- `infrastructure/persistence/repositories/JpaSalesTargetRepository.java`
+- `infrastructure/persistence/mappers/SalesTargetPersistenceMapper.java`
+- `infrastructure/persistence/adapters/SalesTargetRepositoryAdapter.java`
+
+Files created under `backend/src/test/java/com/edu/unicauca/gasstation/backend/sales/`:
+
+- `SalesTargetTestData.java` (shared fixture, not a test class)
+- `domain/services/SalesTargetServiceTest.java`
+- `infrastructure/persistence/SalesTargetPersistenceMapperTest.java`
+- `infrastructure/persistence/SalesTargetRepositoryAdapterTest.java`
+- `infrastructure/persistence/SalesTargetRepositoryTest.java`
+
+The only existing file modified is this document. No migrations, old domain types, other modules,
+environment files, Docker files or dependencies were changed.
+
+Architecture follows workers/shifts/inventory: domain port, separate JPA entity, mapper and adapter.
+The Spring Data repository extends the narrow Repository marker rather than JpaRepository to avoid inheriting
+update/delete methods. Its internal saveAndFlush operation is used only with fresh entities without an ID.
+Domain port and service expose register, findById, findByIdentity and findByYear. Absent single results use Optional;
+year queries are ordered by month ascending (annual NULL last in PostgreSQL), then category.
+These classes remain internal to sales; this increment does not expose a cross-module query contract.
+
+SalesTargetService validates storage representability before delegating. The adapter repeats that validation
+to protect direct port callers. Neither validation alters the original BigDecimal.
+All registration operations are transactional; query operations are read-only.
+The mapper creates an entity without ID or creation time. JPA omits created_at in INSERT; PostgreSQL applies
+V9's CURRENT_TIMESTAMP default. After saveAndFlush, EntityManager.refresh retrieves creation time and the
+stored numeric representation. StoredSalesTarget returns this metadata with a reconstructed pure SalesTarget.
+All mapped business fields are updatable=false; no editing or deletion feature is implemented.
+
+Both partial unique indexes remain the sole authoritative duplicate protection, including concurrent inserts.
+The adapter translates only Hibernate ConstraintViolationException with SQLSTATE 23505 AND the exact name
+uq_sales_targets_annual or uq_sales_targets_monthly into DuplicateSalesTargetException, retaining the cause.
+Other uniqueness/check/unknown integrity errors are rethrown unchanged. No message substring matching or
+pre-insertion existence check is used. A duplicate rolls back the registration transaction.
+
+Numeric comparisons after persistence use BigDecimal.compareTo; record equality must not be assumed across
+scale changes. Original in-memory domain values preserve scale. Fixed PostgreSQL scale is accepted on retrieval.
+
+Executed from `backend`, with cached dependencies and disposable PostgreSQL 16.13 containers:
+
+```powershell
+mvn -o '-Dtest=SalesTarget*Test' test
+```
+
+The first run executed 84 cases with 0 failures, 1 error and 0 skipped: repeated Mockito stubbing invoked an
+already configured exception in SalesTargetRepositoryAdapterTest. Corrected the test to use doThrow stubbing.
+No production behavior needed changing. Re-ran the full SCRUM-40 selection.
+
+Final result: **BUILD SUCCESS**, 84 cases, 0 failures, 0 errors, 0 skipped.
+
+| Test class | Cases |
+| --- | ---: |
+| SalesTargetPeriodTest | 19 |
+| SalesTargetIdentityTest | 3 |
+| SalesTargetTest | 15 |
+| SalesTargetStoragePolicyTest | 22 |
+| SalesTargetMigrationTest | 7 |
+| SalesTargetServiceTest | 6 |
+| SalesTargetPersistenceMapperTest | 1 |
+| SalesTargetRepositoryAdapterTest | 6 |
+| SalesTargetRepositoryTest | 5 |
+
+All 66 previous cases passed, plus 18 new cases. The integration suite explicitly uses ddl-auto=validate,
+never create-drop, and Flyway V1..V9 against Testcontainers connection details. Hibernate 6.4.4 validated the
+mapped schema successfully. It verifies registration and readback, database timestamp, annual/monthly NULL
+queries, empty results, basket zero, exact boundaries, rejected values without inserts, duplicate rollback
+and concurrent annual/monthly registration (one success and one domain duplicate per pair).
+The integration test runs transactions per service call; it does not wrap the entire test in a rollback transaction.
+No production initialization runners or local development datasource were used.
+
+Existing Flyway/PostgreSQL support warning remains. Java 21 also reports Mockito/Byte Buddy dynamic-agent
+and class-sharing warnings; the initial compilation reported implicit annotation-processing warnings.
+Expected duplicate tests produce PostgreSQL error logs while their assertions pass. No dependency settings
+were changed to suppress these messages.
+
+Limitations: no REST authorization/API, no editing/delete permissions at database level, no cross-module facade,
+no real sales-history source, no maximum sales or individual calculations. Direct SQL writers can bypass the
+Java representability policy; this existing boundary remains unchanged. Changing these requires a later scope.
+
+- Increment 3B: implemented registration/query persistence; validated the real V9 mapping with PostgreSQL,
+  Flyway and Hibernate validate, and confirmed all 84 selected cases passed after correcting one test mock.
+  No commits or push.
