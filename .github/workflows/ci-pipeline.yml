@@ -29,8 +29,11 @@ jobs:
       - name: Construir y levantar contenedores con Docker Compose
         run: docker compose up -d --build
 
-      - name: Esperar a que los servicios estén listos
-        run: sleep 25
+      - name: Esperar a que la base de datos esté lista
+        run: |
+          until [ "$(docker inspect --format='{{.State.Health.Status}}' gas-station-db-dev)" == "healthy" ]; do
+            sleep 2
+          done
 
       - name: Ejecutar pruebas del Backend (Java)
         run: docker exec gas-station-backend-dev mvn test
