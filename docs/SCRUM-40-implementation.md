@@ -4,9 +4,61 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: backend registration now stores/exposes maximumSale via V11; new annual HTTP registrations require it. No edit/delete operations are exposed. The existing explicit-profile engine verifies conditional 70/30. No annual-to-monthly formula or universal reparto is inferred.
+- HU-14: backend registration now stores/exposes maximumSale via V12; new annual HTTP registrations require it. No edit/delete operations are exposed. The existing explicit-profile engine verifies conditional 70/30. No annual-to-monthly formula or universal reparto is inferred.
 - HU-16: authenticated ADMIN REST calculation of day/night averages over explicit client observations is implemented; automatic server-history retrieval remains unavailable and is not claimed.
 - HU-17: authenticated ADMIN REST comparison supplies labelled chart series over explicit client observations; the graph itself belongs to Angular, outside this backend scope. See the final acceptance matrix for the source-version limitation.
+
+## PR correction: migration numbering after integrating main
+
+Remote main inspected after `git fetch origin`: `f553427`, which integrates PR #20
+(`feature/back/products`). Its `V9__create_products_table.sql` is preserved unchanged.
+The backend branch integrates main with `git merge --no-commit --no-ff origin/main`;
+the merge is left pending for the author to review and commit. No history was rewritten.
+The C-14 branch at `ee9b5f5` was not merged or modified.
+
+| Original SCRUM-40 filename | Current filename |
+| --- | --- |
+| `V9__create_sales_targets.sql` | `V10__create_sales_targets.sql` |
+| `V10__create_sales_distribution_profiles.sql` | `V11__create_sales_distribution_profiles.sql` |
+| `V11__add_sales_target_maximum_sale.sql` | `V12__add_sales_target_maximum_sale.sql` |
+
+These are filename-only SQL changes. Product tables, constraints and indexes belong
+to V9; sales-owned tables and indexes belong to V10/V11; V12 adds maximum_sale to
+the sales_targets table created by V10. No product objects are changed by V10-V12.
+SalesTargetMigrationTest now expects V1-V12, checks migration from main's V9 while
+preserving existing users and products, and checks V11-to-V12 upgrades of prior targets.
+SalesTargetEntity documents the current V10/V12 mapping.
+
+Validation of this correction: `mvn.cmd -o clean "-Dtest=SalesTarget*Test" test`
+passed 177 tests (zero failures, errors or skips), including eight migration tests.
+PostgreSQL 16 Testcontainers verified fresh V1-V12, V9-to-V12 with existing products
+and users preserved, and V11-to-V12 with existing targets preserved. No development
+datasource was used. `mvn.cmd -DskipTests package` produced the executable backend JAR.
+The initial offline package attempt lacked three cached packaging-plugin artifacts;
+the online retry fetched those artifacts without changing project dependencies.
+Existing warnings about Flyway/PostgreSQL support, dynamic Java agents and the test
+Modulith shutdown did not cause test failures and were left outside this correction.
+
+Observed commit convention: emoji followed by conventional `type(scope): description`,
+for example `541eb0c` (`🐛 fix(inventory): unify exception handler error responses to English`)
+and `e63c001` (`✨ feat(frontend): add workers screen with list, filters and form`).
+Whitespace varies in the existing history; a single space after the emoji is recommended.
+The nine original SCRUM-40 commits still lack emojis. A new compliant merge commit
+does not change them; rewording published commits requires the author's authorization,
+or the team must explicitly accept a squash with a compliant final message.
+
+**Historical evidence:** the increment logs below retain the original V9/V10/V11
+numbers and filenames used for those executions. They are not current migration
+paths or new validation results; use the mapping above for the current files. Numeric
+test data, IDs, decimal scales and business values have not been renumbered.
+
+**Existing development database:** it already applied SCRUM-40 under the original
+numbering. That history is incompatible with these filenames and main's product V9.
+This correction does not access or migrate that database, or repair/clean/baseline its
+history. Migration checks run only in disposable PostgreSQL Testcontainers with their
+own generated connection settings. Existing shared containers and volumes are retained.
+
+## Historical increment logs (original migration numbering)
 
 Increment 3A baseline: clean Git checkout at `49aae77` on `feature/back/sales-targets-statistics`; V9 was available.
 V9 now defines `sales_targets`; it was executed only in a disposable test container.

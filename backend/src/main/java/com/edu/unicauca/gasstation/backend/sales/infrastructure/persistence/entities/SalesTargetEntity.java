@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** V9/V11 mapping. Partial unique indexes are owned exclusively by Flyway. */
+/** V10/V12 mapping. Partial unique indexes are owned exclusively by Flyway. */
 @Entity
 @Table(name = "sales_targets")
 @Getter

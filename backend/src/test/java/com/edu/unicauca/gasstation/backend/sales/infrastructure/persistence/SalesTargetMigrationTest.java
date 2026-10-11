@@ -39,18 +39,22 @@ class SalesTargetMigrationTest {
     @Test
     void migratesEmptyDatabaseAndIsRepeatableWithoutNewMigrations() {
         Flyway flyway = flyway("public");
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("11");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("12");
+        assertThat(flyway.info().applied()).extracting(migration -> migration.getVersion().getVersion())
+                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         flyway.validate();
     }
 
     @Test
-    void upgradesVersionEightWithoutChangingExistingTables() throws SQLException {
+    void upgradesVersionNineWithoutChangingExistingUsersOrProducts() throws SQLException {
         Flyway baseline = Flyway.configure().dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
-                .schemas("upgrade_test").locations("classpath:db/migration").target("8").load();
-        assertThat(baseline.migrate().migrationsExecuted).isEqualTo(8);
+                .schemas("upgrade_test").locations("classpath:db/migration").target("9").load();
+        assertThat(baseline.migrate().migrationsExecuted).isEqualTo(9);
         try (Connection connection = connection(); Statement statement = connection.createStatement()) {
             statement.execute("INSERT INTO upgrade_test.users (username, password, role) VALUES ('migration-test', 'test', 'ADMIN')");
+            statement.execute("INSERT INTO upgrade_test.product (code, name, category, price, cost) "
+                    + "VALUES ('migration-product', 'Migration product', 'OTRO', 12.34, 5.67)");
         }
         Flyway upgrade = flyway("upgrade_test");
         assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(3);
@@ -60,12 +64,23 @@ class SalesTargetMigrationTest {
             assertThat(rows.next()).isTrue();
             assertThat(rows.getString(1)).isEqualTo("migration-test");
         }
+        try (Connection connection = connection(); Statement statement = connection.createStatement();
+                var rows = statement.executeQuery("SELECT code, name, category, price, cost, active FROM upgrade_test.product")) {
+            assertThat(rows.next()).isTrue();
+            assertThat(rows.getString("code")).isEqualTo("migration-product");
+            assertThat(rows.getString("name")).isEqualTo("Migration product");
+            assertThat(rows.getString("category")).isEqualTo("OTRO");
+            assertThat(rows.getBigDecimal("price")).isEqualByComparingTo("12.34");
+            assertThat(rows.getBigDecimal("cost")).isEqualByComparingTo("5.67");
+            assertThat(rows.getBoolean("active")).isTrue();
+            assertThat(rows.next()).isFalse();
+        }
     }
 
     @Test
-    void versionElevenPreservesExistingTargetsAndConstrainsMaximumSale() throws SQLException {
+    void versionTwelvePreservesExistingTargetsAndConstrainsMaximumSale() throws SQLException {
         var baseline=Flyway.configure().dataSource(POSTGRES.getJdbcUrl(),POSTGRES.getUsername(),POSTGRES.getPassword())
-                .schemas("maximum_upgrade").locations("classpath:db/migration").target("10").load();
+                .schemas("maximum_upgrade").locations("classpath:db/migration").target("11").load();
         baseline.migrate();
         try(var connection=connection();var statement=connection.createStatement()) {
             statement.execute("INSERT INTO maximum_upgrade.sales_targets(target_year,category,target_value,unit) VALUES(2026,'BASKET',10,'COP')");
