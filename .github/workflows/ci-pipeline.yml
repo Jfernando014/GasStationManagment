@@ -27,7 +27,7 @@ jobs:
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
       - name: Construir y levantar contenedores con Docker Compose
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
 
       - name: Esperar a que los servicios estén listos
         run: sleep 25
@@ -40,4 +40,4 @@ jobs:
 
       - name: Apagar contenedores
         if: always()
-        run: docker-compose down
+        run: docker compose down
