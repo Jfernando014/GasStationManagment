@@ -47,7 +47,7 @@ jobs:
         run: docker exec --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test
 
       - name: Ejecutar pruebas del Frontend (Angular)
-        run: docker exec gas-station-frontend-dev npm run test -- --run
+        run: docker exec gas-station-frontend-dev ./node_modules/.bin/vitest run
 
       - name: Apagar contenedores
         if: always()
