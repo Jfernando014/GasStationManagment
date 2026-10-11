@@ -82,17 +82,37 @@ public class InventoryExceptionHandler {
         body.put("path", request.getRequestURI());
         return body;
     }
+
     @ExceptionHandler(FuelPriceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleFuelPriceNotFound(
             FuelPriceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, "No encontrado", ex.getMessage(), request);
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
 
 
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
-    public ResponseEntity<Map<String, Object>> handleInvalidParameter(HttpServletRequest request) {
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParameter(HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "Invalid or missing parameters: check fuelType (MOTOR, DIESEL, EXTRA, MAX_PRO) and date (yyyy-MM-dd)",
                 request);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleProductNotFound(
+            ProductNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateProductCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateProductCode(
+            DuplicateProductCodeException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data",
+                "The value of parameter '" + ex.getName() + "' is invalid", request);
     }
 }
