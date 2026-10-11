@@ -32,11 +32,11 @@ public class SalesDistributionController {
     public StoredProfile findById(@PathVariable long id) { return service.findById(id); }
 
     @PostMapping("/targets/{id}/distribution")
-    @Operation(summary="Calculate individual monthly targets", description="ADMIN only. Assignments are explicitly supplied and validated against public workers/shift contracts; they are not fetched from the schedule.")
+    @Operation(summary="Calculate individual monthly targets", description="ADMIN only. Reuses the stored profile. Explicit assignments accept optional inclusive endDate for repeating the same shift within a month; no rotation is inferred. Assignments are validated against public workers/shift contracts, not fetched from the schedule.")
     public SalesDistributionResponse calculate(@PathVariable long id, @Valid @RequestBody CalculateDistributionRequest request,
                                                     Authentication authentication) {
         SalesAdminAuthorization.requireAdmin(authentication);
-        var assignments = request.assignments().stream().map(CalculateDistributionRequest.AssignmentRequest::toDomain).toList();
+        var assignments = request.toDomainAssignments();
         return SalesDistributionResponse.from(id,request.profileId(),service.calculate(id, request.profileId(), request.outputScale(), assignments));
     }
 }

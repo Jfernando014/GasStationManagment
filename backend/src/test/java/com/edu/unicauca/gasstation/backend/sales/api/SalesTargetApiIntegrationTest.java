@@ -158,6 +158,46 @@ class SalesTargetApiIntegrationTest {
     }
 
     @Test
+    void compactRangeMatchesExplicitDatesUsingStoredProfileAndRealJwt() throws Exception {
+        long profile=createProfile();
+        var response=mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                .content(SalesTargetControllerTest.BODY)).andExpect(status().isCreated()).andReturn().getResponse();
+        long target=json.readTree(response.getContentAsString()).get("id").asLong();
+        var worker=new UUID(0,1);var role=new RoleInfo(new UUID(0,10),"TITULAR",1);
+        when(workers.getWorkersByIds(List.of(worker))).thenReturn(Map.of(worker,new ScheduleWorkerInfo(worker,"Explicit fixture",role.id(),true)));
+        when(shifts.getActiveCatalog()).thenReturn(List.of(new ShiftCodeInfo(new UUID(0,20),"DIA","Day",role,"DAY",
+                List.of(new ShiftCodeInfo.Segment(6,18)),12,false,null,true)));
+        String prefix="{\"profileId\":"+profile+",\"outputScale\":2,\"assignments\":[";
+        String row="{\"date\":\"2026-08-01\",\"workerId\":\""+worker+"\",\"shiftCode\":\"DIA\"}";
+        String explicit=prefix+row+","+row.replace("08-01","08-02")+","+row.replace("08-01","08-03")+"]}";
+        String compact=prefix+row.replace("\"shiftCode\":\"DIA\"","\"shiftCode\":\"DIA\",\"endDate\":\"2026-08-03\"")+"]}";
+        var route=SalesTargetControllerTest.BASE+"/"+target+"/distribution";
+        var daily=mvc.perform(post(route).header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(explicit))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        var range=mvc.perform(post(route).header("Authorization",token).contentType(MediaType.APPLICATION_JSON).content(compact))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.byDate.length()").value(3))
+                .andExpect(jsonPath("$.allocations.length()").value(36)).andReturn().getResponse();
+        assertThat(json.readTree(range.getContentAsString())).isEqualTo(json.readTree(daily.getContentAsString()));
+        assertThat(json.readTree(range.getContentAsString()).get("monthlyTotal").get("official").decimalValue())
+                .isEqualByComparingTo("26920");
+    }
+
+    @Test
+    void invalidRangesNeverQueryPublicSources() throws Exception {
+        String row="{\"date\":\"2026-08-01\",\"workerId\":\"00000000-0000-0000-0000-000000000001\",\"shiftCode\":\"DIA\"}";
+        String prefix="{\"profileId\":1,\"outputScale\":2,\"assignments\":[";
+        for (String end : List.of("2026-07-31", "2026-09-01", "invalid")) {
+            String body=prefix+row.replace("\"shiftCode\":\"DIA\"","\"shiftCode\":\"DIA\",\"endDate\":\""+end+"\"")+"]}";
+            mvc.perform(post(SalesTargetControllerTest.BASE+"/1/distribution").header("Authorization",token)
+                    .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+        }
+        mvc.perform(post(SalesTargetControllerTest.BASE+"/1/distribution").header("Authorization",token)
+                .contentType(MediaType.APPLICATION_JSON).content(prefix+row+","+row+"]}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(workers,shifts);
+    }
+
+    @Test
     void invalidConfigurationCannotRoundOrCreateRows() throws Exception {
         var body=json.writeValueAsString(SalesTargetDistributionTestData.workbook());
         for(var invalid:List.of(body.replace("1.1,","0.0000000000001,"),body.replace("\"supportShare\":0.3","\"supportShare\":0.4"))) {
@@ -173,7 +213,8 @@ class SalesTargetApiIntegrationTest {
         when(users.loadUserByUsername("reader-test")).thenReturn(reader);
         var readerToken="Bearer "+jwt.generateToken(reader);
         var config=json.writeValueAsString(SalesTargetDistributionTestData.workbook());
-        var calculation="{\"profileId\":1,\"outputScale\":12,\"assignments\":[{\"date\":\"2026-08-01\",\"workerId\":\"00000000-0000-0000-0000-000000000001\",\"shiftCode\":\"DIA\"}]}";
+        // An invalid range would be 400 if expanded; 403 proves authorization runs first.
+        var calculation="{\"profileId\":1,\"outputScale\":12,\"assignments\":[{\"date\":\"2026-08-01\",\"endDate\":\"2026-07-31\",\"workerId\":\"00000000-0000-0000-0000-000000000001\",\"shiftCode\":\"DIA\"}]}";
         for(var route:List.of("/api/v1/sales/distribution-profiles",SalesTargetControllerTest.BASE+"/1/distribution")) {
             var body=route.endsWith("profiles")?config:calculation;
             mvc.perform(post(route).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isForbidden());

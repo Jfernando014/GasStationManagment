@@ -628,3 +628,92 @@ in negative test logs. No commits or push were performed.
 
 - 2026-10-11: implemented the verified workbook distribution core and explicit-input REST workflow, immutable
   profile persistence in V10, public-contract validation and missing-source ports; all 133 selected tests passed.
+
+### 2026-10-11 — Reducción de entradas repetitivas del administrador
+
+Estado inicial verificado: rama `feature/back/sales-targets-statistics`, HEAD `e6fb469`, Git limpio.
+
+#### Contratos y bloqueos comprobados
+
+- `shifts/ShiftExternalService.java` solo publica `findShiftCodeIdByCode`, `getActiveCatalog` y
+  `getRolesByIds`. No publica ninguna consulta de asignaciones por fechas.
+- `shifts/ScheduleWorkerDirectory.java`, implementado por workers, publica `getWorkersByIds`;
+  sirve para validar personas, no para obtener su agenda. Se conserva su integración existente.
+- `shifts/package-info.java` declara internos todos los subpaquetes. Aunque
+  `GET /api/shifts/schedule?from=2026-08-01&to=2026-08-31` existe y consulta asignaciones reales,
+  su controlador, DTO y `ShiftScheduleService.getSchedule` no son contratos Java entre módulos.
+  No se importaron esas clases ni se implementó una llamada HTTP del backend a sí mismo.
+- Falta exactamente la capacidad pública Java de consultar asignaciones almacenadas entre dos
+  fechas inclusivas y devolver fecha, UUID del trabajador y código del turno. No existe un nombre
+  de método aprobado: no se agregó ni se supuso un contrato de un compañero.
+- Angular puede usar el GET de agenda existente y transformar `workers[].workerId` y cada
+  `workers[].days[]` (`date`, `shiftCode`) en las filas del POST de distribución actual. Esa ruta
+  solo lista trabajadores activos con asignaciones; no se deben inventar días ausentes. Esta
+  conexión de frontend no fue implementada en esta entrega, cuyo alcance es sales del backend.
+- No existe implementación de `SalesHistoryReadPort`. `SaleRepositoryExample` es un esqueleto,
+  y `Journal`/`JournalStep` registran estado de jornadas y pasos, no cantidades vendidas.
+  No se conectaron esos registros como ventas. Los siete históricos del perfil siguen siendo
+  configurados explícitamente; no se creó otra tabla de ventas ni un promedio ficticio.
+- `SalesAssignmentReadPort` sigue reservado y sin implementación. No se creó otro endpoint
+  equivalente a los mismos datos manuales ni una operación que pretenda disponer de estas fuentes.
+
+#### Mejora implementada y contrato compatible
+
+Se amplió el POST existente `/api/v1/sales/targets/{id}/distribution`, sin cambiar su ruta ni salida.
+Reutiliza el perfil persistido mediante `profileId`, como antes, y acepta `endDate` opcional en cada
+fila. Una sola fila representa el mismo trabajador y el mismo turno en todas las fechas inclusivas:
+
+```json
+{
+  "profileId": 1,
+  "outputScale": 2,
+  "assignments": [
+    {
+      "date": "2026-08-01",
+      "endDate": "2026-08-03",
+      "workerId": "00000000-0000-0000-0000-000000000001",
+      "shiftCode": "DIA"
+    }
+  ]
+}
+```
+
+El UUID e ID anteriores son ilustrativos, no datos de producción. Omitir `endDate` conserva la
+asignación de un solo día y el JSON anterior de Angular. Un rango puede sustituir hasta 31 filas
+consecutivas iguales, pero no genera rotaciones, descansos ni excepciones. Solo se debe utilizar
+cuando el administrador declare explícitamente ese mismo turno en todas las fechas del rango.
+La fuente en la respuesta sigue siendo `EXPLICIT_CALLER_SUPPLIED_WORKSHEET_DATE_ASSIGNMENTS`.
+
+Se rechazan con 400 rangos invertidos, cruces de mes, fechas JSON inválidas y solapamientos de
+fecha/trabajador, incluso si proponen códigos distintos. La expansión queda limitada a un mes
+antes de generar filas. El motor conserva la comprobación de pertenencia al mes de la meta.
+Los turnos y personas se validan con los mismos contratos públicos; ningún rango se guarda en shifts.
+La comprobación literal ADMIN continúa antes de expandir las filas y llamar al servicio. La
+validación Jakarta/deserialización de JSON sigue ejecutándose antes de entrar al controlador.
+No se cambiaron fórmulas, precisión, migraciones, persistencia ni configuración de seguridad.
+
+#### Archivos y resultados reales
+
+Modificados:
+- `backend/src/main/java/com/edu/unicauca/gasstation/backend/sales/api/dto/CalculateDistributionRequest.java`
+- `backend/src/main/java/com/edu/unicauca/gasstation/backend/sales/api/SalesDistributionController.java`
+- `backend/src/test/java/com/edu/unicauca/gasstation/backend/sales/api/SalesTargetApiIntegrationTest.java`
+- `docs/SCRUM-40-implementation.md`
+
+Creado:
+- `backend/src/test/java/com/edu/unicauca/gasstation/backend/sales/api/SalesTargetDistributionRequestTest.java`
+
+Ejecutado desde backend: `mvn -o '-Dtest=SalesTarget*Test' test`.
+Resultado: **BUILD SUCCESS; 140 pruebas, 0 fallos, 0 errores y 0 omitidas**, en 43.881 segundos.
+Incluye las 133 pruebas previas, cinco pruebas nuevas de expansión (contrato anterior, equivalencia,
+inmutabilidad, febrero bisiesto, extremos iguales, límites y solapamientos), y dos pruebas HTTP nuevas:
+equivalencia completa del resultado compacto frente a filas diarias, y rechazo de rangos inválidos
+antes de consultar contratos públicos. Se reforzó el caso de denegación anónima/no ADMIN usando
+un rango invertido: devuelve 403 antes de expandirlo y sin consultar workers/shifts.
+
+Las ocho pruebas HTTP de integración utilizaron JWT reales y filtros activos, PostgreSQL 16 con
+Testcontainers, Flyway V1–V10 y Hibernate validate; el directorio de autenticación y los contratos
+workers/shifts son mocks explícitos. No se conectaron agendas o ventas reales en esas pruebas.
+Las migraciones se ejecutaron solo en bases desechables de Testcontainers. Persisten las advertencias
+anteriores de compatibilidad Flyway/PostgreSQL y agente Mockito; no causaron fallos.
+No se instalaron dependencias, modificaron módulos de compañeros ni realizaron commits o push.
