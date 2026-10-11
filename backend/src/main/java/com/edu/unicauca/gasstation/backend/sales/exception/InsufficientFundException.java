@@ -7,11 +7,11 @@ import java.time.LocalDate;
 public class InsufficientFundException extends RuntimeException {
 
     public InsufficientFundException(BigDecimal available, BigDecimal requested, LocalDate date) {
-        super("Insufficient savings fund at " + date + ": available " + available
-                + ", requested " + requested);
+        super("Fondo de ahorro insuficiente para la fecha " + date + ": disponible " + available
+                + ", solicitado " + requested);
     }
 
     public InsufficientFundException(LocalDate date, BigDecimal balance) {
-        super("Insufficient savings fund: balance would become negative at " + date + ": " + balance);
+        super("Fondo de ahorro insuficiente: el saldo quedaría en negativo en la fecha " + date + ": " + balance);
     }
 }
