@@ -39,7 +39,7 @@ class SalesTargetMigrationTest {
     @Test
     void migratesEmptyDatabaseAndIsRepeatableWithoutNewMigrations() {
         Flyway flyway = flyway("public");
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("9");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("10");
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         flyway.validate();
     }
@@ -53,7 +53,7 @@ class SalesTargetMigrationTest {
             statement.execute("INSERT INTO upgrade_test.users (username, password, role) VALUES ('migration-test', 'test', 'ADMIN')");
         }
         Flyway upgrade = flyway("upgrade_test");
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);
         upgrade.validate();
         try (Connection connection = connection(); Statement statement = connection.createStatement();
                 var rows = statement.executeQuery("SELECT username FROM upgrade_test.users")) {

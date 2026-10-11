@@ -11,9 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -30,7 +27,7 @@ public class SalesTargetController {
     @Operation(summary = "Register a configured target", description = "Requires the exact ADMIN authority. No automatic annual-to-monthly calculation.")
     public ResponseEntity<SalesTargetResponse> register(@Valid @RequestBody CreateSalesTargetRequest request,
                                                         Authentication authentication) {
-        requireAdmin(authentication);
+        SalesAdminAuthorization.requireAdmin(authentication);
         var stored = service.register(mapper.toDomain(request));
         var location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(stored.id()).toUri();
@@ -62,14 +59,4 @@ public class SalesTargetController {
         return service.findByYear(year).stream().map(mapper::toResponse).toList();
     }
 
-    // The sole HTTP write entry point calls this before mapping or invoking the service.
-    private static void requireAdmin(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()
-                || new AuthenticationTrustResolverImpl().isAnonymous(authentication)) {
-            throw new AuthenticationCredentialsNotFoundException("Se requiere autenticación");
-        }
-        if (authentication.getAuthorities().stream().noneMatch(a -> "ADMIN".equals(a.getAuthority()))) {
-            throw new AccessDeniedException("Se requiere la autoridad ADMIN");
-        }
-    }
 }

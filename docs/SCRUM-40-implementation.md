@@ -4,7 +4,7 @@
 
 Baseline inspected: commit `232688e` on `feature/back/nicolas_dev`.
 
-- HU-14: increments 1 and 2 provide pure domain types; 3A adds the schema and decimal policy; 3B adds Java registration/query persistence and Hibernate validation; 3C adds authenticated REST registration and queries with an explicit ADMIN write guard. Excel calculations remain outside scope.
+- HU-14: increments 1-3C provide configured targets and authenticated REST persistence; the workbook distribution increment below adds a pure calculation engine, sourced parameter snapshots and ADMIN calculation endpoints. Automatic live-history/schedule retrieval and unconfirmed exceptions remain unavailable.
 - HU-16: pending; requires real historical sales from the owning sales module.
 - HU-17: pending; requires approved scenario rules and the same real sales source.
 
@@ -68,7 +68,7 @@ No conversion or dependency on inventory is introduced in this increment.
 - Additional audit requirements and future schema evolution. Registration HTTP authorization is implemented in 3C.
 - Editing lock rules and any future edit/delete operations; neither operation is exposed by the targets API.
 - Monthly consistency rules, if any, relative to an annual target.
-- Hourly weights, parameter versions, titular/support split applicability and individual results.
+- Live parameter refresh and operational exceptions. Hourly weights, immutable parameter snapshots and workbook-confirmed titular/support allocation are implemented in the distribution increment below.
 - Manual adjustments, holidays, operational date of night shifts and historical-average denominator.
 - Public assignment query contract in shifts and public historical-sales contract in sales.
 
@@ -403,3 +403,228 @@ No dependencies were installed or security settings changed to suppress warnings
 - Increment 3C: completed target registration/query REST API within sales, validated ADMIN protection with
   active existing filters and all 113 selected tests. Business decisions listed above remain pending.
   No commit or push.
+
+## Workbook distribution increment — 2026-10-11
+
+### Baseline and primary evidence
+
+Started from clean Git on `feature/back/sales-targets-statistics`, HEAD `d52cbbd`.
+The requested `docs/references/modelo_eds_bellavista.xlsx` does not exist. The original 11-sheet workbook
+was found at `docs/references/6 OBJETIVOS VENDEDORES BELLAVISTA AGOSTO 2026 (2).xlsx`.
+Python/openpyxl were unavailable. Its ZIP/XML content, shared strings, formulas, shared-formula masters and
+cached results were read directly with PowerShell/.NET, without installing dependencies or editing the file.
+SHA-256 before and after implementation:
+`3A4BBD81E2254DD61FEDC73A568DDFED29C879BD53997E437EF72AE9CABD7555`.
+
+The workbook sheets are MODELO NUEVO, BASE DE DATOS, ESCENARIOS, PROM DIA, VENDEDORES, PRESUPUESTO 2026,
+HISTÓRICO DE VENTAS, PARAMETROS, CALC METAS, ESQUEMA TURNOS and DASHBOARD.
+This implementation follows formula dependencies, not just cached values; it is not a general Excel evaluator.
+
+| Evidence | Verified behavior implemented |
+| --- | --- |
+| PARAMETROS B5:B28, E4=`SUM(B5:B28)` | 24 relative hourly weights; workbook sum is 158.1, not 100. No fixed required sum other than positive. |
+| PARAMETROS B32:B38 | Station historical gallon averages by weekday, explicitly described as a report snapshot through July 2026. |
+| CALC METAS D11/E11/F11 | Look up hour/weekday; expected hourly mass is `hourWeight / sumHourWeights * weekdayHistoricalGallons`. |
+| PARAMETROS B45:L68 and ESQUEMA TURNOS C5:AG8 | Working-hour masks for each supplied worker/date shift. Night covers 0..5 and 18..23 on the worksheet date. |
+| PARAMETROS B71/B72/A74/A75; CALC METAS T11:W11 | Official active-worker weights: titular 0.7, support 0.3 for listed support shift codes, normalized over workers active in that hour. The note attributes the decision to the administrator on 20-Aug-2026. |
+| PARAMETROS B79/B80 and CALC METAS X11:AA11/AB11 | Reference active-worker weights 0.5/0.5, separate from official targets. |
+| CALC METAS K11 and B4:C7 | Hourly expected mass times worker weight divided by active-weight sum; sum across month; normalize each worker by the total covered mass. |
+| CALC METAS D4/E4; MODELO NUEVO AJ14/AJ29 | Apply the same resulting share to the independently configured monthly fuel and basket targets. |
+| ESCENARIOS E2:E8 | Average nonzero station daily totals by weekday. HistoricalDayAverages exposes exact fractions and absence, not fabricated zero baselines. |
+| BASE DE DATOS F2/G2, PROM DIA, VENDEDORES | Manual arithmetic/adjustments, support cutoffs and performance metrics exist. These were inspected but not automatically imported or generalized as approved sales rules. |
+| PRESUPUESTO 2026 C5:S14 and HISTÓRICO DE VENTAS | Monthly/product budgets, sums and execution exist; no formula authorizes dividing an annual target by twelve. Product-specific storage remains outside scope. |
+
+### Implemented formulas and precision
+
+Let `w[h]` be the hourly curve, `a[d]` the weekday historical gallon baseline, and `p[i]` the configured
+official/reference role weight for a worker's supplied shift code. For workers active in a particular hour:
+
+```text
+expected[d,h] = a[d] * w[h] / SUM(w)
+contribution[d,h,i] = expected[d,h] * p[i] / SUM(active p)
+workerShare[i] = SUM(contribution[d,h,i]) / SUM(all covered contributions)
+individualMonthlyTarget[i] = configuredMonthlyTarget * workerShare[i]
+```
+
+The engine uses equivalent exact masses `a[d] * w[h] * p[i] / SUM(active p)` because the common SUM(w)
+cancels during final normalization. All intermediate operations use reduced BigInteger fractions, not
+double, MathContext or rounded BigDecimal division. A sole active worker receives 100%; two active workers
+with configured 0.7/0.3 receive that ratio; multiple active workers are normalized exactly as K11 does.
+Support-code classification uses exact code membership rather than Excel SEARCH substring matching.
+No 70/30 or 50/50 production defaults are installed: all shares and support codes must be supplied in a profile.
+The formula's activation by active coverage and support-code classification is verified in the workbook.
+
+Finite output precision is explicit per request (`outputScale`, 0..12). The total must be exactly representable
+at that scale; otherwise calculation fails. Each ideal date/hour/worker quota is floored in that unit, and
+the remaining units go to the largest exact fractional remainders. Equal remainders are resolved by the
+canonical date, hour, then Java UUID order. This technical apportionment policy was chosen for exact conservation
+under the user's explicit authorization; it is not a rounding rule found in Excel. It preserves the original
+domain target and conserves the full monthly amount for both official and reference results, including repeating
+fractions. It does not imply an approved final display scale for gallons or COP.
+
+Uncovered positive-weight hours are returned explicitly. As in the workbook's zero-contribution/normalization
+formulas, they do not contribute to the denominator: the whole target is normalized over covered hours.
+This may increase targets on covered hours and must not be mistaken for complete schedule coverage.
+No covered positive mass, zero active share sum, incomplete profiles, invalid hours, duplicate worker/date rows,
+out-of-month assignments, negative parameters and annual calculation inputs are rejected. Annual registration
+continues to work; annual-to-monthly calculation is not implemented. A zero target with usable coverage is valid.
+
+### Architecture, persistence and endpoints
+
+The domain engine is independent of JPA, HTTP, Spring and other modules. It accepts immutable typed inputs and
+returns official/reference totals by month, date, hour and worker, individual hourly allocations, precision
+metadata, parameter provenance and uncovered-hour diagnostics. SalesDistributionService coordinates the
+stored target/profile, the public-contract coverage resolver and the pure engine.
+
+V10 availability was checked immediately before creating `V10__create_sales_distribution_profiles.sql`.
+It creates only sales-owned profile, hour-weight, weekday-baseline and support-code tables. Profile ID acts
+as an immutable snapshot version, with a DB-generated creation timestamp and mandatory source description.
+There is no automatic refresh or seed. JDBC registration is transactional, reads stored numeric values back,
+and exposes only registration and lookup. NUMERIC representability is checked before writes through the
+immutable validated profile; DB constraints reject invalid ranges, shares and NaN weights. Composite primary
+keys prevent duplicate profile/hour, profile/weekday and profile/code entries. The application enforces all
+24 hours, all seven days and positive sums; SQL alone does not enforce child-row completeness. SQL permissions
+do not forbid direct UPDATE/DELETE, and direct SQL could bypass representability checks, as with V9.
+Existing V1-V9 are unchanged. No sales-history, assignment or calculation-run table was created.
+
+| Endpoint | Behavior |
+| --- | --- |
+| POST `/api/v1/sales/distribution-profiles` | ADMIN; validate and register an explicit complete profile; 201, body and Location. |
+| GET `/api/v1/sales/distribution-profiles/{id}` | Authenticated; read profile snapshot; 200 or 404. |
+| POST `/api/v1/sales/targets/{id}/distribution` | ADMIN; calculate the existing monthly target with a profile and explicitly supplied assignments; 200, 400 for invalid/unavailable inputs, 404 for missing target/profile. Does not persist results. |
+
+SalesAdminAuthorization shares the same explicit literal ADMIN guard across the original target registration
+and both new POST routes. Anonymous, unauthenticated or non-ADMIN principals cannot invoke writes/calculation.
+The existing global chain still returns 403 for anonymous HTTP requests. @Valid still precedes the local guard.
+Security/JWT classes were neither copied nor modified. Sales advice now covers both sales controllers.
+
+Example profile from the workbook (example/snapshot data, never constants/defaults):
+
+```json
+{
+  "name": "Bellavista July-2026 report snapshot",
+  "source": "Administrator workbook PARAMETROS B5:B38/B71:B80, report through July 2026",
+  "hourlyWeights": [1.1,0.9,0.5,0.4,0.5,1.85,5.3,6.6,7,8.1,8.05,9,9.3,9.6,9.15,9.6,9.2,9.85,13.3,12.7,10.9,8.2,4.9,2.1],
+  "historicalDailyGallons": {"MONDAY":701.54,"TUESDAY":705.34,"WEDNESDAY":764.49,"THURSDAY":756.2,"FRIDAY":799.65,"SATURDAY":883.42,"SUNDAY":625.86},
+  "supportShiftCodes": ["12-7","6-9y5-9","2-9pm","6-9am","2-6pm","6-9y2-6"],
+  "titularShare": 0.7, "supportShare": 0.3,
+  "referenceTitularShare": 0.5, "referenceSupportShare": 0.5
+}
+```
+
+Calculation input shape (IDs and rows must be supplied from actual available data; no fabricated production IDs):
+
+```text
+profileId: stored snapshot ID
+outputScale: explicit integer 0..12
+assignments: [{date: worksheet/calendar date, workerId: actual UUID, shiftCode: public catalog code}, ...]
+```
+
+Response includes targetId/profileId, the target, decimal policy, parameterSource, assignmentSource,
+monthlyTotal, allocations, byDate, structured byHour entries, byWorker and uncoveredHours. Official and reference
+totals are kept separate. Consumers must use decimal-safe parsing of JSON amounts. The assignmentSource is
+always `EXPLICIT_CALLER_SUPPLIED_WORKSHEET_DATE_ASSIGNMENTS`; this endpoint does not claim to fetch schedules.
+
+### Available contracts and isolated dependencies
+
+PublicShiftCoverageResolver calls only `shifts.ShiftExternalService.getActiveCatalog()` and
+`shifts.ScheduleWorkerDirectory.getWorkersByIds()`. The latter is implemented by workers. It verifies existence,
+current active status and worker/shift role agreement, and expands public segments, including overnight and split
+segments. No internal worker/shift repositories or services are imported. Currently inactive workers/codes cannot
+be used through this resolver; there is no historical directory snapshot available through these contracts.
+Night segments are projected onto the same worksheet date, matching PARAMETROS, not automatically attributed
+to the next operational day. Operational night-date rules remain unapproved.
+
+There is no public assignment-query contract in shifts. SalesAssignmentReadPort records the required future
+boundary, without an implementation or fake bean. Existing sales has journals/steps and targets but no usable
+historical sales persistence. SalesHistoryReadPort likewise has no production implementation. HistoricalDayAverages
+can consume that port using exact arithmetic; its tests use explicitly synthetic daily-total fixtures and mark
+missing weekdays unavailable. It is not automatically used to refresh stored workbook baselines. Negative daily
+totals are blocked pending approved adjustment rules rather than silently treated as valid weights.
+
+Persisted historicalDailyGallons are parameter snapshots, not a new sales-history source. They are not raw sales,
+are not computed automatically from database history, and must not be presented as current actual sales. No workbook
+sales adjustments or personal names were imported into production tables. No live schedule/history connection or
+HU-16/HU-17 completion is claimed. Maximum sales, manual adjustments, holiday overrides, product-specific capacity,
+parameter effective dates, final display precision and persisted calculation-run approval remain pending.
+
+### Files created and modified
+
+New production Java files under `backend/src/main/java/com/edu/unicauca/gasstation/backend/`:
+
+```text
+sales/api/SalesAdminAuthorization.java
+sales/api/SalesDistributionController.java
+sales/api/dto/CalculateDistributionRequest.java
+sales/api/dto/CreateDistributionProfileRequest.java
+sales/api/dto/SalesDistributionResponse.java
+sales/application/SalesDistributionService.java
+sales/domain/calculation/ConservingAllocation.java
+sales/domain/calculation/DistributionCalculation.java
+sales/domain/calculation/DistributionProfile.java
+sales/domain/calculation/ExactFraction.java
+sales/domain/calculation/HistoricalDayAverages.java
+sales/domain/calculation/SalesTargetDistributionEngine.java
+sales/domain/repositories/DistributionProfileRepository.java
+sales/domain/repositories/SalesAssignmentReadPort.java
+sales/domain/repositories/SalesHistoryReadPort.java
+sales/infrastructure/adapters/PublicShiftCoverageResolver.java
+sales/infrastructure/persistence/adapters/DistributionProfileRepositoryAdapter.java
+```
+
+New migration: `backend/src/main/resources/db/migration/V10__create_sales_distribution_profiles.sql`.
+New test files under `backend/src/test/java/com/edu/unicauca/gasstation/backend/`:
+
+```text
+sales/SalesTargetDistributionTestData.java
+sales/domain/services/SalesTargetDistributionEngineTest.java
+sales/domain/services/SalesTargetHistoricalDayAveragesTest.java
+sales/infrastructure/SalesTargetPublicShiftCoverageResolverTest.java
+```
+
+Modified: sales/api/SalesTargetController.java (shared guard extraction), sales/api/SalesTargetExceptionHandler.java
+(scope includes new controller), sales/api/SalesTargetApiIntegrationTest.java (four new integration cases),
+sales/infrastructure/persistence/SalesTargetMigrationTest.java (latest version 10; upgrade from V8 executes two
+migrations), and this document. Test paths in this sentence are relative to the test Java root.
+
+### Actual verification
+
+Executed offline from backend using existing dependencies and cached Docker images:
+
+```powershell
+mvn -o '-Dtest=SalesTargetDistributionEngineTest' test
+mvn -o '-Dtest=SalesTarget*Test' test
+```
+
+The first focused run passed 9 cases. Subsequent full runs passed 127, 132 and finally **133 tests** as coverage
+and the HTTP projection were completed. Final result: **BUILD SUCCESS, 133 tests, 0 failures, 0 errors, 0 skipped**
+in 40.803 seconds. The prior 113 cases plus 20 additional cases passed. No failing test occurred in this increment.
+Surefire XML/text reports were read to verify the actual totals; no hypothetical success is reported.
+
+- SalesTargetDistributionEngineTest: 11 cases, including exact thirds/tiny budgets, official/reference shares,
+  single-worker normalization, weekday/hour proportionality, original workbook comparison, both target categories,
+  conservation at all result levels, deterministic ordering, absent coverage, leap February, zero, invalid
+  shares/weights/hours/precision/periods, scientific notation and duplicate assignments.
+- SalesTargetHistoricalDayAveragesTest: 2 cases for explicitly synthetic port fixtures, exclusion of zero,
+  missing weekdays, exact 4/3, invalid ranges, duplicates/out-of-range/negative source data.
+- SalesTargetPublicShiftCoverageResolverTest: 3 cases for night/split/rest coverage, missing/inactive workers,
+  unknown shifts, role mismatch and malformed segments, using only mocked public contracts.
+- SalesTargetApiIntegrationTest: 6 cases total (2 prior + 4 new), with real HTTP controller/application service,
+  JDBC profile persistence and JPA target persistence, PostgreSQL 16.13, Flyway V1-V10, Hibernate validate and
+  active real JWT/security chain. The public worker/catalog contracts and authentication directory remain mocks.
+  Checks full profile round-trip, DB timestamp, separate snapshot IDs, SQL constraints/NaN, no rows for invalid
+  decimals/configuration, structured results, precise amounts and ADMIN protection of both new POST routes.
+- All other prior SCRUM-40 test classes passed. No tests from other modules were selected.
+
+Original-workbook verification uses PARAMETROS data and exact ESQUEMA TURNOS rows, mapped to fixture UUIDs, and
+compares against cached C4:C7 shares (0.2754425694, 0.2693149571, 0.2726738509, 0.1825686227) and H4=0.2573270561.
+Tolerance is 0.00001 gallons because cached percentages are finite precision; domain output independently
+conserves the target exactly. Test fixture IDs are not actual worker IDs, and test results are not real sales.
+
+All migrations executed only in disposable Testcontainers databases, never development PostgreSQL. No credentials,
+Docker files, dependencies, security or teammate modules were modified. Existing Flyway/PostgreSQL support,
+Mockito dynamic-agent and initial annotation-processing warnings remain; expected SQL constraint errors appear
+in negative test logs. No commits or push were performed.
+
+- 2026-10-11: implemented the verified workbook distribution core and explicit-input REST workflow, immutable
+  profile persistence in V10, public-contract validation and missing-source ports; all 133 selected tests passed.

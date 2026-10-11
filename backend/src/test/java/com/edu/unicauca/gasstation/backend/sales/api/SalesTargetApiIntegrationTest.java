@@ -1,6 +1,12 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.services.SalesTargetService;
+import com.edu.unicauca.gasstation.backend.sales.SalesTargetDistributionTestData;
+import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.DistributionProfileRepositoryAdapter;
+import com.edu.unicauca.gasstation.backend.sales.infrastructure.adapters.PublicShiftCoverageResolver;
+import com.edu.unicauca.gasstation.backend.shifts.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.mappers.SalesTargetApiMapper;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.SalesTargetRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.mappers.SalesTargetPersistenceMapper;
@@ -44,7 +50,9 @@ class SalesTargetApiIntegrationTest {
     @EnableJpaRepositories("com.edu.unicauca.gasstation.backend")
     @Import({SalesTargetController.class, SalesTargetExceptionHandler.class, SalesTargetApiMapper.class,
             SalesTargetService.class, SalesTargetRepositoryAdapter.class, SalesTargetPersistenceMapper.class,
-            SecurityConfig.class, JwtAuthenticationFilter.class, JwtService.class})
+            SecurityConfig.class, JwtAuthenticationFilter.class, JwtService.class,
+            SalesDistributionController.class, DistributionProfileRepositoryAdapter.class, PublicShiftCoverageResolver.class,
+            com.edu.unicauca.gasstation.backend.sales.application.SalesDistributionService.class})
     static class Application { }
 
     @Container @ServiceConnection
@@ -54,11 +62,15 @@ class SalesTargetApiIntegrationTest {
     @Autowired JwtService jwt;
     @MockBean UserDetailsService users;
     @MockBean AuthenticationProvider provider;
+    @MockBean ShiftExternalService shifts;
+    @MockBean ScheduleWorkerDirectory workers;
+    @Autowired ObjectMapper json;
     String token;
 
     @BeforeEach
     void setup() {
         jdbc.execute("TRUNCATE TABLE sales_targets");
+        jdbc.execute("TRUNCATE TABLE sales_distribution_profiles, sales_distribution_hour_weights, sales_distribution_day_baselines, sales_distribution_support_codes");
         var user = User.withUsername("admin-test").password("unused").authorities("ADMIN").build();
         when(users.loadUserByUsername("admin-test")).thenReturn(user);
         token = "Bearer " + jwt.generateToken(user);
@@ -95,5 +107,79 @@ class SalesTargetApiIntegrationTest {
         mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization", token).contentType(MediaType.APPLICATION_JSON)
                 .content(SalesTargetControllerTest.BODY.replace("FUEL_AGGREGATE", "BASKET").replace("GALLONS", "COP").replace("26920", "0")))
                 .andExpect(status().isCreated());
+    }
+
+    private long createProfile() throws Exception {
+        var response=mvc.perform(post("/api/v1/sales/distribution-profiles").header("Authorization",token)
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(SalesTargetDistributionTestData.workbook())))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.createdAt").isNotEmpty()).andReturn().getResponse();
+        var id=json.readTree(response.getContentAsString()).get("id").asLong();
+        mvc.perform(get(response.getHeader("Location")).header("Authorization",token)).andExpect(status().isOk());
+        return id;
+    }
+
+    @Test
+    void persistsCompleteImmutableParameterSnapshotsAndNumericValues() throws Exception {
+        long first=createProfile(), second=createProfile();
+        assertThat(second).isNotEqualTo(first);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_distribution_hour_weights WHERE profile_id=?",Integer.class,first)).isEqualTo(24);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_distribution_day_baselines WHERE profile_id=?",Integer.class,first)).isEqualTo(7);
+        assertThat(jdbc.queryForObject("SELECT weight FROM sales_distribution_hour_weights WHERE profile_id=? AND hour=0",BigDecimal.class,first)).isEqualByComparingTo("1.1");
+        assertThat(jdbc.queryForObject("SELECT titular_share FROM sales_distribution_profiles WHERE id=?",BigDecimal.class,first)).isEqualByComparingTo("0.7");
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO sales_distribution_hour_weights VALUES (?,24,1)",first)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("INSERT INTO sales_distribution_day_baselines VALUES (?,0,1)",first)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("UPDATE sales_distribution_hour_weights SET weight='NaN' WHERE profile_id=? AND hour=0",first)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("UPDATE sales_distribution_profiles SET support_share=0.4 WHERE id=?",first)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void calculatesHttpUsingSuppliedScheduleAndOnlyPublicWorkerAndShiftContracts() throws Exception {
+        long profile=createProfile();
+        var response=mvc.perform(post(SalesTargetControllerTest.BASE).header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                .content(SalesTargetControllerTest.BODY)).andExpect(status().isCreated()).andReturn().getResponse();
+        long target=json.readTree(response.getContentAsString()).get("id").asLong();
+        var worker=new UUID(0,1);var role=new RoleInfo(new UUID(0,10),"TITULAR",1);
+        when(workers.getWorkersByIds(List.of(worker))).thenReturn(Map.of(worker,new ScheduleWorkerInfo(worker,"Explicit fixture",role.id(),true)));
+        when(shifts.getActiveCatalog()).thenReturn(List.of(new ShiftCodeInfo(new UUID(0,20),"DIA","Day",role,"DAY",
+                List.of(new ShiftCodeInfo.Segment(6,18)),12,false,null,true)));
+        var body="{\"profileId\":"+profile+",\"outputScale\":12,\"assignments\":[{\"date\":\"2026-08-01\",\"workerId\":\""+worker+"\",\"shiftCode\":\"DIA\"}]}";
+        var result=mvc.perform(post(SalesTargetControllerTest.BASE+"/"+target+"/distribution").header("Authorization",token)
+                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignmentSource").value("EXPLICIT_CALLER_SUPPLIED_WORKSHEET_DATE_ASSIGNMENTS"))
+                .andExpect(jsonPath("$.profileId").value(profile)).andExpect(jsonPath("$.targetId").value(target))
+                .andExpect(jsonPath("$.byHour[0].date").value("2026-08-01"))
+                .andExpect(jsonPath("$.byHour[0].hour").value(6))
+                .andExpect(jsonPath("$.allocations.length()").value(12)).andReturn().getResponse();
+        var parsed=json.readTree(result.getContentAsString());
+        assertThat(new BigDecimal(parsed.get("byWorker").get(worker.toString()).get("official").asText())).isEqualByComparingTo("26920");
+        org.mockito.Mockito.verify(workers).getWorkersByIds(List.of(worker));org.mockito.Mockito.verify(shifts).getActiveCatalog();
+        mvc.perform(post(SalesTargetControllerTest.BASE+"/"+target+"/distribution").header("Authorization",token)
+                .contentType(MediaType.APPLICATION_JSON).content(body.replace("2026-08-01","2026-09-01"))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidConfigurationCannotRoundOrCreateRows() throws Exception {
+        var body=json.writeValueAsString(SalesTargetDistributionTestData.workbook());
+        for(var invalid:List.of(body.replace("1.1,","0.0000000000001,"),body.replace("\"supportShare\":0.3","\"supportShare\":0.4"))) {
+            mvc.perform(post("/api/v1/sales/distribution-profiles").header("Authorization",token).contentType(MediaType.APPLICATION_JSON)
+                    .content(invalid)).andExpect(status().isBadRequest());
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_distribution_profiles",Long.class)).isZero();
+    }
+
+    @Test
+    void bothNewPostRoutesDenyAnonymousAndNonAdminBeforePublicQueriesOrWrites() throws Exception {
+        var reader=User.withUsername("reader-test").password("unused").authorities("READ_ONLY").build();
+        when(users.loadUserByUsername("reader-test")).thenReturn(reader);
+        var readerToken="Bearer "+jwt.generateToken(reader);
+        var config=json.writeValueAsString(SalesTargetDistributionTestData.workbook());
+        var calculation="{\"profileId\":1,\"outputScale\":12,\"assignments\":[{\"date\":\"2026-08-01\",\"workerId\":\"00000000-0000-0000-0000-000000000001\",\"shiftCode\":\"DIA\"}]}";
+        for(var route:List.of("/api/v1/sales/distribution-profiles",SalesTargetControllerTest.BASE+"/1/distribution")) {
+            var body=route.endsWith("profiles")?config:calculation;
+            mvc.perform(post(route).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isForbidden());
+            mvc.perform(post(route).header("Authorization",readerToken).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isForbidden());
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sales_distribution_profiles",Long.class)).isZero();
+        org.mockito.Mockito.verifyNoInteractions(workers,shifts);
     }
 }
