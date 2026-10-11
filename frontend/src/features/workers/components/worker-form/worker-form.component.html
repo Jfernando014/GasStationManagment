@@ -1,0 +1,105 @@
+<ng-template #fields>
+  @if (formError(); as message) {
+    <div class="alert-box-danger" role="alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{{ message }}</span>
+    </div>
+  }
+  <app-form-field
+    [fieldId]="idPrefix() + '-document'"
+    label="Documento de Identidad"
+    placeholder="Número de documento"
+    [hint]="documentHint"
+    inputMode="numeric"
+    [digitsOnly]="true"
+    [control]="form.controls.document"
+    [required]="true"
+    [maxLength]="documentMaxLength" />
+  <div class="worker-fields-row">
+    <app-form-field
+      [fieldId]="idPrefix() + '-full-name'"
+      (focusout)="normalizeFullName()"
+      label="Nombre completo"
+      placeholder="Ej. Carlos Andrés Restrepo"
+      [control]="form.controls.fullName"
+      [required]="true"
+      [maxLength]="fullNameMaxLength" />
+    <app-select-field
+      [fieldId]="idPrefix() + '-role'"
+      label="Rol"
+      placeholder="Selecciona un rol"
+      [control]="form.controls.roleId"
+      [options]="roleOptions()"
+      [required]="true"
+      [hint]="variant() === 'panel' ? dispenserHint() : ''" />
+  </div>
+</ng-template>
+
+@if (variant() === 'dialog') {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="dialog-header">
+      <div class="dialog-titles">
+        <h3 id="worker-dialog-title">Registrar Nuevo Vendedor</h3>
+        <p>Alta de personal operativo para rotación 2×2</p>
+      </div>
+      <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="cancelled.emit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div class="dialog-body worker-dialog-body">
+      <ng-container [ngTemplateOutlet]="fields" />
+    </div>
+    <div class="dialog-footer">
+      <button type="button" class="btn-flat-secondary" [disabled]="saving()" (click)="cancelled.emit()">Cancelar</button>
+      <button type="submit" class="btn-solid-primary worker-save" [class.is-saving]="saving()" [disabled]="saving()">
+        @if (saving()) {
+          <span class="worker-spinner" aria-hidden="true"></span> Guardando…
+        } @else {
+          GUARDAR
+        }
+      </button>
+    </div>
+  </form>
+} @else {
+  <div class="ps-perfil-cab">
+    @if (worker(); as current) {
+      <app-avatar [name]="current.fullName" size="lg" />
+      <div class="ps-perfil-id">
+        <div>
+          <b>{{ current.fullName }}</b>
+          <span class="ps-etiqueta">{{ current.roleName }} · Surtidor {{ current.dispenser }}</span>
+          <app-status-badge [active]="current.active" />
+        </div>
+        <small>Editar datos del vendedor</small>
+      </div>
+      <button
+        type="button"
+        class="jr-btn jr-btn--sec jr-btn--sm"
+        [disabled]="saving() || form.dirty"
+        [title]="form.dirty ? 'Guarda o cancela los cambios antes de cambiar el estado' : ''"
+        (click)="toggleStatus()">
+        {{ current.active ? 'Inactivar' : 'Activar' }}
+      </button>
+    }
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="ps-form">
+      <ng-container [ngTemplateOutlet]="fields" />
+    </div>
+    <div class="ps-form-acciones">
+      <button type="button" class="jr-btn jr-btn--sec" [disabled]="saving()" (click)="cancelled.emit()">Cancelar</button>
+      <button type="submit" class="jr-btn jr-btn--pri" [disabled]="saving()">
+        @if (saving()) {
+          <span class="worker-spinner" aria-hidden="true"></span> Guardando…
+        } @else {
+          Guardar cambios
+        }
+      </button>
+    </div>
+  </form>
+}

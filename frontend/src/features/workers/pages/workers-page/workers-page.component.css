@@ -1,0 +1,70 @@
+/* Animations of the workers screen only. They use the motion tokens of tokens.css. */
+
+/* Rows enter one after another (only the first ones, the rest arrive together) */
+.ps-vend-fila {
+  animation: workers-row-in var(--duration-normal) var(--spring) both;
+  transition: background-color var(--duration-fast) ease, box-shadow var(--duration-normal) var(--spring);
+}
+.ps-vend-fila:nth-child(2) { animation-delay: 25ms; }
+.ps-vend-fila:nth-child(3) { animation-delay: 50ms; }
+.ps-vend-fila:nth-child(4) { animation-delay: 75ms; }
+.ps-vend-fila:nth-child(5) { animation-delay: 100ms; }
+.ps-vend-fila:nth-child(6) { animation-delay: 125ms; }
+.ps-vend-fila:nth-child(n + 7) { animation-delay: 150ms; }
+.ps-vend-fila:active { transform: scale(0.99); }
+
+/* Selected worker: an elevated white card instead of the tinted row */
+.ps-vend-fila.is-sel {
+  background: var(--surface-card);
+  box-shadow: 0 0 0 1px var(--border-main), 0 6px 16px rgba(11, 25, 44, 0.08);
+}
+.ps-vend-fila.is-sel:hover {
+  background: var(--surface-card);
+}
+
+/* While filtering, the current list fades a little instead of disappearing */
+.ps-vend-lista { transition: opacity var(--duration-fast) ease; }
+.ps-vend-lista.is-cargando { opacity: 0.55; }
+
+.workers-cargando { animation: workers-pulse 1.2s ease-in-out infinite; }
+
+/* The edit form slides in when another worker is chosen */
+.workers-panel { animation: workers-panel-in var(--duration-normal) var(--spring) both; }
+
+/* Primary buttons of this screen with white text, like the modal's GUARDAR */
+.jr-btn--pri { color: #FFFFFF; }
+
+/* "Nuevo vendedor": the plus sign turns a little on hover */
+.workers-nuevo svg { transition: transform var(--duration-normal) var(--spring); }
+.workers-nuevo:hover svg { transform: rotate(90deg); }
+
+@keyframes workers-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes workers-panel-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes workers-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Register modal: a native <dialog> covering the viewport, styled by .apple-dialog-scrim */
+dialog.apple-dialog-scrim {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+dialog.apple-dialog-scrim:not([open]) { display: none; }
+dialog.apple-dialog-scrim::backdrop { background: transparent; }
+
+/* The role menu may open outside the card instead of being cut */
+.apple-dialog-card { overflow: visible; }

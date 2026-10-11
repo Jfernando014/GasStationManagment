@@ -3150,6 +3150,13 @@
     .ps-vend-nombre b { font-size: 13px; color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ps-vend-nombre small { font-size: 11px; color: var(--text-muted); }
 
+    /* Filtros en dos filas (buscador arriba, selectores abajo) y formulario de edición en el panel */
+    .ps-vend-filtros--rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .ps-vend-filtros--rejilla > :first-child { grid-column: 1 / -1; }
+    .ps-vend-filtros--rejilla .flat-select { width: 100%; }
+    .ps-form { display: flex; flex-direction: column; gap: 14px; padding: 16px 14px; }
+    .ps-form-acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--surface-subtle); }
+
     .ps-perfil { display: flex; flex-direction: column; min-width: 0; }
     .ps-perfil-cab { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--surface-subtle); }
     .ps-perfil-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
