@@ -26,8 +26,16 @@ jobs:
           echo "SWAGGER_PATH=/swagger-ui.html" >> .env
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
+      - name: Crear configuración de Docker para el Pipeline
+        run: |
+          echo "version: '3.8'
+          services:
+            backend:
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock" > docker-compose.ci.yml
+
       - name: Construir y levantar contenedores con Docker Compose
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
 
       - name: Esperar a que la base de datos esté lista
         run: |
@@ -36,11 +44,11 @@ jobs:
           done
 
       - name: Ejecutar pruebas del Backend (Java)
-        run: docker exec --privileged --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test
+        run: docker exec --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: docker exec gas-station-frontend-dev npm run test -- --watch=false --browsers=ChromeHeadless
 
       - name: Apagar contenedores
         if: always()
-        run: docker compose down
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down
