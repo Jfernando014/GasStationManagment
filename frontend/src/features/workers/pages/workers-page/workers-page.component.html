@@ -1,0 +1,139 @@
+<div class="inv-subview active ps-vista">
+  <div class="ps-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Vendedores</h1>
+      <p>Registro de vendedores, su rol y su estado.</p>
+    </div>
+    <div class="ps-cabecera-der">
+      <button type="button" class="jr-btn jr-btn--pri workers-nuevo" (click)="openDialog()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nuevo vendedor
+      </button>
+    </div>
+  </div>
+
+  <div class="ps-vend-cuerpo">
+    <section class="ps-card" aria-label="Lista de vendedores">
+      <div class="ps-vend-filtros ps-vend-filtros--rejilla">
+        <app-search-field
+          fieldId="workers-search"
+          label="Buscar vendedor"
+          placeholder="Buscar por nombre o documento"
+          (searchChange)="onSearch($event)" />
+        <app-select-field
+          fieldId="workers-status-filter"
+          label="Estado"
+          placeholder="Todos"
+          [labelHidden]="true"
+          [control]="statusFilter"
+          [options]="statusOptions" />
+        <app-select-field
+          fieldId="workers-role-filter"
+          label="Rol"
+          placeholder="Todos los roles"
+          [labelHidden]="true"
+          [control]="roleFilter"
+          [options]="roleOptions()" />
+      </div>
+
+      @if (loadError(); as message) {
+        <app-empty-state heading="No se pudo cargar la lista" [description]="message" tone="error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="2" y1="2" x2="22" y2="22" /><path d="M8.5 16.5a5 5 0 0 1 7 0" /><path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
+            <path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76" /><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68" />
+            <path d="M5 13a10 10 0 0 1 5.24-2.76" /><line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
+          <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="retry()">Reintentar</button>
+        </app-empty-state>
+      } @else if (loading() && workers().length === 0) {
+        <p class="ps-vacio workers-cargando" aria-live="polite">Cargando vendedores…</p>
+      } @else if (workers().length === 0) {
+        @if (hasFilters()) {
+          <app-empty-state heading="Sin resultados" description="No hay vendedores con esos filtros. Prueba con otra búsqueda.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </app-empty-state>
+        } @else {
+          <app-empty-state heading="Aún no hay vendedores" description="Registra el primero para poder asignarlo a los turnos.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <button type="button" class="jr-btn jr-btn--pri jr-btn--sm" (click)="openDialog()">Nuevo vendedor</button>
+          </app-empty-state>
+        }
+      } @else {
+        <div class="ps-vend-lista" [class.is-cargando]="loading()" [attr.aria-busy]="loading()">
+          @for (worker of workers(); track worker.id) {
+            <button
+              type="button"
+              class="ps-vend-fila"
+              [class.is-sel]="worker.id === selected()?.id"
+              [class.is-inactivo]="!worker.active"
+              [attr.aria-pressed]="worker.id === selected()?.id"
+              (click)="select(worker)">
+              <app-avatar [name]="worker.fullName" />
+              <span class="ps-vend-nombre"><b>{{ worker.fullName }}</b><small>{{ worker.document }}</small></span>
+              <span class="ps-etiqueta">{{ worker.roleName }}</span>
+              <app-status-badge [active]="worker.active" />
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="ps-card ps-perfil" aria-label="Datos del vendedor">
+      @for (key of [selected()?.id ?? null]; track key) {
+        @if (key === null) {
+          <app-empty-state
+            heading="Selecciona un vendedor"
+            description="Elige uno de la lista para ver y editar sus datos, o registra uno nuevo.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+              <path d="M19 8v6" /><path d="M16 11h6" />
+            </svg>
+          </app-empty-state>
+        } @else {
+          <app-worker-form
+            class="workers-panel"
+            [worker]="selected()"
+            [roles]="roles()"
+            (saved)="onUpdated($event)"
+            (cancelled)="onEditCancelled()" />
+        }
+      }
+    </section>
+  </div>
+</div>
+
+<!--
+  The click only closes the modal when it lands on the backdrop (a mouse shortcut). From the keyboard the modal
+  closes with Escape (native cancel event) or with the close button, so no key handler is needed here.
+-->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<dialog
+  #dialog
+  class="apple-dialog-scrim"
+  aria-labelledby="worker-dialog-title"
+  [class.visible]="dialogOpen()"
+  (cancel)="onDialogCancel($event)"
+  (click)="onBackdropClick($event)">
+  <div class="apple-dialog-card">
+    @if (dialogSession() > 0) {
+      @for (session of [dialogSession()]; track session) {
+        <app-worker-form
+          variant="dialog"
+          [roles]="roles()"
+          (saved)="onCreated($event)"
+          (cancelled)="closeDialog()" />
+      }
+    }
+  </div>
+</dialog>
+
+<div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+  <span class="toast-check">✓</span> {{ toastText() }}
+</div>
