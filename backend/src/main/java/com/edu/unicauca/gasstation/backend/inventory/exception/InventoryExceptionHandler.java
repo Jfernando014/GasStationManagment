@@ -1,8 +1,6 @@
 package com.edu.unicauca.gasstation.backend.inventory.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.edu.unicauca.gasstation.backend.inventory.ProductCategory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,12 +43,8 @@ public class InventoryExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleUnreadable(
-            HttpMessageNotReadableException ex, HttpServletRequest request) {
-        boolean invalidProductCategory = ex.getCause() instanceof InvalidFormatException formatException
-                && formatException.getTargetType() == ProductCategory.class;
-        String error = invalidProductCategory ? "Datos inválidos" : "Invalid data";
-        return build(HttpStatus.BAD_REQUEST, error,
+    public ResponseEntity<Map<String, Object>> handleUnreadable(HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "The request is invalid: Please check that the numerical values and fuel type are correct",
                 request);
     }
@@ -118,7 +112,7 @@ public class InventoryExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Datos inválidos",
-                "El valor del parámetro '" + ex.getName() + "' no es válido", request);
+        return build(HttpStatus.BAD_REQUEST, "Invalid data",
+                "The value of parameter '" + ex.getName() + "' is invalid", request);
     }
 }
