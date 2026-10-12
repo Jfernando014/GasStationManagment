@@ -1,0 +1,99 @@
+<div class="configuration-page">
+  <header class="configuration-header">
+    <div>
+      <div class="configuration-breadcrumb">Configuración <span>/</span> {{ tab() === 'aforo' ? 'Tabla de aforo' : 'Tanques' }}</div>
+      <h1>{{ tab() === 'aforo' ? 'Tabla de aforo' : 'Tanques' }}</h1>
+      <p>{{ tab() === 'aforo' ? 'Registra primero las tablas que podrán utilizar los tanques.' : 'Configura un tanque seleccionando una tabla de aforo existente.' }}</p>
+    </div>
+    @if (tab() === 'aforo') {
+      <button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">+ Nueva tabla</button>
+    } @else {
+      <button class="jr-btn jr-btn--pri" type="button" [disabled]="gaugeTables().length === 0" (click)="newTankOpen.set(!newTankOpen())">+ Nuevo tanque</button>
+    }
+  </header>
+
+  <nav class="configuration-tabs" aria-label="Configuración">
+    <a routerLink="/configuracion/aforo" [class.active]="tab() === 'aforo'">Tabla de aforo</a>
+    <a routerLink="/configuracion/tanques" [class.active]="tab() === 'tanques'">Tanques</a>
+  </nav>
+
+  @if (error()) {
+    <div class="alert-box-danger" role="alert">
+      <span>{{ error() }}</span>
+    </div>
+  }
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (tab() === 'aforo') {
+    @if (newGaugeTableOpen()) {
+      <section class="configuration-card new-tank-card">
+        <div class="card-heading"><div><h2>Registrar tabla de aforo</h2><p>Se crea con dos puntos iniciales editables.</p></div></div>
+        <div class="form-grid">
+          <label>Nombre de la tabla <input [class.configuration-field-invalid]="isRequiredTextInvalid(newGaugeTable().name) || fieldError('name')" [ngModel]="newGaugeTable().name" (ngModelChange)="updateNewGaugeTableName($event)" placeholder="Ej. Tabla T1 - 250 cm">@if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> } @else if (isRequiredTextInvalid(newGaugeTable().name)) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+        </div>
+        <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newGaugeTableOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="createGaugeTable()">Guardar tabla</button></div>
+      </section>
+    }
+    @if (gaugeTableLoading()) {
+      <section class="configuration-card configuration-empty-state"><h2>Cargando tablas...</h2></section>
+    } @else if (gaugeTables().length === 0) {
+      <section class="configuration-card configuration-empty-state"><h2>No hay tablas de aforo registradas</h2><p>Registra una tabla antes de crear un tanque.</p><button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">Registrar primera tabla</button></section>
+    } @else {
+      <section class="configuration-card aforo-toolbar">
+        <label>Seleccionar tabla de aforo
+          <select [ngModel]="selectedGaugeTableId()" (ngModelChange)="selectGaugeTable($event)">@for (table of gaugeTables(); track table.id) { <option [value]="table.id">{{ table.name }}</option> }</select>
+        </label>
+        <div class="aforo-stats"><span>Volumen máximo <b>{{ (gaugeTables().find(table => table.id === selectedGaugeTableId())?.maxVolumeGallons ?? 0) | number }} Gal</b></span><span>Altura máxima <b>{{ (gaugeTables().find(table => table.id === selectedGaugeTableId())?.maxHeightCm ?? 0) | number:'1.1-1' }} cm</b></span><span class="state-pill-tag optimal">{{ selectedCurve.length }} puntos</span></div>
+      </section>
+      <section class="configuration-card">
+        <input #csvInput type="file" accept=".csv,text/csv" hidden (change)="importCsv($event)">
+        <div class="card-heading">
+          <div><h2>Puntos de calibración</h2><p>Edita la relación entre altura y volumen.</p></div>
+          <div class="configuration-actions">
+            <button class="jr-btn jr-btn--sec" type="button" (click)="openImport()">Importar tabla</button>
+            <button class="jr-btn jr-btn--sec" type="button" (click)="exportCsv()">Exportar tabla</button>
+            <button class="jr-btn jr-btn--sec" type="button" (click)="addPoint()">Agregar fila</button>
+            <button class="jr-btn jr-btn--pri" type="button" (click)="saveCurve()">Guardar cambios</button>
+          </div>
+        </div>
+        <div class="table-scroll"><table class="configuration-table calibration-table"><thead><tr><th># Punto</th><th>Altura (cm)</th><th>Volumen (galones)</th><th>Acciones</th></tr></thead><tbody>
+          @for (point of selectedCurve; track $index) { <tr><td class="muted">#{{ $index + 1 }}</td><td><input type="number" step="0.1" [class.configuration-field-invalid]="isPointInvalid(point)" [ngModel]="point.height" (ngModelChange)="updatePoint($index, 'height', $event)">@if (isPointInvalid(point)) { <span class="field-error">Valor obligatorio y no negativo.</span> }</td><td><input type="number" step="0.01" [class.configuration-field-invalid]="isPointInvalid(point)" [ngModel]="point.gallons" (ngModelChange)="updatePoint($index, 'gallons', $event)">@if (isPointInvalid(point)) { <span class="field-error">Valor obligatorio y no negativo.</span> }</td><td><button class="table-action danger" type="button" (click)="deletePoint($index)">Eliminar</button></td></tr> }
+        </tbody></table></div>
+      </section>
+    }
+  } @else {
+    @if (newTankOpen()) {
+      <section class="configuration-card new-tank-card">
+        <div class="card-heading"><div><h2>Registrar nuevo tanque</h2><p>Solo puedes registrar tanques asociados a una tabla de aforo.</p></div></div>
+        <div class="form-grid">
+          <label>Código <input [class.configuration-field-invalid]="isTankFieldInvalid('code')" [ngModel]="newTank().code" (ngModelChange)="updateNewTank('code', $event)" placeholder="Ej. T1">@if (fieldError('code')) { <span class="field-error">{{ fieldError('code') }}</span> } @else if (isTankFieldInvalid('code')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Nombre <input [class.configuration-field-invalid]="isTankFieldInvalid('name')" [ngModel]="newTank().name" (ngModelChange)="updateNewTank('name', $event)" placeholder="Ej. Tanque motor 11">@if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> } @else if (isTankFieldInvalid('name')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Combustible <select [class.configuration-field-invalid]="isTankFieldInvalid('fuel')" [ngModel]="newTank().fuel" (ngModelChange)="updateNewTank('fuel', $event)"><option value="">Seleccionar combustible</option><option>Gasolina Corriente</option><option>Gasolina Extra</option><option>Diésel ACPM</option><option>Diésel Max Pro</option></select>@if (isTankFieldInvalid('fuel')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Capacidad (galones) <input [class.configuration-field-invalid]="isTankFieldInvalid('capacity')" type="number" min="1" [ngModel]="newTank().capacity" (ngModelChange)="updateNewTank('capacity', $event)">@if (isTankFieldInvalid('capacity')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Altura máxima (cm) <input [class.configuration-field-invalid]="isTankFieldInvalid('maxHeight')" type="number" min="0.01" step="0.01" [ngModel]="newTank().maxHeight" (ngModelChange)="updateNewTank('maxHeight', $event)">@if (isTankFieldInvalid('maxHeight')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Tolerancia (cm) <input [class.configuration-field-invalid]="isTankFieldInvalid('tolerance')" type="number" min="0" step="0.01" [ngModel]="newTank().tolerance" (ngModelChange)="updateNewTank('tolerance', $event)">@if (isTankFieldInvalid('tolerance')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+          <label>Tabla de aforo <select [class.configuration-field-invalid]="isTankFieldInvalid('gaugeTableId')" [ngModel]="newTank().gaugeTableId" (ngModelChange)="updateNewTank('gaugeTableId', $event)"><option [ngValue]="0">Seleccionar tabla</option>@for (table of gaugeTables(); track table.id) { <option [ngValue]="table.id">{{ table.name }}</option> }</select>@if (isTankFieldInvalid('gaugeTableId')) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+        </div>
+        <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newTankOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="addTank()">Guardar tanque</button></div>
+      </section>
+    }
+    @if (loading()) {
+      <section class="configuration-card configuration-empty-state"><h2>Cargando tanques...</h2></section>
+    } @else if (gaugeTables().length === 0) {
+      <section class="configuration-card configuration-empty-state"><h2>Primero registra una tabla de aforo</h2><p>No puedes registrar un tanque sin asociarlo a una tabla.</p><button class="jr-btn jr-btn--pri" type="button" routerLink="/configuracion/aforo">Ir a Tabla de aforo</button></section>
+    } @else if (tanks().length === 0) {
+      <section class="configuration-card configuration-empty-state"><h2>No hay tanques registrados</h2><p>Ya existen tablas disponibles. Registra el primer tanque.</p><button class="jr-btn jr-btn--pri" type="button" (click)="newTankOpen.set(true)">Registrar primer tanque</button></section>
+    } @else {
+      <section class="configuration-card"><div class="card-heading"><div><h2>Tanques instalados</h2><p>Tanques configurados en el backend.</p></div><span class="state-pill-tag optimal">{{ tanks().length }} activos</span></div><div class="table-scroll"><table class="configuration-table"><thead><tr><th>Identificador</th><th>Combustible</th><th>Capacidad</th><th>Tabla de aforo</th><th>Acciones</th></tr></thead><tbody>
+        @for (tank of tanks(); track tank.id) { <tr><td><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td><td>{{ tank.fuel }}</td><td class="tnum">{{ tank.capacity | number }} Gal</td><td>{{ gaugeTables().find(table => table.id === tank.gaugeTableId)?.name ?? 'Sin tabla' }}</td><td><button class="table-action" type="button" (click)="selectTank(tank.id)">Editar</button></td></tr> }
+      </tbody></table></div></section>
+      @if (selectedTankId()) {
+        <section class="configuration-card tank-editor"><div class="card-heading"><div><h2>Editar configuración</h2><p>{{ selectedTank.name }}</p></div></div><div class="form-grid">
+          <label>Código <input [class.configuration-field-invalid]="isTankFieldInvalid('code', selectedTank)" [ngModel]="selectedTank.code" (ngModelChange)="updateTank(selectedTank.id, 'code', $event)">@if (fieldError('code')) { <span class="field-error">{{ fieldError('code') }}</span> } @else if (isTankFieldInvalid('code', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Nombre <input [class.configuration-field-invalid]="isTankFieldInvalid('name', selectedTank)" [ngModel]="selectedTank.name" (ngModelChange)="updateTank(selectedTank.id, 'name', $event)">@if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> } @else if (isTankFieldInvalid('name', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Combustible <select [class.configuration-field-invalid]="isTankFieldInvalid('fuel', selectedTank)" [ngModel]="selectedTank.fuel" (ngModelChange)="updateTank(selectedTank.id, 'fuel', $event)"><option value="">Seleccionar combustible</option><option>Gasolina Corriente</option><option>Gasolina Extra</option><option>Diésel ACPM</option><option>Diésel Max Pro</option></select>@if (isTankFieldInvalid('fuel', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Capacidad (galones) <input [class.configuration-field-invalid]="isTankFieldInvalid('capacity', selectedTank)" type="number" min="1" [ngModel]="selectedTank.capacity" (ngModelChange)="updateTank(selectedTank.id, 'capacity', $event)">@if (isTankFieldInvalid('capacity', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Altura máxima (cm) <input [class.configuration-field-invalid]="isTankFieldInvalid('maxHeight', selectedTank)" type="number" min="0.01" step="0.01" [ngModel]="selectedTank.maxHeight" (ngModelChange)="updateTank(selectedTank.id, 'maxHeight', $event)">@if (isTankFieldInvalid('maxHeight', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Tolerancia (cm) <input [class.configuration-field-invalid]="isTankFieldInvalid('tolerance', selectedTank)" type="number" min="0" step="0.01" [ngModel]="selectedTank.tolerance" (ngModelChange)="updateTank(selectedTank.id, 'tolerance', $event)">@if (isTankFieldInvalid('tolerance', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label><label>Tabla de aforo <select [class.configuration-field-invalid]="isTankFieldInvalid('gaugeTableId', selectedTank)" [ngModel]="selectedTank.gaugeTableId" (ngModelChange)="updateTank(selectedTank.id, 'gaugeTableId', $event)">@for (table of gaugeTables(); track table.id) { <option [ngValue]="table.id">{{ table.name }}</option> }</select>@if (isTankFieldInvalid('gaugeTableId', selectedTank)) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+        </div><div class="card-actions"><button class="jr-btn jr-btn--pri" type="button" (click)="saveTank(selectedTank)">Guardar configuración</button></div></section>
+      }
+    }
+  }
+</div>
