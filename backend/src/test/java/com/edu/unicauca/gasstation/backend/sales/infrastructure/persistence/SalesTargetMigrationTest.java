@@ -169,7 +169,7 @@ class SalesTargetMigrationTest {
 
     private static Flyway flyway(String schema) {
         return Flyway.configure().dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
-                .schemas(schema).locations("classpath:db/migration").load();
+                .schemas(schema).locations("classpath:db/migration").target("12").load();
     }
 
     private static Connection connection() throws SQLException {
