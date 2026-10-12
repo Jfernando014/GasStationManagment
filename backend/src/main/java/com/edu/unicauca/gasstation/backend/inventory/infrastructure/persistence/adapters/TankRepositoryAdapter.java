@@ -39,4 +39,9 @@ public class TankRepositoryAdapter implements TankRepository {
     public boolean existsByCode(String code) {
         return repository.existsByCode(code);
     }
+
+    @Override
+    public List<Tank> findByGaugeTableId(Long gaugeTableId) {
+        return repository.findByGaugeTableIdOrderByCode(gaugeTableId).stream().map(mapper::toDomain).toList();
+    }
 }
