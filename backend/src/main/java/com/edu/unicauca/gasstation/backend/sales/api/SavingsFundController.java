@@ -6,6 +6,8 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.SavingsFundMovementResp
 import com.edu.unicauca.gasstation.backend.sales.domain.services.SavingsFundService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,6 +15,8 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,9 +37,15 @@ public class SavingsFundController {
     }
 
     @Operation(summary = "Register the daily contribution (one per date)")
-    @ApiResponse(responseCode = "201", description = "Contribution registered")
-    @ApiResponse(responseCode = "400", description = "Invalid data")
-    @ApiResponse(responseCode = "409", description = "That date already has a contribution")
+    @ApiResponse(responseCode = "201", description = "Contribution registered",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = SavingsFundMovementResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request body",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                    schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "409", description = "That date already has a contribution",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                    schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/contributions")
     public ResponseEntity<SavingsFundMovementResponseDto> registerContribution(
             @Valid @RequestBody SavingsFundMovementRequestDto request) {
@@ -44,9 +54,15 @@ public class SavingsFundController {
     }
 
     @Operation(summary = "Register a payment taken from the fund")
-    @ApiResponse(responseCode = "201", description = "Payment registered")
-    @ApiResponse(responseCode = "400", description = "Invalid data")
-    @ApiResponse(responseCode = "409", description = "Payment exceeds the fund balance")
+    @ApiResponse(responseCode = "201", description = "Payment registered",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = SavingsFundMovementResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Invalid request body",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                    schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "409", description = "Payment exceeds the fund balance",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                    schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/payments")
     public ResponseEntity<SavingsFundMovementResponseDto> registerPayment(
             @Valid @RequestBody SavingsFundMovementRequestDto request) {
@@ -55,7 +71,6 @@ public class SavingsFundController {
     }
 
     @Operation(summary = "Fund balance at a date (includes that date)")
-    @ApiResponse(responseCode = "200", description = "Balance returned")
     @GetMapping("/balance")
     public ResponseEntity<BalanceResponseDto> getBalance(
             @Parameter(description = "Date (yyyy-MM-dd)", example = "2026-07-31")
@@ -64,7 +79,6 @@ public class SavingsFundController {
     }
 
     @Operation(summary = "List all fund movements, newest first")
-    @ApiResponse(responseCode = "200", description = "Movements returned")
     @GetMapping("/movements")
     public ResponseEntity<List<SavingsFundMovementResponseDto>> listMovements() {
         return ResponseEntity.ok(savingsFundService.listMovements().stream()
