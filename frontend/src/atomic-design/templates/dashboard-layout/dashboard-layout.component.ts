@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,8 +12,18 @@ import { AuthService } from '../../../core/services/auth.service';
 export class DashboardLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly configurationOpen = signal(true);
+  readonly resultsOpen = signal(true);
 
-  logout() {
+  toggleConfiguration(): void {
+    this.configurationOpen.update(open => !open);
+  }
+
+  toggleResults(): void {
+    this.resultsOpen.update(open => !open);
+  }
+
+  logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
