@@ -26,5 +26,5 @@ public class Tank {
 
     private BigDecimal toleranceCm;
 
-
+    private Long gaugeTableId;
 }
