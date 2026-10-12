@@ -1,9 +1,8 @@
-package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence;
+package com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.adapters;
 
 import com.edu.unicauca.gasstation.backend.inventory.ProductCategory;
 import com.edu.unicauca.gasstation.backend.inventory.ProductTestData;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Product;
-import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.adapters.ProductRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.mappers.ProductPersistenceMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -17,4 +17,5 @@ public class TankResponse {
     private BigDecimal maxCapacityGallons;
     private BigDecimal maxHeightCm;
     private BigDecimal toleranceCm;
+    private Long gaugeTableId;
 }

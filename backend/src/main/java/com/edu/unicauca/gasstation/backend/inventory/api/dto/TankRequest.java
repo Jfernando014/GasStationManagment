@@ -49,5 +49,6 @@ public class TankRequest {
     @Digits(integer = 3, fraction = 2, message = TOLERANCE_MESSAGE)
     private BigDecimal toleranceCm;
 
-
+    @Schema(example = "1", nullable = true)
+    private Long gaugeTableId;
 }

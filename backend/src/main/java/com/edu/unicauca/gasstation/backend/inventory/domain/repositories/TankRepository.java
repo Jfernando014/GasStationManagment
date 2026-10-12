@@ -14,4 +14,6 @@ public interface TankRepository {
     List<Tank> findAllOrderByCode();
 
     boolean existsByCode(String code);
+
+    List<Tank> findByGaugeTableId(Long gaugeTableId);
 }
