@@ -1,0 +1,119 @@
+<main class="expenses-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">VENTAS / CONTROL ADMINISTRATIVO</p>
+      <h1>Gastos administrativos</h1>
+    </div>
+    <p class="heading-total">
+      <span>Total del filtro</span>
+      <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+    </p>
+  </header>
+
+  @if (errorMessage) {
+    <p class="error-message" role="alert">{{ errorMessage }}</p>
+  }
+
+  <div class="expenses-layout">
+    <section class="expense-entry" aria-labelledby="entry-title">
+      <h2 id="entry-title">Registrar gasto</h2>
+      <form (ngSubmit)="submitExpense()">
+        <label>
+          Fecha
+          <input type="date" name="expenseDate" [(ngModel)]="expenseDate" required />
+        </label>
+        <label>
+          Valor (COP)
+          <input type="number" name="amount" [(ngModel)]="amount" min="1" step="100" required />
+        </label>
+        <label>
+          Descripción
+          <textarea name="description" [(ngModel)]="description" maxlength="255" rows="3"
+            placeholder="Ej. Servicios, mantenimiento o suministros"></textarea>
+        </label>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Guardando…' : 'Registrar gasto' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="expense-results" aria-labelledby="results-title">
+      <div class="results-heading">
+        <h2 id="results-title">Movimientos</h2>
+        <span>{{ expenses.length }} gastos</span>
+      </div>
+
+      <div class="filters" aria-label="Filtros de gastos">
+        <label>
+          Periodo
+          <select name="filterMode" [(ngModel)]="filterMode" (ngModelChange)="loadExpenses()">
+            <option value="fortnight">Quincena</option>
+            <option value="date-range">Rango de fechas</option>
+          </select>
+        </label>
+        @if (filterMode === 'fortnight') {
+          <label>
+            Mes
+            <input type="month" name="month" [(ngModel)]="month" (change)="loadExpenses()" />
+          </label>
+          <label>
+            Quincena
+            <select name="fortnight" [(ngModel)]="fortnight" (ngModelChange)="loadExpenses()">
+              <option [ngValue]="1">1 · Días 1–15</option>
+              <option [ngValue]="2">2 · Día 16 al cierre</option>
+            </select>
+          </label>
+        } @else {
+          <label>
+            Desde
+            <input type="date" name="dateFrom" [(ngModel)]="dateFrom" (change)="loadExpenses()" />
+          </label>
+          <label>
+            Hasta
+            <input type="date" name="dateTo" [(ngModel)]="dateTo" (change)="loadExpenses()" />
+          </label>
+        }
+      </div>
+
+      @if (isLoading) {
+        <div class="empty-state" aria-live="polite">Cargando gastos…</div>
+      } @else if (expenses.length === 0) {
+        <div class="empty-state">No hay gastos para el periodo seleccionado.</div>
+      } @else {
+        <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Descripción</th>
+              <th scope="col" class="amount">Valor</th>
+              <th scope="col"><span class="visually-hidden">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (expense of expenses; track expense.id) {
+              <tr>
+              <td>{{ expense.date | date:'yyyy-MM-dd' }}</td>
+              <td>{{ expense.description }}</td>
+              <td class="amount">{{ expense.amount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="action-cell">
+                <button type="button" class="delete-button" (click)="deleteExpense(expense)">
+                  Eliminar
+                </button>
+              </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row" colspan="2">Total del periodo</th>
+              <td class="amount">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        </div>
+      }
+    </section>
+  </div>
+</main>
