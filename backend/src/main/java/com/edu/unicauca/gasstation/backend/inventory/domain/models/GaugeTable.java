@@ -31,7 +31,7 @@ public class GaugeTable {
     public void validate() {
         if (points == null || points.size() < MIN_POINTS) {
             throw new InvalidGaugeTableException("points",
-                    "The gaude table must have at least" + MIN_POINTS + " points");
+                    "The gauge table must have at least " + MIN_POINTS + " points");
         }
         for (int i = 0; i < points.size(); i++) {
             GaugePoint current = points.get(i);

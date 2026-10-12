@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.inventory.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,13 +91,6 @@ public class InventoryExceptionHandler {
     }
 
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingParameter(HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Invalid data",
-                "Invalid or missing parameters: check fuelType (MOTOR, DIESEL, EXTRA, MAX_PRO) and date (yyyy-MM-dd)",
-                request);
-    }
-
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleProductNotFound(
             ProductNotFoundException ex, HttpServletRequest request) {
@@ -114,5 +108,65 @@ public class InventoryExceptionHandler {
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "The value of parameter '" + ex.getName() + "' is invalid", request);
+    }
+
+    @ExceptionHandler(InvalidGaugeTableException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidGaugeTable(
+            InvalidGaugeTableException ex, HttpServletRequest request) {
+        Map<String, String> item = new LinkedHashMap<>();
+        item.put("field", ex.getField());
+        item.put("message", ex.getDetail());
+        Map<String, Object> body = buildBody(HttpStatus.BAD_REQUEST, "Invalid data",
+                ex.getDetail() != null ? ex.getDetail() : ex.getMessage(), request);
+        body.put("fields", List.of(item));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HeightExceedsGaugeException.class)
+    public ResponseEntity<Map<String, Object>> handleHeightExceedsGauge(
+            HeightExceedsGaugeException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(GaugeTableNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleGaugeTableNotFound(
+            GaugeTableNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateGaugeTableNameException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateGaugeTableName(
+            DuplicateGaugeTableNameException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(TankWithoutGaugeTableException.class)
+    public ResponseEntity<Map<String, Object>> handleTankWithoutGaugeTable(
+            TankWithoutGaugeTableException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(
+            ConstraintViolationException ex, HttpServletRequest request) {
+        List<Map<String, String>> fields = new ArrayList<>();
+        ex.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            Map<String, String> item = new LinkedHashMap<>();
+            item.put("field", path.substring(path.lastIndexOf('.') + 1));
+            item.put("message", violation.getMessage());
+            fields.add(item);
+        });
+        Map<String, Object> body = buildBody(HttpStatus.BAD_REQUEST, "Invalid data",
+                "One or more parameters failed validation", request);
+        body.put("fields", fields);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingParameter(
+            MissingServletRequestParameterException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data",
+                "The required parameter is missing '" + ex.getParameterName() + "'", request);
     }
 }
