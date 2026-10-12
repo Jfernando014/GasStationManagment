@@ -1,0 +1,53 @@
+:host { display: block; min-width: 0; container-type: inline-size; }
+.goals-page { display: flex; flex-direction: column; gap: 12px; }
+[hidden] { display: none !important; }
+.goals-period-toolbar { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.goals-period-toolbar app-select-field { width: 160px; }
+.goals-period-toolbar select { min-width: 170px; }
+.jr-tabpanel { min-width: 0; }
+.jr-indicadores { flex-wrap: wrap; gap: 6px; }
+.jr-indicador b { font-size: 14px; }
+.ps-card-titulo { font-size: 13px; }
+table { min-width: 680px; }
+.rs-tabla-wrap td[colspan] { white-space: normal; }
+.rank { width: 50px; text-align: center; }
+.compliance-column { width: 240px; }
+.annual-card { max-width: 820px; margin: 0 auto; }
+.annual-header { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.annual-heading { display: flex; align-items: center; gap: 8px; }
+.annual-heading svg, .equivalences-heading svg { color: var(--brand-primary); }
+.annual-header .state-pill-tag { font-size: 11.5px; font-weight: 700; }
+.annual-subtitle { font-size: 12.5px; color: var(--text-muted); margin: -6px 0 16px; }
+.goals-locked-banner { color: var(--semantic-green-strong); }
+.goals-locked-banner p { font-size: 12.5px; margin-top: 4px; }
+.equivalences-heading { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--surface-navy); letter-spacing: .05em; margin: 24px 0 10px; }
+.goals-preview-tiles { margin-top: 0; }
+.goals-tile { min-width: 0; }
+.goals-tile-value { overflow-wrap: anywhere; }
+.monthly-figure { color: var(--brand-primary); }
+.daily-figure { color: var(--surface-navy); }
+.margin-figure { color: var(--semantic-green); }
+.tile-note { font-size: 11px; color: var(--text-muted); }
+.goals-save { width: 100%; justify-content: center; min-height: 46px; font-size: 14px; font-weight: 700; margin-top: 10px; }
+.goals-save:disabled { opacity: .5; cursor: not-allowed; }
+.goals-notice { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-subtle); }
+form .goals-notice { margin-top: 12px; }
+.goals-error { color: var(--semantic-red-strong); background: var(--semantic-red-subtle); }
+.goals-success { color: var(--semantic-green-strong); background: var(--semantic-green-subtle); }
+.goals-confirm-step { color: var(--semantic-amber-strong); }
+.goals-confirm-step p { font-size: 12.5px; line-height: 1.4; margin: 6px 0 14px; }
+.confirmation-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.confirm-button { background: var(--semantic-green); }
+summary { flex-wrap: wrap; }
+/* Use the available canvas width: the shared sidebar also occupies space on tablets. */
+@container (max-width: 650px) {
+  .goals-big-inputs-row, .goals-preview-tiles { grid-template-columns: 1fr; }
+  .annual-header { align-items: flex-start; }
+}
+@media (max-width: 768px) {
+  .rs-cabecera-der { width: 100%; }
+  .jr-indicadores { width: 100%; }
+  .jr-indicador { flex: 1; }
+  .jr-plegable-resumen { margin-left: 24px; }
+  .goals-save { height: auto; padding: 12px; }
+}
