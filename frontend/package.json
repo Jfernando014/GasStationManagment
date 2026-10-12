@@ -7,6 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:pwa": "node --test scripts/pwa.spec.mjs",
+    "preview:pwa": "node scripts/serve-pwa.mjs",
     "lint": "ng lint"
   },
   "prettier": {
@@ -30,6 +32,7 @@
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@angular/router": "^21.1.0",
+    "@angular/service-worker": "21.2.25",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
