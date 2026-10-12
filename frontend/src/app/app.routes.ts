@@ -28,6 +28,11 @@ export const routes: Routes = [
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
       {
+        path: 'gastos',
+        loadComponent: () => import('../atomic-design/pages/administrative-expenses/administrative-expenses-page.component')
+          .then(m => m.AdministrativeExpensesPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }
