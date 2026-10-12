@@ -28,6 +28,14 @@ export const routes: Routes = [
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
       {
+        path: 'configuracion/tanques',
+        loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
+      },
+      {
+        path: 'configuracion/aforo',
+        loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }
