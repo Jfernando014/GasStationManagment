@@ -6,6 +6,6 @@ import java.time.LocalDate;
 public class DuplicateContributionException extends RuntimeException {
 
     public DuplicateContributionException(LocalDate date) {
-        super("A contribution for " + date + " is already registered");
+        super("Ya existe un aporte registrado para la fecha " + date);
     }
 }
