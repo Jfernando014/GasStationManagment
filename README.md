@@ -134,10 +134,51 @@ Based on the [Platzi Git Commit Guide](https://platzi.com/blog/guia-de-commits-e
   ```
 
 ### Allowed Types
-- `feat`: A new feature for the user or system
-- `fix`: A bug fix
-- `refactor`: Code refactoring without changing functionality
-- `style`: Formatting, missing semicolons, etc.
-- `docs`: Documentation only changes
-- `test`: Adding or refactoring tests
-- `chore`: Build tasks, package updates, configuration
+- `🎉 tada`: Start a project.
+- `🚀 release`: Deploying things.
+- `🔖new version`: Label / release version.
+- `✨ feat`: New feature.
+- `♻️ refactor`: Refactor code.
+- `🐛 fix`: Bug fix.
+- `🩹 patch`: Simple solution for a non-critical problem.
+- `⚡️perf`: Improve performance.
+- `🎨 style`: Improve code structure/formatting (whitespace, formatting, missing commas, etc.).
+- `💄 ui`: Add or update the user interface and style files.
+- `🚸 ux`: Improve user experience / usability.
+- `🔥 remove`: Delete code or files.
+- `🚧 construction`: Work in progress.
+- `➕ add`: Add a dependency.
+- `⏫ upgrade`: Update dependency.
+- `⏬ downgrade`: Downgrade dependency.
+- `⏪ revert`: Revert changes.
+- `♿️ accessibility`: Improve accessibility.
+- `🔀 merge`: Merge branches.
+- `✅ test`: Add or update tests.
+- `🔧 config`: Add or update configuration files.
+- `🔨 script`: Add or update development scripts.
+- `✏️ typos`: Correct typographical errors.
+- `💬 test`: Add or update text and literals.
+- `🚚 resources`: Move or rename resources (files).
+- `🍱 assets`: Add or update assets (images).
+- `🙈 gitignore`: Add or update a .gitignore file.
+- `📱 responsive`: Work on responsive design.
+- `⚗️ experiment`: Conduct experiments.
+- `📝 docs`: Add or update documentation.
+- `💡 comments`: Add or update comments in the source code.
+- `🔍️ seo`: Improve SEO.
+- `🌱 seeds`: Add or update seed files (seed files in APIs).
+- `🤖 chore`: Other changes that do not modify src or test files.
+- `👷 ci`: Changes to CI configuration files and scripts.
+- `🔒️ security`: Resolve security issues.
+- `🔐 secrets`: Add or update secrets (environment variables).
+- `🚨 linter`: Fix compiler/linter warnings.
+- `🌐 internationalization`: Internationalization and localization.
+- `👽️ alien`: Update code due to changes in the external API..
+- `🗃️ db`: Make changes related to the database.
+- `🛡️ types`: Add or update types.
+- `💫 animations`: Add or update animations and transitions.
+- `🛂 auth`: Work on code related to authorization, roles, and permissions.
+- `⚰️ dead`: Remove dead code.
+- `👔 business`: Add or update business logic.
+- `🦺 validation`: Add or update validation-related code..
+- `💥 BREAKING CHANGE`: A commit that includes a `BREAKING CHANGE:` footer, or adds a `!` after the type/scope, introduces major changes to the API (corresponding to a MAJOR Semantic Versioning release). A `BREAKING CHANGE` can be part of a commit of any type.
