@@ -24,10 +24,17 @@ function toApiError(error: HttpErrorResponse): ApiError {
   if (error.status === 0) {
     return new ApiError(0, { detail: CONNECTION_ERROR_MESSAGE });
   }
-  if (isProblemDetails(error.error)) {
-    return new ApiError(error.status, error.error);
+  const body = parseProblemBody(error.error);
+  if (isProblemDetails(body)) {
+    return new ApiError(error.status, body);
   }
   return new ApiError(error.status, { detail: DEFAULT_ERROR_MESSAGE });
+}
+
+/** Decimal-safe clients request text responses, including JSON Problem Details on errors. */
+function parseProblemBody(body: unknown): unknown {
+  if (typeof body !== 'string') return body;
+  try { return JSON.parse(body); } catch { return body; }
 }
 
 function isProblemDetails(body: unknown): body is ProblemDetails {
