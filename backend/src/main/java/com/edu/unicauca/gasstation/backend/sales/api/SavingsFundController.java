@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,9 +47,11 @@ public class SavingsFundController {
     @ApiResponse(responseCode = "409", description = "That date already has a contribution",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
+        @ApiResponse(responseCode = "403", description = "Admin authority required")
     @PostMapping("/contributions")
     public ResponseEntity<SavingsFundMovementResponseDto> registerContribution(
-            @Valid @RequestBody SavingsFundMovementRequestDto request) {
+                        @Valid @RequestBody SavingsFundMovementRequestDto request, Authentication authentication) {
+                SalesAdminAuthorization.requireAdmin(authentication);
         return ResponseEntity.status(HttpStatus.CREATED).body(SavingsFundMovementResponseDto.from(
                 savingsFundService.registerContribution(request.date(), request.amount(), request.description())));
     }
@@ -63,9 +66,11 @@ public class SavingsFundController {
     @ApiResponse(responseCode = "409", description = "Payment exceeds the fund balance",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
+        @ApiResponse(responseCode = "403", description = "Admin authority required")
     @PostMapping("/payments")
     public ResponseEntity<SavingsFundMovementResponseDto> registerPayment(
-            @Valid @RequestBody SavingsFundMovementRequestDto request) {
+                        @Valid @RequestBody SavingsFundMovementRequestDto request, Authentication authentication) {
+                SalesAdminAuthorization.requireAdmin(authentication);
         return ResponseEntity.status(HttpStatus.CREATED).body(SavingsFundMovementResponseDto.from(
                 savingsFundService.registerPayment(request.date(), request.amount(), request.description())));
     }

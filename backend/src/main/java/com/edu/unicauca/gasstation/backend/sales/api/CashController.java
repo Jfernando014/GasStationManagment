@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,8 +44,11 @@ public class CashController {
     @ApiResponse(responseCode = "400", description = "Invalid request body or amount for the type",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "403", description = "Admin authority required")
     @PostMapping("/movements")
-    public ResponseEntity<CashMovementResponseDto> register(@Valid @RequestBody CashMovementRequestDto request) {
+    public ResponseEntity<CashMovementResponseDto> register(
+            @Valid @RequestBody CashMovementRequestDto request, Authentication authentication) {
+        SalesAdminAuthorization.requireAdmin(authentication);
         return ResponseEntity.status(HttpStatus.CREATED).body(CashMovementResponseDto.from(
                 cashService.register(request.type(), request.date(), request.amount(), request.description())));
     }
