@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  backend:
+    # Keep the container alive without starting Spring Boot so `mvn test`
+    # does not race with `spring-boot:run` over generated MapStruct sources.
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx2g -XX:MaxMetaspaceSize=512m
+      - MAVEN_OPTS=-Xmx2g -XX:MaxMetaspaceSize=512m
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TESTCONTAINERS_RYUK_DISABLED=true
+    mem_limit: 4g
+    shm_size: '2gb'
