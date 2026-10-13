@@ -17,11 +17,14 @@ import com.edu.unicauca.gasstation.backend.sales.exception.InsufficientFundExcep
 import com.edu.unicauca.gasstation.backend.sales.exception.InvalidCashMovementException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -118,11 +121,17 @@ class FundAndCashExceptionHandlerTest {
                 .thenThrow(new DuplicateContributionException(LocalDate.of(2026, 8, 1)));
 
         mockMvc.perform(post("/api/v1/sales/savings-fund/contributions")
+                        .principal(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"date\":\"2026-08-01\",\"amount\":250000}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DUPLICATE_CONTRIBUTION"))
                 .andExpect(jsonPath("$.title").value("Conflict"))
                 .andExpect(jsonPath("$.detail").value("Ya existe un aporte registrado para la fecha 2026-08-01"));
+    }
+
+    private UsernamePasswordAuthenticationToken admin() {
+        return new UsernamePasswordAuthenticationToken(
+                "admin", "unused", List.of(new SimpleGrantedAuthority("ADMIN")));
     }
 }
