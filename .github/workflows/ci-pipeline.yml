@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Descargar código de la rama que realiza el pull request
         uses: actions/checkout@v4
 
@@ -26,14 +25,6 @@ jobs:
           echo "SWAGGER_PATH=/swagger-ui.html" >> .env
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
-      - name: Crear configuración de Docker para el Pipeline
-        run: |
-          echo "version: '3.8'
-          services:
-            backend:
-              volumes:
-                - /var/run/docker.sock:/var/run/docker.sock" > docker-compose.ci.yml
-
       - name: Construir y levantar contenedores con Docker Compose
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
 
@@ -44,7 +35,13 @@ jobs:
           done
 
       - name: Ejecutar pruebas del Backend (Java)
-        run: docker exec --user root -e MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m" gas-station-backend-dev mvn clean test -Dmaven.compiler.useIncrementalCompilation=false
+        run: |
+          docker exec --user root \
+            -e MAVEN_OPTS="-Xmx2g -XX:MaxMetaspaceSize=512m" \
+            -e DOCKER_HOST=unix:///var/run/docker.sock \
+            -e TESTCONTAINERS_RYUK_DISABLED=true \
+            gas-station-backend-dev \
+            mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: docker exec -e CI=true gas-station-frontend-dev npx ng test --no-watch

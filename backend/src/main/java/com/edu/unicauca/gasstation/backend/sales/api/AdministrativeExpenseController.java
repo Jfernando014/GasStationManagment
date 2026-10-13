@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,9 +38,11 @@ public class AdministrativeExpenseController {
     @Operation(summary = "Register an administrative expense")
     @ApiResponse(responseCode = "201", description = "Expense registered")
     @ApiResponse(responseCode = "400", description = "Invalid expense data")
+    @ApiResponse(responseCode = "403", description = "Admin authority required")
     @PostMapping
     public ResponseEntity<AdministrativeExpenseResponseDto> register(
-            @Valid @RequestBody AdministrativeExpenseRequestDto request) {
+            @Valid @RequestBody AdministrativeExpenseRequestDto request, Authentication authentication) {
+        SalesAdminAuthorization.requireAdmin(authentication);
         AdministrativeExpenseResponseDto response = AdministrativeExpenseResponseDto.from(
                 service.register(request.date(), request.amount(), request.description()));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -69,8 +72,10 @@ public class AdministrativeExpenseController {
     @Operation(summary = "Delete an administrative expense by id")
     @ApiResponse(responseCode = "204", description = "Expense deleted")
     @ApiResponse(responseCode = "404", description = "Expense not found")
+    @ApiResponse(responseCode = "403", description = "Admin authority required")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
+        SalesAdminAuthorization.requireAdmin(authentication);
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
