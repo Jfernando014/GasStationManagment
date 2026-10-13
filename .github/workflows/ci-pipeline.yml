@@ -31,9 +31,13 @@ jobs:
           version: '3.8'
           services:
             backend:
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock
               environment:
                 - JAVA_TOOL_OPTIONS=-Xmx2g -XX:MaxMetaspaceSize=512m
                 - MAVEN_OPTS=-Xmx2g -XX:MaxMetaspaceSize=512m
+                - DOCKER_HOST=unix:///var/run/docker.sock
+                - TESTCONTAINERS_RYUK_DISABLED=true
               mem_limit: 4g
               shm_size: '2gb'
           EOF
@@ -51,6 +55,8 @@ jobs:
         run: |
           docker exec --user root \
             -e MAVEN_OPTS="-Xmx2g -XX:MaxMetaspaceSize=512m" \
+            -e DOCKER_HOST=unix:///var/run/docker.sock \
+            -e TESTCONTAINERS_RYUK_DISABLED=true \
             gas-station-backend-dev \
             mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false
 
