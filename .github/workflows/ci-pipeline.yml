@@ -25,23 +25,6 @@ jobs:
           echo "SWAGGER_PATH=/swagger-ui.html" >> .env
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
-      - name: Crear configuración de Docker para el Pipeline
-        run: |
-          cat > docker-compose.ci.yml <<'EOF'
-          version: '3.8'
-          services:
-            backend:
-              volumes:
-                - /var/run/docker.sock:/var/run/docker.sock
-              environment:
-                - JAVA_TOOL_OPTIONS=-Xmx2g -XX:MaxMetaspaceSize=512m
-                - MAVEN_OPTS=-Xmx2g -XX:MaxMetaspaceSize=512m
-                - DOCKER_HOST=unix:///var/run/docker.sock
-                - TESTCONTAINERS_RYUK_DISABLED=true
-              mem_limit: 4g
-              shm_size: '2gb'
-          EOF
-
       - name: Construir y levantar contenedores con Docker Compose
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
 
