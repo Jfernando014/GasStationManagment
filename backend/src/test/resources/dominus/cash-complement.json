@@ -1,0 +1,46 @@
+{
+  "header": {
+    "reportDate": "2026-08-01",
+    "stationCode": "761",
+    "stationName": "BELLAVISTA",
+    "administrator": null
+  },
+  "lubricantSales": {
+    "oils": {"amount": 192000},
+    "additivesWaterLiquids": {"amount": 246000},
+    "miscellaneousGoods": {"amount": 20000},
+    "additionalRows": [],
+    "total": 458000
+  },
+  "creditSales": {
+    "sotracauca": {},
+    "puntosColombia": {"amount": 46055},
+    "additionalRows": [
+      {"concept": "", "values": {}},
+      {"concept": "", "values": {}}
+    ],
+    "total": 46055
+  },
+  "expenses": {"rows": [], "total": 0},
+  "deposits": {
+    "credibanco": {"amount": 5035696},
+    "bancolombiaPrimax": {},
+    "qr": {"amount": 711315},
+    "additionalRows": [{"concept": "", "values": {}}],
+    "total": 5747011
+  },
+  "dailyBalance": {
+    "dailySales": 18308992,
+    "expenses": 0,
+    "credibancos": 5035696,
+    "credits": 46055,
+    "qr": 711315,
+    "dailyCash": 12515926
+  },
+  "accumulatedCash": {
+    "previousCash": 12113543,
+    "dailyCash": 12515926,
+    "deposit": 0,
+    "accumulatedBalance": 24629469
+  }
+}
