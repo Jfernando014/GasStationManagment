@@ -182,3 +182,16 @@ Based on the [Platzi Git Commit Guide](https://platzi.com/blog/guia-de-commits-e
 - `👔 business`: Add or update business logic.
 - `🦺 validation`: Add or update validation-related code..
 - `💥 BREAKING CHANGE`: A commit that includes a `BREAKING CHANGE:` footer, or adds a `!` after the type/scope, introduces major changes to the API (corresponding to a MAJOR Semantic Versioning release). A `BREAKING CHANGE` can be part of a commit of any type.
+
+---
+
+## 🤖 AI Co-Authorship & Contribution Policy
+
+To ensure accurate repository analytics and keep the GitHub contributor list restricted to real project team members:
+
+1. **No AI Co-Authorship Trailers**:
+   - Do **NOT** include `Co-authored-by:` trailers referencing AI tools or virtual bots (such as `Cursor <cursor@cursor.com>` or `GitHub Copilot <copilot@github.com>`) in commit messages.
+2. **Disable Automatic AI Trailers**:
+   - Turn off automatic co-authoring settings in your local code editor (Cursor / VS Code).
+3. **PR Merge Verification**:
+   - When merging a Pull Request, always review the commit title and body in the GitHub merge box. If any `Co-authored-by: Cursor` or `Co-authored-by: Copilot` line appears, delete it manually before clicking **Confirm merge**.
