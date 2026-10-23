@@ -169,4 +169,9 @@ public class InventoryExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "The required parameter is missing '" + ex.getParameterName() + "'", request);
     }
+    @ExceptionHandler(InvalidTankMeasurementException.class)
+    public ResponseEntity<Map<String, Object>> handleTankMeasurement(
+            InvalidTankMeasurementException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
 }
