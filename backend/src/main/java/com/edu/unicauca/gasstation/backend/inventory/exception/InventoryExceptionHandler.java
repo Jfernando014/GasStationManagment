@@ -174,4 +174,9 @@ public class InventoryExceptionHandler {
             InvalidTankMeasurementException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
+    @ExceptionHandler(TankMeasurementNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTankMeasurementNotFound(
+            TankMeasurementNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
 }
