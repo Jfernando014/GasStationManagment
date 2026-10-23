@@ -13,6 +13,7 @@ public interface TankMeasurementRepository {
 
     boolean existsByJournalDate(LocalDate journalDate);
 
-    /** Última medición anterior a la fecha: es el "inicial" de la jornada (S2-26). */
     Optional<TankMeasurement> findLatestBefore(LocalDate journalDate);
+
+    Optional<TankMeasurement> findLatestContainingTank(Long tankId);
 }

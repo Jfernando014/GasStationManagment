@@ -179,4 +179,21 @@ public class InventoryExceptionHandler {
             TankMeasurementNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
+    @ExceptionHandler(FuelReceptionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFuelReceptionNotFound(
+            FuelReceptionNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ReceptionExceedsCapacityException.class)
+    public ResponseEntity<Map<String, Object>> handleReceptionExceedsCapacity(
+            ReceptionExceedsCapacityException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidFuelReceptionException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidFuelReception(
+            InvalidFuelReceptionException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
 }

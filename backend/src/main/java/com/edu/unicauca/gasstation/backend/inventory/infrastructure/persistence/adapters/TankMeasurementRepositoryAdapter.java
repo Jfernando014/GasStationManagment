@@ -8,6 +8,7 @@ import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.JpaTankMeasurementRepository;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.repositories.JpaTankReadingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,5 +60,13 @@ public class TankMeasurementRepositoryAdapter implements TankMeasurementReposito
 
     private TankMeasurement withReadings(TankMeasurementEntity entity) {
         return mapper.toDomain(entity, readingRepository.findByMeasurementIdOrderByTankId(entity.getId()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<TankMeasurement> findLatestContainingTank(Long tankId) {
+        return measurementRepository.findContainingTank(tankId, PageRequest.of(0, 1)).stream()
+                .findFirst()
+                .map(this::withReadings);
     }
 }
