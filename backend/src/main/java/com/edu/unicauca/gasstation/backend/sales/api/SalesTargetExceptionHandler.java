@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-@RestControllerAdvice(assignableTypes = {SalesTargetController.class, SalesDistributionController.class, SalesStatisticsController.class})
+@RestControllerAdvice(assignableTypes = {SalesTargetController.class, SalesDistributionController.class, SalesStatisticsController.class, SalesReportingController.class})
 public class SalesTargetExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
@@ -24,6 +24,11 @@ public class SalesTargetExceptionHandler extends ResponseEntityExceptionHandler 
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail invalid(IllegalArgumentException ex) {
         return problem(HttpStatus.BAD_REQUEST, "INVALID_SALES_TARGET", ex.getMessage());
+    }
+
+    @ExceptionHandler(StatisticsSourceException.class)
+    public ProblemDetail invalidSource(StatisticsSourceException ex) {
+        return problem(HttpStatus.BAD_GATEWAY, "INVALID_STATISTICS_SOURCE", ex.getMessage());
     }
 
     @ExceptionHandler(DuplicateSalesTargetException.class)
