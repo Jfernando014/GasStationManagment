@@ -1,0 +1,22 @@
+<div class="inv-filter-toolbar stats-toolbar">
+  <label class="stats-date">Período de balance:
+    <select class="flat-select" [ngModel]="month()" (ngModelChange)="month.set($event); error.set(''); success.set('')" [disabled]="loading()">
+      @for (period of periods(); track period) { <option [value]="period">{{ label(period) }}{{ period === month() ? available() ? ' (Datos disponibles)' : ' (Periodo Sin Información)' : '' }}</option> }
+    </select>
+  </label>
+  <button type="button" class="btn-action-primary" [disabled]="!available() || loading()" (click)="export()">{{ loading() ? 'GENERANDO PRESENTACIÓN…' : '↓ EXPORTAR A ARCHIVO DE PRESENTACIÓN (.pptx)' }}</button>
+</div>
+@if (!available()) { <p class="stats-note" role="status">No hay información suficiente para generar el balance de este período. Se requieren observaciones proporcionadas o ventas reales disponibles.</p> }
+@if (checking()) { <p class="stats-note" role="status">Consultando disponibilidad de ventas reales del período…</p> }
+@if (basketWarning()) { <p class="stats-note" role="status">Ventas reales de canastilla no disponibles: {{ basketWarning() }} Las observaciones proporcionadas pueden exportarse por separado.</p> }
+@if (error()) { <p class="stats-error" role="alert">{{ error() }}</p> }
+@if (success()) { <p class="stats-success" role="status">{{ success() }}</p> }
+<h3 class="stats-section-title">ESTRUCTURA DE LA PRESENTACIÓN (.PPTX) <small>(4 Diapositivas Corporativas)</small></h3>
+<div class="stats-slides">
+  @for (slide of slides; track slide.title; let index = $index) {
+    <article><div class="stats-slide-preview"><span>SLIDE {{ index + 1 }}</span><strong>{{ slide.title }}</strong>
+      <small>{{ index === 0 && total() !== null ? format(total()) + ' ' + workspace.unit() + ' · Observaciones' : index === 1 && observations().length ? 'Promedios de observaciones proporcionadas' : index === 2 && realBasket()?.charts?.availability === 'AVAILABLE' ? format(realBasket()?.summary?.amount ?? null) + ' COP · Ventas reales' : index === 3 ? 'Disponibilidad de cada fuente' : 'Datos faltantes identificados al exportar' }}</small>
+    </div><h4>{{ slide.label }}</h4><p>{{ slide.description }}</p></article>
+  }
+</div>
+<p class="stats-note stats-balance-note">El balance distingue observaciones del cliente y ventas históricas reales. Las secciones sin fuente se identifican como no disponibles; no se inventan resultados.</p>

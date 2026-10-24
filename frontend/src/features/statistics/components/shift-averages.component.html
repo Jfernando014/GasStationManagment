@@ -1,0 +1,40 @@
+<div class="rs-seccion">
+  <form class="inv-filter-toolbar stats-toolbar" (ngSubmit)="workspace.consult()" [attr.aria-busy]="workspace.loadingAverages()">
+    <label class="stats-date">Fecha inicial:
+      <input type="date" class="flat-input tnum" name="from" [ngModel]="workspace.from()" (ngModelChange)="workspace.setRange($event, workspace.to())" required>
+    </label>
+    <label class="stats-date">Fecha final:
+      <input type="date" class="flat-input tnum" name="to" [ngModel]="workspace.to()" (ngModelChange)="workspace.setRange(workspace.from(), $event)" required>
+    </label>
+    <button type="submit" class="btn-action-primary" [disabled]="!!workspace.rangeError() || workspace.loadingAverages()">{{ workspace.loadingAverages() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
+  </form>
+  @if (workspace.rangeError()) { <p class="stats-error" role="alert">{{ workspace.rangeError() }}</p> }
+  <div class="inv-table-wrapper">
+    <div class="stats-table-heading"><h2>Desglose Diario de Turnos en el Período</h2>
+      <span class="sales-kpi-badge neutral">{{ rows().length }} observaciones del cliente</span></div>
+    <div class="stats-table-scroll" tabindex="0" role="region" aria-label="Desglose diario de observaciones">
+      <table class="inv-table">
+        <thead><tr><th>FECHA</th><th>VENDEDOR</th><th>TURNO</th><th class="right">GALONES</th><th class="right">CANASTILLA</th><th>COMPARATIVA VS PROMEDIO DEL TURNO</th></tr></thead>
+        <tbody>
+          @for (row of rows(); track row.date + row.journey) {
+            <tr><td class="tnum">{{ row.date }}</td><td><span title="La observación consolidada no incluye vendedor">—</span></td>
+              <td><span [class]="row.journey === 'DAY' ? 'badge-shift-day-pill' : 'badge-shift-night-pill'">{{ row.journey === 'DAY' ? '☀ Día' : '☾ Noche' }}</span></td>
+              <td class="right tnum">{{ workspace.category() === 'FUEL_AGGREGATE' ? format(row.value) + ' Gal' : '—' }}</td>
+              <td class="right tnum stats-orange">{{ workspace.category() === 'BASKET' ? '$ ' + format(row.value) + ' COP' : '—' }}</td>
+              <td><span class="sales-kpi-badge" [class.green]="delta(row) !== null && !delta(row)?.startsWith('-')" [class.stats-negative]="delta(row)?.startsWith('-')">
+                {{ delta(row) !== null && !delta(row)?.startsWith('-') ? '+' : '' }}{{ format(delta(row)) }} {{ delta(row) !== null ? workspace.unit() : '' }}
+                @if (percent(row) !== null) { ({{ !percent(row)?.startsWith('-') ? '+' : '' }}{{ format(percent(row)) }}%) }
+              </span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><app-empty-state [heading]="workspace.loadingAverages() ? 'Consultando promedios' : 'Sin observaciones en el período'"
+              description="Puedes cargar totales por fecha y jornada para analizarlos. No hay ventas históricas por vendedor conectadas.">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3v18h18M7 16v-4M12 16V8M17 16v-7" /></svg>
+            </app-empty-state></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="stats-note">Las observaciones son totales proporcionados por el cliente. No incluyen vendedor ni acreditan turnos efectivamente trabajados.</p>
+</div>

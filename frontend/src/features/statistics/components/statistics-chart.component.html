@@ -1,0 +1,42 @@
+<div class="stats-chart-legend">
+  @for (item of series(); track item.label) { <span><i [style.background-color]="item.color"></i>{{ item.label }}</span> }
+  <small>{{ sourceLabel() }} · {{ unit() }}</small>
+</div>
+@if (points().length) {
+  <div class="stats-chart-canvas">
+    <svg #svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320" font-family="Inter, Arial, sans-serif" role="img" aria-labelledby="statistics-chart-description">
+      <title id="statistics-chart-description">{{ kind() === 'bars' ? 'Comparación de promedios' : 'Totales por fecha observada' }} · {{ unit() }}</title>
+      <rect width="900" height="320" fill="#F8FAFC" rx="12" />
+      <text x="40" y="25" fill="#64748B" font-size="11">{{ sourceLabel() }} · {{ unit() }}</text>
+      <path d="M40 260H870M40 160H870M40 60H870" stroke="#E2E8F0" fill="none" />
+      @if (kind() === 'bars') {
+        @for (point of points(); track $index; let index = $index) {
+          <rect [attr.x]="barX(index) - barWidth()/2" [attr.y]="y(point.value)" [attr.width]="barWidth()" [attr.height]="260-y(point.value)" [attr.fill]="point.color" rx="5">
+            <title>{{ point.series }}: {{ format(point.value) }} {{ unit() }}</title>
+          </rect>
+          <text [attr.x]="barX(index)" [attr.y]="y(point.value)-12" text-anchor="middle" fill="#0F172A" font-size="12">{{ format(point.value) }} {{ unit() }}</text>
+          <text [attr.x]="barX(index)" y="290" text-anchor="middle" fill="#64748B" font-size="12"><title>{{ point.label }}</title>{{ shortLabel(point.label) }}</text>
+        }
+      } @else {
+        @for (item of series(); track item.label) {
+          <polyline [attr.points]="line(item)" fill="none" [attr.stroke]="item.color" stroke-width="3" />
+          @for (point of item.points; track point.label) {
+            <circle [attr.cx]="x(point.label)" [attr.cy]="y(point.value)" r="5" [attr.fill]="item.color"><title>{{ point.label }} · {{ item.label }}: {{ format(point.value) }} {{ unit() }}</title></circle>
+          }
+        }
+        @for (label of labels(); track label; let index = $index) {
+          @if (index % (labels().length > 8 ? 5 : 1) === 0 || $last) { <text [attr.x]="x(label)" y="290" text-anchor="middle" fill="#64748B" font-size="12">{{ label }}</text> }
+        }
+      }
+    </svg>
+  </div>
+} @else {
+  <app-empty-state heading="Sin datos para representar" description="Consulta un análisis con observaciones disponibles. No se dibujan barras ni líneas con valores supuestos." />
+}
+<div class="stats-chart-kpis">
+  <div><span>PICO MÁXIMO</span><b class="stats-orange">{{ format(points().length ? maximum() : null) }} {{ points().length ? unit() : '' }}</b></div>
+  <div><span>PROMEDIO DE LA GRÁFICA</span><b>{{ format(mean()) }} {{ mean() !== null ? unit() : '' }}</b></div>
+  <div><span>MÍNIMO DEL PERÍODO MOSTRADO</span><b>{{ format(minimum()) }} {{ minimum() !== null ? unit() : '' }}</b></div>
+  <div><span>EFICIENCIA DE DESPACHO</span><b>—</b><small>Sin datos verificados</small></div>
+</div>
+@if (error()) { <p class="stats-error" role="alert">{{ error() }}</p> }

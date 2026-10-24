@@ -28,6 +28,10 @@ export const routes: Routes = [
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
       {
+        path: 'resultados/estadisticas',
+        loadComponent: () => import('../features/statistics/pages/statistics-page.component').then(m => m.StatisticsPageComponent)
+      },
+      {
 
         path: 'configuracion/tanques',
         loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
