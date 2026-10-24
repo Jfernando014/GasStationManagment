@@ -18,6 +18,8 @@ public class FuelReceptionRepositoryAdapter implements FuelReceptionRepository {
 
     private final JpaFuelReceptionRepository repository;
     private final FuelReceptionPersistenceMapper mapper;
+    private static final LocalDate MIN_DATE = LocalDate.of(1900, 1, 1);
+    private static final LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
 
     @Override
     public FuelReception save(FuelReception reception) {
@@ -29,9 +31,12 @@ public class FuelReceptionRepositoryAdapter implements FuelReceptionRepository {
         return repository.findById(id).map(mapper::toDomain);
     }
 
+
     @Override
     public List<FuelReception> search(Long tankId, LocalDate from, LocalDate to) {
-        return repository.search(tankId, from, to).stream().map(mapper::toDomain).toList();
+        LocalDate fromDate = from != null ? from : MIN_DATE;
+        LocalDate toDate = to != null ? to : MAX_DATE;
+        return repository.search(tankId, fromDate, toDate).stream().map(mapper::toDomain).toList();
     }
 
     @Override

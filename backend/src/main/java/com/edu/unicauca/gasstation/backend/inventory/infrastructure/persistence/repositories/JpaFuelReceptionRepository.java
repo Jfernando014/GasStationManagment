@@ -14,8 +14,7 @@ public interface JpaFuelReceptionRepository extends JpaRepository<FuelReceptionE
     @Query("""
             select r from FuelReceptionEntity r
             where (:tankId is null or r.tankId = :tankId)
-              and (:fromDate is null or r.receptionDate >= :fromDate)
-              and (:toDate is null or r.receptionDate <= :toDate)
+              and r.receptionDate between :fromDate and :toDate
             order by r.receptionDate desc, r.id desc
             """)
     List<FuelReceptionEntity> search(@Param("tankId") Long tankId,
