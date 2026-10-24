@@ -1,12 +1,23 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
+import com.edu.unicauca.gasstation.backend.shifts.exception.ExceptionalCoverageRequiredException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidDateRangeException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidNoveltyException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidNoveltyReasonException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidRotationLengthException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.JournalNotEditableException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.JournalNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.NoStaffToConfirmException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.NoveltyConflictException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.NoveltyNotFoundException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.PastDateException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.RotationNotAllowedException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.SameWorkerNoveltyException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ScheduleWorkerNotFoundException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftHoursOverlapException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerAlreadyWorkingException;
 import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -114,6 +125,72 @@ public class ShiftExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(RotationNotAllowedException.class)
     public ProblemDetail handleRotationNotAllowed(RotationNotAllowedException ex) {
         return problem(HttpStatus.CONFLICT, "ROTATION_NOT_ALLOWED", ex.getMessage());
+    }
+
+    /** There is no journal for the date of step 1 (404). */
+    @ExceptionHandler(JournalNotFoundException.class)
+    public ProblemDetail handleJournalNotFound(JournalNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "JOURNAL_NOT_FOUND", ex.getMessage());
+    }
+
+    /** The journal is closed and step 1 is read only (409). */
+    @ExceptionHandler(JournalNotEditableException.class)
+    public ProblemDetail handleJournalNotEditable(JournalNotEditableException ex) {
+        return problem(HttpStatus.CONFLICT, "JOURNAL_NOT_EDITABLE", ex.getMessage());
+    }
+
+    /** The reason of a novelty does not have 3 to 255 characters (400). */
+    @ExceptionHandler(InvalidNoveltyReasonException.class)
+    public ProblemDetail handleInvalidNoveltyReason(InvalidNoveltyReasonException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_NOVELTY_REASON", ex.getMessage());
+    }
+
+    /** The novelty does not fit the staff of the day (400). */
+    @ExceptionHandler(InvalidNoveltyException.class)
+    public ProblemDetail handleInvalidNovelty(InvalidNoveltyException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_NOVELTY", ex.getMessage());
+    }
+
+    /** The replacement or the other worker of a swap is the same worker (400). */
+    @ExceptionHandler(SameWorkerNoveltyException.class)
+    public ProblemDetail handleSameWorker(SameWorkerNoveltyException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "SAME_WORKER", ex.getMessage());
+    }
+
+    /** The replacement works a shift whose hours cross the shift to cover (409). */
+    @ExceptionHandler(ShiftHoursOverlapException.class)
+    public ProblemDetail handleShiftHoursOverlap(ShiftHoursOverlapException ex) {
+        return problem(HttpStatus.CONFLICT, "SHIFT_HOURS_OVERLAP", ex.getMessage());
+    }
+
+    /** The replacement already works another shift that day (409). */
+    @ExceptionHandler(WorkerAlreadyWorkingException.class)
+    public ProblemDetail handleWorkerAlreadyWorking(WorkerAlreadyWorkingException ex) {
+        return problem(HttpStatus.CONFLICT, "WORKER_ALREADY_WORKING", ex.getMessage());
+    }
+
+    /** A code of another role was not marked as exceptional coverage (409). */
+    @ExceptionHandler(ExceptionalCoverageRequiredException.class)
+    public ProblemDetail handleExceptionalCoverageRequired(ExceptionalCoverageRequiredException ex) {
+        return problem(HttpStatus.CONFLICT, "EXCEPTIONAL_COVERAGE_REQUIRED", ex.getMessage());
+    }
+
+    /** A worker already takes part in another active novelty that day (409). */
+    @ExceptionHandler(NoveltyConflictException.class)
+    public ProblemDetail handleNoveltyConflict(NoveltyConflictException ex) {
+        return problem(HttpStatus.CONFLICT, "NOVELTY_CONFLICT", ex.getMessage());
+    }
+
+    /** Nobody would work the day, so step 1 cannot be confirmed (409). */
+    @ExceptionHandler(NoStaffToConfirmException.class)
+    public ProblemDetail handleNoStaffToConfirm(NoStaffToConfirmException ex) {
+        return problem(HttpStatus.CONFLICT, "NO_STAFF_TO_CONFIRM", ex.getMessage());
+    }
+
+    /** The novelty does not exist or belongs to another date (404). */
+    @ExceptionHandler(NoveltyNotFoundException.class)
+    public ProblemDetail handleNoveltyNotFound(NoveltyNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "NOVELTY_NOT_FOUND", ex.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String detail) {
