@@ -169,16 +169,19 @@ public class InventoryExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "The required parameter is missing '" + ex.getParameterName() + "'", request);
     }
+
     @ExceptionHandler(InvalidTankMeasurementException.class)
     public ResponseEntity<Map<String, Object>> handleTankMeasurement(
             InvalidTankMeasurementException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
+
     @ExceptionHandler(TankMeasurementNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleTankMeasurementNotFound(
             TankMeasurementNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
+
     @ExceptionHandler(FuelReceptionNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleFuelReceptionNotFound(
             FuelReceptionNotFoundException ex, HttpServletRequest request) {
@@ -194,6 +197,18 @@ public class InventoryExceptionHandler {
     @ExceptionHandler(InvalidFuelReceptionException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidFuelReception(
             InvalidFuelReceptionException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidAutonomyThresholdException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidAutonomyThreshold(
+            InvalidAutonomyThresholdException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AutonomyThresholdAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleAutonomyThresholdAlreadyExists(
+            AutonomyThresholdAlreadyExistsException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
 }
