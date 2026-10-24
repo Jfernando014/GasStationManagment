@@ -1,0 +1,535 @@
+<div class="jr-p2-container">
+  <!-- Cabecera del Paso 2 -->
+  <div class="jr-p2-cabecera">
+    <div class="jr-p2-titulos">
+      <div class="jr-p2-titulo-linea">
+        <h1>Cierre por vendedor</h1>
+        <span *ngIf="!isStep1Complete" class="jr-p2-aviso-paso1" title="El paso 1 no está completo: las columnas salen de la malla del día.">
+          Paso 1 sin completar · <a routerLink="/jornada/personal">Revisar</a>
+        </span>
+      </div>
+      <div class="jr-p2-sub">
+        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--cuadra"></i> Cuadra (&le; {{ tolerance }} COP)</span>
+        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--sobra"></i> Sobra (&gt; {{ tolerance }} COP)</span>
+        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--falta"></i> Falta (&lt; -{{ tolerance }} COP)</span>
+      </div>
+    </div>
+
+    <div class="jr-p2-acciones">
+      <!-- Indicadores compactos -->
+      <div class="jr-indicadores">
+        <div class="jr-indicador">
+          <span class="jr-indicador-label">Según Dominus</span>
+          <span class="jr-indicador-val">{{ formatCurrency(totalDominusTirilla()) }}</span>
+        </div>
+        <div class="jr-indicador">
+          <span class="jr-indicador-label">Total entregado</span>
+          <span class="jr-indicador-val">{{ formatCurrency(totalDelivered()) }}</span>
+        </div>
+        <div class="jr-indicador" [ngClass]="'jr-indicador--' + discrepanciesSummary().status">
+          <span class="jr-indicador-label">Descuadres</span>
+          <span class="jr-indicador-val">{{ discrepanciesSummary().text }}</span>
+        </div>
+      </div>
+
+      <!-- Botón Drawer Dominus -->
+      <button type="button" class="btn-secondary" id="btn-valores-dominus" (click)="openDominusDrawer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Valores para Dominus
+      </button>
+
+      <!-- Botón Cargar Datos Demo Hoja 05 -->
+      <button type="button" class="btn-ghost" id="btn-cargar-hoja05" (click)="loadDemoHoja05()">
+        Cargar hoja 05
+      </button>
+
+      <!-- Botón Guardar Cierres -->
+      <button type="button" class="btn-primary" id="btn-guardar-cierres" [disabled]="isSaving" (click)="saveCloses()">
+        <span *ngIf="isSaving">Guardando...</span>
+        <span *ngIf="!isSaving">Guardar Cierres</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alertas de estado -->
+  <div *ngIf="saveSuccessMessage" class="alert-success">
+    {{ saveSuccessMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Rejilla compacta de conciliación -->
+  <div class="jr-p2-rejilla-wrapper">
+    <div class="jr-grid-wrap">
+      <table class="jr-grid" id="jr-p2-rejilla">
+        <colgroup>
+          <col class="jr-grid-col-concepto">
+          <col *ngFor="let vendor of assignedVendors">
+          <col class="jr-grid-col-total">
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th class="jr-grid-concepto">
+              Concepto
+              <small class="jr-p2-ayuda" title="Enter baja en la columna · Tab pasa al siguiente vendedor · Ctrl+V pega serie hacia abajo">
+                Enter &darr; &middot; Tab &rarr; &middot; Ctrl+V pega
+              </small>
+            </th>
+            <th *ngFor="let vendor of assignedVendors">
+              <div class="th-vendor-title">{{ vendor.name }}</div>
+              <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ vendor.shiftName }}</small>
+            </th>
+            <th class="jr-grid-total">
+              <div class="th-vendor-title">Total del día</div>
+              <small>{{ assignedVendors.length }} vendedores</small>
+            </th>
+          </tr>
+
+          <!-- Fila de Descuadre Real Fija en Cabecera -->
+          <tr class="jr-grid-fila--resultado">
+            <td class="jr-grid-concepto">
+              <strong>Descuadre real</strong>
+              <small>entregado &minus; Dominus</small>
+            </td>
+            <td *ngFor="let vendor of assignedVendors">
+              <span *ngIf="captures[vendor.document]?.estadoResultado === 'vacio'" class="jr-chip jr-chip--pendiente">Sin datos</span>
+              <span *ngIf="captures[vendor.document]?.estadoResultado === 'cuadra'" class="jr-chip jr-chip--cuadra">
+                <span class="jr-chip-punto"></span>Cuadra
+              </span>
+              <span *ngIf="captures[vendor.document]?.estadoResultado === 'sobra'" class="jr-chip jr-chip--sobra">
+                <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(captures[vendor.document].descuadre) }}
+              </span>
+              <span *ngIf="captures[vendor.document]?.estadoResultado === 'falta'" class="jr-chip jr-chip--falta">
+                <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-captures[vendor.document].descuadre) }}
+              </span>
+            </td>
+            <td class="jr-grid-total">
+              <span *ngIf="!hasDiscrepancies() && totalDelivered() > 0" class="jr-chip jr-chip--cuadra">
+                <span class="jr-chip-punto"></span>Cuadra
+              </span>
+              <span *ngIf="totalDiscrepancy() > tolerance" class="jr-chip jr-chip--sobra">
+                <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(totalDiscrepancy()) }}
+              </span>
+              <span *ngIf="totalDiscrepancy() < -tolerance" class="jr-chip jr-chip--falta">
+                <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-totalDiscrepancy()) }}
+              </span>
+              <span *ngIf="totalDelivered() === 0" class="jr-chip jr-chip--pendiente">Sin datos</span>
+            </td>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- BLOQUE 1: PLANILLA FÍSICA -->
+          <tr class="jr-grid-bloque" data-bloque="planilla">
+            <td [attr.colspan]="assignedVendors.length + 2">
+              <span class="jr-grid-bloque-titulo">Planilla física</span>
+            </td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">Parciales (sobres de $200.000)</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="1"
+                     data-fila="parciales" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].parciales"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'parciales', vendor.document)"
+                     (paste)="onPaste($event, 'parciales', vendor.document)">
+            </td>
+            <td class="jr-grid-total">
+              {{ totalParciales() }} sobres &middot; {{ formatCurrency(totalParciales() * packetValue) }}
+            </td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">Pico</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="1000"
+                     data-fila="pico" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].pico"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'pico', vendor.document)"
+                     (paste)="onPaste($event, 'pico', vendor.document)">
+            </td>
+            <td class="jr-grid-total">
+              {{ formatCurrency(totalPico()) }}
+            </td>
+          </tr>
+
+          <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <td class="jr-grid-concepto">Total efectivo</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <span class="jr-cell--calc">{{ formatCurrency(captures[vendor.document]?.efectivo || 0) }}</span>
+            </td>
+            <td class="jr-grid-total">
+              <span class="jr-cell--total">{{ formatCurrency(totalCash()) }}</span>
+            </td>
+          </tr>
+
+          <!-- BLOQUE 2: OTROS MEDIOS -->
+          <tr class="jr-grid-bloque" data-bloque="otros">
+            <td [attr.colspan]="assignedVendors.length + 2">
+              <span class="jr-grid-bloque-titulo">Otros medios</span>
+            </td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">G.A. (gastos administrativos)</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="1000"
+                     data-fila="ga" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].ga"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'ga', vendor.document)"
+                     (paste)="onPaste($event, 'ga', vendor.document)">
+            </td>
+            <td class="jr-grid-total">{{ formatCurrency(totalGa()) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">Credibanco</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="100"
+                     data-fila="credibanco" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].credibanco"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'credibanco', vendor.document)"
+                     (paste)="onPaste($event, 'credibanco', vendor.document)">
+            </td>
+            <td class="jr-grid-total">{{ formatCurrency(totalCredibanco()) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">QR</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="100"
+                     data-fila="qr" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].qr"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'qr', vendor.document)"
+                     (paste)="onPaste($event, 'qr', vendor.document)">
+            </td>
+            <td class="jr-grid-total">{{ formatCurrency(totalQr()) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">Redenciones Puntos Colombia</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <input class="jr-input" type="number" min="0" step="100"
+                     data-fila="redenciones" [attr.data-col]="vendor.document"
+                     [(ngModel)]="captures[vendor.document].redenciones"
+                     (input)="onFieldChange(vendor.document)"
+                     (keydown)="onKeyDown($event, 'redenciones', vendor.document)"
+                     (paste)="onPaste($event, 'redenciones', vendor.document)">
+            </td>
+            <td class="jr-grid-total">{{ formatCurrency(totalRedenciones()) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <td class="jr-grid-concepto">Total entregado</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <span class="jr-cell--calc">{{ formatCurrency(captures[vendor.document]?.totalEntregado || 0) }}</span>
+            </td>
+            <td class="jr-grid-total">
+              <span class="jr-cell--total">{{ formatCurrency(totalDelivered()) }}</span>
+            </td>
+          </tr>
+
+          <!-- BLOQUE 3: SEGÚN DOMINUS -->
+          <tr class="jr-grid-bloque" data-bloque="dominus">
+            <td [attr.colspan]="assignedVendors.length + 2">
+              <span class="jr-grid-bloque-titulo">Según Dominus</span>
+              <span class="jr-grid-bloque-nota">Pega la columna completa con Ctrl+V</span>
+            </td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">
+              <i class="jr-grid-color" style="background: #22c55e;"></i>
+              Galones Motor (corriente)
+            </td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus">
+                <input class="jr-input" type="number" step="0.001" min="0"
+                       data-fila="galMotor" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].galMotor"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'galMotor', vendor.document)"
+                       (paste)="onPaste($event, 'galMotor', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">{{ formatNumber(totalGalMotor(), 3) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">
+              <i class="jr-grid-color" style="background: #3b82f6;"></i>
+              Galones Diésel
+            </td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus">
+                <input class="jr-input" type="number" step="0.001" min="0"
+                       data-fila="galDiesel" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].galDiesel"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'galDiesel', vendor.document)"
+                       (paste)="onPaste($event, 'galDiesel', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">{{ formatNumber(totalGalDiesel(), 3) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">
+              <i class="jr-grid-color" style="background: #f59e0b;"></i>
+              Galones Extra
+            </td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus">
+                <input class="jr-input" type="number" step="0.001" min="0"
+                       data-fila="galExtra" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].galExtra"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'galExtra', vendor.document)"
+                       (paste)="onPaste($event, 'galExtra', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">{{ formatNumber(totalGalExtra(), 3) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">
+              <i class="jr-grid-color" style="background: #8b5cf6;"></i>
+              Galones Max Pro
+            </td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus">
+                <input class="jr-input" type="number" step="0.001" min="0"
+                       data-fila="galMaxpro" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].galMaxpro"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'galMaxpro', vendor.document)"
+                       (paste)="onPaste($event, 'galMaxpro', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">{{ formatNumber(totalGalMaxpro(), 3) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila">
+            <td class="jr-grid-concepto">Canastilla</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus">
+                <input class="jr-input" type="number" step="100" min="0"
+                       data-fila="canastilla" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].canastilla"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'canastilla', vendor.document)"
+                       (paste)="onPaste($event, 'canastilla', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">{{ formatCurrency(totalCanastilla()) }}</td>
+          </tr>
+
+          <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <td class="jr-grid-concepto">Total (tirilla)</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <div class="jr-cell jr-cell--dominus" [class.jr-cell--aviso]="captures[vendor.document]?.avisoTirilla"
+                   [attr.title]="captures[vendor.document]?.avisoTirilla">
+                <input class="jr-input" type="number" step="0.01" min="0"
+                       data-fila="tirilla" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].tirilla"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, 'tirilla', vendor.document)"
+                       (paste)="onPaste($event, 'tirilla', vendor.document)">
+              </div>
+            </td>
+            <td class="jr-grid-total">
+              <span class="jr-cell--total">{{ formatCurrency(totalDominusTirilla()) }}</span>
+            </td>
+          </tr>
+
+          <!-- BLOQUE 4: ARQUEO POR DENOMINACIÓN (PLEGABLE) -->
+          <tr class="jr-grid-bloque" [class.is-plegado]="folded.arqueo" data-bloque="arqueo">
+            <td [attr.colspan]="assignedVendors.length + 2">
+              <button type="button" class="jr-grid-toggle" (click)="toggleFold('arqueo')">
+                <svg class="jr-chevron" [class.is-rotated]="!folded.arqueo" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+                Arqueo por denominación
+              </button>
+              <span class="jr-grid-bloque-nota" *ngIf="folded.arqueo">Plegado (clic para desplegar billetes)</span>
+            </td>
+          </tr>
+
+          <ng-container *ngIf="!folded.arqueo">
+            <tr *ngFor="let d of denominations" class="jr-grid-fila">
+              <td class="jr-grid-concepto">Billetes de {{ formatCurrency(d[1]) }} <small>cantidad</small></td>
+              <td *ngFor="let vendor of assignedVendors">
+                <input class="jr-input" type="number" min="0" step="1"
+                       [attr.data-fila]="d[0]" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].denominaciones[d[0]]"
+                       (input)="onFieldChange(vendor.document)"
+                       (keydown)="onKeyDown($event, d[0], vendor.document)">
+              </td>
+              <td class="jr-grid-total">
+                {{ totalDenomination(d[0]) }} uds &middot; {{ formatCurrency(totalDenomination(d[0]) * d[1]) }}
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <td class="jr-grid-concepto">Total arqueo</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <span class="jr-cell--calc" [class.jr-cell--aviso]="captures[vendor.document]?.avisoArqueo"
+                    [attr.title]="captures[vendor.document]?.avisoArqueo ? 'No coincide con efectivo reportado: ' + formatCurrency(captures[vendor.document].efectivo) : ''">
+                <span *ngIf="captures[vendor.document]?.avisoArqueo" class="jr-p2-esperado">&ne; {{ formatCurrency(captures[vendor.document].efectivo) }}</span>
+                {{ formatCurrency(captures[vendor.document]?.totalArqueo || 0) }}
+              </span>
+            </td>
+            <td class="jr-grid-total">
+              <span class="jr-cell--total">{{ formatCurrency(totalArqueo()) }}</span>
+            </td>
+          </tr>
+
+          <!-- BLOQUE 5: PRODUCTOS VENDIDOS (PLEGABLE) -->
+          <tr class="jr-grid-bloque" [class.is-plegado]="folded.productos" data-bloque="productos">
+            <td [attr.colspan]="assignedVendors.length + 2">
+              <button type="button" class="jr-grid-toggle" (click)="toggleFold('productos')">
+                <svg class="jr-chevron" [class.is-rotated]="!folded.productos" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m9 18 6-6-6-6"></path>
+                </svg>
+                Productos vendidos (unidades)
+              </button>
+              <input type="text" class="jr-p2-buscar" list="jr-p2-lista-productos" placeholder="Agregar producto por SKU o nombre..."
+                     [(ngModel)]="productSearchInput" (change)="addProductFromSearch()" (keydown.enter)="addProductFromSearch()">
+              <datalist id="jr-p2-lista-productos">
+                <option *ngFor="let prod of catalogProducts" [value]="prod.name + ' · ' + prod.sku"></option>
+              </datalist>
+            </td>
+          </tr>
+
+          <ng-container *ngIf="!folded.productos">
+            <tr *ngFor="let sku of visibleProductSkus" class="jr-grid-fila">
+              <td class="jr-grid-concepto" [attr.title]="getProductName(sku)">
+                {{ getProductName(sku) }}
+                <small>{{ formatCurrency(getProductPrice(sku)) }}</small>
+              </td>
+              <td *ngFor="let vendor of assignedVendors">
+                <input class="jr-input" type="number" min="0" step="1"
+                       [attr.data-fila]="'p_' + sku" [attr.data-col]="vendor.document"
+                       [(ngModel)]="captures[vendor.document].productos[sku]"
+                       (input)="onFieldChange(vendor.document)">
+              </td>
+              <td class="jr-grid-total">
+                {{ totalProductUnits(sku) }} uds
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <td class="jr-grid-concepto">Unidades vendidas</td>
+            <td *ngFor="let vendor of assignedVendors">
+              <span class="jr-cell--calc">{{ captures[vendor.document]?.productos ? allProductUnits() : 0 }} uds</span>
+            </td>
+            <td class="jr-grid-total">
+              <span class="jr-cell--total">{{ allProductUnits() }} uds</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tarjeta de Consolidación Diaria (S2-10) -->
+  <div class="jr-consolidado-card">
+    <div class="jr-card-item jr-card-item--cash">
+      <div class="jr-card-label">Total Efectivo del Día (S2-10)</div>
+      <div class="jr-card-val" id="total-cash-display">{{ formatCurrency(totalCash()) }}</div>
+      <div class="jr-card-sub">{{ totalParciales() }} sobres ($200.000 c/u) + {{ formatCurrency(totalPico()) }} pico</div>
+    </div>
+    <div class="jr-card-item">
+      <div class="jr-card-label">Total Entregado</div>
+      <div class="jr-card-val">{{ formatCurrency(totalDelivered()) }}</div>
+      <div class="jr-card-sub">Efectivo + Bancos + QR + Redenciones</div>
+    </div>
+    <div class="jr-card-item">
+      <div class="jr-card-label">Total Según Dominus</div>
+      <div class="jr-card-val">{{ formatCurrency(totalDominusTirilla()) }}</div>
+      <div class="jr-card-sub">Tirilla consolidada de venta de combustible</div>
+    </div>
+    <div class="jr-card-item" [ngClass]="'jr-card-item--' + discrepanciesSummary().status">
+      <div class="jr-card-label">Descuadre del Día</div>
+      <div class="jr-card-val">
+        <span *ngIf="totalDiscrepancy() > 0">+</span>{{ formatCurrency(totalDiscrepancy()) }}
+      </div>
+      <div class="jr-card-sub">{{ discrepanciesSummary().text }}</div>
+    </div>
+  </div>
+
+  <!-- Drawer Lateral: Valores para Dominus -->
+  <div class="drawer-backdrop" *ngIf="isDominusDrawerOpen" (click)="closeDominusDrawer()"></div>
+  <aside class="jr-p2-panel" *ngIf="isDominusDrawerOpen" aria-label="Valores para conciliar en Dominus">
+    <div class="jr-p2-panel-cab">
+      <div>
+        <h3>Valores para Dominus</h3>
+        <p>Digítalos en Dominus para conciliar y cerrar cada vendedor.</p>
+      </div>
+      <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="closeDominusDrawer()">✕</button>
+    </div>
+
+    <div class="jr-p2-panel-cuerpo">
+      <div *ngIf="assignedVendors.length === 0" class="jr-p2-panel-vacio">
+        Aún no hay vendedores configurados.
+      </div>
+
+      <section *ngFor="let vendor of assignedVendors" class="jr-p2-panel-vendedor">
+        <h4>{{ vendor.name }} <small>({{ vendor.shiftName }})</small></h4>
+
+        <div class="jr-p2-panel-fila">
+          <span>Efectivo reportado en la isla</span>
+          <b>{{ formatCurrency(captures[vendor.document]?.efectivo || 0) }}</b>
+          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.efectivo || 0, 'Efectivo ' + vendor.name)">
+            Copiar
+          </button>
+        </div>
+        <p *ngIf="captures[vendor.document]?.avisoArqueo" class="jr-p2-panel-aviso">
+          El arqueo dio {{ formatCurrency(captures[vendor.document].totalArqueo) }}; se reporta parciales + pico.
+        </p>
+
+        <div class="jr-p2-panel-fila">
+          <span>Credibanco</span>
+          <b>{{ formatCurrency(captures[vendor.document]?.credibanco || 0) }}</b>
+          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.credibanco || 0, 'Credibanco ' + vendor.name)">
+            Copiar
+          </button>
+        </div>
+
+        <div class="jr-p2-panel-fila">
+          <span>QR</span>
+          <b>{{ formatCurrency(captures[vendor.document]?.qr || 0) }}</b>
+          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.qr || 0, 'QR ' + vendor.name)">
+            Copiar
+          </button>
+        </div>
+
+        <div class="jr-p2-panel-fila">
+          <span>Redenciones</span>
+          <b>{{ formatCurrency(captures[vendor.document]?.redenciones || 0) }}</b>
+          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.redenciones || 0, 'Redenciones ' + vendor.name)">
+            Copiar
+          </button>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- Toast Notificaciones -->
+  <div class="global-toast" [class.visible]="toastVisible">
+    <span>{{ toastMessage }}</span>
+  </div>
+</div>
