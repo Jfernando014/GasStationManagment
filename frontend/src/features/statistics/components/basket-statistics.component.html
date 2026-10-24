@@ -1,0 +1,46 @@
+<div class="rs-seccion">
+  <form class="inv-filter-toolbar stats-toolbar" (ngSubmit)="consult()">
+    <label class="stats-date">Período:<input type="month" class="flat-input tnum" name="month" [(ngModel)]="month" required></label>
+    <button type="submit" class="btn-action-primary" [disabled]="!validMonth() || loading()">{{ loading() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
+    <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="reset()">Reajustar</button>
+  </form>
+  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" class="jr-btn jr-btn--ghost" (click)="consult()">Reintentar</button></p> }
+  <div class="inv-table-wrapper">
+    <div class="stats-table-heading"><div><h2>Canastas por Vendedor · {{ periodLabel() }}</h2>
+      <p>Liquidación acumulada de canastilla de aceites y aditivos ordenada por mayor volumen comercial</p></div>
+      <span class="sales-kpi-badge neutral">{{ status() === 'AVAILABLE' ? 'Ventas históricas reales · ' + data()?.to : status() === 'NO_DATA' ? 'Sin registros en el período' : 'Último corte: No disponible' }}</span></div>
+    <div class="stats-table-scroll" role="region" tabindex="0" aria-label="Canastilla por vendedor">
+      <table class="inv-table stats-basket-table"><thead><tr><th>VENDEDOR</th><th class="right">TURNOS</th><th class="right">VENTA CANASTAS (COP)</th>
+        <th class="right">PROMEDIO / TURNO (COP)</th><th>PARTICIPACIÓN</th><th>ACCIONES</th></tr></thead>
+        <tbody>
+          @for (seller of sellers(); track seller.workerId) {
+            <tr><td><div class="stats-seller"><app-avatar [name]="seller.name.slice(0, 1)" /><div><b>{{ seller.name }}</b><small>{{ seller.document ? 'C.C. ' + seller.document : 'Documento no disponible' }}</small></div></div></td>
+              <td class="right tnum">{{ seller.workedShifts === null ? '—' : seller.workedShifts + ' Turnos' }}</td>
+              <td class="right tnum"><strong>$ {{ format(seller.amount) }}</strong></td>
+              <td class="right tnum">{{ seller.average === null ? '—' : '$ ' + format(seller.average) }}</td>
+              <td><div class="stats-participation"><div class="progress-track-apple">@if (seller.participation !== null) { <div class="progress-fill-apple green" [style.width.%]="seller.participation"></div> }</div><b>{{ format(seller.participation) }}{{ seller.participation === null ? '' : '%' }}</b></div></td>
+              <td><button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="selected.set(seller)" [attr.aria-label]="'Ver detalle de ' + seller.name">▤</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><app-empty-state [heading]="loading() ? 'Consultando ventas' : status() === 'NO_DATA' ? 'Sin información de canastilla en este periodo' : 'Ventas de canastilla no disponibles'"
+              [description]="status() === 'NO_DATA' ? 'No se encontraron registros reales para el período consultado.' : 'Se requiere la captura real de ventas por vendedor. El promedio por turno también necesita constancia de los turnos efectivamente trabajados.'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3 9 3 12h12l3-12H3ZM8 9l4-6 4 6M9 13v4M15 13v4" /></svg>
+            </app-empty-state></td></tr>
+          }
+        </tbody>
+        <tfoot><tr class="table-total-row-highlight"><td><span class="stats-total-dot"></span> TOTAL GENERAL ESTACIÓN</td><td class="right">{{ data()?.summary?.workedShifts ?? '—' }}</td>
+          <td class="right tnum stats-orange">{{ data()?.summary ? '$ ' + format(data()!.summary!.amount) : '—' }}</td><td class="right tnum">{{ format(data()?.summary?.averageAmountPerWorkedShift ?? null) }}</td>
+          <td colspan="2">{{ status() === 'AVAILABLE' ? 'Registros reales · ' + (data()?.summary?.saleLines ?? '') + ' líneas' : 'Sin datos verificados' }}</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+  @if (status() === 'AVAILABLE' && data()?.workedShiftsAvailability !== 'AVAILABLE') { <p class="stats-note">Los importes son reales. Los turnos trabajados y sus promedios no están disponibles.</p> }
+</div>
+@if (selected(); as seller) {
+  <app-statistics-dialog [heading]="'Lubricantes y otros · ' + seller.name" [subtitle]="queriedMonth() + ' · Ventas históricas reales'" (closed)="selected.set(null)">
+    <div class="stats-table-scroll"><table class="inv-table"><thead><tr><th>CATEGORÍA</th><th class="right">VENTAS (COP)</th><th class="right">UNIDADES</th><th class="right">PARTICIPACIÓN DEL TOTAL</th></tr></thead>
+      <tbody>@for (group of seller.groups; track group.category) { <tr><td>{{ group.category }}</td><td class="right">$ {{ format(group.amount) }}</td><td class="right">{{ format(group.quantity) }}</td><td class="right">{{ format(group.participationPercent) }}{{ group.participationPercent === null ? '' : '%' }}</td></tr> }</tbody>
+    </table></div>
+    <p class="stats-note">Las unidades corresponden a productos vendidos. La participación usa el total del período consultado.</p>
+  </app-statistics-dialog>
+}

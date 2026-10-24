@@ -1,0 +1,55 @@
+:host { display: block; min-width: 0; }
+[hidden] { display: none !important; }
+.stats-page { gap: 12px; }
+.jr-tabpanel, .rs-seccion { min-width: 0; }
+.jr-indicadores { flex-wrap: wrap; }
+.stats-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.stats-toolbar button { min-height: 38px; }
+.stats-date { display: flex; flex-shrink: 0; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+.stats-date select { width: 200px; }
+.stats-date input { width: 160px; }
+.stats-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+.stats-field input, .stats-field select { width: 100%; min-width: 0; }
+.stats-editor { display: flex; flex-direction: column; gap: 14px; }
+.stats-note { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin: 0; }
+.stats-error { color: var(--semantic-red-strong); background: var(--semantic-red-subtle); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; }
+.stats-table-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-hairline); }
+.stats-table-heading h2, .stats-simulator h2 { font-size: 14px; font-weight: 700; color: var(--text-heading); margin: 0; }
+.stats-table-heading p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.stats-table-scroll { overflow: auto; container-type: inline-size; }
+.stats-table-scroll app-empty-state { display: flex; max-width: calc(100cqw - 36px); }
+table { min-width: 850px; }
+td[colspan] { white-space: normal; }
+tfoot { background: var(--surface-subtle); font-weight: 700; }
+.stats-orange { color: var(--brand-primary); }
+.stats-positive { color: var(--semantic-green-strong); }
+.sales-kpi-badge.stats-negative { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); border: 1px solid #FECACA; }
+.stats-success { padding: 12px; color: var(--semantic-green-strong); background: var(--semantic-green-subtle); border-radius: var(--radius-sm); font-size: 13px; }
+.stats-seller { display: flex; align-items: center; gap: 10px; }
+.stats-seller app-avatar { background: var(--brand-primary-subtle); color: var(--brand-primary); width: 30px; height: 30px; }
+.stats-basket-table th:first-child { width: 34%; }
+.stats-basket-table th { white-space: nowrap; }
+.stats-seller small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 3px; }
+.stats-participation { display: flex; align-items: center; gap: 12px; min-width: 160px; }
+.stats-participation .progress-track-apple { flex: 1; }
+.stats-participation b { min-width: 46px; text-align: right; }
+.stats-total-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--brand-primary); }
+.stats-trailing { margin-left: auto; }
+.stats-dialog-actions { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 16px 24px; margin: 24px -24px -24px; background: var(--surface-subtle); border-top: 1px solid var(--border-main); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+@media(max-width:768px) {
+  .rs-tabs { min-width: 0; width: 100%; align-items: stretch; }
+  .jr-tabs { min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; }
+  .jr-tab { white-space: nowrap; }
+  .rs-tabs-acciones { flex-wrap: wrap; width: 100%; }
+  .rs-cabecera-der { width: 100%; }
+  .jr-indicadores { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); min-width: 0; width: 100%; gap: 12px; }
+  .jr-indicador { min-width: 0; padding: 0 8px; }
+  .jr-indicador:last-child { grid-column: 1 / -1; }
+  .jr-indicador span,.jr-indicador b { white-space: normal; overflow-wrap: anywhere; }
+  .jr-indicador b { font-size: 14px; }
+  .stats-date { flex-wrap: wrap; white-space: normal; max-width: 100%; }
+  .stats-toolbar { align-items: flex-start; }
+  .rs-vista .inv-table-wrapper { max-height: none; }
+}
+@media(max-width:600px) { .stats-dialog-actions { padding: 16px; margin: 24px -16px -16px; } }

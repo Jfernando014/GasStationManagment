@@ -1,0 +1,116 @@
+<div class="rs-seccion">
+  <div class="inv-filter-toolbar stats-toolbar">
+    <label class="stats-date">Combustible prioritario:
+      <select class="flat-select" [ngModel]="fuel()" (ngModelChange)="fuel.set($event)"><option value="ALL">Todos los Combustibles</option>
+        @for (item of fuels; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
+      </select>
+    </label>
+    <label class="stats-date">Bandera / marca:
+      <select class="flat-select" [ngModel]="brand()" (ngModelChange)="brand.set($event)"><option value="ALL">Todas las Marcas</option>
+        @for (item of brands(); track item) { <option [value]="item">{{ item }}</option> }
+      </select>
+    </label>
+    <span class="sales-kpi-badge neutral stats-trailing">Última verificación: {{ latestVerification() }}</span>
+  </div>
+  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" class="jr-btn jr-btn--ghost" (click)="reload()">Reintentar</button></p> }
+  @if (success()) { <p class="stats-success" role="status">{{ success() }}</p> }
+  <section class="inv-panel-card stats-competition-card">
+    <div class="inv-panel-card-title stats-table-heading"><h2><span class="stats-orange" aria-hidden="true">◎</span> Matriz Comparativa de Precios en Popayán (Área de Influencia)</h2>
+      <span class="sales-kpi-badge neutral">{{ activeStations().length }} estaciones registradas + Bellavista</span></div>
+    <div class="inv-table-wrapper"><div class="stats-table-scroll" role="region" tabindex="0" aria-label="Precios de estaciones competidoras">
+      <table class="inv-table stats-market-table"><thead><tr><th>ESTACIÓN DE SERVICIO</th><th>BANDERA</th><th>UBICACIÓN / DIRECCIÓN</th>
+        @for (item of fuels; track item.value) { <th class="right" [class.stats-priority]="fuel() === item.value">{{ item.label }}</th> }
+        <th>DIFERENCIAL MEDIO</th></tr></thead>
+        <tbody>
+          @for (station of rows(); track station.id) {
+            <tr [class.stats-own-station]="station.own">
+              <td><b>{{ station.name }}</b>@if (station.own) { <span class="sales-kpi-badge green">Nuestra EDS</span> }</td>
+              <td><span class="sales-kpi-badge" [class.orange]="station.brand === 'Primax'" [class.blue]="station.brand === 'Terpel'" [class.neutral]="station.brand !== 'Primax' && station.brand !== 'Terpel'">{{ station.brand }}</span></td>
+              <td class="stats-location">{{ station.location }}</td>
+              @for (item of fuels; track item.value) {
+                <td class="right tnum" [class.stats-priority]="fuel() === item.value"><strong>{{ station.prices[item.value] === null ? '—' : '$ ' + format(station.prices[item.value]) }}</strong>
+                  @if (!station.own && delta(station, item.value) !== null) {
+                    <small class="stats-price-delta" [class.stats-positive]="delta(station, item.value)?.startsWith('-')" [class.stats-orange]="!delta(station, item.value)?.startsWith('-')">
+                      {{ delta(station, item.value) === '0' ? '= EDS' : (delta(station, item.value)?.startsWith('-') ? '' : '+') + format(delta(station, item.value)) }}
+                    </small>
+                  }
+                </td>
+              }
+              <td><span class="sales-kpi-badge" [class.neutral]="!delta(station, priority())?.startsWith('-')" [class.stats-lower]="delta(station, priority())?.startsWith('-')">{{ station.own ? 'Referencia' : delta(station, priority()) === null ? 'Sin referencia' : delta(station, priority())?.startsWith('-') ? 'Más bajo' : delta(station, priority()) === '0' ? 'Alineado' : 'Más alto' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8"><app-empty-state [heading]="loading() ? 'Consultando sondeos' : comparison() ? 'Sin estaciones para estos filtros' : 'Precios de competencia no disponibles'"
+              description="Los precios deben proceder de observaciones registradas. No se completan celdas con valores supuestos." /></td></tr>
+          }
+        </tbody>
+        <tfoot><tr><td colspan="3">PROMEDIO ZONA DE INFLUENCIA · TODAS LAS MARCAS</td>
+          @for (item of fuels; track item.value) { <td class="right tnum">{{ reference(item.value) === null ? '—' : '$ ' + format(reference(item.value)) }}</td> }
+          <td>COP / galón</td></tr></tfoot>
+      </table>
+    </div></div>
+    <div class="stats-market-actions">
+      <button type="button" class="jr-btn jr-btn--sec" (click)="open('station')">Registrar estación</button>
+      <button type="button" class="btn-action-primary" (click)="open('observation')">Registrar precio observado</button>
+      <button type="button" class="jr-btn jr-btn--ghost" (click)="reload()" [disabled]="loading()">Actualizar</button>
+    </div>
+    <p class="stats-note">La referencia de zona usa las últimas observaciones de competidores activos, excluye a Bellavista y no limita su antigüedad. Los filtros de marca solo acotan las filas visibles.</p>
+  </section>
+  <details class="jr-plegable rs-plegable">
+    <summary><span aria-hidden="true">⌄</span><span>Simulador de margen frente a la competencia</span></summary>
+    <section class="inv-panel-card stats-simulator">
+      <h2><span class="stats-orange" aria-hidden="true">↗</span> Simulador Estratégico de Precios y Margen Diario Bellavista</h2>
+      <div class="stats-simulation-grid">
+        <form [formGroup]="simulationForm" (ngSubmit)="simulate()" class="stats-simulation-inputs">
+          <h3>Ajuste Propuesto de Precios EDS Bellavista:</h3>
+          @for (item of fuels; track item.value) {
+            <label class="stats-price-field">{{ item.label }} ($/Gal):<input type="text" inputmode="decimal" class="flat-input tnum" [formControlName]="item.value" [attr.aria-label]="'Precio propuesto de ' + item.label" placeholder="Sin dato"></label>
+          }
+          <label class="stats-field">Combustible a simular<select class="flat-select" formControlName="fuelType">
+            @for (item of fuels; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
+          </select></label>
+          <label class="stats-field">Costo de adquisición opcional (COP/galón)<input type="text" inputmode="decimal" class="flat-input tnum" formControlName="acquisitionCost" placeholder="Sin costo informado"></label>
+          <small class="stats-note">Hasta dos decimales, sin separadores de miles. El costo puede ser cero; no se infiere del precio de venta.</small>
+          <button type="submit" class="btn-action-primary" [disabled]="simulating()">{{ simulating() ? 'SIMULANDO…' : 'SIMULAR PRECIO' }}</button>
+        </form>
+        <div class="stats-simulation-impact"><h3>Impacto Financiero Proyectado:</h3>
+          <dl>
+            <div><dt>Diferencia competitiva vs. promedio:</dt><dd>{{ format(simulation()?.versusAverage?.absoluteCopPerGallon ?? null) }} COP/gal<br><small>{{ format(simulation()?.versusAverage?.percentage ?? null) }}%</small></dd></div>
+            <div><dt>Diferencia competitiva vs. mínimo:</dt><dd>{{ format(simulation()?.versusMinimum?.absoluteCopPerGallon ?? null) }} COP/gal</dd></div>
+            <div><dt>Margen bruto estimado:</dt><dd>{{ format(simulation()?.estimatedMargin?.grossCopPerGallon ?? null) }} COP/gal<br><small>{{ format(simulation()?.estimatedMargin?.grossMarginPercentage ?? null) }}%</small></dd></div>
+            <div><dt>Ventas Diarias Proyectadas:</dt><dd>—<small>Requiere volumen de ventas</small></dd></div>
+            <div><dt>Posición por precio:</dt><dd>{{ rank() === null ? '—' : '#' + rank() + ' de ' + ((simulation()?.competition?.competitorCount ?? 0) + 1) }}</dd></div>
+          </dl>
+          <p class="stats-note">El margen se calcula solo con un costo informado y excluye impuestos y gastos. La diferencia competitiva compara precios; no representa rentabilidad ni ventas realizadas.</p>
+          @if (simulationError()) { <p class="stats-error" role="alert">{{ simulationError() }}</p> }
+        </div>
+      </div>
+    </section>
+  </details>
+</div>
+@if (dialog() === 'station') {
+  <app-statistics-dialog heading="Registrar estación competidora" subtitle="Identificación de una estación del área de influencia." (closed)="dialog.set(null)">
+    <form class="stats-editor" [formGroup]="stationForm" (ngSubmit)="saveStation()">
+      <app-form-field fieldId="competitor-name" label="Nombre de la estación" [control]="stationForm.controls.name" [required]="true" [maxLength]="150" />
+      <app-form-field fieldId="competitor-brand" label="Bandera / marca" [control]="stationForm.controls.brand" [required]="true" [maxLength]="100" />
+      <app-form-field fieldId="competitor-location" label="Ubicación / dirección" [control]="stationForm.controls.location" [required]="true" [maxLength]="255" />
+      @if (formError()) { <p class="stats-error" role="alert">{{ formError() }}</p> }
+      <button type="submit" class="btn-action-primary" [disabled]="saving()">{{ saving() ? 'REGISTRANDO…' : 'REGISTRAR ESTACIÓN' }}</button>
+    </form>
+  </app-statistics-dialog>
+}
+@if (dialog() === 'observation') {
+  <app-statistics-dialog heading="Registrar precio observado" subtitle="Sondeo manual con fecha y hora verificadas. No reemplaza registros anteriores." (closed)="dialog.set(null)">
+    <form class="stats-editor" [formGroup]="observationForm" (ngSubmit)="saveObservation()">
+      <label class="stats-field">Estación<select class="flat-select" formControlName="competitorId"><option value="">Selecciona una estación</option>
+        @for (station of activeStations(); track station.id) { <option [value]="station.id">{{ station.name }} · {{ station.brand }}</option> }
+      </select></label>
+      <label class="stats-field">Combustible<select class="flat-select" formControlName="fuelType">
+        @for (item of fuels; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
+      </select></label>
+      <app-form-field fieldId="observed-price" label="Precio por galón (COP)" [control]="observationForm.controls.pricePerGallon" [required]="true" />
+      <label class="stats-field">Fecha y hora de observación (Colombia)<input type="datetime-local" class="flat-input" formControlName="observedAt"></label>
+      @if (formError()) { <p class="stats-error" role="alert">{{ formError() }}</p> }
+      <button type="submit" class="btn-action-primary" [disabled]="saving()">{{ saving() ? 'GUARDANDO…' : 'REGISTRAR OBSERVACIÓN' }}</button>
+    </form>
+  </app-statistics-dialog>
+}

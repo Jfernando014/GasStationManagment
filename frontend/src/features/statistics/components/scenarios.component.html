@@ -1,0 +1,30 @@
+<div class="rs-seccion">
+  <div class="scenario-comparison-grid stats-scenarios">
+    @for (scenario of scenarios; track $index; let index = $index) {
+      @if (index === 1) {
+        <div class="vs-divider-btn-wrap"><div class="vs-circle-badge">VS</div>
+          <button type="button" class="btn-action-primary" (click)="workspace.compare(first, second)" [disabled]="!!workspace.rangeError() || workspace.loadingComparison()">
+            {{ workspace.loadingComparison() ? 'COMPARANDO…' : 'COMPARAR' }}
+          </button>
+        </div>
+      }
+      <section class="scenario-card" [class.active-a]="index === 0" [class.active-b]="index === 1" [attr.aria-label]="'Escenario ' + (index === 0 ? 'A' : 'B')">
+        <div class="scenario-header-tag" [class.tag-a]="index === 0" [class.tag-b]="index === 1">ESCENARIO {{ index === 0 ? 'A (BASE)' : 'B (OBJETIVO)' }}</div>
+        <label class="stats-field">Día de la Semana
+          <select class="flat-select" [(ngModel)]="scenario.dayOfWeek" (ngModelChange)="workspace.invalidateComparison()">
+            @for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }
+          </select>
+        </label>
+        <label class="stats-field">Turno Operativo
+          <select class="flat-select" [(ngModel)]="scenario.journey" (ngModelChange)="workspace.invalidateComparison()">
+            <option value="DAY">Turno Día (06:00 - 18:00)</option><option value="NIGHT">Turno Noche (18:00 - 06:00)</option>
+          </select>
+        </label>
+        <div class="stats-scenario-result"><span>ESTIMACIÓN DE DESPACHO</span>
+          <strong class="tnum" [class.stats-orange]="index === 1">{{ format(workspace.comparison()?.series?.[index]?.average ?? null) }} {{ workspace.comparison()?.series?.[index]?.available ? workspace.unit() : '' }}</strong>
+        </div>
+      </section>
+    }
+  </div>
+  <p class="stats-note">Período: {{ workspace.from() }} al {{ workspace.to() }} · {{ workspace.unit() }} · Promedios de observaciones proporcionadas por el cliente; no son ventas proyectadas. Se ajusta en Promedios por turno.</p>
+</div>
