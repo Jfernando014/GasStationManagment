@@ -3,7 +3,7 @@ package com.edu.unicauca.gasstation.backend.shifts.exception;
 import java.time.LocalDate;
 
 /**
- * The journal of the date is closed, so its step 1 is read only (VAL-D1, RN-D5). Translated to 409.
+ * The journal of the date is closed, so its step 1 is read only. Translated to 409.
  */
 public class JournalNotEditableException extends RuntimeException {
 

@@ -12,8 +12,8 @@ import java.util.UUID;
  * @param counterpartWorkerId replacement (REPLACEMENT) or second worker of the swap (SWAP); null otherwise
  * @param shiftCode           code to work: required in SHIFT_CHANGE, optional in REPLACEMENT (the code of the absent
  *                            worker when null), ignored in ABSENCE and SWAP
- * @param exceptionalCoverage accepts a code of a role different from the worker's role (VAL-D5)
- * @param reason              3 to 255 characters without leading or trailing spaces (VAL-D6)
+ * @param exceptionalCoverage accepts a code of a role different from the worker's role
+ * @param reason              3 to 255 characters without leading or trailing spaces
  */
 public record NoveltyDraft(NoveltyType type, UUID workerId, UUID counterpartWorkerId, String shiftCode,
                            boolean exceptionalCoverage, String reason) {

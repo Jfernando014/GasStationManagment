@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.exception;
 
 /**
- * A worker would work a code of another role without marking it as exceptional coverage (VAL-D5). Translated to 409.
+ * A worker would work a code of another role without marking it as exceptional coverage. Translated to 409.
  */
 public class ExceptionalCoverageRequiredException extends RuntimeException {
 

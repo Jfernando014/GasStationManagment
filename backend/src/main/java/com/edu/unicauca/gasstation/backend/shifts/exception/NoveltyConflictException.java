@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.exception;
 
 /**
- * The worker already takes part in another active novelty that day (RN-D4). Translated to 409.
+ * The worker already takes part in another active novelty that day. Translated to 409.
  */
 public class NoveltyConflictException extends RuntimeException {
 

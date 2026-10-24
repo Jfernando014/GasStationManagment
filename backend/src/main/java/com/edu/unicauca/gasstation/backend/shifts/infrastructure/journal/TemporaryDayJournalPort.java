@@ -10,7 +10,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 /**
  * TEMPORARY. In-memory {@link DayJournalPort} used only while the {@code sales} module does not publish its
- * implementation by date (S2-19). Delete it, with {@link TemporaryDayJournalConfiguration}, when the real adapter
+ * implementation by date. Delete it, with {@link TemporaryDayJournalConfiguration}, when the real adapter
  * exists.
  *
  * <p>Every date has a journal and it is editable, except the dates configured as closed. Step 1 starts PENDING; a

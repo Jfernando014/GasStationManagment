@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Step 1 of a journal (S2-19): the grid of the day with its active novelties, whether they are confirmed or not.
+ * Step 1 of a journal: the grid of the day with its active novelties, whether they are confirmed or not.
  *
  * @param date        operational day of the journal
  * @param step1Status state of step 1 in the journal
- * @param editable    false when the journal does not exist or is closed: the step is read only (RN-D5)
+ * @param editable    false when the journal does not exist or is closed: the step is read only
  * @param members     who works, in the order of {@code DayStaffQuery} (titulares first, then by start hour)
- * @param resting     workers on DESCANSO, shown apart (RF-D1)
+ * @param resting     workers on DESCANSO, shown apart
  * @param absentees   workers taken out of the day by a novelty
  * @param novelties   active novelties of the day, in registration order
- * @param warnings    coverage and pairing warnings; they never block (RN-D6)
+ * @param warnings    coverage and pairing warnings; they never block
  */
 public record DayStaffStep(
         LocalDate date,

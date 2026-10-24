@@ -36,7 +36,7 @@ public record RegisterNoveltyRequest(
                 + "is used when omitted; ignored in ABSENCE and SWAP", example = "NOCHE")
         String shiftCode,
 
-        @Schema(description = "Accepts a code of a role different from the worker's role (VAL-D5)", example = "false")
+        @Schema(description = "Accepts a code of a role different from the worker's role", example = "false")
         boolean exceptionalCoverage,
 
         @Schema(description = "Reason, 3 to 255 characters without leading and trailing spaces",

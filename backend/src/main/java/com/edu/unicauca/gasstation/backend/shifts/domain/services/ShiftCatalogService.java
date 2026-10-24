@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Read-only use cases of the shift catalog (S1-22).
+ * Read-only use cases of the shift catalog.
  *
  * <p>Serves two clients: the REST API of this module (returns domain models, mapped to DTOs in the
  * controller) and other modules through {@link ShiftExternalService} (returns the public {@code *Info} records).

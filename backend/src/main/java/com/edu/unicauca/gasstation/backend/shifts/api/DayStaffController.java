@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Endpoints of step 1 of the journal, "Personal del día" (S2-19). No business logic here: validates the input,
+ * Endpoints of step 1 of the journal, "Personal del día". No business logic here: validates the input,
  * delegates to {@link ShiftDayStaffService} and converts its results with {@link DayStaffStepMapper}. Every operation
  * answers with step 1 as it is after the change.
  */

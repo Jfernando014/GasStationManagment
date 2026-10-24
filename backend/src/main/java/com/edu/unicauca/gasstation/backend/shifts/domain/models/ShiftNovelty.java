@@ -8,8 +8,8 @@ import java.util.UUID;
 import lombok.Getter;
 
 /**
- * Change of last minute to the staff of a journal day (S2-19, step 1). The grid is never modified: the novelty keeps
- * the original code of the grid and the code actually worked (RF-D8).
+ * Change of last minute to the staff of a journal day (step 1). The grid is never modified: the novelty keeps
+ * the original code of the grid and the code actually worked.
  *
  * <p>Who is who, by type:
  * <ul>
@@ -20,7 +20,7 @@ import lombok.Getter;
  *       {@code counterpartWorkerId} works {@code originalShiftCode}.</li>
  * </ul>
  * {@code originalShiftCode} is always the grid code of {@code workerId} (DESCANSO when the worker had none).
- * A cancelled novelty is kept for traceability and is no longer applied (CB-D4).
+ * A cancelled novelty is kept for traceability and is no longer applied.
  */
 @Getter
 public class ShiftNovelty {
@@ -35,7 +35,7 @@ public class ShiftNovelty {
     private final ShiftCode originalShiftCode;
     /** Null for ABSENCE. */
     private final ShiftCode finalShiftCode;
-    /** A code of another role was accepted on purpose (VAL-D5). */
+    /** A code of another role was accepted on purpose. */
     private final boolean exceptionalCoverage;
     /** Without leading or trailing spaces. */
     private final String reason;

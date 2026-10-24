@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Use cases of the monthly shift schedule (S1-27): generate the 2x2 rotation of a titular, save or edit one day,
+ * Use cases of the monthly shift schedule: generate the 2x2 rotation of a titular, save or edit one day,
  * and read the schedule of a range with its daily coverage. Returns domain results; the controller converts them
  * to DTOs.
  *

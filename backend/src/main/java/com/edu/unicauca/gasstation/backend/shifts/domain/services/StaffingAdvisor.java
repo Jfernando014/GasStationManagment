@@ -17,12 +17,12 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 /**
- * Warnings of step 1 (VAL-D8 to VAL-D10). They only inform: none of them blocks the confirmation (RN-D6).
+ * Warnings of step 1: missing titular, incomplete pairing and uncovered hours. They only inform: none of them blocks the confirmation.
  * Calculated over the codes actually worked, after the novelties.
  */
 final class StaffingAdvisor {
 
-    /** Hours of an operational day in order: from 06:00 to 06:00 of the next day (CB-D3). */
+    /** Hours of an operational day in order: from 06:00 to 06:00 of the next day. */
     private static final List<Integer> OPERATIONAL_HOURS =
             IntStream.range(6, 30).map(hour -> hour % 24).boxed().toList();
 
@@ -30,7 +30,7 @@ final class StaffingAdvisor {
     }
 
     /**
-     * @param noSchedule true when the day has no grid rows of active workers (CB-D1)
+     * @param noSchedule true when the day has no grid rows of active workers
      * @param working    working lines of active workers
      * @param workers    active workers by id, for the names in the messages
      */

@@ -44,13 +44,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Use cases of step 1 of the journal, "Personal del día" (S2-19): read the staff of the day, register and cancel
+ * Use cases of step 1 of the journal, "Personal del día": read the staff of the day, register and cancel
  * novelties, and confirm the staff.
  *
  * <p>The grid ({@code shift_assignment}) is never modified: novelties are stored apart, so the original and the final
- * code are both kept (RF-D8). Past dates are accepted only when the journal of that date exists and is still editable
- * ({@link DayJournalPort}, RF-D9); the grid rule that rejects past days does not apply here. Coverage and pairing
- * problems only warn (RN-D6); what blocks is VAL-D1 to VAL-D7.
+ * code are both kept. Past dates are accepted only when the journal of that date exists and is still editable
+ * ({@link DayJournalPort}); the grid rule that rejects past days does not apply here. Coverage and pairing
+ * problems only warn and never block.
  */
 @Service
 @RequiredArgsConstructor
@@ -63,8 +63,8 @@ public class ShiftDayStaffService {
     private final DayJournalPort dayJournalPort;
 
     /**
-     * Step 1 of a date (RF-D1): the grid with its active novelties, the workers on DESCANSO apart and the warnings
-     * (VAL-D8 to VAL-D10). Works for any date; a closed or missing journal comes back with {@code editable = false}.
+     * Step 1 of a date: the grid with its active novelties, the workers on DESCANSO apart and the warnings. Works
+     * for any date; a closed or missing journal comes back with {@code editable = false}.
      */
     @Transactional(readOnly = true)
     public DayStaffStep getStep(LocalDate date) {
@@ -74,17 +74,17 @@ public class ShiftDayStaffService {
     /**
      * Registers a novelty of the day and returns step 1 with it applied.
      *
-     * @throws JournalNotFoundException              if there is no journal for the date (VAL-D1)
-     * @throws JournalNotEditableException           if the journal is closed (VAL-D1, RN-D5)
-     * @throws InvalidNoveltyReasonException         if the reason does not have 3 to 255 characters (VAL-D6)
-     * @throws SameWorkerNoveltyException            if the replacement or the other worker is the same worker (VAL-D3)
+     * @throws JournalNotFoundException              if there is no journal for the date
+     * @throws JournalNotEditableException           if the journal is closed
+     * @throws InvalidNoveltyReasonException         if the reason does not have 3 to 255 characters
+     * @throws SameWorkerNoveltyException            if the replacement or the other worker is the same worker
      * @throws ScheduleWorkerNotFoundException       if a worker does not exist
-     * @throws WorkerNotAvailableException           if the worker who would start working is inactive (VAL-D2)
-     * @throws ShiftHoursOverlapException            if the replacement works a shift whose hours cross (VAL-D2)
-     * @throws WorkerAlreadyWorkingException         if the replacement already works another shift (RN-D4)
-     * @throws ShiftCodeNotFoundException            if the code does not exist or is not active (VAL-D4)
-     * @throws ExceptionalCoverageRequiredException  if a code of another role is not marked as exceptional (VAL-D5)
-     * @throws NoveltyConflictException              if a worker already takes part in another novelty that day (RN-D4)
+     * @throws WorkerNotAvailableException           if the worker who would start working is inactive
+     * @throws ShiftHoursOverlapException            if the replacement works a shift whose hours cross
+     * @throws WorkerAlreadyWorkingException         if the replacement already works another shift
+     * @throws ShiftCodeNotFoundException            if the code does not exist or is not active
+     * @throws ExceptionalCoverageRequiredException  if a code of another role is not marked as exceptional
+     * @throws NoveltyConflictException              if a worker already takes part in another novelty that day
      * @throws InvalidNoveltyException               if the novelty does not fit the staff of the day
      */
     @Transactional
@@ -95,7 +95,7 @@ public class ShiftDayStaffService {
     }
 
     /**
-     * Cancels a novelty (CB-D4): the day goes back to the grid code. Cancelling an already cancelled novelty changes
+     * Cancels a novelty: the day goes back to the grid code. Cancelling an already cancelled novelty changes
      * nothing.
      *
      * @throws JournalNotFoundException    if there is no journal for the date
@@ -116,10 +116,10 @@ public class ShiftDayStaffService {
     }
 
     /**
-     * Confirms the staff of the day (RF-D7) in a single transaction: (1) the journal must be editable, (2) the
-     * novelties still pending in the request are saved, (3) at least one worker must be left working (VAL-D7) and
-     * (4) step 1 of the journal is marked as completed. If any step fails, nothing is saved (RF-Q3). Warnings do
-     * not block (RN-D6).
+     * Confirms the staff of the day in a single transaction: (1) the journal must be editable, (2) the
+     * novelties still pending in the request are saved, (3) at least one worker must be left working and
+     * (4) step 1 of the journal is marked as completed. If any step fails, nothing is saved. Warnings do
+     * not block.
      *
      * @param pending novelties to save together with the confirmation; empty when they were registered before
      * @throws NoStaffToConfirmException if nobody would work that day
@@ -172,7 +172,7 @@ public class ShiftDayStaffService {
         shiftNoveltyRepository.save(novelty);
     }
 
-    /** RF-D2: the absent worker leaves; the replacement works the code of the absent worker or the one given. */
+    /** Replacement: the absent worker leaves; the replacement works the code of the absent worker or the one given. */
     private ShiftNovelty replacement(LocalDate date, NoveltyDraft draft, String reason, DayContext day) {
         UUID replacementId = requireCounterpart(draft, "Indique el vendedor que reemplaza");
         DayLineup.Line absent = requireWorking(day, draft.workerId(), date);
@@ -189,7 +189,7 @@ public class ShiftDayStaffService {
                 absent.gridCode(), code, exceptional, reason, Instant.now());
     }
 
-    /** RF-D3: the worker does not come and nobody covers; the shift is left uncovered and only warned. */
+    /** Absence: the worker does not come and nobody covers; the shift is left uncovered and only warned. */
     private ShiftNovelty absence(LocalDate date, NoveltyDraft draft, String reason, DayContext day) {
         DayLineup.Line absent = requireWorking(day, draft.workerId(), date);
         return ShiftNovelty.register(date, NoveltyType.ABSENCE, absent.workerId(), null, absent.gridCode(), null,
@@ -197,8 +197,8 @@ public class ShiftDayStaffService {
     }
 
     /**
-     * RF-D4: a worker works another code. A worker without a working code that day (DESCANSO or no row) is added to
-     * the staff this way, which also covers a day without grid (CB-D1).
+     * Shift change: a worker works another code. A worker without a working code that day (DESCANSO or no row) is added to
+     * the staff this way, which also covers a day without grid.
      */
     private ShiftNovelty shiftChange(LocalDate date, NoveltyDraft draft, String reason, DayContext day) {
         if (draft.shiftCode() == null || draft.shiftCode().isBlank()) {
@@ -216,7 +216,7 @@ public class ShiftDayStaffService {
                 reason, Instant.now());
     }
 
-    /** RF-D5: two working workers swap their codes of the day. */
+    /** Swap: two working workers swap their codes of the day. */
     private ShiftNovelty swap(LocalDate date, NoveltyDraft draft, String reason, DayContext day) {
         UUID otherId = requireCounterpart(draft, "Indique el otro vendedor del intercambio");
         DayLineup.Line first = requireWorking(day, draft.workerId(), date);
@@ -232,7 +232,7 @@ public class ShiftDayStaffService {
                 second.gridCode(), firstExceptional || secondExceptional, reason, Instant.now());
     }
 
-    /** VAL-D6: measured without leading and trailing spaces. */
+    /** The reason is measured without leading and trailing spaces. */
     private static String requireValidReason(String reason) {
         String stripped = reason == null ? "" : reason.strip();
         if (stripped.length() < 3 || stripped.length() > 255) {
@@ -272,14 +272,14 @@ public class ShiftDayStaffService {
                 .orElseThrow(() -> new InvalidNoveltyException(worker.fullName() + " no trabaja el " + date));
     }
 
-    /** RN-D4: a worker takes part in at most one active novelty per day. */
+    /** A worker takes part in at most one active novelty per day. */
     private static void requireWithoutNovelty(DayContext day, UUID workerId) {
         if (day.lineup().hasNovelty(workerId)) {
             throw new NoveltyConflictException(requireWorker(day, workerId).fullName());
         }
     }
 
-    /** VAL-D4: the code exists, is active and is a working code (not DESCANSO). */
+    /** The code exists, is active and is a working code (not DESCANSO). */
     private ShiftCode requireWorkingCode(String code) {
         ShiftCode shiftCode = shiftCodeRepository.findByCode(code)
                 .filter(ShiftCode::isActive)
@@ -296,7 +296,7 @@ public class ShiftDayStaffService {
     }
 
     /**
-     * VAL-D5: a code of a role different from the worker's role needs the explicit mark.
+     * A code of a role different from the worker's role needs the explicit mark.
      *
      * @return true when the code belongs to another role (the coverage is exceptional)
      */

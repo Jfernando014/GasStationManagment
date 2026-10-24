@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Who works an operational day, with which code, in which role and on which dispenser (S2-20).
+ * Who works an operational day, with which code, in which role and on which dispenser.
  * Only entry point other modules may use to read the day staff; it never exposes internal classes.
  *
  * <p>The date is the operational date (the journal runs from 06:00 to 06:00): a NOCHE assignment of day D belongs

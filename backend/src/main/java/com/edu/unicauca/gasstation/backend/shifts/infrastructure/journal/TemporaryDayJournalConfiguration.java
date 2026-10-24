@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
  * until the {@code sales} module publishes its adapter. Delete this class with the port when that happens.
  *
  * <p>{@code shifts.temporary-day-journal.closed-dates} (comma separated, yyyy-MM-dd, empty by default) lists the
- * dates whose journal behaves as closed, so the read-only step 1 (RN-D5) can be tried by hand.
+ * dates whose journal behaves as closed, so the read-only step 1 can be tried by hand.
  */
 @Configuration
 class TemporaryDayJournalConfiguration {

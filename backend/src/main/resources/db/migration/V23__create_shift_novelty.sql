@@ -1,6 +1,6 @@
--- S2-19 · Novelties of the day staff (step 1 of the journal, shifts module).
+-- Novelties of the day staff (step 1 of the journal, shifts module).
 -- The grid (shift_assignment) is never modified: a novelty keeps the original code of the grid and the code actually
--- worked (RF-D8). A cancelled novelty is kept for traceability and is no longer applied (CB-D4).
+-- worked. A cancelled novelty is kept for traceability and is no longer applied.
 
 CREATE TABLE shift_novelty (
   id                     UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -16,7 +16,7 @@ CREATE TABLE shift_novelty (
   original_shift_code_id UUID         NOT NULL CONSTRAINT fk_shift_novelty_original_code REFERENCES shift_code (id),
   -- Code actually worked: by the replacement (REPLACEMENT), by worker_id (SHIFT_CHANGE, SWAP); NULL in ABSENCE.
   final_shift_code_id    UUID         CONSTRAINT fk_shift_novelty_final_code REFERENCES shift_code (id),
-  -- A code of another role was accepted on purpose (VAL-D5).
+  -- A code of another role was accepted on purpose.
   exceptional_coverage   BOOLEAN      NOT NULL DEFAULT FALSE,
   reason                 VARCHAR(255) NOT NULL
     CONSTRAINT ck_shift_novelty_reason CHECK (length(btrim(reason)) BETWEEN 3 AND 255),

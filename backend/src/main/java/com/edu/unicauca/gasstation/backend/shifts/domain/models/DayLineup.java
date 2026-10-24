@@ -13,7 +13,7 @@ import java.util.UUID;
  * Who works one day: the grid of the day with its active novelties applied, in the order they were registered.
  * Pure calculation, never stored; shared by the step 1 use cases and by {@code DayStaffQuery}.
  *
- * <p>A worker takes part in at most one novelty per day (RN-D4). The registration rejects a second one; if one
+ * <p>A worker takes part in at most one novelty per day. The registration rejects a second one; if one
  * reaches this class anyway, the first one by registration order is kept and the later one is ignored.
  */
 public final class DayLineup {
@@ -97,7 +97,7 @@ public final class DayLineup {
         return List.copyOf(absences);
     }
 
-    /** Novelties that changed the day; a novelty ignored because of RN-D4 is not here. */
+    /** Novelties that changed the day; a novelty ignored because the worker already had one is not here. */
     public List<ShiftNovelty> applied() {
         return List.copyOf(applied);
     }

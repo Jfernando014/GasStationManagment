@@ -17,11 +17,11 @@ import java.util.UUID;
 /**
  * Turns a {@link DayLineup} into the public records of the day staff. Shared by {@link DayStaffQueryService} and
  * {@link ShiftDayStaffService}, so the step 1 and the query other modules read always show the same people, codes,
- * roles and order. Dispenser, support flag, segments and hours always come from the worked code (RN-D2, RN-D3).
+ * roles and order. Dispenser, support flag, segments and hours always come from the worked code.
  */
 final class DayStaffAssembler {
 
-    /** RN-Q2: titulares before apoyos, then start hour of the first segment, then full name, then worker id. */
+    /** Titulares before apoyos, then start hour of the first segment, then full name, then worker id. */
     static final Comparator<DayStaffMember> MEMBER_ORDER = Comparator
             .comparing((DayStaffMember member) -> !TITULAR.equals(member.dayRole().name()))
             .thenComparingInt(DayStaffAssembler::firstStartHour)
@@ -32,7 +32,7 @@ final class DayStaffAssembler {
     }
 
     /**
-     * Working members of the lineup in RN-Q2 order.
+     * Working members of the lineup in {@link #MEMBER_ORDER}.
      *
      * @param workers active workers by id; workers missing from it (inactive or unknown) are left out
      */

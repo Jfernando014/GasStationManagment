@@ -31,9 +31,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Implementation of {@link DayStaffQuery} (S2-20, phase 2): who works each day according to the grid and, once
+ * Implementation of {@link DayStaffQuery}: who works each day according to the grid and, once
  * step 1 of the journal is CONFIRMED, its active novelties. Before the confirmation it returns the grid as it is,
- * with the real state of step 1 and {@code noveltiesApplied = false} (RN-Q4).
+ * with the real state of step 1 and {@code noveltiesApplied = false}.
  *
  * <p>Reads, whatever the size of the range: the assignments and the active novelties of the range (one SQL query
  * each) and the workers involved (one batch read; no SQL when there are no ids). The state of step 1 is asked to
@@ -87,7 +87,7 @@ public class DayStaffQueryService implements DayStaffQuery {
                               Map<UUID, ScheduleWorkerInfo> workers) {
         Step1Status status = dayJournalPort.step1Status(date);
         boolean confirmed = status == Step1Status.CONFIRMED;
-        // RN-Q4: novelties apply only once step 1 is confirmed; DESCANSO never makes a member (RN-Q1)
+        // Novelties apply only once step 1 is confirmed; DESCANSO never makes a member
         DayLineup lineup = DayLineup.of(grid, confirmed ? novelties : List.of());
         List<DayStaffMember> members = DayStaffAssembler.members(lineup, workers);
         List<DayStaffAbsentee> absentees = confirmed ? DayStaffAssembler.absentees(lineup, workers) : List.of();

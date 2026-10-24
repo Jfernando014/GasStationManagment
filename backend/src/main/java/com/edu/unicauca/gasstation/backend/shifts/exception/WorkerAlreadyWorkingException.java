@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.exception;
 
 /**
- * The replacement already works another shift that day, so the replacement would give them two codes (RN-D4).
+ * The replacement already works another shift that day, so the replacement would give them two codes.
  * Translated to 409.
  */
 public class WorkerAlreadyWorkingException extends RuntimeException {

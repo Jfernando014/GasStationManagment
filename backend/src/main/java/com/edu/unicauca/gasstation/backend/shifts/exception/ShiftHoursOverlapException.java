@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.exception;
 
 /**
- * The replacement already works that day a shift whose hours cross the hours of the shift to cover (VAL-D2).
+ * The replacement already works that day a shift whose hours cross the hours of the shift to cover.
  * Translated to 409.
  */
 public class ShiftHoursOverlapException extends RuntimeException {

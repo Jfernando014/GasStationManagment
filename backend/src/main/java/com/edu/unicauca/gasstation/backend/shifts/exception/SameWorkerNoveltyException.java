@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.exception;
 
 /**
- * The replacement, or the other worker of a swap, is the same worker (VAL-D3). Translated to 400.
+ * The replacement, or the other worker of a swap, is the same worker. Translated to 400.
  */
 public class SameWorkerNoveltyException extends RuntimeException {
 

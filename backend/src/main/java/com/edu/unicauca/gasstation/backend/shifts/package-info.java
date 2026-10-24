@@ -1,6 +1,6 @@
 /**
- * Shifts module: catalog of shift codes and roles (S1-22), Colombian holidays, the monthly shift schedule (S1-27),
- * step 1 of the journal with its novelties (S2-19) and the staff of each operational day (S2-20).
+ * Shifts module: catalog of shift codes and roles, Colombian holidays, the monthly shift schedule, step 1 of the
+ * journal with its novelties and the staff of each operational day.
  *
  * <p>Public API (usable by other modules): {@link com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService}
  * and the records {@link com.edu.unicauca.gasstation.backend.shifts.RoleInfo} and

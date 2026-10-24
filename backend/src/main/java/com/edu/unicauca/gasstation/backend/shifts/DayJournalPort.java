@@ -3,7 +3,7 @@ package com.edu.unicauca.gasstation.backend.shifts;
 import java.time.LocalDate;
 
 /**
- * What the shifts module needs to know about the journal of a date (S2-19). Declared here and implemented by the
+ * What the shifts module needs to know about the journal of a date. Declared here and implemented by the
  * {@code sales} module, which owns the journals: {@code sales} already depends on {@code shifts}, so the opposite
  * dependency would be a cycle (same pattern as {@link ScheduleWorkerDirectory}).
  *
