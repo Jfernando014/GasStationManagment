@@ -25,21 +25,17 @@ public class DiscrepancyToleranceService {
 
     @Transactional(readOnly = true)
     public BigDecimal getEffectiveTolerance(LocalDate journalDate) {
-        if (journalDate == null) {
-            journalDate = LocalDate.now();
-        }
-        return toleranceRepository.findEffectiveTolerance(journalDate)
+        final LocalDate targetDate = journalDate != null ? journalDate : LocalDate.now();
+        return toleranceRepository.findEffectiveTolerance(targetDate)
                 .map(DiscrepancyToleranceConfig::toleranceAmount)
                 .orElse(BigDecimal.ZERO);
     }
 
     @Transactional(readOnly = true)
     public DiscrepancyToleranceConfig getEffectiveToleranceConfig(LocalDate journalDate) {
-        if (journalDate == null) {
-            journalDate = LocalDate.now();
-        }
-        return toleranceRepository.findEffectiveTolerance(journalDate)
-                .orElseGet(() -> DiscrepancyToleranceConfig.create(BigDecimal.ZERO, journalDate, "Default zero baseline", "SYSTEM"));
+        final LocalDate targetDate = journalDate != null ? journalDate : LocalDate.now();
+        return toleranceRepository.findEffectiveTolerance(targetDate)
+                .orElseGet(() -> DiscrepancyToleranceConfig.create(BigDecimal.ZERO, targetDate, "Default zero baseline", "SYSTEM"));
     }
 
     @Transactional
