@@ -108,4 +108,8 @@ public class GaugeTableService {
         current.setPoints(changes.getPoints());
         return gaugeTableRepository.save(current);
     }
+
+    public BigDecimal calculateVolume(GaugeTable table, BigDecimal heightCm) {
+        return table.volumeAt(heightCm).subtract(deadVolumeGallons).max(BigDecimal.ZERO);
+    }
 }

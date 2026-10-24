@@ -291,4 +291,15 @@ class GaugeTableServiceTest {
         when(tankRepository.findById(1L)).thenReturn(Optional.of(tank));
         when(gaugeTableRepository.findById(10L)).thenReturn(Optional.of(curve(10L, "Tanques 1 y 2")));
     }
+    @Test
+    void calculateVolumeOfALoadedTableSubtractsTheDeadVolume() {
+        assertThat(gaugeTableService.calculateVolume(curve(10L, "Curva"), new BigDecimal("55")))
+                .isEqualByComparingTo("539");
+    }
+
+    @Test
+    void calculateVolumeOfALoadedTableNeverGoesBelowZero() {
+        assertThat(gaugeTableService.calculateVolume(curve(10L, "Curva"), new BigDecimal("5")))
+                .isEqualByComparingTo("0");
+    }
 }
