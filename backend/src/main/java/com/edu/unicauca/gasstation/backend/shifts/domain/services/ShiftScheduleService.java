@@ -54,7 +54,6 @@ public class ShiftScheduleService {
     private static final ZoneId STATION_ZONE = ZoneId.of("America/Bogota");
 
     private static final String TITULAR = "TITULAR";
-    private static final String APOYO = "APOYO";
 
     /** 2x2 rotation of a titular, repeated from the start date: 2 days, 2 nights, 2 days off. */
     private static final List<String> ROTATION_PATTERN = List.of("DIA", "DIA", "NOCHE", "NOCHE", "DESCANSO", "DESCANSO");
@@ -131,7 +130,7 @@ public class ShiftScheduleService {
                         active.workers().get(entry.getKey()).fullName(), entry.getValue()))
                 .sorted(Comparator.comparing(WorkerShifts::fullName))
                 .toList();
-        return new ScheduleView(from, to, workers, coverage(from, to, active.assignments()));
+        return new ScheduleView(from, to, workers, ScheduleCoverageCalculator.coverage(from, to, active.assignments()));
     }
 
     /**
@@ -211,7 +210,7 @@ public class ShiftScheduleService {
 
     /** Days of the range without coverage, after the changes of the current transaction. */
     private List<LocalDate> uncoveredDates(LocalDate from, LocalDate to) {
-        return coverage(from, to, activeAssignments(from, to).assignments()).stream()
+        return ScheduleCoverageCalculator.coverage(from, to, activeAssignments(from, to).assignments()).stream()
                 .filter(day -> !day.covered())
                 .map(DailyCoverage::date)
                 .toList();
@@ -229,31 +228,6 @@ public class ShiftScheduleService {
                 .filter(assignment -> activeWorkers.containsKey(assignment.getWorkerId()))
                 .toList();
         return new ActiveAssignments(activeOnly, activeWorkers);
-    }
-
-    /**
-     * Coverage of every day of the range, including days without any row (those are not covered). A day is covered
-     * when there is a titular with a DAY code, a titular with a NIGHT code and, if any code of the day requires
-     * support, at least one APOYO shift (any code; the exact paired code is not required).
-     */
-    private static List<DailyCoverage> coverage(LocalDate from, LocalDate to, List<ShiftAssignment> assignments) {
-        Map<LocalDate, List<ShiftCode>> codesByDate = assignments.stream()
-                .collect(Collectors.groupingBy(ShiftAssignment::getWorkDate,
-                        Collectors.mapping(ShiftAssignment::getShiftCode, Collectors.toList())));
-        List<DailyCoverage> coverage = new ArrayList<>();
-        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
-            List<ShiftCode> codes = codesByDate.getOrDefault(date, List.of());
-            boolean dayCovered = codes.stream().anyMatch(code -> hasRole(code, TITULAR) && code.getPeriod() == ShiftPeriod.DAY);
-            boolean nightCovered = codes.stream().anyMatch(code -> hasRole(code, TITULAR) && code.getPeriod() == ShiftPeriod.NIGHT);
-            boolean supportNeeded = codes.stream().anyMatch(ShiftCode::isRequiresSupport);
-            boolean supportCovered = !supportNeeded || codes.stream().anyMatch(code -> hasRole(code, APOYO));
-            coverage.add(new DailyCoverage(date, dayCovered, nightCovered, supportCovered));
-        }
-        return coverage;
-    }
-
-    private static boolean hasRole(ShiftCode code, String roleName) {
-        return code.getRole() != null && roleName.equals(code.getRole().getName());
     }
 
     /** Assignments of active workers in a range, with those workers keyed by id. */
