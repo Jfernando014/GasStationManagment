@@ -1,6 +1,6 @@
 /**
- * Shifts module: catalog of shift codes and roles (S1-22), Colombian holidays, the monthly shift schedule (S1-27)
- * and the staff of each operational day (S2-20).
+ * Shifts module: catalog of shift codes and roles (S1-22), Colombian holidays, the monthly shift schedule (S1-27),
+ * step 1 of the journal with its novelties (S2-19) and the staff of each operational day (S2-20).
  *
  * <p>Public API (usable by other modules): {@link com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService}
  * and the records {@link com.edu.unicauca.gasstation.backend.shifts.RoleInfo} and
@@ -20,6 +20,11 @@
  * {@link com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo} go the other way: this module declares them
  * and {@code workers} implements them, so the schedule can read workers without {@code shifts} depending on
  * {@code workers}.
+ *
+ * <p>{@link com.edu.unicauca.gasstation.backend.shifts.DayJournalPort} goes the other way too: this module declares
+ * it and {@code sales} implements it, so step 1 can ask whether a journal is editable and mark its step 1 without
+ * {@code shifts} depending on {@code sales}. Until {@code sales} publishes it, a temporary in-memory implementation
+ * of {@code infrastructure.journal} is used.
  *
  * <p>Layers: {@code api} (REST controllers and DTOs) and {@code infrastructure} (persistence and mappers) depend
  * on {@code domain} (pure models, repository interfaces and use cases); {@code domain} depends on neither.
