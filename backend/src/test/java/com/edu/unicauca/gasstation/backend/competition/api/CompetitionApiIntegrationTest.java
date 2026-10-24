@@ -240,7 +240,7 @@ class CompetitionApiIntegrationTest {
     }
 
     @Test void freshV18SchemaEnforcesReferentialFuelMoneyAndDateIntegrity() throws Exception {
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("18");
+        assertThat(Arrays.stream(flyway.info().applied()).anyMatch(m -> "18".equals(m.getVersion().getVersion()))).isTrue();
         flyway.validate();
         long id = competitor("A");
         observe(id, "MOTOR", "1.23", "2020-01-01T00:00:00Z");
@@ -264,7 +264,7 @@ class CompetitionApiIntegrationTest {
         jdbc.execute("INSERT INTO competition_upgrade.fuel_price(fuel_type,price_per_gallon,valid_from) VALUES ('MOTOR',12345.67,'2020-01-01')");
         jdbc.execute("INSERT INTO competition_upgrade.product(code,name,category,price) VALUES ('kept','Kept product','OTRO',10)");
         var upgrade = Flyway.configure().dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
-                .schemas("competition_upgrade").locations("classpath:db/migration").load();
+                .schemas("competition_upgrade").locations("classpath:db/migration").target("18").load();
         assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
         assertThat(upgrade.info().current().getVersion().getVersion()).isEqualTo("18");
         assertThat(upgrade.migrate().migrationsExecuted).isZero(); upgrade.validate();
