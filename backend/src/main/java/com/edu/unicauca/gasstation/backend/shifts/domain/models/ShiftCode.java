@@ -1,7 +1,10 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
@@ -83,6 +86,25 @@ public class ShiftCode {
     /** Sum of the hours of each segment; DESCANSO returns 0. */
     public int totalHours() {
         return segments().stream().mapToInt(ShiftCode::segmentHours).sum();
+    }
+
+    /**
+     * Clock hours (0-23) worked by the shift: hour {@code h} means from h:00 to h+1:00. A segment that ends the next
+     * day wraps past midnight (NOCHE 18 -> 6 covers 18..23 and 0..5). Empty for DESCANSO.
+     */
+    public Set<Integer> coveredHours() {
+        Set<Integer> hours = new TreeSet<>();
+        for (ShiftSegment segment : segments()) {
+            for (int hour = segment.startHour(); hour != segment.endHour() % 24; hour = (hour + 1) % 24) {
+                hours.add(hour);
+            }
+        }
+        return Collections.unmodifiableSet(hours);
+    }
+
+    /** True when both shifts work at least one common hour of the day. */
+    public boolean overlaps(ShiftCode other) {
+        return !Collections.disjoint(coveredHours(), other.coveredHours());
     }
 
     /** Hours of one segment, counting past midnight when it ends the next day (NOCHE 18 -> 6 = 12). */
