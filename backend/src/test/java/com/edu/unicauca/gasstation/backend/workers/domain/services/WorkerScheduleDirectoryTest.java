@@ -5,7 +5,7 @@ import static com.edu.unicauca.gasstation.backend.workers.WorkerTestData.TITULAR
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.workers.WorkerTestData;
 import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRepository;
 import java.util.List;

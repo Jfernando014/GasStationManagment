@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.RoleRepositoryImpl;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.RolePersistenceMapper;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-@Import({RoleRepositoryImpl.class, RolePersistenceMapper.class})
+@Import({RoleRepositoryImpl.class})
 class RoleRepositoryTest {
 
     @Container

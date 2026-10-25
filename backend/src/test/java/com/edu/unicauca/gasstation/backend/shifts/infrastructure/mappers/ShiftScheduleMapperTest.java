@@ -3,11 +3,11 @@ package com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.edu.unicauca.gasstation.backend.shifts.ShiftTestData;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayCoverage;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDay;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleUpdateResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.WorkerSchedule;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.DayCoverage;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleDay;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleUpdateResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.WorkerSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;

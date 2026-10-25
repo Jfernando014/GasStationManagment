@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.workers;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.CreateWorkerRequest;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.UpdateWorkerRequest;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
