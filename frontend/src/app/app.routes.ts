@@ -14,9 +14,16 @@ export const routes: Routes = [
         path: 'jornada',
         loadComponent: () => import('../atomic-design/pages/journal/journal-page.component').then(m => m.JournalPageComponent),
         children: [
-          // Pantallas de cada paso como rutas hijas (a ser implementadas por los dueños)
-          // { path: 'step-1-medicion-inicial', component: ... }
-          // { path: 'step-2-asignacion-turnos', component: ... }
+          {
+            path: 'vendedores',
+            loadComponent: () => import('../features/sales/pages/vendor-close-step2/vendor-close-step2.component')
+              .then(m => m.VendorCloseStep2Component)
+          },
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: 'vendedores'
+          }
         ]
       },
       {
@@ -26,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'resultados/metas',
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
+      },
+      {
+        path: 'resultados/estadisticas',
+        loadComponent: () => import('../features/statistics/pages/statistics-page.component').then(m => m.StatisticsPageComponent)
       },
       {
 

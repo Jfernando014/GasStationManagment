@@ -28,7 +28,8 @@ class ShiftDataInitializer implements ApplicationRunner {
     private static final Map<String, Integer> ROLES = Map.of(TITULAR, 1, APOYO, 3);
 
     // Titular codes go first so support codes can resolve the code they pair with.
-    // TODO: confirm pairing for 2-9pm, 6-9am, 2-6pm and 6-9y2-6 (not documented in the Excel).
+    // 2-9pm, 6-9am, 2-6pm and 6-9y2-6 are support codes without pairing, by decision of the team, until the client
+    // defines one (the Excel does not document it).
     private static final List<ShiftCodeSeed> SHIFT_CODES = List.of(
             new ShiftCodeSeed("DIA", "Día", TITULAR, ShiftPeriod.DAY, 6, 18, null, null, false, null),
             new ShiftCodeSeed("DIA6", "Día 6 horas", TITULAR, ShiftPeriod.DAY, 6, 12, null, null, true, null),

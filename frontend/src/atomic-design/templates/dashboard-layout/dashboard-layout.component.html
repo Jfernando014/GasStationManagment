@@ -1,6 +1,8 @@
 <div class="view-container active" id="view-dashboard">
   <!-- 1. SIDEBAR FLOTANTE -->
-  <aside class="app-floating-sidebar">
+  @if (mobileMenuOpen()) { <button type="button" class="mobile-menu-backdrop" aria-label="Cerrar menú de navegación" (click)="closeMenu()"></button> }
+  <aside #sidebar class="app-floating-sidebar" id="dashboard-sidebar" [class.mobile-open]="mobileMenuOpen()">
+    <button type="button" class="mobile-menu-close" aria-label="Cerrar menú" (click)="closeMenu()">✕</button>
 
     <!-- Encabezado de Marca -->
     <div class="sidebar-brand-box jr-brand-inicio" routerLink="/" title="Ir al inicio" tabindex="0">
@@ -127,7 +129,8 @@
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/metas" routerLinkActive="active">Metas y
             cumplimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/estadisticas"
-            routerLinkActive="active">Estadísticas</a>
+            routerLinkActive="active" #statisticsNav="routerLinkActive"
+            [attr.aria-current]="statisticsNav.isActive ? 'page' : null">Estadísticas</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/rendimiento"
             routerLinkActive="active">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
@@ -174,6 +177,8 @@
 
     <!-- HEADER FLOTANTE BLANCO -->
     <header class="app-floating-header">
+      <button #menuButton type="button" class="mobile-menu-toggle" aria-label="Abrir menú de navegación"
+        aria-controls="dashboard-sidebar" [attr.aria-expanded]="mobileMenuOpen()" (click)="toggleMenu()">☰</button>
 
       <div class="header-trail">
         <span class="trail-root" routerLink="/"
@@ -181,7 +186,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 

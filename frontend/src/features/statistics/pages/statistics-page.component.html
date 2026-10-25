@@ -1,0 +1,50 @@
+<div class="inv-subview active rs-vista stats-page" id="rs-subview-estadisticas">
+  <div class="rs-cabecera">
+    <div class="jr-paso-cabecera"><h1>Estadísticas</h1><p>Promedios por turno, escenarios, lubricantes y competencia, por periodo.</p></div>
+    <div class="rs-cabecera-der"><div class="jr-indicadores">
+      <div class="jr-indicador"><span>Promedio turno día</span><b class="tnum">{{ format(day()) }}{{ day() !== null ? ' ' + workspace.unit() + ' / observación' : '' }}</b></div>
+      <div class="jr-indicador"><span>Promedio turno noche</span><b class="tnum">{{ format(night()) }}{{ night() !== null ? ' ' + workspace.unit() + ' / observación' : '' }}</b></div>
+      <div class="jr-indicador"><span>Canastilla del mes</span><b>{{ format(workspace.basket()?.summary?.amount ?? null) }}{{ workspace.basket()?.summary ? ' COP' : '' }}</b></div>
+    </div></div>
+  </div>
+  <div class="rs-tabs">
+    <div class="jr-tabs" role="tablist" aria-label="Estadísticas">
+      @for (item of tabs; track item.id; let index = $index) {
+        <button type="button" role="tab" class="jr-tab" [id]="'statistics-tab-' + item.id" [class.is-activa]="tab() === item.id"
+          [attr.aria-selected]="tab() === item.id" [attr.aria-controls]="'statistics-panel-' + item.id" [attr.tabindex]="tab() === item.id ? 0 : -1"
+          (click)="selectTab(item.id, $event)" (keydown)="tabKey($event, index)">{{ item.label }}</button>
+      }
+    </div>
+    <div class="rs-tabs-acciones"><button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="dialog.set('charts')">Ver gráficas</button>
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="dialog.set('balance')">Exportar balance (.pptx)</button>
+      @if (tab() === 'promedios' || tab() === 'escenarios') { <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" title="Observaciones proporcionadas por el cliente" (click)="dialog.set('observations')">Datos del análisis</button> }
+    </div>
+  </div>
+  @if (workspace.error() && (tab() === 'promedios' || tab() === 'escenarios')) { <p class="stats-error" role="alert">{{ workspace.error() }}</p> }
+  <section class="jr-tabpanel" id="statistics-panel-promedios" role="tabpanel" aria-labelledby="statistics-tab-promedios" [hidden]="tab() !== 'promedios'"><app-shift-averages /></section>
+  <section class="jr-tabpanel" id="statistics-panel-escenarios" role="tabpanel" aria-labelledby="statistics-tab-escenarios" [hidden]="tab() !== 'escenarios'"><app-statistics-scenarios /></section>
+  <section class="jr-tabpanel" id="statistics-panel-canastas" role="tabpanel" aria-labelledby="statistics-tab-canastas" [hidden]="tab() !== 'canastas'"><app-basket-statistics /></section>
+  <section class="jr-tabpanel" id="statistics-panel-competencia" role="tabpanel" aria-labelledby="statistics-tab-competencia" [hidden]="tab() !== 'competencia'"><app-competition-statistics /></section>
+</div>
+
+@if (dialog() === 'observations') {
+  <app-statistics-dialog heading="Observaciones para el análisis" subtitle="Datos proporcionados por el cliente · No son ventas históricas verificadas" (closed)="dialog.set(null)">
+    <app-observations-editor (saved)="dialog.set(null)" />
+  </app-statistics-dialog>
+}
+@if (dialog() === 'charts') {
+  <app-statistics-dialog [heading]="chartTitle()" [subtitle]="chartSource()" [showBack]="true" (closed)="dialog.set(null)">
+    <div dialogControls class="stats-chart-toggle" role="group" aria-label="Tipo de gráfica">
+      <button type="button" [class.active]="chartKind() === 'bars'" [attr.aria-pressed]="chartKind() === 'bars'" (click)="chartKind.set('bars')">Barras</button>
+      <button type="button" [class.active]="chartKind() === 'lines'" [attr.aria-pressed]="chartKind() === 'lines'" (click)="chartKind.set('lines')">Líneas</button>
+    </div>
+    <app-statistics-chart #chart [series]="chartSeries()" [kind]="chartKind()" [unit]="chartUnit()" [sourceLabel]="chartSource()" />
+    <div class="stats-dialog-actions"><button type="button" class="jr-btn jr-btn--sec" [disabled]="chartSeries().length === 0" (click)="chart.download()">Descargar Gráfica (PNG)</button>
+      <button type="button" class="btn-action-primary" (click)="dialog.set(null)">Volver al reporte</button></div>
+  </app-statistics-dialog>
+}
+@if (dialog() === 'balance') {
+  <app-statistics-dialog heading="Exportar balance (.pptx)" subtitle="Presentación del periodo para la gerencia." (closed)="dialog.set(null)">
+    <app-statistics-balance />
+  </app-statistics-dialog>
+}

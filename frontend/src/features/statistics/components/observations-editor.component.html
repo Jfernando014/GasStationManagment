@@ -1,0 +1,18 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="stats-editor">
+  <p class="stats-note">Carga un total consolidado por fecha y jornada dentro del período {{ workspace.from() }} a {{ workspace.to() }}. Se utiliza solo en este análisis y no se guarda como venta realizada.</p>
+  <label class="stats-field">Tipo de observaciones<select class="flat-select" formControlName="category"><option value="FUEL_AGGREGATE">Combustibles · Galones</option><option value="BASKET">Canastilla · COP</option></select></label>
+  <p class="stats-note">Cambiar el tipo declara las unidades de todos los importes; no convierte sus valores.</p>
+  <div formArrayName="observations" class="stats-observation-rows">
+    @for (row of rows.controls; track row; let index = $index) {
+      <div [formGroupName]="index" class="stats-observation-row">
+        <label class="stats-field">Fecha<input type="date" class="flat-input" formControlName="date" [attr.aria-label]="'Fecha de observación ' + (index + 1)"></label>
+        <label class="stats-field">Jornada<select class="flat-select" formControlName="journey" [attr.aria-label]="'Jornada de observación ' + (index + 1)"><option value="DAY">Diurna</option><option value="NIGHT">Nocturna</option></select></label>
+        <label class="stats-field">{{ category.value === 'BASKET' ? 'Importe COP' : 'Galones' }}<input type="text" inputmode="decimal" class="flat-input tnum" formControlName="value" [attr.aria-label]="'Valor de observación ' + (index + 1)"></label>
+        <button type="button" class="jr-btn jr-btn--ghost" (click)="rows.removeAt(index)" [attr.aria-label]="'Quitar observación ' + (index + 1)">Quitar</button>
+      </div>
+    } @empty { <p class="stats-note">Aún no se han proporcionado observaciones.</p> }
+  </div>
+  @if (error) { <p class="stats-error" role="alert">{{ error }}</p> }
+  <div class="stats-toolbar"><button type="button" class="jr-btn jr-btn--sec" (click)="add()" [disabled]="rows.length >= 1000">Añadir observación</button>
+    <button type="submit" class="btn-action-primary">Usar observaciones</button></div>
+</form>

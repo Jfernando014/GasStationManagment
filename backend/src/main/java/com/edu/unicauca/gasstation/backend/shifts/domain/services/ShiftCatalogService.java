@@ -3,7 +3,6 @@ package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
-import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Read-only use cases of the shift catalog (S1-22).
+ * Read-only use cases of the shift catalog.
  *
  * <p>Serves two clients: the REST API of this module (returns domain models, mapped to DTOs in the
  * controller) and other modules through {@link ShiftExternalService} (returns the public {@code *Info} records).
@@ -59,25 +58,18 @@ public class ShiftCatalogService implements ShiftExternalService {
     @Override
     public Map<UUID, RoleInfo> getRolesByIds(Collection<UUID> roleIds) {
         return roleRepository.findAllByIds(roleIds).stream()
-                .map(ShiftCatalogService::toInfo)
+                .map(ShiftInfoMapper::toRoleInfo)
                 .collect(Collectors.toMap(RoleInfo::id, roleInfo -> roleInfo));
     }
 
-    private static RoleInfo toInfo(Role role) {
-        return new RoleInfo(role.getId(), role.getName(), role.getDispenser());
-    }
-
     private static ShiftCodeInfo toInfo(ShiftCode shiftCode) {
-        List<ShiftCodeInfo.Segment> segments = shiftCode.segments().stream()
-                .map(segment -> new ShiftCodeInfo.Segment(segment.startHour(), segment.endHour()))
-                .toList();
         return new ShiftCodeInfo(
                 shiftCode.getId(),
                 shiftCode.getCode(),
                 shiftCode.getName(),
-                shiftCode.getRole() == null ? null : toInfo(shiftCode.getRole()),
+                shiftCode.getRole() == null ? null : ShiftInfoMapper.toRoleInfo(shiftCode.getRole()),
                 shiftCode.getPeriod() == null ? null : shiftCode.getPeriod().name(),
-                segments,
+                ShiftInfoMapper.toSegments(shiftCode),
                 shiftCode.totalHours(),
                 shiftCode.isRequiresSupport(),
                 shiftCode.getPairedWithId(),
