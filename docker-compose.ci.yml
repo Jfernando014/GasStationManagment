@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    # Keep the container alive without starting Spring Boot so `mvn test`
-    # does not race with `spring-boot:run` over generated MapStruct sources.
-    command: ["tail", "-f", "/dev/null"]
+    command: ["mvn", "test", "-Dtest=DailyDownload*,SellerCloseQueryStub*,StubProfileConventionTest"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

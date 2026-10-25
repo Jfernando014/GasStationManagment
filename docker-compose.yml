@@ -1,36 +1,35 @@
-version: '3.8'
-
 services:
 
   frontend:
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile.dev
-        args:
-          - FRONTEND_PORT=${FRONTEND_PORT}
-      container_name: gas-station-frontend-dev
-      ports:
-        - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-      volumes:
-        - ./frontend:/app
-        - /app/node_modules
-      environment:
-        - NODE_ENV=development
-      depends_on:
-        - backend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+      args:
+        - FRONTEND_PORT=${FRONTEND_PORT}
+    container_name: gas-station-frontend-dev
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
 
   backend:
     build:
-      context: ./backend        
+      context: ./backend
       dockerfile: Dockerfile.dev
     container_name: gas-station-backend-dev
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - ./backend:/app         
+      - ./backend:/app
+      - backend_target_dev:/app/target
       - ~/.m2:/root/.m2
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=${BACKEND_PROFILES}
       - SERVER_PORT=${SERVER_PORT}
       - DB_URL=jdbc:postgresql://db:5432/${POSTGRES_DB_NAME}
       - DB_USER=${POSTGRES_DB_USER}
@@ -62,3 +61,4 @@ services:
 
 volumes:
   postgres_dev_data:
+  backend_target_dev:
