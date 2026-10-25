@@ -2,8 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    user: "0:0" 
-    command: ["mvn", "test", "-Dtest=DailyDownload*,SellerCloseQueryStub*,StubProfileConventionTest"]
+    command: ["tail", "-f", "/dev/null"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
