@@ -14,6 +14,6 @@
  * </ul>
  *
  * <p>Internal to the module: other modules read this data through
- * {@link com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService}, never through these classes.
+ * {@link com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService}, never through these classes.
  */
 package com.edu.unicauca.gasstation.backend.shifts.domain;

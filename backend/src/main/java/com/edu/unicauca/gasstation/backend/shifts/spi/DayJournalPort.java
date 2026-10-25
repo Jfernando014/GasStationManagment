@@ -1,5 +1,6 @@
-package com.edu.unicauca.gasstation.backend.shifts;
+package com.edu.unicauca.gasstation.backend.shifts.spi;
 
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.Step1Status;
 import java.time.LocalDate;
 
 /**

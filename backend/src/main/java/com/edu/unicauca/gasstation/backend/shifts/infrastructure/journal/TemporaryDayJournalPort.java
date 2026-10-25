@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.journal;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayJournalPort;
-import com.edu.unicauca.gasstation.backend.shifts.Step1Status;
+import com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.Step1Status;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,6 +1,7 @@
-package com.edu.unicauca.gasstation.backend.shifts;
+package com.edu.unicauca.gasstation.backend.shifts.spi;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,4 +20,10 @@ public interface ScheduleWorkerDirectory {
      * @return workers found, keyed by id. An id missing from the map means that worker does not exist
      */
     Map<UUID, ScheduleWorkerInfo> getWorkersByIds(Collection<UUID> workerIds);
+
+    /**
+     * Every active worker, in a single query. The monthly rotation needs it to include titulares that have no row in
+     * the grid yet.
+     */
+    List<ScheduleWorkerInfo> getActiveWorkers();
 }

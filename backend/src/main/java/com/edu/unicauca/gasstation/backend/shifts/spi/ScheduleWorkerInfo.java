@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.shifts;
+package com.edu.unicauca.gasstation.backend.shifts.spi;
 
 import java.util.UUID;
 
