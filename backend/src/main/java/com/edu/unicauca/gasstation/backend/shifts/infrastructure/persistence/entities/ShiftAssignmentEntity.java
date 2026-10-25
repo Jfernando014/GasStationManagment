@@ -1,7 +1,10 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.entities;
 
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftOrigin;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -45,4 +48,9 @@ public class ShiftAssignmentEntity {
 
     @Column(length = 255)
     private String note;
+
+    /** Who put the day (migration V26); the rotation only rewrites generated days. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private ShiftOrigin origin;
 }
