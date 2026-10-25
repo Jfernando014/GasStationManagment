@@ -5,6 +5,13 @@ import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } fro
 import { filter } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 
+/** Pantallas que ya se adaptan al celular: en ellas la barra lateral pasa a ser un menú desplegable. */
+const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/personal/turnos', '/jornada/personal'];
+
+function usesMobileLayout(url: string): boolean {
+  return MOBILE_READY_ROUTES.includes(url.split(/[?#]/)[0]);
+}
+
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
@@ -19,14 +26,14 @@ export class DashboardLayoutComponent {
   readonly configurationOpen = signal(true);
   readonly resultsOpen = signal(true);
   readonly mobileMenuOpen = signal(false);
-  readonly statisticsActive = signal(this.router.url.split(/[?#]/)[0] === '/resultados/estadisticas');
+  readonly statisticsActive = signal(usesMobileLayout(this.router.url));
   private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
 
   constructor() {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(event => {
-        this.statisticsActive.set(event.urlAfterRedirects.split(/[?#]/)[0] === '/resultados/estadisticas');
+        this.statisticsActive.set(usesMobileLayout(event.urlAfterRedirects));
         this.closeMenu(false);
       });
   }
