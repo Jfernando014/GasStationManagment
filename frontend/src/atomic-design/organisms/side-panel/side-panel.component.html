@@ -1,0 +1,32 @@
+@if (open()) {
+  <button type="button" class="side-panel-backdrop" tabindex="-1" aria-label="Cerrar panel" (click)="onBackdropClick()"></button>
+}
+<aside
+  #panel
+  class="side-panel"
+  [class.side-panel--open]="open()"
+  [style.width.px]="width()"
+  role="dialog"
+  aria-modal="false"
+  [attr.aria-label]="heading()"
+  [attr.inert]="open() ? null : ''">
+  <header class="side-panel-header">
+    <div class="side-panel-titles">
+      <h2>{{ heading() }}</h2>
+      @if (description()) {
+        <p>{{ description() }}</p>
+      }
+    </div>
+    <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm side-panel-close" (click)="close()" aria-label="Cerrar panel">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </header>
+  <div class="side-panel-body">
+    <ng-content />
+  </div>
+  <footer class="side-panel-footer">
+    <ng-content select="[slot=footer]" />
+  </footer>
+</aside>
