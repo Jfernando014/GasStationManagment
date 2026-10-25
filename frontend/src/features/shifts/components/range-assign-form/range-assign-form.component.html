@@ -1,0 +1,72 @@
+<form class="ra" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <p class="ra-rule">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+    Desde hoy en adelante, hasta {{ maxDays }} días por vez.
+  </p>
+
+  <app-select-field
+    fieldId="ra-worker"
+    label="Vendedor"
+    placeholder="Elige un vendedor"
+    [required]="true"
+    [control]="form.controls.workerId"
+    [options]="workerOptions()" />
+
+  <app-select-field
+    fieldId="ra-code"
+    label="Código de turno"
+    placeholder="Elige el código"
+    [required]="true"
+    [control]="form.controls.shiftCode"
+    [options]="codeOptions()"
+    [hint]="selectedWorker() ? 'Solo códigos de su rol y el descanso.' : 'Elige primero el vendedor.'" />
+
+  <div class="ra-dates">
+    <div class="form-item">
+      <label class="item-label" for="ra-from">Desde <span class="star">*</span></label>
+      <input id="ra-from" class="flat-input" type="date" [min]="editableFrom()" formControlName="from" [class.is-invalid]="!!rangeError()">
+    </div>
+    <div class="form-item">
+      <label class="item-label" for="ra-to">Hasta <span class="star">*</span></label>
+      <input id="ra-to" class="flat-input" type="date" [min]="value().from || editableFrom()" [max]="maxTo()" formControlName="to" [class.is-invalid]="!!rangeError()">
+    </div>
+  </div>
+  @if (rangeError(); as message) {
+    <p class="field-error" role="alert">{{ message }}</p>
+  }
+
+  <label class="ra-check">
+    <input type="checkbox" formControlName="leaveSundaysAsRest">
+    <span>Dejar los domingos en descanso</span>
+  </label>
+
+  <div class="form-item">
+    <label class="item-label" for="ra-note">Nota para todos los días (opcional)</label>
+    <input id="ra-note" class="flat-input" type="text" maxlength="255" formControlName="note" placeholder="Ej. Horario de noviembre" autocomplete="off">
+  </div>
+
+  <section class="ra-preview" aria-labelledby="ra-preview-title">
+    <b id="ra-preview-title">Vista previa</b>
+    @if (preview().length) {
+      <p class="ra-summary" aria-live="polite">{{ summary() }}</p>
+      <ol class="ra-days" aria-label="Días que se escriben">
+        @for (d of preview(); track d.date; let i = $index) {
+          <li class="ra-day" [style.--i]="i" [class.is-rest]="d.rest" [attr.title]="d.date + ' · ' + d.code">
+            <small>{{ d.weekday }}</small>
+            <b>{{ d.day }}</b>
+            <app-shift-chip variant="cell" [code]="d.code" />
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="ps-vacio">Elige vendedor, código y fechas para ver qué días cambian.</p>
+    }
+  </section>
+
+  <div class="ra-actions">
+    <button appButton type="button" variant="ghost" (click)="cancelled.emit()">Cancelar</button>
+    <button appButton type="submit" variant="primary" [disabled]="saving()" [attr.aria-busy]="saving()">
+      {{ saving() ? 'Guardando…' : preview().length ? 'Asignar ' + preview().length + ' días' : 'Asignar al rango' }}
+    </button>
+  </div>
+</form>

@@ -1,0 +1,87 @@
+:host { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.pg-scroll { overflow-x: auto; scroll-behavior: smooth; }
+.pg { border-collapse: separate; border-spacing: 2px; font-variant-numeric: tabular-nums; }
+
+.pg-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 120px;
+  padding-right: 8px;
+  background: var(--surface-card);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-heading);
+  white-space: nowrap;
+}
+
+.pg-day { min-width: 28px; text-align: center; line-height: 1.1; }
+.pg-day b { display: block; font-size: 11px; color: var(--text-heading); }
+.pg-day small { font-size: 9.5px; color: var(--text-muted); }
+.pg-day.is-sunday b { color: var(--brand-primary-strong); }
+.pg-day.is-skipped { opacity: 0.5; }
+
+/* Cada día se enciende después del anterior: se lee el ritmo día-día-noche-noche-descanso-descanso */
+.pg-cell {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  animation: pg-light var(--duration-normal) var(--spring) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.pg-cell--REPLACED_MANUAL { outline: 2px dashed var(--semantic-amber-strong); outline-offset: 1px; }
+.pg-cell--KEPT_MANUAL::after,
+.pg-sw--kept::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary);
+  box-shadow: 0 0 0 1.5px var(--surface-card);
+}
+.pg-cell--SKIPPED_NOVELTY { animation-name: pg-dim; }
+.pg-cell--SKIPPED_NOVELTY app-shift-chip { filter: grayscale(1); }
+.pg-cell--UNCHANGED { animation-name: pg-dim-soft; }
+.pg-skip { position: absolute; top: 1px; right: 1px; color: var(--semantic-red-strong); background: var(--surface-card); border-radius: var(--radius-pill); }
+
+.pg-cov {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 20px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--semantic-green-subtle);
+  color: var(--semantic-green-strong);
+}
+.pg-cov.is-bad { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); box-shadow: inset 0 0 0 1.5px var(--semantic-red); }
+
+.pg-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--text-body); }
+.pg-legend span { display: flex; align-items: center; gap: 6px; }
+.pg-sw { position: relative; display: inline-block; width: 16px; height: 14px; border-radius: 4px; background: var(--brand-primary-subtle); }
+.pg-sw--overwrite { outline: 2px dashed var(--semantic-amber-strong); outline-offset: 1px; }
+.pg-sw--kept::after { top: 1px; right: 1px; width: 5px; height: 5px; box-shadow: none; }
+.pg-sw--skipped { background: var(--surface-subtle); opacity: 0.6; }
+.pg-sw--same { opacity: 0.5; }
+
+@keyframes pg-light { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: none; } }
+@keyframes pg-dim { from { opacity: 0; } to { opacity: 0.45; } }
+@keyframes pg-dim-soft { from { opacity: 0; } to { opacity: 0.6; } }
+@keyframes pg-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-scroll { scroll-behavior: auto; }
+  .pg-cell { animation: pg-fade 150ms linear both; animation-delay: 0ms; }
+  .pg-cell--SKIPPED_NOVELTY { animation: none; opacity: 0.45; }
+  .pg-cell--UNCHANGED { animation: none; opacity: 0.6; }
+}
