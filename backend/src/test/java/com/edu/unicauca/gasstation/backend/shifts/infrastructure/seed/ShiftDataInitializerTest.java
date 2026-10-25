@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.shifts.config;
+package com.edu.unicauca.gasstation.backend.shifts.infrastructure.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;

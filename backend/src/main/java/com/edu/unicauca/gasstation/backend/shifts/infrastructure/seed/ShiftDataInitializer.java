@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.shifts.config;
+package com.edu.unicauca.gasstation.backend.shifts.infrastructure.seed;
 
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
