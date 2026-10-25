@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -209,6 +210,6 @@ public class InventoryExceptionHandler {
     @ExceptionHandler(AutonomyThresholdAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleAutonomyThresholdAlreadyExists(
             AutonomyThresholdAlreadyExistsException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
 }
