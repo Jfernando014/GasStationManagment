@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { ChangePasswordModalComponent } from '../../organisms/change-password-modal/change-password-modal.component';
 
 /** Pantallas que ya se adaptan al celular: en ellas la barra lateral pasa a ser un menú desplegable. */
 const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/personal/turnos', '/jornada/personal'];
@@ -15,7 +16,7 @@ function usesMobileLayout(url: string): boolean {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ChangePasswordModalComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
   host: { '(document:keydown.escape)': 'closeMenu()', '[class.statistics-mobile-layout]': 'statisticsActive()' }
@@ -26,6 +27,7 @@ export class DashboardLayoutComponent {
   readonly configurationOpen = signal(true);
   readonly resultsOpen = signal(true);
   readonly mobileMenuOpen = signal(false);
+  readonly changePasswordModalOpen = signal(false);
   readonly statisticsActive = signal(usesMobileLayout(this.router.url));
   private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
@@ -56,6 +58,17 @@ export class DashboardLayoutComponent {
 
   toggleResults(): void {
     this.resultsOpen.update(open => !open);
+  }
+
+  openChangePasswordModal(): void {
+    this.changePasswordModalOpen.set(true);
+    if (this.mobileMenuOpen()) {
+      this.closeMenu(false);
+    }
+  }
+
+  closeChangePasswordModal(): void {
+    this.changePasswordModalOpen.set(false);
   }
 
   logout(): void {
