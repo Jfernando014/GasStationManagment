@@ -1,7 +1,7 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -11,10 +11,11 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginPageComponent {
+export class LoginPageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
   loginForm = this.fb.nonNullable.group({
@@ -23,12 +24,22 @@ export class LoginPageComponent {
   });
 
   errorMessage = '';
+  sessionExpiredMessage = '';
+  isAccountLocked = false;
+  lockoutRemainingMinutes = 15;
   isLoading = false;
+
+  ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('expired') === 'true') {
+      this.sessionExpiredMessage = 'Tu sesión ha expirado por inactividad o seguridad. Por favor, inicia sesión nuevamente.';
+    }
+  }
 
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
+      this.sessionExpiredMessage = '';
       this.cdr.detectChanges();
       
       this.authService.login(this.loginForm.getRawValue()).subscribe({
@@ -46,11 +57,18 @@ export class LoginPageComponent {
         },
         error: (err) => {
           console.error('Login error:', err);
-          if (err.status === 0) {
+          if (err.status === 423) {
+            this.isAccountLocked = true;
+            this.lockoutRemainingMinutes = err.error?.minutesRemaining ?? 15;
+            this.errorMessage = 'Cuenta temporalmente bloqueada por seguridad. Se superó el límite de 5 intentos fallidos consecutivos.';
+          } else if (err.status === 0) {
+            this.isAccountLocked = false;
             this.errorMessage = 'Error de conexión con el servidor (Posible problema de CORS o servidor caído).';
           } else if (err.status === 401 || err.status === 403) {
-            this.errorMessage = 'Credenciales inválidas. Por favor, intenta de nuevo.';
+            this.isAccountLocked = false;
+            this.errorMessage = 'Credenciales inválidas. Advertencia: Tras 5 intentos fallidos consecutivos, tu cuenta será bloqueada temporalmente por 15 minutos.';
           } else {
+            this.isAccountLocked = false;
             this.errorMessage = 'Ocurrió un error inesperado (' + err.status + ').';
           }
           this.isLoading = false;
