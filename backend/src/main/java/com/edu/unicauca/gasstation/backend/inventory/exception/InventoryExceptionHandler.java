@@ -212,4 +212,22 @@ public class InventoryExceptionHandler {
             AutonomyThresholdAlreadyExistsException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
+
+    @ExceptionHandler(NoSalesDataException.class)
+    public ResponseEntity<Map<String, Object>> handleNoSalesData(
+            NoSalesDataException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(StockConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleStockConflict(
+            StockConflictException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidStockMovementException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStockMovement(
+            InvalidStockMovementException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
 }
