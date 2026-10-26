@@ -4,9 +4,9 @@ import com.edu.unicauca.gasstation.backend.sales.domain.models.SalesParameterKey
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.*;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.CardReconciliationRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.QrPointsRepository;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
