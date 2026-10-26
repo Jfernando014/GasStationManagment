@@ -1,0 +1,29 @@
+<div class="dc-head">
+  <b>Cobertura del día operativo</b>
+  <span class="dc-legend">
+    <span><i class="dc-swatch"></i>Titular</span>
+    <span><i class="dc-swatch dc-swatch--support"></i>Apoyo</span>
+  </span>
+</div>
+@for (row of rows(); track row.workerId; let i = $index) {
+  <div class="dc-row" [class.is-flash]="flash().has(row.workerId)">
+    <span class="dc-name">{{ row.name }}</span>
+    <div class="dc-track">
+      @for (bar of row.bars; track $index) {
+        <span
+          class="dc-bar"
+          [class.dc-bar--support]="row.support"
+          [style.left.%]="bar.left"
+          [style.width.%]="bar.width"
+          [style.--i]="i"
+          [attr.title]="row.name + ' · ' + bar.label">{{ bar.width >= 16 ? bar.label : '' }}</span>
+      }
+    </div>
+  </div>
+}
+<div class="dc-row dc-axis" aria-hidden="true">
+  <span class="dc-name"></span>
+  <div class="dc-hours">
+    @for (h of axisHours; track $index) { <span>{{ h }}</span> }
+  </div>
+</div>

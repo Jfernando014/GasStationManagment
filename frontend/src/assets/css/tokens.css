@@ -88,3 +88,10 @@
       --duration-fast: 130ms;
       --duration-normal: 320ms;
     }
+
+    /* Turnos: color del apoyo en la malla y en el personal del día (azul cielo, distinto del azul rey de caja) */
+    :root {
+      --shift-support-subtle: #E0F2FE;
+      --shift-support-strong: #0369A1;
+      --shift-support: #0284C7;
+    }

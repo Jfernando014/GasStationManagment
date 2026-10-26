@@ -1,9 +1,8 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaff;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffMember;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffQuery;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +37,7 @@ public class DayStaffReadPortAdapter implements DayStaffReadPort {
         }
     }
 
-    private AssignedVendor mapMember(DayStaffMember member) {
+    private AssignedVendor mapMember(DayStaff.Member member) {
         String roleName = member.dayRole() != null ? member.dayRole().name() : "ISLERO";
         String doc = member.workerId() != null ? member.workerId().toString() : member.fullName();
         return new AssignedVendor(

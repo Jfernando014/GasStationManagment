@@ -13,7 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.workers.WorkerTestData;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerChanges;

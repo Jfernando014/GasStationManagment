@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.workers.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerChanges;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerDetail;

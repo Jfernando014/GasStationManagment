@@ -1,0 +1,110 @@
+<form class="novelty-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (typeOptions().length > 1) {
+    <fieldset class="novelty-types">
+      <legend class="item-label">¿Qué pasó?</legend>
+      <div class="novelty-types-grid" role="radiogroup" aria-label="Tipo de novedad">
+        @for (option of typeOptions(); track option.value) {
+          <label class="novelty-type" [class.is-sel]="selectedType() === option.value">
+            <input
+              type="radio"
+              name="novelty-type"
+              [value]="option.value"
+              [checked]="selectedType() === option.value"
+              (change)="chooseType(option.value)">
+            <span>{{ option.label }}</span>
+          </label>
+        }
+      </div>
+    </fieldset>
+  }
+
+  <p class="novelty-help" aria-live="polite">{{ typeHelp() }}</p>
+
+  @if (context().mode === 'member') {
+    <div class="novelty-person">
+      <span class="item-label">Vendedor</span>
+      <b>{{ mainWorkerName() }}</b>
+      @if (gridCode(); as code) {
+        <app-shift-chip [code]="code" />
+      }
+    </div>
+  } @else {
+    <app-select-field
+      fieldId="novelty-worker"
+      label="¿A quién reemplaza?"
+      placeholder="Elige quién no trabaja"
+      [required]="true"
+      [control]="form.controls.workerId"
+      [options]="memberOptions()" />
+  }
+
+  @if (selectedType() === 'REPLACEMENT') {
+    @if (context().mode === 'member') {
+      <app-select-field
+        fieldId="novelty-counterpart"
+        label="¿Quién cubre?"
+        placeholder="Elige a quien descansa hoy"
+        [required]="true"
+        [control]="form.controls.counterpartWorkerId"
+        [options]="restingOptions()"
+        [hint]="restingOptions().length ? '' : 'Nadie descansa hoy: registra una ausencia o un intercambio.'" />
+    } @else {
+      <div class="novelty-person">
+        <span class="item-label">Cubre</span>
+        <b>{{ nameOf(context().workerId) }}</b>
+      </div>
+    }
+    <app-select-field
+      fieldId="novelty-code"
+      label="Turno que cubre"
+      [placeholder]="gridCode() ? 'El mismo turno (' + gridCode() + ')' : 'El mismo turno de la malla'"
+      [control]="form.controls.shiftCode"
+      [options]="codeOptions()" />
+  }
+
+  @if (selectedType() === 'SWAP') {
+    <app-select-field
+      fieldId="novelty-swap"
+      label="¿Con quién intercambia?"
+      placeholder="Elige a otro vendedor de hoy"
+      [required]="true"
+      [control]="form.controls.counterpartWorkerId"
+      [options]="swapOptions()" />
+  }
+
+  @if (selectedType() === 'SHIFT_CHANGE') {
+    <app-select-field
+      fieldId="novelty-shift"
+      label="Turno que trabaja"
+      placeholder="Elige el turno"
+      [required]="true"
+      [control]="form.controls.shiftCode"
+      [options]="codeOptions()" />
+  }
+
+  @if (selectedType() !== 'ABSENCE') {
+    <label class="novelty-check" [class.is-attention]="needsExceptional()">
+      <input type="checkbox" [formControl]="form.controls.exceptionalCoverage">
+      <span>
+        Cobertura excepcional
+        <small>El turno es de otro rol, por ejemplo un titular haciendo turno de apoyo.</small>
+      </span>
+    </label>
+  }
+
+  <app-form-field
+    fieldId="novelty-reason"
+    label="Motivo"
+    placeholder="Ej. Cita médica, calamidad familiar"
+    [required]="true"
+    [maxLength]="reasonMax"
+    [control]="form.controls.reason"
+    [hint]="reasonLength() + ' de ' + reasonMax + ' caracteres · mínimo 3'" />
+
+  <div class="novelty-actions">
+    <button appButton type="button" variant="ghost" (click)="cancelled.emit()">Cancelar</button>
+    <button appButton type="submit" variant="primary" [disabled]="saving()" [attr.aria-busy]="saving()">
+      {{ saving() ? 'Guardando…' : 'Guardar novedad' }}
+    </button>
+  </div>
+</form>

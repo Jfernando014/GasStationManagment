@@ -1752,3 +1752,49 @@
       from { opacity: 0; transform: scale(0.6); }
       to { opacity: 1; transform: scale(1); }
     }
+
+    /* ---- Botones de acción de la malla y del personal del día ---- */
+    .ab {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-sizing: border-box; border: 1px solid transparent; border-radius: 10px;
+      font-family: inherit; font-weight: 600; letter-spacing: 0.005em;
+      white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none;
+      transition: background-color var(--duration-fast) var(--spring-fast), border-color var(--duration-fast) var(--spring-fast),
+        box-shadow var(--duration-normal) var(--spring), transform var(--duration-fast) var(--spring-fast);
+    }
+    .ab--md { min-height: 44px; padding: 0 18px; font-size: 14px; }
+    .ab--sm { min-height: 36px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+    .ab--block { width: 100%; }
+
+    /* Naranja con texto blanco, igual que .btn-action-primary */
+    .ab--primary {
+      background: var(--brand-primary); color: #FFFFFF; font-weight: 700;
+      box-shadow: 0 1px 2px rgba(11, 25, 44, 0.14), 0 6px 14px -6px rgba(255, 107, 0, 0.6);
+    }
+    .ab--primary:hover:not([disabled]) {
+      background: var(--brand-primary-hover); transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(11, 25, 44, 0.14), 0 10px 20px -8px rgba(255, 107, 0, 0.7);
+    }
+    .ab--primary:active:not([disabled]) { background: var(--brand-primary-active); }
+
+    .ab--secondary {
+      background: var(--surface-card); color: var(--text-heading); border-color: var(--jr-cell-border);
+      box-shadow: 0 1px 2px rgba(11, 25, 44, 0.06);
+    }
+    .ab--secondary:hover:not([disabled]) { border-color: var(--surface-navy); background: var(--surface-subtle); }
+
+    .ab--ghost { background: transparent; color: var(--text-body); }
+    .ab--ghost:hover:not([disabled]) { background: var(--surface-subtle); color: var(--text-heading); }
+
+    .ab--danger { background: transparent; color: var(--semantic-red-strong); }
+    .ab--danger:hover:not([disabled]) { background: var(--semantic-red-subtle); }
+
+    .ab:active:not([disabled]) { transform: scale(0.98); }
+    .ab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+    .ab[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .ab[aria-busy='true'] { cursor: progress; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ab { transition: none; }
+      .ab:hover, .ab:active { transform: none !important; }
+    }

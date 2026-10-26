@@ -1,7 +1,8 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.adapters;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.calculation.DistributionCalculation.*;
-import com.edu.unicauca.gasstation.backend.shifts.*;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.*;
+import com.edu.unicauca.gasstation.backend.shifts.spi.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

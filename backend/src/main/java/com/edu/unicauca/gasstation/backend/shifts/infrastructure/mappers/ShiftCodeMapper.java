@@ -1,8 +1,8 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers;
 
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RoleResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftSchedule;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeDtos.RoleResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeDtos.ShiftCodeResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ShiftSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import java.util.List;
