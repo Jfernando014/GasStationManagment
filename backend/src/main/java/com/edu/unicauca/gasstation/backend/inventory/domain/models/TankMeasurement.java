@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Medición de los tanques de una jornada. Una por fecha de jornada, con una lectura por tanque. */
+/** Measurement of the tanks of a journal. One per journal date, with one reading per tank. */
 @Getter
 @Setter
 @NoArgsConstructor
