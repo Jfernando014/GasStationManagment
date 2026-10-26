@@ -2,7 +2,9 @@ package com.edu.unicauca.gasstation.backend.security.domain;
 
 import com.edu.unicauca.gasstation.backend.security.api.dto.AuthRequest;
 import com.edu.unicauca.gasstation.backend.security.api.dto.AuthResponse;
+import com.edu.unicauca.gasstation.backend.security.api.dto.ChangePasswordRequest;
 import com.edu.unicauca.gasstation.backend.security.exception.AccountLockedException;
+import com.edu.unicauca.gasstation.backend.security.exception.InvalidPasswordException;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtService;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public AuthResponse login(AuthRequest request) {
@@ -101,5 +105,28 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new InvalidPasswordException("New password and confirmation do not match");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("Current password is incorrect");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("New password cannot be the same as the current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordChangedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("Password successfully changed for user: {}", username);
     }
 }
