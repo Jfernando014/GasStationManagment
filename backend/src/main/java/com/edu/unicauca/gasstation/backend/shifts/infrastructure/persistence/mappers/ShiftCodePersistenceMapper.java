@@ -1,19 +1,16 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers;
 
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.entities.RoleEntity;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.entities.ShiftCodeEntity;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Converts between the domain {@link ShiftCode} and the JPA {@link ShiftCodeEntity}.
  */
 @Component
-@RequiredArgsConstructor
 public class ShiftCodePersistenceMapper {
-
-    private final RolePersistenceMapper rolePersistenceMapper;
 
     /** The entity's role must already be loaded (the JPA queries use an entity graph). */
     public ShiftCode toDomain(ShiftCodeEntity entity) {
@@ -21,7 +18,7 @@ public class ShiftCodePersistenceMapper {
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
-                .role(entity.getRole() == null ? null : rolePersistenceMapper.toDomain(entity.getRole()))
+                .role(entity.getRole() == null ? null : toDomain(entity.getRole()))
                 .period(entity.getPeriod())
                 .startHour1(entity.getStartHour1())
                 .endHour1(entity.getEndHour1())
@@ -52,5 +49,9 @@ public class ShiftCodePersistenceMapper {
         entity.setPairedWithId(shiftCode.getPairedWithId());
         entity.setActive(shiftCode.isActive());
         return entity;
+    }
+
+    private static Role toDomain(RoleEntity role) {
+        return new Role(role.getId(), role.getName(), role.getDispenser());
     }
 }

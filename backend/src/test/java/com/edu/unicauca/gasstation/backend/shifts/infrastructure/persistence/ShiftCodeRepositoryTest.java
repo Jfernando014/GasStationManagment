@@ -11,7 +11,6 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleReposi
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.RoleRepositoryImpl;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.ShiftCodeRepositoryImpl;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.RolePersistenceMapper;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.ShiftCodePersistenceMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @Import({ShiftCodeRepositoryImpl.class, ShiftCodePersistenceMapper.class,
-        RoleRepositoryImpl.class, RolePersistenceMapper.class})
+        RoleRepositoryImpl.class})
 class ShiftCodeRepositoryTest {
 
     @Container

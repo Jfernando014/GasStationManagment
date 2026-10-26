@@ -1,0 +1,42 @@
+<div class="nl-head">
+  <b>Novedades de hoy</b>
+  <span class="nl-hint">Solo este día: la malla del mes no cambia.</span>
+</div>
+
+@if (errorMessage(); as message) {
+  <p class="nl-error" role="alert">{{ message }}</p>
+}
+
+<ul class="nl-list">
+  @for (item of items(); track item.novelty.id) {
+    <li class="nl-item" [class.is-folding]="item.folding" [attr.aria-hidden]="item.folding ? true : null">
+      <div class="nl-inner">
+        <span class="nl-tag">{{ item.label }}</span>
+        <div class="nl-text">
+          <b>{{ item.summary }}</b>
+          <span>
+            <app-shift-chip [code]="item.novelty.originalShiftCode" />
+            @if (item.novelty.finalShiftCode && item.novelty.finalShiftCode !== item.novelty.originalShiftCode) {
+              <span aria-hidden="true">→</span><app-shift-chip [code]="item.novelty.finalShiftCode" />
+            }
+            @if (item.novelty.exceptionalCoverage) { <small class="nl-exceptional">Cobertura excepcional</small> }
+          </span>
+          <small>Motivo: {{ item.novelty.reason }}</small>
+        </div>
+        @if (editable()) {
+          @if (item.asking) {
+            <span class="nl-ask" role="group" [attr.aria-label]="'¿Anular ' + item.label + '?'">
+              <span>¿Anularla?</span>
+              <button appButton type="button" variant="danger" size="sm" (click)="confirmCancel.emit(item.novelty)">Sí, anular</button>
+              <button appButton type="button" variant="ghost" size="sm" (click)="keep.emit()">No</button>
+            </span>
+          } @else {
+            <button appButton type="button" variant="ghost" size="sm" (click)="askCancel.emit(item.novelty)">
+              Anular<span class="jr-sr"> {{ item.summary }}</span>
+            </button>
+          }
+        }
+      </div>
+    </li>
+  }
+</ul>

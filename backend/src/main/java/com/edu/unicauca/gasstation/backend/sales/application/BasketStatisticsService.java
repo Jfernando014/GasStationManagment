@@ -11,7 +11,7 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.StatisticsChartResponse
 import com.edu.unicauca.gasstation.backend.sales.api.dto.StatisticsChartResponse.*;
 import com.edu.unicauca.gasstation.backend.sales.domain.calculation.*;
 import com.edu.unicauca.gasstation.backend.sales.exception.StatisticsSourceException;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
 import java.math.*;
 import java.time.LocalDate;
 import java.util.*;

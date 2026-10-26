@@ -19,11 +19,11 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
+import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftRotationService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftScheduleService;
-import com.edu.unicauca.gasstation.backend.shifts.exception.PastDateException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.RotationNotAllowedException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
+import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftRotationMapperImpl;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftScheduleMapperImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.ResultActions;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-@Import(ShiftScheduleMapperImpl.class)
+@Import({ShiftScheduleMapperImpl.class, ShiftRotationMapperImpl.class})
 @TestPropertySource(properties = "server.port=0")
 class ShiftScheduleControllerTest {
 
@@ -72,11 +72,14 @@ class ShiftScheduleControllerTest {
     @MockBean
     private ShiftScheduleService shiftScheduleService;
 
+    @MockBean
+    private ShiftRotationService shiftRotationService;
+
     // ---- POST /rotation ----
 
     @Test
     void generateRotationPassesTheBodyToTheServiceAndReturnsTheResult() throws Exception {
-        when(shiftScheduleService.generateRotation(WORKER_ID, START, END))
+        when(shiftRotationService.generateForWorker(WORKER_ID, START, END, null))
                 .thenReturn(new ScheduleChange(14, List.of(START)));
 
         postRotation(rotationBody(WORKER_ID, START.toString()))
@@ -93,7 +96,7 @@ class ShiftScheduleControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.errors[0].field").value("workerId"))
                 .andExpect(jsonPath("$.errors[0].message").value("El vendedor es obligatorio"));
-        verifyNoInteractions(shiftScheduleService);
+        verifyNoInteractions(shiftRotationService);
     }
 
     @Test
@@ -101,13 +104,13 @@ class ShiftScheduleControllerTest {
         postRotation(rotationBody(WORKER_ID, "01/11/2026"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
-        verifyNoInteractions(shiftScheduleService);
+        verifyNoInteractions(shiftRotationService);
     }
 
     @ParameterizedTest(name = "{2}")
     @MethodSource("serviceErrors")
     void generateRotationTranslatesServiceErrors(RuntimeException error, int status, String code) throws Exception {
-        when(shiftScheduleService.generateRotation(any(), any(), any())).thenThrow(error);
+        when(shiftRotationService.generateForWorker(any(), any(), any(), any())).thenThrow(error);
 
         postRotation(rotationBody(WORKER_ID, START.toString()))
                 .andExpect(status().is(status))
@@ -142,7 +145,7 @@ class ShiftScheduleControllerTest {
     @Test
     void assignReturnsConflictWhenTheRoleDoesNotMatch() throws Exception {
         when(shiftScheduleService.assign(any(), any(), anyString(), any()))
-                .thenThrow(new ShiftRoleMismatchException("DIA", "TITULAR"));
+                .thenThrow(new ShiftException(ShiftError.ROLE_MISMATCH, "DIA", "TITULAR"));
 
         putAssignment(assignBody("DIA", null))
                 .andExpect(status().isConflict())
@@ -195,9 +198,9 @@ class ShiftScheduleControllerTest {
 
     static Stream<Arguments> serviceErrors() {
         return Stream.of(
-                Arguments.of(new PastDateException(START), 400, "PAST_DATE"),
-                Arguments.of(new WorkerNotAvailableException(WORKER_ID), 409, "WORKER_INACTIVE"),
-                Arguments.of(new RotationNotAllowedException(), 409, "ROTATION_NOT_ALLOWED"));
+                Arguments.of(new ShiftException(ShiftError.PAST_DATE, START), 400, "PAST_DATE"),
+                Arguments.of(new ShiftException(ShiftError.WORKER_INACTIVE, WORKER_ID), 409, "WORKER_INACTIVE"),
+                Arguments.of(new ShiftException(ShiftError.ROTATION_NOT_ALLOWED), 409, "ROTATION_NOT_ALLOWED"));
     }
 
     private static Map<String, Object> rotationBody(UUID workerId, String startDate) {

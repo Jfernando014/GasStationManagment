@@ -6,12 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftTestData;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,7 +39,7 @@ class ShiftCatalogServiceTest {
         when(shiftCodeRepository.findByCode("XYZ")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> shiftCatalogService.getByCode("XYZ"))
-                .isInstanceOf(ShiftCodeNotFoundException.class)
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.SHIFT_CODE_NOT_FOUND))
                 .hasMessage("No se encontró el código de turno 'XYZ'");
     }
 

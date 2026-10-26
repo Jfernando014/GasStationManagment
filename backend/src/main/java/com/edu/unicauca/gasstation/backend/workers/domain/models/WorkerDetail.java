@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.workers.domain.models;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
 import java.util.Objects;
 
 /**

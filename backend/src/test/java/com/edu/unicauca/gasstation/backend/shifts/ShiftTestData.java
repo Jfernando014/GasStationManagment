@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts;
 
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;

@@ -13,8 +13,6 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeR
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.RoleRepositoryImpl;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.ShiftAssignmentRepositoryImpl;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.adapters.ShiftCodeRepositoryImpl;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.RolePersistenceMapper;
-import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.ShiftAssignmentPersistenceMapper;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.mappers.ShiftCodePersistenceMapper;
 import java.time.LocalDate;
 import java.util.List;
@@ -35,9 +33,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-@Import({ShiftAssignmentRepositoryImpl.class, ShiftAssignmentPersistenceMapper.class,
+@Import({ShiftAssignmentRepositoryImpl.class,
         ShiftCodeRepositoryImpl.class, ShiftCodePersistenceMapper.class,
-        RoleRepositoryImpl.class, RolePersistenceMapper.class})
+        RoleRepositoryImpl.class})
 class ShiftAssignmentRepositoryTest {
 
     private static final UUID ANA_ID = UUID.fromString("00000000-0000-0000-0000-00000000000a");

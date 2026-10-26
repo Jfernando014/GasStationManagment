@@ -1,10 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayJournalPort;
-import com.edu.unicauca.gasstation.backend.shifts.NoveltyType;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
-import com.edu.unicauca.gasstation.backend.shifts.Step1Status;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.NoveltyType;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.Step1Status;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayStaffStep;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.NoveltyDraft;
@@ -14,20 +11,11 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftNovelty;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftAssignmentRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftNoveltyRepository;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ExceptionalCoverageRequiredException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidNoveltyException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidNoveltyReasonException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.JournalNotEditableException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.JournalNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.NoStaffToConfirmException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.NoveltyConflictException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.NoveltyNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.SameWorkerNoveltyException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ScheduleWorkerNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftHoursOverlapException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerAlreadyWorkingException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
+import com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -74,18 +62,18 @@ public class ShiftDayStaffService {
     /**
      * Registers a novelty of the day and returns step 1 with it applied.
      *
-     * @throws JournalNotFoundException              if there is no journal for the date
-     * @throws JournalNotEditableException           if the journal is closed
-     * @throws InvalidNoveltyReasonException         if the reason does not have 3 to 255 characters
-     * @throws SameWorkerNoveltyException            if the replacement or the other worker is the same worker
-     * @throws ScheduleWorkerNotFoundException       if a worker does not exist
-     * @throws WorkerNotAvailableException           if the worker who would start working is inactive
-     * @throws ShiftHoursOverlapException            if the replacement works a shift whose hours cross
-     * @throws WorkerAlreadyWorkingException         if the replacement already works another shift
-     * @throws ShiftCodeNotFoundException            if the code does not exist or is not active
-     * @throws ExceptionalCoverageRequiredException  if a code of another role is not marked as exceptional
-     * @throws NoveltyConflictException              if a worker already takes part in another novelty that day
-     * @throws InvalidNoveltyException               if the novelty does not fit the staff of the day
+     * @throws ShiftException {@code JOURNAL_NOT_FOUND} if there is no journal for the date
+     * @throws ShiftException {@code JOURNAL_NOT_EDITABLE} if the journal is closed
+     * @throws ShiftException {@code INVALID_NOVELTY_REASON} if the reason does not have 3 to 255 characters
+     * @throws ShiftException {@code SAME_WORKER} if the replacement or the other worker is the same worker
+     * @throws ShiftException {@code WORKER_NOT_FOUND} if a worker does not exist
+     * @throws ShiftException {@code WORKER_INACTIVE} if the worker who would start working is inactive
+     * @throws ShiftException {@code SHIFT_HOURS_OVERLAP} if the replacement works a shift whose hours cross
+     * @throws ShiftException {@code WORKER_ALREADY_WORKING} if the replacement already works another shift
+     * @throws ShiftException {@code SHIFT_CODE_NOT_FOUND} if the code does not exist or is not active
+     * @throws ShiftException {@code EXCEPTIONAL_COVERAGE_REQUIRED} if a code of another role is not marked as exceptional
+     * @throws ShiftException {@code NOVELTY_CONFLICT} if a worker already takes part in another novelty that day
+     * @throws ShiftException {@code INVALID_NOVELTY} if the novelty does not fit the staff of the day
      */
     @Transactional
     public DayStaffStep registerNovelty(LocalDate date, NoveltyDraft draft) {
@@ -98,16 +86,16 @@ public class ShiftDayStaffService {
      * Cancels a novelty: the day goes back to the grid code. Cancelling an already cancelled novelty changes
      * nothing.
      *
-     * @throws JournalNotFoundException    if there is no journal for the date
-     * @throws JournalNotEditableException if the journal is closed
-     * @throws NoveltyNotFoundException    if the novelty does not exist or belongs to another date
+     * @throws ShiftException {@code JOURNAL_NOT_FOUND} if there is no journal for the date
+     * @throws ShiftException {@code JOURNAL_NOT_EDITABLE} if the journal is closed
+     * @throws ShiftException {@code NOVELTY_NOT_FOUND} if the novelty does not exist or belongs to another date
      */
     @Transactional
     public DayStaffStep cancelNovelty(LocalDate date, UUID noveltyId) {
         requireEditable(Objects.requireNonNull(date, "date"));
         ShiftNovelty novelty = shiftNoveltyRepository.findById(noveltyId)
                 .filter(found -> found.getWorkDate().equals(date))
-                .orElseThrow(() -> new NoveltyNotFoundException(noveltyId));
+                .orElseThrow(() -> new ShiftException(ShiftError.NOVELTY_NOT_FOUND, noveltyId));
         if (novelty.isActive()) {
             novelty.cancel(Instant.now());
             shiftNoveltyRepository.save(novelty);
@@ -122,7 +110,7 @@ public class ShiftDayStaffService {
      * not block.
      *
      * @param pending novelties to save together with the confirmation; empty when they were registered before
-     * @throws NoStaffToConfirmException if nobody would work that day
+     * @throws ShiftException {@code NO_STAFF_TO_CONFIRM} if nobody would work that day
      */
     @Transactional
     public DayStaffStep confirm(LocalDate date, List<NoveltyDraft> pending) {
@@ -132,7 +120,7 @@ public class ShiftDayStaffService {
         boolean someoneWorks = day.lineup().working().stream()
                 .anyMatch(line -> day.activeWorkers().containsKey(line.workerId()));
         if (!someoneWorks) {
-            throw new NoStaffToConfirmException(date);
+            throw new ShiftException(ShiftError.NO_STAFF_TO_CONFIRM, date);
         }
         dayJournalPort.markStep1Completed(date);
         return step(date);
@@ -140,20 +128,20 @@ public class ShiftDayStaffService {
 
     private void requireEditable(LocalDate date) {
         if (dayJournalPort.step1Status(date) == Step1Status.NO_JOURNAL) {
-            throw new JournalNotFoundException(date);
+            throw new ShiftException(ShiftError.JOURNAL_NOT_FOUND, date);
         }
         if (!dayJournalPort.isEditable(date)) {
-            throw new JournalNotEditableException(date);
+            throw new ShiftException(ShiftError.JOURNAL_NOT_EDITABLE, date);
         }
     }
 
     private void register(LocalDate date, NoveltyDraft draft) {
         if (draft.type() == null || draft.type() == NoveltyType.NONE) {
-            throw new InvalidNoveltyException("El tipo de novedad no es válido");
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, "El tipo de novedad no es válido");
         }
         String reason = requireValidReason(draft.reason());
         if (draft.workerId().equals(draft.counterpartWorkerId())) {
-            throw new SameWorkerNoveltyException();
+            throw new ShiftException(ShiftError.SAME_WORKER);
         }
         Set<UUID> involved = new HashSet<>();
         involved.add(draft.workerId());
@@ -167,7 +155,7 @@ public class ShiftDayStaffService {
             case ABSENCE -> absence(date, draft, reason, day);
             case SHIFT_CHANGE -> shiftChange(date, draft, reason, day);
             case SWAP -> swap(date, draft, reason, day);
-            default -> throw new InvalidNoveltyException("El tipo de novedad no es válido");
+            default -> throw new ShiftException(ShiftError.INVALID_NOVELTY, "El tipo de novedad no es válido");
         };
         shiftNoveltyRepository.save(novelty);
     }
@@ -180,9 +168,9 @@ public class ShiftDayStaffService {
         ShiftCode code = draft.shiftCode() == null ? absent.workedCode() : requireWorkingCode(draft.shiftCode());
         day.lineup().line(replacementId).filter(DayLineup.Line::working).ifPresent(current -> {
             if (current.workedCode().overlaps(code)) {
-                throw new ShiftHoursOverlapException(replacement.fullName(), current.workedCode().getCode(), code.getCode());
+                throw new ShiftException(ShiftError.SHIFT_HOURS_OVERLAP, replacement.fullName(), current.workedCode().getCode(), code.getCode());
             }
-            throw new WorkerAlreadyWorkingException(replacement.fullName(), current.workedCode().getCode());
+            throw new ShiftException(ShiftError.WORKER_ALREADY_WORKING, replacement.fullName(), current.workedCode().getCode());
         });
         boolean exceptional = requireRoleOrExceptional(replacement, code, draft.exceptionalCoverage());
         return ShiftNovelty.register(date, NoveltyType.REPLACEMENT, absent.workerId(), replacementId,
@@ -202,13 +190,13 @@ public class ShiftDayStaffService {
      */
     private ShiftNovelty shiftChange(LocalDate date, NoveltyDraft draft, String reason, DayContext day) {
         if (draft.shiftCode() == null || draft.shiftCode().isBlank()) {
-            throw new InvalidNoveltyException("Indique el código del cambio de turno");
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, "Indique el código del cambio de turno");
         }
         ScheduleWorkerInfo worker = requireActive(day, draft.workerId());
         ShiftCode code = requireWorkingCode(draft.shiftCode());
         DayLineup.Line line = day.lineup().line(worker.id()).orElse(null);
         if (line != null && line.working() && line.workedCode().getId().equals(code.getId())) {
-            throw new InvalidNoveltyException(worker.fullName() + " ya trabaja " + code.getCode() + " ese día");
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, worker.fullName() + " ya trabaja " + code.getCode() + " ese día");
         }
         ShiftCode original = line == null || line.gridCode() == null ? restCode() : line.gridCode();
         boolean exceptional = requireRoleOrExceptional(worker, code, draft.exceptionalCoverage());
@@ -222,7 +210,7 @@ public class ShiftDayStaffService {
         DayLineup.Line first = requireWorking(day, draft.workerId(), date);
         DayLineup.Line second = requireWorking(day, otherId, date);
         if (first.workedCode().getId().equals(second.workedCode().getId())) {
-            throw new InvalidNoveltyException("Los dos vendedores tienen el mismo código; no hay nada que intercambiar");
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, "Los dos vendedores tienen el mismo código; no hay nada que intercambiar");
         }
         boolean firstExceptional = requireRoleOrExceptional(
                 requireActive(day, first.workerId()), second.workedCode(), draft.exceptionalCoverage());
@@ -236,14 +224,14 @@ public class ShiftDayStaffService {
     private static String requireValidReason(String reason) {
         String stripped = reason == null ? "" : reason.strip();
         if (stripped.length() < 3 || stripped.length() > 255) {
-            throw new InvalidNoveltyReasonException();
+            throw new ShiftException(ShiftError.INVALID_NOVELTY_REASON);
         }
         return stripped;
     }
 
     private static UUID requireCounterpart(NoveltyDraft draft, String message) {
         if (draft.counterpartWorkerId() == null) {
-            throw new InvalidNoveltyException(message);
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, message);
         }
         return draft.counterpartWorkerId();
     }
@@ -251,7 +239,7 @@ public class ShiftDayStaffService {
     private static ScheduleWorkerInfo requireWorker(DayContext day, UUID workerId) {
         ScheduleWorkerInfo worker = day.workers().get(workerId);
         if (worker == null) {
-            throw new ScheduleWorkerNotFoundException(workerId);
+            throw new ShiftException(ShiftError.WORKER_NOT_FOUND, workerId);
         }
         return worker;
     }
@@ -259,7 +247,7 @@ public class ShiftDayStaffService {
     private static ScheduleWorkerInfo requireActive(DayContext day, UUID workerId) {
         ScheduleWorkerInfo worker = requireWorker(day, workerId);
         if (!worker.active()) {
-            throw new WorkerNotAvailableException(workerId);
+            throw new ShiftException(ShiftError.WORKER_INACTIVE, workerId);
         }
         return worker;
     }
@@ -269,13 +257,13 @@ public class ShiftDayStaffService {
         ScheduleWorkerInfo worker = requireWorker(day, workerId);
         return day.lineup().line(workerId)
                 .filter(DayLineup.Line::working)
-                .orElseThrow(() -> new InvalidNoveltyException(worker.fullName() + " no trabaja el " + date));
+                .orElseThrow(() -> new ShiftException(ShiftError.INVALID_NOVELTY, worker.fullName() + " no trabaja el " + date));
     }
 
     /** A worker takes part in at most one active novelty per day. */
     private static void requireWithoutNovelty(DayContext day, UUID workerId) {
         if (day.lineup().hasNovelty(workerId)) {
-            throw new NoveltyConflictException(requireWorker(day, workerId).fullName());
+            throw new ShiftException(ShiftError.NOVELTY_CONFLICT, requireWorker(day, workerId).fullName());
         }
     }
 
@@ -283,16 +271,16 @@ public class ShiftDayStaffService {
     private ShiftCode requireWorkingCode(String code) {
         ShiftCode shiftCode = shiftCodeRepository.findByCode(code)
                 .filter(ShiftCode::isActive)
-                .orElseThrow(() -> new ShiftCodeNotFoundException(code));
+                .orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, code));
         if (shiftCode.getRole() == null) {
-            throw new InvalidNoveltyException("El código " + code + " no es un turno de trabajo");
+            throw new ShiftException(ShiftError.INVALID_NOVELTY, "El código " + code + " no es un turno de trabajo");
         }
         return shiftCode;
     }
 
     private ShiftCode restCode() {
         return shiftCodeRepository.findByCode(DayLineup.REST_CODE)
-                .orElseThrow(() -> new ShiftCodeNotFoundException(DayLineup.REST_CODE));
+                .orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, DayLineup.REST_CODE));
     }
 
     /**
@@ -303,7 +291,7 @@ public class ShiftDayStaffService {
     private static boolean requireRoleOrExceptional(ScheduleWorkerInfo worker, ShiftCode code, boolean exceptional) {
         boolean otherRole = !code.getRole().getId().equals(worker.roleId());
         if (otherRole && !exceptional) {
-            throw new ExceptionalCoverageRequiredException(worker.fullName(), code.getCode(), code.getRole().getName());
+            throw new ShiftException(ShiftError.EXCEPTIONAL_COVERAGE_REQUIRED, worker.fullName(), code.getCode(), code.getRole().getName());
         }
         return otherRole;
     }

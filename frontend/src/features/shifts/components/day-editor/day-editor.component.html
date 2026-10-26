@@ -1,0 +1,64 @@
+<div class="de">
+  <div class="de-now">
+    <span class="item-label">{{ dateLabel() }}</span>
+    <div class="de-now-row">
+      <app-shift-chip [code]="cell().code" />
+      <span>{{ cell().code ? currentHours() : 'Sin turno asignado' }}</span>
+    </div>
+    @if (cell().note) {
+      <p class="de-note-now"><b>Nota:</b> {{ cell().note }}</p>
+    }
+  </div>
+
+  @if (readOnly()) {
+    <p class="de-info" role="status">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+      Este día ya pasó: queda como se trabajó y no se puede cambiar.
+    </p>
+  } @else {
+    <div class="form-item">
+      <label class="item-label" for="de-note">Nota (opcional)</label>
+      <input
+        id="de-note"
+        class="flat-input"
+        type="text"
+        maxlength="255"
+        placeholder="Ej. Cambio pedido por el vendedor"
+        autocomplete="off"
+        [formControl]="note"
+        aria-describedby="de-note-help">
+      <p class="field-hint" id="de-note-help">Se guarda junto con el turno que elijas. Escríbela antes de elegir.</p>
+    </div>
+
+    @if (errorMessage(); as message) {
+      <p class="de-error" role="alert">{{ message }}</p>
+    }
+
+    <fieldset class="de-options">
+      <legend class="item-label">Elige el turno · se guarda al tocarlo</legend>
+      <div class="de-grid">
+        @for (option of options(); track option.code; let i = $index) {
+          <button
+            type="button"
+            class="de-option"
+            [style.--i]="i"
+            [class.is-current]="option.code === cell().code"
+            [class.is-saving]="savingCode() === option.code"
+            [disabled]="saving()"
+            [attr.aria-pressed]="option.code === cell().code"
+            [attr.aria-label]="option.code + ', ' + option.name + ', ' + option.hours + (option.code === cell().code ? ', turno actual' : '')"
+            (click)="choose(option.code, $event)">
+            <app-shift-chip [code]="option.code" />
+            <span class="de-option-text"><b>{{ option.name }}</b><small>{{ option.hours }}</small></span>
+            @if (option.code === cell().code) {
+              <svg class="de-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+            }
+          </button>
+        } @empty {
+          <p class="ps-vacio">No hay turnos activos para este rol en el catálogo.</p>
+        }
+      </div>
+      <p class="field-hint">Solo se muestran los turnos de {{ roleLabel() }} y el descanso.</p>
+    </fieldset>
+  }
+</div>

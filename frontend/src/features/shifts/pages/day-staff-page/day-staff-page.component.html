@@ -1,0 +1,220 @@
+<section class="ds" aria-labelledby="ds-title">
+  <header class="ds-head">
+    <div class="ds-title">
+      <span class="ds-eyebrow">Jornada · Paso 1</span>
+      <h1 id="ds-title">Personal del día</h1>
+      <p class="ds-date">{{ dateShort() }}</p>
+    </div>
+
+    @if (state(); as st) {
+      <span class="ds-state" [class]="'ds-state ds-state--' + st.tone">
+        @if (st.tone === 'ok') {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+        }
+        {{ st.label }}
+      </span>
+    }
+
+    @if (step()) {
+      <p class="ds-summary">
+        <b>{{ working().length }}</b> {{ working().length === 1 ? 'persona trabaja' : 'personas trabajan' }} hoy
+        @if (notWorking().length) { <span>· {{ notWorking().length }} no {{ notWorking().length === 1 ? 'trabaja' : 'trabajan' }}</span> }
+        @if (novelties().length) { <span class="ds-summary-nov">· {{ novelties().length }} {{ novelties().length === 1 ? 'novedad' : 'novedades' }}</span> }
+      </p>
+    }
+  </header>
+
+  @if (loadError(); as message) {
+    <div class="ps-card ds-card">
+      <app-empty-state heading="No se pudo cargar el personal del día" [description]="message" tone="error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" />
+        </svg>
+        <button appButton type="button" variant="secondary" size="sm" (click)="retry()">Reintentar</button>
+      </app-empty-state>
+    </div>
+  } @else if (loading() || !step()) {
+    <div class="ds-skeleton" aria-busy="true" aria-live="polite">
+      <span class="jr-sr">Cargando el personal del día…</span>
+      @for (r of [0, 1, 2, 3]; track r) {
+        <div class="ds-skel" [style.--r]="r"></div>
+      }
+    </div>
+  } @else {
+    @if (state(); as st) {
+      @if (st.note) {
+        <p class="ds-note" role="status">{{ st.note }}</p>
+      }
+    }
+
+    @if (warnings().length) {
+      <ul class="ds-warnings" aria-label="Avisos del día">
+        @for (warning of warnings(); track warning.code + warning.message) {
+          <li class="ds-warning">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+            <span>{{ warning.message }}</span>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (!working().length && !notWorking().length) {
+      <div class="ps-card ds-card">
+        <app-empty-state heading="No hay malla para este día" description="Nadie tiene turno asignado. Revisa la malla de turnos del mes.">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+          <a appButton variant="secondary" size="sm" routerLink="/personal/turnos">Ir a la malla de turnos</a>
+        </app-empty-state>
+      </div>
+    } @else {
+      <div class="ps-card ds-card ds-people">
+        <div class="ds-people-head">
+          <b>Quién trabaja hoy</b>
+          <span class="ds-axis-legend" aria-hidden="true">
+            @for (h of axisHours; track $index) { <span>{{ h }}</span> }
+          </span>
+        </div>
+
+        <ul class="ds-list">
+          @for (p of working(); track p.workerId; let i = $index) {
+            <li class="ds-person" [style.--i]="i" [class.is-flash]="isFlashing(p.workerId)">
+              <app-avatar [name]="p.fullName" />
+
+              <div class="ds-person-who">
+                <b>{{ p.fullName }}</b>
+                <span>{{ p.roleLabel }} · surtidor {{ p.dispenser }} · {{ p.totalHours }} h</span>
+              </div>
+
+              <div class="ds-person-shift">
+                <app-shift-chip
+                  [code]="p.code"
+                  [changed]="p.changed"
+                  [title]="p.changed ? 'En la malla: ' + p.gridCode : ''" />
+                <small>{{ p.hours }}</small>
+              </div>
+
+              <div class="ds-track" role="img" [attr.aria-label]="p.fullName + ' trabaja ' + p.hours">
+                @for (bar of p.bars; track $index) {
+                  <span
+                    class="ds-bar"
+                    [class.ds-bar--support]="p.support"
+                    [style.left.%]="bar.left"
+                    [style.width.%]="bar.width"
+                    [style.--i]="i"
+                    [attr.title]="p.fullName + ' · ' + bar.label"></span>
+                }
+              </div>
+
+              <div class="ds-person-end">
+                @if (p.novelty) {
+                  <span class="ds-nov-tag" tabindex="0" [attr.title]="p.noveltyReason ? 'Motivo: ' + p.noveltyReason : null">
+                    {{ p.novelty }}@if (p.noveltyWith) { <small>con {{ p.noveltyWith }}</small> }
+                  </span>
+                } @else if (editable()) {
+                  <button appButton type="button" variant="secondary" size="sm" (click)="openPanel('member', p.workerId)">
+                    Registrar novedad<span class="jr-sr"> de {{ p.fullName }}</span>
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (notWorking().length) {
+          <div class="ds-off">
+            <b class="ds-off-title">No trabajan hoy</b>
+            <ul class="ds-off-list">
+              @for (p of notWorking(); track p.workerId) {
+                <li class="ds-off-person" [class.is-flash]="isFlashing(p.workerId)">
+                  <app-avatar [name]="p.fullName" />
+                  <span class="ds-off-who">
+                    <b>{{ p.fullName }}</b>
+                    <small>
+                      {{ p.roleLabel }}
+                      @if (p.novelty) { · {{ p.novelty }}@if (p.noveltyReason) { : {{ p.noveltyReason }} } }
+                    </small>
+                  </span>
+                  @if (p.kind === 'resting') {
+                    <app-shift-chip code="DESCANSO" />
+                    @if (editable()) {
+                      <button appButton type="button" variant="ghost" size="sm" (click)="openPanel('resting', p.workerId)">
+                        Asignar como reemplazo<span class="jr-sr">: {{ p.fullName }}</span>
+                      </button>
+                    }
+                  } @else {
+                    <app-shift-chip [code]="p.code" />
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      @if (novelties().length || cancelError()) {
+        <app-novelty-list
+          class="ps-card ds-card"
+          [items]="noveltyItems()"
+          [editable]="editable()"
+          [errorMessage]="cancelError()"
+          (askCancel)="askCancel($event)"
+          (keep)="keepNovelty()"
+          (confirmCancel)="cancelNovelty($event)" />
+      }
+    }
+  }
+
+  <div class="ds-footer">
+    <span class="ds-footer-note" aria-live="polite">
+      @if (confirmError(); as message) {
+        <span class="ds-inline-error" role="alert">{{ message }}</span>
+      } @else if (confirmBlockedReason(); as reason) {
+        {{ reason }}
+      } @else if (status() === 'CONFIRMED') {
+        Listo. Puedes seguir con el cierre por vendedor.
+      } @else {
+        Al confirmar, esta lista pasa a los siguientes pasos.
+      }
+    </span>
+    <button
+      appButton
+      type="button"
+      [variant]="status() === 'CONFIRMED' ? 'secondary' : 'primary'"
+      class="ds-confirm"
+      [disabled]="!!confirmBlockedReason() || confirming()"
+      [attr.aria-busy]="confirming()"
+      (click)="confirm()">
+      @if (status() === 'CONFIRMED' && !confirming()) {
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+      }
+      {{ confirming() ? 'Confirmando…' : confirmLabel() }}
+    </button>
+  </div>
+</section>
+
+<app-side-panel
+  [open]="panelOpen()"
+  [heading]="panelHeading()"
+  description="Cambio de último momento. La malla del mes no cambia."
+  (closed)="closePanel()">
+  @if (panelContext(); as ctx) {
+    @if (submitMessage(); as message) {
+      <p class="ds-panel-error" role="alert">{{ message }}</p>
+    }
+    @if (step(); as s) {
+      <app-novelty-form
+        [step]="s"
+        [catalog]="catalog()"
+        [context]="ctx"
+        [saving]="saving()"
+        [submitError]="submitError()"
+        (submitted)="saveNovelty($event)"
+        (cancelled)="closePanel()" />
+    }
+  }
+</app-side-panel>
+
+<div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+  <span class="toast-check">✓</span> {{ toastText() }}
+</div>

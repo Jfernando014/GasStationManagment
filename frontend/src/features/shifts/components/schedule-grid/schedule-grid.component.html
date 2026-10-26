@@ -1,0 +1,135 @@
+<!-- Tabla para tablet y escritorio -->
+<div class="sg-scroll">
+  <table
+    class="sg-table"
+    role="grid"
+    aria-label="Malla de turnos del mes. Usa las flechas para moverte y Enter para abrir un día."
+    [attr.aria-rowcount]="rows().length + 2"
+    [attr.aria-colcount]="days().length + 1">
+    <thead>
+      <tr>
+        <th class="sg-corner" scope="col"><span class="jr-sr">Vendedor</span></th>
+        @for (col of columns(); track col.date; let c = $index) {
+          <th
+            scope="col"
+            class="sg-day"
+            [attr.data-col]="c"
+            [class.is-sunday]="col.sunday"
+            [class.is-today]="col.today"
+            [class.is-past]="col.past"
+            [attr.aria-label]="col.label + (col.today ? ', hoy' : '')"
+            [attr.aria-current]="col.today ? 'date' : null">
+            <small>{{ col.weekday }}</small><b>{{ col.day }}</b>
+          </th>
+        }
+      </tr>
+    </thead>
+    @for (group of groups(); track group.label) {
+      <tbody>
+        <tr class="sg-group">
+          <th scope="rowgroup" class="sg-group-label">{{ group.label }} <span>{{ group.rows.length }}</span></th>
+          <td [attr.colspan]="days().length"></td>
+        </tr>
+        @for (item of group.rows; track item.row.workerId) {
+          @let row = item.row;
+          @let r = item.index;
+          <tr class="sg-row" [style.--r]="r">
+            <th scope="row" class="sg-name">
+              <span class="sg-name-in" [attr.title]="row.name"><app-avatar [name]="row.name" /><b>{{ shortNameOf(row.name) }}</b></span>
+            </th>
+            @for (col of columns(); track col.date; let c = $index) {
+              @let cell = cellOf(row, col.date);
+              @let cellKey = key(row.workerId, col.date);
+              <td role="gridcell" class="sg-td" [class.is-today]="col.today">
+                <button
+                  type="button"
+                  class="sg-cell"
+                  [attr.data-r]="r"
+                  [attr.data-c]="c"
+                  [attr.data-key]="cellKey"
+                  [tabindex]="focus().r === r && focus().c === c ? 0 : -1"
+                  [class.is-past]="col.past"
+                  [class.is-empty]="!cell.code"
+                  [class.has-note]="!!cell.note"
+                  [class.is-sweep]="isSweeping(row, col.date)"
+                  [class.is-dim]="dimmed(cell)"
+                  [class.is-hit]="matched(cell)"
+                  [class.is-updated]="updatedKey() === cellKey"
+                  [class.is-saving]="savingKey() === cellKey"
+                  [style.--c]="c"
+                  [attr.aria-label]="cellLabel(row, col)"
+                  (mouseenter)="showTip(row, col, $event)"
+                  (mouseleave)="hideTip()"
+                  (blur)="hideTip()"
+                  (focus)="onFocusCell(r, c); showTip(row, col, $event)"
+                  (keydown)="onKeydown($event)"
+                  (click)="open(row, col, r, c)">
+                  @if (cell.code) {
+                    <app-shift-chip variant="cell" [code]="cell.code" />
+                  }
+                </button>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    }
+    <tfoot>
+      <tr>
+        <th scope="row" class="sg-name sg-cov-name"><b>Cobertura</b></th>
+        @for (col of columns(); track col.date) {
+          <td class="sg-td sg-cov-td" [class.is-today]="col.today">
+            @if (col.coverage; as cov) {
+              @if (cov.covered) {
+                <span class="sg-cov sg-cov--ok" role="img" [attr.aria-label]="coverageLabel(col)" [attr.title]="coverageLabel(col)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+              } @else {
+                <span class="sg-cov sg-cov--bad" [class.is-past]="col.past" role="img" [attr.aria-label]="coverageLabel(col)" [attr.title]="coverageLabel(col)">{{ col.missingShort }}</span>
+              }
+            }
+          </td>
+        }
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+@if (tip(); as t) {
+  <div class="sg-tip" role="tooltip" [class.is-below]="t.below" [style.left.px]="t.left" [style.top.px]="t.top">
+    <b>{{ t.title }}</b>
+    <span>{{ t.body }}</span>
+  </div>
+}
+
+<!-- Móvil: un día por tarjeta, se desliza de lado -->
+<div class="sg-days" role="list" aria-label="Malla por día. Desliza para cambiar de día.">
+  @for (col of columns(); track col.date; let c = $index) {
+    <section class="sg-daycard" role="listitem" [attr.data-col]="c" [class.is-today]="col.today" [attr.aria-label]="col.label">
+      <header class="sg-daycard-head">
+        <b>{{ shortLabel(col.date) }}</b>
+        @if (col.today) { <span class="sg-tag sg-tag--today">Hoy</span> }
+        @if (col.past) { <span class="sg-tag">Solo lectura</span> }
+        @if (col.coverage; as cov) {
+          <span class="sg-daycard-cov" [class.is-bad]="!cov.covered">{{ cov.covered ? 'Cubierto' : 'Falta: ' + col.missing.join(', ') }}</span>
+        }
+      </header>
+      <ul class="sg-daycard-list">
+        @for (row of rows(); track row.workerId; let r = $index) {
+          @let cell = cellOf(row, col.date);
+          <li>
+            <button type="button" class="sg-daycard-row" [class.is-past]="col.past" [class.is-dim]="dimmed(cell)" [class.is-hit]="matched(cell)" [attr.aria-label]="cellLabel(row, col)" (click)="open(row, col, r, c)">
+              <app-avatar [name]="row.name" />
+              <span class="sg-daycard-name"><b>{{ row.name }}</b><small>{{ row.roleLabel }}{{ cell.note ? ' · con nota' : '' }}</small></span>
+              @if (cell.code) {
+                <app-shift-chip [code]="cell.code" />
+              } @else {
+                <span class="sg-daycard-empty">Sin turno</span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

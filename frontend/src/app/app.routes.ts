@@ -15,6 +15,10 @@ export const routes: Routes = [
         loadComponent: () => import('../atomic-design/pages/journal/journal-page.component').then(m => m.JournalPageComponent),
         children: [
           {
+            path: 'personal',
+            loadComponent: () => import('../features/shifts/pages/day-staff-page/day-staff-page.component').then(m => m.DayStaffPageComponent)
+          },
+          {
             path: 'vendedores',
             loadComponent: () => import('../features/sales/pages/vendor-close-step2/vendor-close-step2.component')
               .then(m => m.VendorCloseStep2Component)
@@ -29,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'personal/vendedores',
         loadComponent: () => import('../features/workers/pages/workers-page/workers-page.component').then(m => m.WorkersPageComponent)
+      },
+      {
+        path: 'personal/turnos',
+        loadComponent: () => import('../features/shifts/pages/shifts-schedule-page/shifts-schedule-page.component').then(m => m.ShiftsSchedulePageComponent)
       },
       {
         path: 'resultados/metas',

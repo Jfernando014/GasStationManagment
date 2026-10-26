@@ -1,11 +1,9 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
 import static com.edu.unicauca.gasstation.backend.shifts.domain.services.ScheduleCoverageCalculator.TITULAR;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffAbsentee;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffMember;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffNovelty;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftNovelty;
@@ -22,11 +20,11 @@ import java.util.UUID;
 final class DayStaffAssembler {
 
     /** Titulares before apoyos, then start hour of the first segment, then full name, then worker id. */
-    static final Comparator<DayStaffMember> MEMBER_ORDER = Comparator
-            .comparing((DayStaffMember member) -> !TITULAR.equals(member.dayRole().name()))
+    static final Comparator<DayStaff.Member> MEMBER_ORDER = Comparator
+            .comparing((DayStaff.Member member) -> !TITULAR.equals(member.dayRole().name()))
             .thenComparingInt(DayStaffAssembler::firstStartHour)
-            .thenComparing(DayStaffMember::fullName)
-            .thenComparing(DayStaffMember::workerId);
+            .thenComparing(DayStaff.Member::fullName)
+            .thenComparing(DayStaff.Member::workerId);
 
     private DayStaffAssembler() {
     }
@@ -36,7 +34,7 @@ final class DayStaffAssembler {
      *
      * @param workers active workers by id; workers missing from it (inactive or unknown) are left out
      */
-    static List<DayStaffMember> members(DayLineup lineup, Map<UUID, ScheduleWorkerInfo> workers) {
+    static List<DayStaff.Member> members(DayLineup lineup, Map<UUID, ScheduleWorkerInfo> workers) {
         return lineup.working().stream()
                 .filter(line -> workers.containsKey(line.workerId()))
                 .map(line -> member(line, workers))
@@ -49,19 +47,19 @@ final class DayStaffAssembler {
      *
      * @param workers active workers by id; workers missing from it are left out
      */
-    static List<DayStaffAbsentee> absentees(DayLineup lineup, Map<UUID, ScheduleWorkerInfo> workers) {
+    static List<DayStaff.Absentee> absentees(DayLineup lineup, Map<UUID, ScheduleWorkerInfo> workers) {
         return lineup.absences().stream()
                 .filter(absence -> workers.containsKey(absence.workerId()))
-                .map(absence -> new DayStaffAbsentee(absence.workerId(), workers.get(absence.workerId()).fullName(),
+                .map(absence -> new DayStaff.Absentee(absence.workerId(), workers.get(absence.workerId()).fullName(),
                         absence.gridCode().getCode(), absence.novelty().getType(), absence.novelty().getReason()))
-                .sorted(Comparator.comparing(DayStaffAbsentee::fullName).thenComparing(DayStaffAbsentee::workerId))
+                .sorted(Comparator.comparing(DayStaff.Absentee::fullName).thenComparing(DayStaff.Absentee::workerId))
                 .toList();
     }
 
-    private static DayStaffMember member(DayLineup.Line line, Map<UUID, ScheduleWorkerInfo> workers) {
+    private static DayStaff.Member member(DayLineup.Line line, Map<UUID, ScheduleWorkerInfo> workers) {
         ShiftCode worked = line.workedCode();
         ScheduleWorkerInfo worker = workers.get(line.workerId());
-        return DayStaffMember.of(
+        return DayStaff.Member.of(
                 worker.id(),
                 worker.fullName(),
                 worked.getCode(),
@@ -72,18 +70,18 @@ final class DayStaffAssembler {
                 novelty(line, workers));
     }
 
-    private static DayStaffNovelty novelty(DayLineup.Line line, Map<UUID, ScheduleWorkerInfo> workers) {
+    private static DayStaff.Novelty novelty(DayLineup.Line line, Map<UUID, ScheduleWorkerInfo> workers) {
         ShiftNovelty novelty = line.novelty();
         if (novelty == null) {
-            return DayStaffNovelty.none();
+            return DayStaff.Novelty.none();
         }
         UUID other = line.otherWorkerId();
         ScheduleWorkerInfo otherWorker = other == null ? null : workers.get(other);
-        return new DayStaffNovelty(novelty.getType(), other, otherWorker == null ? null : otherWorker.fullName(),
+        return new DayStaff.Novelty(novelty.getType(), other, otherWorker == null ? null : otherWorker.fullName(),
                 novelty.getReason());
     }
 
-    private static int firstStartHour(DayStaffMember member) {
+    private static int firstStartHour(DayStaff.Member member) {
         return member.segments().isEmpty() ? Integer.MAX_VALUE : member.segments().get(0).startHour();
     }
 }

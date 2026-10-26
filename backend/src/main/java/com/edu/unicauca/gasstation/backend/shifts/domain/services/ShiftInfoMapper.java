@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import java.util.List;

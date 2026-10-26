@@ -9,7 +9,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.models.*;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.SalesTargetService;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.config.SecurityConfig;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.*;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.math.BigDecimal;

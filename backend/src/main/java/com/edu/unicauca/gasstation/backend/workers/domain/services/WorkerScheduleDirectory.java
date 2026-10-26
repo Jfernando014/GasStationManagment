@@ -1,10 +1,12 @@
 package com.edu.unicauca.gasstation.backend.workers.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.Worker;
+import com.edu.unicauca.gasstation.backend.workers.domain.models.WorkerFilter;
 import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRepository;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,6 +30,14 @@ public class WorkerScheduleDirectory implements ScheduleWorkerDirectory {
         return workerRepository.findAllByIds(workerIds).stream()
                 .map(WorkerScheduleDirectory::toInfo)
                 .collect(Collectors.toMap(ScheduleWorkerInfo::id, info -> info));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScheduleWorkerInfo> getActiveWorkers() {
+        return workerRepository.findAll(new WorkerFilter(true, null, null)).stream()
+                .map(WorkerScheduleDirectory::toInfo)
+                .toList();
     }
 
     private static ScheduleWorkerInfo toInfo(Worker worker) {
