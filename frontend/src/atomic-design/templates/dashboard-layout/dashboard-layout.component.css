@@ -14,3 +14,127 @@
   :host(.statistics-mobile-layout) .status-capsule-badge { display: none; }
   :host(.statistics-mobile-layout) .dashboard-scroll-viewport { padding-right: 0; }
 }
+
+/* ==========================================================================
+   BARRA LATERAL CONTRAÍBLE · el logo la abre y la cierra, el contenido
+   de la derecha toma el ancho que suelta (es flex: 1).
+   ========================================================================== */
+.app-floating-sidebar {
+  transition: width var(--duration-normal) var(--spring), padding var(--duration-normal) var(--spring),
+    background-color var(--duration-normal) ease;
+  overflow: hidden;
+}
+
+/* El logo es el disparador: botón de ancho completo que no cambia de aspecto */
+.sidebar-brand-box {
+  position: relative;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  border-radius: var(--radius-md);
+  transition: background-color var(--duration-fast) ease;
+}
+
+.sidebar-brand-box:hover { background-color: var(--surface-navy-hover); }
+.sidebar-brand-box:active .brand-logo-tile { transform: scale(0.94); }
+.brand-logo-tile { position: relative; transition: transform var(--duration-fast) var(--spring); }
+
+/* Chevron que aparece sobre el logo al pasar el cursor: dice que se puede contraer */
+.brand-logo-switch {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease, transform var(--duration-normal) var(--spring);
+}
+
+.sidebar-brand-box:hover .brand-logo-switch,
+.sidebar-brand-box:focus-visible .brand-logo-switch { opacity: 1; }
+:host(.sidebar-collapsed) .brand-logo-switch { transform: rotate(180deg); }
+
+/* Mientras el ancho se anima, el texto no debe reacomodarse en varias líneas */
+.btn-prefix-stack span, .sub-item-link, .sidebar-bottom-pill { white-space: nowrap; }
+
+.brand-meta-group, .brand-name-text { min-width: 0; }
+.brand-name-text span:first-child, .brand-desc-text { white-space: nowrap; }
+
+/* ---- Estado contraído ---- */
+:host(.sidebar-collapsed) .app-floating-sidebar { width: 78px; padding: 22px 13px; }
+
+:host(.sidebar-collapsed) .sidebar-brand-box { justify-content: center; gap: 0; padding: 2px 0; }
+:host(.sidebar-collapsed) .brand-meta-group {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.brand-meta-group { transition: opacity var(--duration-fast) ease, width var(--duration-normal) var(--spring); }
+
+/* Las etiquetas de sección se vuelven una línea divisoria */
+.nav-label-pill { overflow: hidden; white-space: nowrap; transition: padding var(--duration-normal) var(--spring); }
+:host(.sidebar-collapsed) .nav-label-pill {
+  height: 1px;
+  padding: 0;
+  margin: 14px 10px 10px;
+  font-size: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 1px;
+}
+
+:host(.sidebar-collapsed) .sidebar-action-btn { justify-content: center; padding: 11px 0; }
+:host(.sidebar-collapsed) .btn-prefix-stack { gap: 0; }
+:host(.sidebar-collapsed) .btn-prefix-stack span,
+:host(.sidebar-collapsed) .active-notch,
+:host(.sidebar-collapsed) .chevron-arrow,
+:host(.sidebar-collapsed) .jr-nav-chip,
+:host(.sidebar-collapsed) .alert-counter-badge,
+:host(.sidebar-collapsed) .bottom-pill-text { display: none; }
+
+/* El punto del turno activo se mantiene visible como marca sobre el icono */
+:host(.sidebar-collapsed) .sidebar-action-btn.active { box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35); }
+
+/* Los submenús no caben: se cierran solos y el primer clic en el grupo expande la barra */
+:host(.sidebar-collapsed) .collapsible-sub-menu { max-height: 0; margin-bottom: 0; }
+
+:host(.sidebar-collapsed) .sidebar-bottom-pill { justify-content: center; padding: 10px 0; }
+
+/* Al expandir, los textos entran con un desvanecido corto para que no se vean recortados */
+:host(:not(.sidebar-collapsed)) .btn-prefix-stack span,
+  :host(:not(.sidebar-collapsed)) .sub-item-link,
+  :host(:not(.sidebar-collapsed)) .bottom-pill-text,
+  :host(:not(.sidebar-collapsed)) .brand-meta-group {
+  animation: sidebar-label-in var(--duration-normal) ease 60ms both;
+}
+
+@keyframes sidebar-label-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Nombre de la ruta al lado del icono mientras está contraída ---- */
+.sidebar-nav-tip {
+  position: fixed;
+  z-index: 60;
+  padding: 7px 11px;
+  border-radius: 9px;
+  background-color: var(--surface-navy);
+  color: var(--surface-navy-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(-50%);
+  box-shadow: 0 10px 26px rgba(11, 25, 44, 0.3);
+  animation: sidebar-tip-in 120ms var(--spring) both;
+}
+
+@keyframes sidebar-tip-in { from { opacity: 0; transform: translate(-4px, -50%); } to { opacity: 1; transform: translateY(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-floating-sidebar, .brand-meta-group, .nav-label-pill, .brand-logo-tile, .brand-logo-switch { transition: none; }
+  .sidebar-nav-tip, :host(:not(.sidebar-collapsed)) .btn-prefix-stack span { animation: none; }
+}

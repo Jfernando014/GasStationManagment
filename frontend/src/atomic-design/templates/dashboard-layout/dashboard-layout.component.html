@@ -4,26 +4,40 @@
   <aside #sidebar class="app-floating-sidebar" id="dashboard-sidebar" [class.mobile-open]="mobileMenuOpen()">
     <button type="button" class="mobile-menu-close" aria-label="Cerrar menú" (click)="closeMenu()">✕</button>
 
-    <!-- Encabezado de Marca -->
-    <div class="sidebar-brand-box jr-brand-inicio" routerLink="/" title="Ir al inicio" tabindex="0">
-      <div class="brand-logo-tile">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <!-- Encabezado de Marca · también contrae y expande la barra -->
+    <button
+      type="button"
+      class="sidebar-brand-box jr-brand-inicio"
+      id="sidebar-brand"
+      aria-controls="dashboard-sidebar"
+      [attr.aria-expanded]="!sidebarCollapsed()"
+      [attr.title]="sidebarCollapsed() ? 'Expandir el menú' : 'Contraer el menú'"
+      (click)="toggleSidebar()">
+      <span class="brand-logo-tile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
           <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
           <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <circle cx="10" cy="9" r="2" />
         </svg>
-      </div>
-      <div class="brand-meta-group">
-        <div class="brand-name-text">
+        <span class="brand-logo-switch" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </span>
+      </span>
+      <span class="brand-meta-group">
+        <span class="brand-name-text">
           <span>EDS Bellavista</span>
           <span class="brand-live-dot"></span>
-        </div>
+        </span>
         <span class="brand-desc-text">Gestión Operativa y Admin</span>
-      </div>
-    </div>
+      </span>
+      <span class="jr-sr">{{ sidebarCollapsed() ? 'Expandir el menú lateral' : 'Contraer el menú lateral' }}</span>
+    </button>
 
     <!-- Scroll de Módulos y Submódulos -->
-    <div class="sidebar-nav-scroll">
+    <div class="sidebar-nav-scroll" (mouseover)="onNavPointer($event)" (focusin)="onNavPointer($event)"
+      (mouseleave)="hideNavTip()" (focusout)="hideNavTip()">
       <div class="nav-label-pill">General</div>
       <button class="sidebar-action-btn" routerLink="/" routerLinkActive="active"
         [routerLinkActiveOptions]="{exact: true}">
@@ -72,8 +86,8 @@
         <span class="active-notch"></span>
       </button>
 
-      <div class="collapsible-group open">
-        <button class="sidebar-action-btn" type="button">
+      <div class="collapsible-group" [class.open]="personalOpen()">
+        <button class="sidebar-action-btn" type="button" [attr.aria-expanded]="personalOpen()" (click)="togglePersonal()">
           <div class="btn-prefix-stack">
             <svg class="sidebar-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -134,7 +148,7 @@
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/rendimiento"
             routerLinkActive="active">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
-            routerLinkActive="active">Incentivos</a>
+            routerLinkActive="active" #incentivesNav="routerLinkActive">Incentivos</a>
         </div>
       </div>
 
@@ -169,12 +183,16 @@
     </div>
 
     <!-- Pie de página del sidebar -->
-    <div class="sidebar-bottom-pill">
+    <div class="sidebar-bottom-pill" [attr.title]="sidebarCollapsed() ? 'Sede Popayán · En línea' : null">
       <span class="dot-green-pulse"></span>
-      <span>Sede Popayán · En línea</span>
+      <span class="bottom-pill-text">Sede Popayán · En línea</span>
     </div>
 
   </aside>
+
+  @if (navTip(); as tip) {
+    <span class="sidebar-nav-tip" role="tooltip" [style.left.px]="tip.left" [style.top.px]="tip.top">{{ tip.text }}</span>
+  }
 
   <!-- 2. CANVAS DERECHO FLOTANTE -->
   <div class="canvas-right-stack">
@@ -190,7 +208,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 
