@@ -1,0 +1,14 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+:host(.tag--green) { background: var(--semantic-green-subtle); color: var(--semantic-green-strong); }
+:host(.tag--blue) { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
+:host(.tag--gray) { background: var(--surface-subtle); color: var(--text-muted); }
