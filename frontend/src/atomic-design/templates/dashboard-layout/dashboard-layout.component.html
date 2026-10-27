@@ -148,7 +148,7 @@
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/rendimiento"
             routerLinkActive="active">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
-            routerLinkActive="active">Incentivos</a>
+            routerLinkActive="active" #incentivesNav="routerLinkActive">Incentivos</a>
         </div>
       </div>
 
@@ -208,7 +208,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 

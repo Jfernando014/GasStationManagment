@@ -47,6 +47,19 @@ export const routes: Routes = [
         loadComponent: () => import('../features/statistics/pages/statistics-page.component').then(m => m.StatisticsPageComponent)
       },
       {
+        path: 'resultados/incentivos',
+        loadComponent: () => import('../features/incentives/pages/incentives-page/incentives-page.component')
+          .then(m => m.IncentivesPageComponent),
+        children: [
+          {
+            path: 'aditivos',
+            loadComponent: () => import('../features/incentives/pages/additives-tab/additives-tab.component')
+              .then(m => m.AdditivesTabComponent)
+          },
+          { path: '', pathMatch: 'full', redirectTo: 'aditivos' }
+        ]
+      },
+      {
 
         path: 'configuracion/tanques',
         loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
