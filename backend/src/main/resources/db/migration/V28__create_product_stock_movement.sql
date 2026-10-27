@@ -1,7 +1,7 @@
 CREATE TABLE product_stock_movement
 (
     id            BIGSERIAL PRIMARY KEY,
-    product_id    BIGINT      NOT NULL REFERENCES products (id),
+    product_id    BIGINT      NOT NULL REFERENCES product (id),
     journal_date  DATE        NOT NULL,
     location      VARCHAR(10) NOT NULL,
     movement_type VARCHAR(12) NOT NULL,
