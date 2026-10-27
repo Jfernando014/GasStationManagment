@@ -133,10 +133,13 @@ class ProductStockServiceTest {
     @Test
     void initialStockRejectsACounterThatWasAlreadyInitialized() {
         givenUsableProduct();
+        when(movementRepository.existsInitial(1L, OFFICE)).thenReturn(false);
         when(movementRepository.existsInitial(1L, COUNTER)).thenReturn(true);
 
         assertThatThrownBy(() -> service.registerInitial(1L, 1, 1, DATE))
-                .isInstanceOf(StockConflictException.class);
+                .isInstanceOf(StockConflictException.class)
+                .hasMessage("The initial stock of the product was already registered");
+        verify(movementRepository, never()).saveAll(any());
     }
 
     // ---------- common rules ----------
