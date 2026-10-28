@@ -2,7 +2,8 @@ package com.edu.unicauca.gasstation.backend.sales.infrastructure;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.calculation.DistributionCalculation.Assignment;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.adapters.PublicShiftCoverageResolver;
-import com.edu.unicauca.gasstation.backend.shifts.*;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.*;
+import com.edu.unicauca.gasstation.backend.shifts.spi.*;
 import java.time.LocalDate;
 import java.util.*;
 import org.junit.jupiter.api.Test;

@@ -1,0 +1,179 @@
+/* Paso 1 · Personal del día. Solo tokens de tokens.css. */
+
+.ds {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* Las filas se reacomodan según el ancho del contenido, no de la ventana (la barra lateral le quita espacio) */
+  container-type: inline-size;
+}
+
+/* ---- Cabecera ---- */
+.ds-head { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
+.ds-title { display: flex; flex-direction: column; gap: 2px; }
+.ds-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-primary-strong); }
+.ds-title h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-heading); }
+.ds-date { margin: 0; font-size: 13px; color: var(--text-muted); }
+
+.ds-state {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--radius-pill);
+  font-size: 12.5px; font-weight: 700;
+}
+.ds-state--pending { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
+.ds-state--ok { background: var(--semantic-green-subtle); color: var(--semantic-green-strong); }
+.ds-state--warn { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); }
+.ds-state--locked { background: var(--surface-subtle); color: var(--text-muted); }
+
+.ds-summary { margin: 0 0 0 auto; font-size: 13px; color: var(--text-muted); }
+.ds-summary b { font-size: 15px; color: var(--text-heading); }
+.ds-summary-nov { color: var(--brand-primary-strong); font-weight: 600; }
+
+.ds-note, .ds-warning {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0;
+  padding: 10px 14px; border-radius: var(--radius-md);
+  font-size: 12.5px; line-height: 1.45;
+  animation: ds-in var(--duration-normal) var(--spring) both;
+}
+.ds-note { background: var(--surface-subtle); color: var(--text-body); }
+.ds-warning { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); font-weight: 600; }
+.ds-warning svg { flex-shrink: 0; margin-top: 1px; }
+.ds-warnings { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+.ds-card { padding: 0; box-shadow: var(--shadow-card); overflow: hidden; }
+
+/* ---- Esqueleto ---- */
+.ds-skeleton { display: flex; flex-direction: column; gap: 8px; }
+.ds-skel { height: 64px; border-radius: var(--radius-md); background: var(--surface-subtle); animation: ds-pulse 1.2s ease-in-out infinite; animation-delay: calc(var(--r, 0) * 90ms); }
+
+/* ---- Lista de personas ---- */
+.ds-people-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border-main);
+  font-size: 13px; color: var(--text-heading);
+}
+
+/* Las horas del día operativo (06:00 → 06:00) se alinean con las barras de abajo */
+.ds-axis-legend {
+  display: flex; justify-content: space-between;
+  width: 240px; flex-shrink: 0;
+  font-size: 10.5px; color: var(--text-light); font-variant-numeric: tabular-nums;
+}
+
+.ds-list { margin: 0; padding: 0; list-style: none; }
+
+.ds-person {
+  display: grid;
+  grid-template-columns: auto minmax(150px, 1fr) 128px 240px auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--surface-subtle);
+  animation: ds-row-in var(--duration-normal) var(--spring) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  transition: background-color var(--duration-normal) var(--spring);
+}
+.ds-person:last-child { border-bottom: 0; }
+.ds-person.is-flash { background: var(--brand-primary-subtle); }
+
+.ds-person-who { display: flex; flex-direction: column; min-width: 0; }
+.ds-person-who b { font-size: 14px; font-weight: 600; color: var(--text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-person-who span { font-size: 12px; color: var(--text-muted); }
+
+.ds-person-shift { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.ds-person-shift small { font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* ---- Barra del día operativo, dentro de la fila de cada persona ---- */
+.ds-track { position: relative; height: 10px; border-radius: var(--radius-pill); background: var(--surface-subtle); }
+.ds-bar {
+  position: absolute; top: 0; bottom: 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-navy);
+  transform-origin: left center;
+  animation: ds-grow var(--duration-normal) var(--spring) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.ds-bar--support { background: var(--brand-primary); }
+
+.ds-person-end { display: flex; justify-content: flex-end; }
+
+.ds-nov-tag {
+  display: inline-flex; flex-direction: column; gap: 1px;
+  padding: 4px 10px; border-radius: 8px;
+  background: var(--brand-primary-subtle); color: var(--brand-primary-strong);
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.ds-nov-tag small { font-weight: 500; font-size: 11px; color: var(--text-muted); }
+
+/* ---- No trabajan ---- */
+.ds-off { padding: 12px 16px 14px; border-top: 1px solid var(--border-main); background: var(--canvas-inner); }
+.ds-off-title { display: block; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.ds-off-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ds-off-person {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; border-radius: 10px; background: var(--surface-card);
+  transition: background-color var(--duration-normal) var(--spring);
+}
+.ds-off-person.is-flash { background: var(--brand-primary-subtle); }
+.ds-off-who { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; }
+.ds-off-who b { font-size: 13.5px; font-weight: 600; color: var(--text-body); }
+.ds-off-who small { font-size: 11.5px; color: var(--text-muted); }
+
+.ds-inline-error, .ds-panel-error { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--semantic-red-strong); }
+.ds-panel-error {
+  margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--semantic-red-subtle); animation: ds-in var(--duration-normal) var(--spring) both;
+}
+
+/* ---- Pie con la confirmación ---- */
+.ds-footer {
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 2px; padding: 12px 16px;
+  background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+.ds-footer-note { font-size: 12.5px; color: var(--text-muted); }
+
+@keyframes ds-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes ds-row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes ds-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ds-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-note, .ds-warning, .ds-person, .ds-bar, .ds-panel-error, .ds-skel { animation: none; }
+}
+
+/* Angosto: la barra de horas sobra y la fila se reacomoda en dos líneas */
+@container (max-width: 860px) {
+  .ds-axis-legend { display: none; }
+  .ds-person {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'av who shift' '. track track' '. end end';
+    row-gap: 8px;
+  }
+  .ds-person > app-avatar { grid-area: av; }
+  .ds-person-who { grid-area: who; }
+  .ds-person-shift { grid-area: shift; align-items: flex-end; }
+  .ds-track { grid-area: track; }
+  .ds-person-end { grid-area: end; }
+  .ds-person-end:empty { display: none; }
+}
+
+@container (max-width: 560px) {
+  /* El nombre se lee completo: el turno y la barra bajan a sus propias líneas */
+  .ds-person {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'av who' '. shift' '. track' '. end';
+  }
+  .ds-person-who b { white-space: normal; }
+  .ds-person-shift { flex-direction: row; align-items: baseline; gap: 8px; }
+}
+
+@container (max-width: 520px) {
+  .ds-summary { margin-left: 0; width: 100%; }
+  .ds-footer { flex-wrap: wrap; }
+  .ds-footer-note { width: 100%; }
+  .ds-confirm { width: 100%; }
+  .ds-off-person { flex-wrap: wrap; }
+}

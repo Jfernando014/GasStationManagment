@@ -1,0 +1,55 @@
+<div class="pg-scroll">
+  <table class="pg" aria-label="Malla propuesta, todavía sin guardar">
+    <thead>
+      <tr>
+        <th scope="col" class="pg-name">Titular</th>
+        @for (col of columns(); track col.date) {
+          <th scope="col" class="pg-day" [class.is-sunday]="col.sunday" [class.is-skipped]="col.skipped"><b>{{ col.day }}</b><small>{{ col.weekday }}</small></th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.workerId; let r = $index) {
+        <tr>
+          <th scope="row" class="pg-name">{{ row.name }}</th>
+          @for (cell of row.cells; track $index; let c = $index) {
+            <td>
+              @if (cell) {
+                <span
+                  role="img"
+                  [class]="'pg-cell pg-cell--' + cell.status"
+                  [style.--delay]="delay(r, c)"
+                  [attr.title]="cell.label"
+                  [attr.aria-label]="cell.label">
+                  <app-shift-chip variant="cell" [code]="cell.code" />
+                  @if (cell.status === 'SKIPPED_NOVELTY') {
+                    <svg class="pg-skip" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M5.6 5.6l12.8 12.8" /></svg>
+                  }
+                </span>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      <tr>
+        <th scope="row" class="pg-name">Cobertura</th>
+        @for (col of columns(); track col.date) {
+          <td>
+            <span class="pg-cov" role="img" [class.is-bad]="!col.coverage.covered" [attr.title]="col.coverageTip" [attr.aria-label]="col.coverageTip">
+              {{ col.coverage.covered ? '✓' : '×' }}
+            </span>
+          </td>
+        }
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<div class="pg-legend" aria-hidden="true">
+  <span><i class="pg-sw"></i>Se escribe</span>
+  <span><i class="pg-sw pg-sw--overwrite"></i>Se sobrescribe</span>
+  <span><i class="pg-sw pg-sw--kept"></i>A mano, se conserva</span>
+  <span><i class="pg-sw pg-sw--skipped"></i>Con novedad, se omite</span>
+  <span><i class="pg-sw pg-sw--same"></i>Sin cambio</span>
+</div>

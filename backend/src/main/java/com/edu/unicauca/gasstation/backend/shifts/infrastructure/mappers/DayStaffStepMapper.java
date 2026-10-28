@@ -1,10 +1,9 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffAbsentee;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffMember;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffStepResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RegisterNoveltyRequest;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftSchedule;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffDtos.DayStaffStepResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffDtos.RegisterNoveltyRequest;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ShiftSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayStaffStep;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.NoveltyDraft;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftNovelty;
@@ -43,7 +42,7 @@ public class DayStaffStepMapper {
         return requests == null ? List.of() : requests.stream().map(this::toDraft).toList();
     }
 
-    private static DayStaffStepResponse.Member toMember(DayStaffMember member) {
+    private static DayStaffStepResponse.Member toMember(DayStaff.Member member) {
         return new DayStaffStepResponse.Member(
                 member.workerId(),
                 member.fullName(),
@@ -62,7 +61,7 @@ public class DayStaffStepMapper {
                 member.novelty().reason());
     }
 
-    private static DayStaffStepResponse.Absentee toAbsentee(DayStaffAbsentee absentee) {
+    private static DayStaffStepResponse.Absentee toAbsentee(DayStaff.Absentee absentee) {
         return new DayStaffStepResponse.Absentee(absentee.workerId(), absentee.fullName(), absentee.gridCode(),
                 absentee.type(), absentee.reason());
     }

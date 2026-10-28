@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeDtos.ShiftCodeResponse;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftCatalogService;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftCodeMapper;
 import io.swagger.v3.oas.annotations.Operation;

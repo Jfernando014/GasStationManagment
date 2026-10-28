@@ -1,7 +1,5 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
@@ -10,17 +8,13 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidDateRangeException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidRotationLengthException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.PastDateException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.RotationNotAllowedException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ScheduleWorkerNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
-import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftAssignmentRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -39,8 +33,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Use cases of the monthly shift schedule: generate the 2x2 rotation of a titular, save or edit one day,
- * and read the schedule of a range with its daily coverage. Returns domain results; the controller converts them
+ * Use cases of the monthly shift schedule: save or edit one day, assign a code to a range, and read the schedule of
+ * a range with its daily coverage. Every change made here is manual; the automatic rotation lives in
+ * {@link ShiftRotationService}. Returns domain results; the controller converts them
  * to DTOs.
  *
  * <p>Workers are read through {@link ScheduleWorkerDirectory}, implemented by the {@code workers} module, so this
@@ -53,30 +48,23 @@ public class ShiftScheduleService {
     /** Time zone of the station. "Today" is always calculated with it; the server may run in UTC. */
     private static final ZoneId STATION_ZONE = ZoneId.of("America/Bogota");
 
-    private static final String TITULAR = "TITULAR";
+    /** Longest range assigned at once: two months, so a typo in a date cannot rewrite a whole year. */
+    private static final int MAX_RANGE_DAYS = 62;
 
-    /** 2x2 rotation of a titular, repeated from the start date: 2 days, 2 nights, 2 days off. */
-    private static final List<String> ROTATION_PATTERN = List.of("DIA", "DIA", "NOCHE", "NOCHE", "DESCANSO", "DESCANSO");
-
-    /**
-     * Longest rotation, counted from its start date. Bounds a single request: a typo in the year would otherwise
-     * create thousands of rows in one transaction.
-     */
-    private static final int MAX_ROTATION_MONTHS = 3;
+    private static final String REST = "DESCANSO";
 
     private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final ShiftCodeRepository shiftCodeRepository;
-    private final RoleRepository roleRepository;
     private final ScheduleWorkerDirectory scheduleWorkerDirectory;
 
     /**
      * Saves the shift code of a worker on one day, replacing the one the day had (code and note).
      *
-     * @throws PastDateException               if the date is before today
-     * @throws ScheduleWorkerNotFoundException if the worker does not exist
-     * @throws WorkerNotAvailableException     if the worker is inactive
-     * @throws ShiftCodeNotFoundException      if the code does not exist or is not active
-     * @throws ShiftRoleMismatchException      if the code belongs to a role different from the worker's
+     * @throws ShiftException {@code PAST_DATE} if the date is before today
+     * @throws ShiftException {@code WORKER_NOT_FOUND} if the worker does not exist
+     * @throws ShiftException {@code WORKER_INACTIVE} if the worker is inactive
+     * @throws ShiftException {@code SHIFT_CODE_NOT_FOUND} if the code does not exist or is not active
+     * @throws ShiftException {@code ROLE_MISMATCH} if the code belongs to a role different from the worker's
      *                                         (DESCANSO has no role and is valid for everyone)
      */
     @Transactional
@@ -85,10 +73,10 @@ public class ShiftScheduleService {
         ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
         ShiftCode code = shiftCodeRepository.findByCode(shiftCode)
                 .filter(ShiftCode::isActive)
-                .orElseThrow(() -> new ShiftCodeNotFoundException(shiftCode));
+                .orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, shiftCode));
         Role codeRole = code.getRole();
         if (codeRole != null && !codeRole.getId().equals(worker.roleId())) {
-            throw new ShiftRoleMismatchException(code.getCode(), codeRole.getName());
+            throw new ShiftException(ShiftError.ROLE_MISMATCH, code.getCode(), codeRole.getName());
         }
 
         ShiftAssignment assignment = shiftAssignmentRepository.findByWorkerIdAndWorkDate(workerId, date)
@@ -103,6 +91,60 @@ public class ShiftScheduleService {
     }
 
     /**
+     * Assigns the same code to a worker on every day of a range, replacing what each day had. Every row is manual, so
+     * the automatic rotation keeps it. With {@code leaveSundaysAsRest} the Sundays of the range get DESCANSO instead.
+     *
+     * @throws ShiftException {@code INVALID_DATE_RANGE} if {@code to} is before {@code from}
+     * @throws ShiftException {@code INVALID_RANGE} if the range is longer than 62 days
+     * @throws ShiftException {@code PAST_DATE} if {@code from} is before today
+     * @throws ShiftException {@code WORKER_NOT_FOUND} if the worker does not exist
+     * @throws ShiftException {@code WORKER_INACTIVE} if the worker is inactive
+     * @throws ShiftException {@code SHIFT_CODE_NOT_FOUND} if the code does not exist or is not active
+     * @throws ShiftException {@code ROLE_MISMATCH} if the code belongs to a role different from the worker's
+     */
+    @Transactional
+    public ScheduleChange assignRange(UUID workerId, LocalDate from, LocalDate to, String shiftCode, String note,
+                                      boolean leaveSundaysAsRest) {
+        requireValidRange(from, to);
+        if (ChronoUnit.DAYS.between(from, to) + 1 > MAX_RANGE_DAYS) {
+            throw new ShiftException(ShiftError.INVALID_RANGE, "El rango no puede superar " + MAX_RANGE_DAYS + " días");
+        }
+        requireNotPast(from);
+        ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
+        ShiftCode code = requireCodeForWorker(shiftCode, worker);
+        ShiftCode rest = leaveSundaysAsRest ? requireCodeForWorker(REST, worker) : null;
+
+        Map<LocalDate, ShiftAssignment> existing = shiftAssignmentRepository.findByWorkDateBetween(from, to).stream()
+                .filter(assignment -> assignment.getWorkerId().equals(workerId))
+                .collect(Collectors.toMap(ShiftAssignment::getWorkDate, Function.identity()));
+        List<ShiftAssignment> rows = new ArrayList<>();
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+            ShiftCode dayCode = rest != null && date.getDayOfWeek() == DayOfWeek.SUNDAY ? rest : code;
+            ShiftAssignment assignment = existing.get(date);
+            if (assignment == null) {
+                assignment = new ShiftAssignment(workerId, date, dayCode, note);
+            } else {
+                assignment.change(dayCode, note);
+            }
+            rows.add(assignment);
+        }
+        shiftAssignmentRepository.saveAll(rows);
+        return new ScheduleChange(rows.size(), uncoveredDates(from, to));
+    }
+
+    /** The code exists, is active and belongs to the worker's role; DESCANSO has no role and is valid for everyone. */
+    private ShiftCode requireCodeForWorker(String shiftCode, ScheduleWorkerInfo worker) {
+        ShiftCode code = shiftCodeRepository.findByCode(shiftCode)
+                .filter(ShiftCode::isActive)
+                .orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, shiftCode));
+        Role codeRole = code.getRole();
+        if (codeRole != null && !codeRole.getId().equals(worker.roleId())) {
+            throw new ShiftException(ShiftError.ROLE_MISMATCH, code.getCode(), codeRole.getName());
+        }
+        return code;
+    }
+
+    /**
      * Schedule of a range with its daily coverage. Returns what is stored, past days included.
      *
      * <p>Only active workers with at least one shift in the range are shown; rows of inactive workers are kept but
@@ -110,7 +152,7 @@ public class ShiftScheduleService {
      *
      * @param workerId only this worker; null for all
      * @param period   only codes of this period; DESCANSO has no period and is not shown when filtering; null for all
-     * @throws InvalidDateRangeException if {@code to} is before {@code from}
+     * @throws ShiftException {@code INVALID_DATE_RANGE} if {@code to} is before {@code from}
      */
     @Transactional(readOnly = true)
     public ScheduleView getSchedule(LocalDate from, LocalDate to, UUID workerId, ShiftPeriod period) {
@@ -133,77 +175,25 @@ public class ShiftScheduleService {
         return new ScheduleView(from, to, workers, ScheduleCoverageCalculator.coverage(from, to, active.assignments()));
     }
 
-    /**
-     * Generates the 2x2 rotation (DIA, DIA, NOCHE, NOCHE, DESCANSO, DESCANSO) of a titular from {@code startDate},
-     * replacing everything the worker had in the range. The exact day code (DIA6, 9-6) is changed afterwards by
-     * editing that day. Rows of the rotation have no note.
-     *
-     * <p>The range covers at least one full cycle (shorter changes are made day by day) and at most a quarter from
-     * {@code startDate}.
-     *
-     * @throws PastDateException               if {@code startDate} is before today
-     * @throws InvalidDateRangeException       if {@code endDate} is before {@code startDate}
-     * @throws InvalidRotationLengthException  if the range is shorter than one cycle or longer than a quarter
-     * @throws ScheduleWorkerNotFoundException if the worker does not exist
-     * @throws WorkerNotAvailableException     if the worker is inactive
-     * @throws RotationNotAllowedException     if the worker is not TITULAR
-     */
-    @Transactional
-    public ScheduleChange generateRotation(UUID workerId, LocalDate startDate, LocalDate endDate) {
-        requireNotPast(startDate);
-        requireValidRange(startDate, endDate);
-        requireRotationLength(startDate, endDate);
-        ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
-        boolean titular = roleRepository.findByName(TITULAR)
-                .map(role -> role.getId().equals(worker.roleId()))
-                .orElse(false);
-        if (!titular) {
-            throw new RotationNotAllowedException();
-        }
-
-        // Immediate JPQL DELETE before the INSERTs, so the unique (worker, date) constraint is not broken
-        shiftAssignmentRepository.deleteByWorkerInRange(workerId, startDate, endDate);
-
-        Map<String, ShiftCode> codes = Set.copyOf(ROTATION_PATTERN).stream()
-                .collect(Collectors.toMap(Function.identity(), code -> shiftCodeRepository.findByCode(code)
-                        .orElseThrow(() -> new ShiftCodeNotFoundException(code))));
-        List<ShiftAssignment> rotation = new ArrayList<>();
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            int position = (int) (ChronoUnit.DAYS.between(startDate, date) % ROTATION_PATTERN.size());
-            rotation.add(new ShiftAssignment(workerId, date, codes.get(ROTATION_PATTERN.get(position)), null));
-        }
-        shiftAssignmentRepository.saveAll(rotation);
-        return new ScheduleChange(rotation.size(), uncoveredDates(startDate, endDate));
-    }
-
     private void requireNotPast(LocalDate date) {
         if (date.isBefore(LocalDate.now(STATION_ZONE))) {
-            throw new PastDateException(date);
+            throw new ShiftException(ShiftError.PAST_DATE, date);
         }
     }
 
     private static void requireValidRange(LocalDate start, LocalDate end) {
         if (end.isBefore(start)) {
-            throw new InvalidDateRangeException(start, end);
-        }
-    }
-
-    /** At least one full cycle of the pattern and at most a quarter, both counted from the start date. */
-    private static void requireRotationLength(LocalDate startDate, LocalDate endDate) {
-        LocalDate minEndDate = startDate.plusDays(ROTATION_PATTERN.size() - 1L);
-        LocalDate maxEndDate = startDate.plusMonths(MAX_ROTATION_MONTHS).minusDays(1);
-        if (endDate.isBefore(minEndDate) || endDate.isAfter(maxEndDate)) {
-            throw new InvalidRotationLengthException(startDate, minEndDate, maxEndDate);
+            throw new ShiftException(ShiftError.INVALID_DATE_RANGE, start, end);
         }
     }
 
     private ScheduleWorkerInfo requireAvailableWorker(UUID workerId) {
         ScheduleWorkerInfo worker = scheduleWorkerDirectory.getWorkersByIds(Set.of(workerId)).get(workerId);
         if (worker == null) {
-            throw new ScheduleWorkerNotFoundException(workerId);
+            throw new ShiftException(ShiftError.WORKER_NOT_FOUND, workerId);
         }
         if (!worker.active()) {
-            throw new WorkerNotAvailableException(workerId);
+            throw new ShiftException(ShiftError.WORKER_INACTIVE, workerId);
         }
         return worker;
     }

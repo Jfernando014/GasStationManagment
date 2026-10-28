@@ -1,0 +1,154 @@
+/* Personal › Malla de turnos. Solo tokens de tokens.css. */
+
+.sp { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ---- Cabecera: título, mes y acciones en una sola franja ---- */
+.sp-head { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+.sp-title { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
+.sp-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-primary-strong); }
+.sp-title h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-heading); }
+
+.sp-month { display: flex; align-items: center; gap: 4px; padding: 3px; border: 1px solid var(--border-main); border-radius: 12px; background: var(--surface-card); }
+.sp-month-step {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--text-heading); cursor: pointer;
+  transition: background-color var(--duration-fast) var(--spring-fast);
+}
+.sp-month-step:hover { background: var(--surface-subtle); }
+.sp-month-step:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+.sp-month-label { margin: 0; min-width: 150px; text-align: center; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+
+.sp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---- Tablero: estado del mes, malla y leyenda en una sola tarjeta ---- */
+.sp-board { overflow: hidden; box-shadow: var(--shadow-card); animation: sp-in var(--duration-normal) var(--spring) both; }
+.sp-board-bar { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border-main); }
+.sp-status { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--text-heading); }
+.sp-status::before { content: ''; width: 8px; height: 8px; border-radius: var(--radius-pill); }
+.sp-status--bad::before { background: var(--semantic-red); }
+.sp-status--bad b { color: var(--semantic-red-strong); }
+.sp-status--ok::before { background: var(--semantic-green); }
+.sp-board-hint { margin-left: auto; font-size: 12.5px; color: var(--text-muted); }
+
+/* ---- Filtro activo, junto al estado del mes ---- */
+.sp-filter-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 3px 2px 10px; border-radius: var(--radius-pill);
+  background: var(--brand-primary-subtle); color: var(--brand-primary-strong);
+  font-size: 12.5px; font-weight: 600;
+  animation: sp-pill-in var(--duration-fast) var(--spring) both;
+}
+.sp-filter-off {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: inherit; cursor: pointer;
+  transition: background-color var(--duration-fast) var(--spring-fast), color var(--duration-fast) var(--spring-fast);
+}
+.sp-filter-off:hover { background: var(--brand-primary); color: var(--surface-navy); }
+.sp-filter-off:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+
+/* ---- Leyenda: desplegable de "Cómo leer la malla", en dos columnas, y filtro de la malla ---- */
+.sp-legend-wrap { position: relative; }
+
+.sp-legend-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border: 1px solid var(--border-main); border-radius: var(--radius-pill);
+  background: var(--surface-card); color: var(--text-heading);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background-color var(--duration-fast) var(--spring-fast), border-color var(--duration-fast) var(--spring-fast),
+    transform var(--duration-fast) var(--spring-fast);
+}
+.sp-legend-btn:hover { background: var(--surface-subtle); }
+.sp-legend-btn:active { transform: scale(0.97); }
+.sp-legend-btn:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+.sp-legend-btn.is-on { border-color: var(--brand-primary); background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
+.sp-legend-btn svg { opacity: 0.7; }
+.sp-legend-btn.is-on svg { opacity: 1; }
+
+.sp-legend {
+  position: absolute; z-index: 20; top: calc(100% + 8px); right: 0;
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 10px 22px;
+  width: min(92vw, 500px);
+  padding: 14px 16px; border: 1px solid var(--border-main); border-radius: var(--radius-md);
+  background: var(--surface-card); box-shadow: 0 18px 44px rgba(11, 25, 44, 0.18);
+  text-align: left;
+  animation: sp-legend-in var(--duration-normal) var(--spring) both;
+}
+.sp-leg-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sp-leg-h { margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.sp-leg-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.sp-leg-list > li { animation: sp-leg-row-in var(--duration-normal) var(--spring) both; animation-delay: calc(var(--i, 0) * 35ms + 60ms); }
+.sp-leg-list--plain > li { display: flex; align-items: center; gap: 8px; padding: 2px 4px; font-size: 11.5px; color: var(--text-body); }
+
+.sp-leg-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 3px 6px 3px 4px; border: 1px solid transparent; border-radius: 9px;
+  background: transparent; font: inherit; text-align: left; cursor: pointer;
+  transition: background-color var(--duration-fast) var(--spring-fast), border-color var(--duration-fast) var(--spring-fast),
+    transform var(--duration-fast) var(--spring-fast);
+}
+.sp-leg-btn:hover { background: var(--surface-subtle); transform: translateX(2px); }
+.sp-leg-btn:active { transform: scale(0.97); }
+.sp-leg-btn:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+.sp-leg-btn.is-on { background: var(--brand-primary-subtle); border-color: var(--brand-primary); }
+.sp-leg-btn.is-on .sp-sw { animation: sp-leg-pop var(--duration-normal) var(--spring) both; }
+.sp-leg-btn.is-none { opacity: 0.55; }
+
+.sp-leg-text { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; line-height: 1.25; }
+.sp-leg-text b { font-size: 12px; font-weight: 700; color: var(--text-heading); }
+.sp-leg-text small { font-size: 10.5px; color: var(--text-muted); }
+.sp-leg-count {
+  min-width: 22px; padding: 1px 6px; border-radius: var(--radius-pill);
+  background: var(--surface-subtle); color: var(--text-muted);
+  font-size: 10.5px; font-weight: 800; text-align: center;
+  transition: background-color var(--duration-fast) var(--spring-fast), color var(--duration-fast) var(--spring-fast);
+}
+.sp-leg-btn.is-on .sp-leg-count { background: var(--brand-primary); color: var(--surface-navy); }
+.sp-leg-foot { margin: 2px 0 0; font-size: 10.5px; color: var(--text-light); }
+
+.sp-sw { display: inline-block; flex: 0 0 auto; width: 26px; height: 20px; }
+.sp-dot { display: inline-block; flex: 0 0 auto; width: 7px; height: 7px; margin: 0 5px; border-radius: var(--radius-pill); background: var(--surface-navy); }
+.sp-past { display: inline-block; flex: 0 0 auto; width: 17px; height: 13px; border-radius: 4px; background: var(--surface-subtle); box-shadow: inset 0 0 0 1px var(--border-main); opacity: 0.7; }
+.sp-miss { flex: 0 0 auto; min-width: 17px; padding: 1px 5px; border-radius: 5px; background: var(--semantic-red-subtle); color: var(--semantic-red-strong); font-size: 10.5px; font-weight: 800; text-align: center; }
+
+/* ---- Esqueleto con forma de malla ---- */
+.sp-skeleton { display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+.sp-skel-row { display: flex; gap: 3px; animation: sp-pulse 1.2s ease-in-out infinite; animation-delay: calc(var(--r, 0) * 90ms); }
+.sp-skel { flex: 1 0 26px; height: 34px; border-radius: 7px; background: var(--surface-subtle); }
+.sp-skel--name { flex: 0 0 170px; }
+
+.sp-panel-error {
+  margin: 0 0 14px; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--semantic-red-subtle); color: var(--semantic-red-strong); font-size: 12.5px; font-weight: 600;
+}
+
+@keyframes sp-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sp-legend-in { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes sp-leg-row-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sp-leg-pop { 0% { transform: scale(0.8); } 55% { transform: scale(1.12); } 100% { transform: none; } }
+@keyframes sp-pill-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes sp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-board, .sp-skel-row, .sp-legend, .sp-leg-list > li, .sp-filter-pill { animation: none; }
+  .sp-leg-btn:hover, .sp-leg-btn:active, .sp-legend-btn:active { transform: none; }
+}
+
+@media (max-width: 720px) {
+  .sp-title { width: 100%; }
+  .sp-month { width: 100%; }
+  .sp-month-label { flex-grow: 1; min-width: 0; }
+  .sp-actions { width: 100%; }
+  .sp-actions [appButton] { flex: 1 1 auto; }
+  .sp-board { background: transparent; border: 0; box-shadow: none; overflow: visible; }
+  .sp-board-bar { padding-left: 0; padding-right: 0; background: transparent; border: 0; }
+  .sp-board-hint { margin-left: 0; }
+  .sp-legend-wrap { margin-left: auto; }
+  .sp-legend { width: min(92vw, 420px); }
+  .sp-skel--name { flex-basis: 90px; }
+}
+
+@media (max-width: 480px) {
+  .sp-legend { grid-template-columns: 1fr; }
+}

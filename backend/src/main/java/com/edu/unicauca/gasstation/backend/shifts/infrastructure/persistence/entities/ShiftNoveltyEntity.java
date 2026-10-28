@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.persistence.entities;
 
-import com.edu.unicauca.gasstation.backend.shifts.NoveltyType;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.NoveltyType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

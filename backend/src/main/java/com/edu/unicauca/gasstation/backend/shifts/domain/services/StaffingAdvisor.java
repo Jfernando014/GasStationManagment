@@ -2,7 +2,7 @@ package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
 import static com.edu.unicauca.gasstation.backend.shifts.domain.services.ScheduleCoverageCalculator.TITULAR;
 
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
@@ -68,8 +68,11 @@ final class StaffingAdvisor {
         return ScheduleCoverageCalculator.hasRole(code, TITULAR) && code.getPeriod() == period;
     }
 
-    /** Consecutive uncovered hours of the operational day, as {first hour, last hour}. */
-    private static List<int[]> uncoveredRanges(List<ShiftCode> codes) {
+    /**
+     * Consecutive uncovered hours of the operational day, as {first hour, last hour}. Also used by the rotation preview,
+     * so both screens report uncovered hours the same way.
+     */
+    static List<int[]> uncoveredRanges(List<ShiftCode> codes) {
         Set<Integer> covered = new HashSet<>();
         codes.forEach(code -> covered.addAll(code.coveredHours()));
         List<int[]> ranges = new ArrayList<>();

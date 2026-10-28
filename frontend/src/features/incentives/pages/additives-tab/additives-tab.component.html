@@ -1,0 +1,144 @@
+<header class="title-row enter">
+  <div>
+    <h1>Incentivo por unidad vendida</h1>
+    <p>Lo que gana el vendedor por cada aditivo que vende.</p>
+  </div>
+  <div class="controls">
+    <div class="date-field">
+      <button type="button" class="date-picker" (click)="openPicker(dateInput)"
+        [attr.aria-label]="'Valores al ' + dateLabel() + '. Cambiar la fecha'">
+        <span class="date-prefix">Valores al</span>
+        <span class="date-value">{{ dateLabel() }}</span>
+      </button>
+      <input #dateInput type="date" class="date-native" tabindex="-1" aria-hidden="true"
+        [value]="date()" (change)="onDateChange($event)">
+    </div>
+    @if (canManageRules()) {
+      <button #newRuleButton type="button" class="new-rule" (click)="openPanel()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        Nueva regla
+      </button>
+    }
+  </div>
+</header>
+
+<div class="past-line" [class.is-visible]="!isToday()" [attr.inert]="isToday() ? '' : null">
+  <app-tag variant="blue">{{ shortDate() }}</app-tag>
+  <span>Estás viendo lo que se pagaba ese día.</span>
+  <button type="button" class="link" (click)="backToToday()">Volver a hoy</button>
+</div>
+
+<section class="card enter enter-2" [class.is-refreshing]="loading() && rows().length > 0" [attr.aria-busy]="loading()">
+  <div class="grid head">
+    <span>Aditivo</span>
+    <span>{{ isToday() ? 'Paga hoy' : 'Pagaba ese día' }}</span>
+    <span>Desde</span>
+    <span class="head-next">Próximo cambio
+      <app-info-tooltip text="Un valor ya programado. Hasta esa fecha se sigue pagando el actual."
+        label="Qué es el próximo cambio" />
+    </span>
+    <span></span>
+  </div>
+
+  @if (loadError()) {
+    <div class="state">
+      <p>No se pudo cargar la lista.</p>
+      <button type="button" class="retry" (click)="reload()">Reintentar</button>
+    </div>
+  } @else if (rows().length === 0 && loading()) {
+    <div class="skeleton-list" aria-hidden="true">
+      @for (n of skeletonRows; track n) {
+        <div class="grid row-skeleton">
+          <span class="sk" style="width: 58%"></span>
+          <span class="sk" style="width: 64px"></span>
+          <span class="sk" style="width: 80px"></span>
+          <span class="sk" style="width: 150px"></span>
+          <span></span>
+        </div>
+      }
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="state"><p>No hay aditivos a la venta.</p></div>
+  } @else {
+    <ul class="list">
+      @for (row of rows(); track row.id) {
+        @let open = openId() === row.id;
+        @let history = histories()[row.id];
+        <li class="item" [class.is-open]="open" [attr.data-additive-id]="row.id" [style.--i]="$index">
+          <div class="grid row" (click)="toggle(row.id)">
+            <span class="name" [attr.title]="row.name">{{ row.name }}</span>
+            <span class="swap value">
+              @for (text of [row.value]; track text) {
+                <span class="swap-item" [class.is-muted]="text === '—' || text === 'Sin incentivo'"
+                  animate.enter="swap-in" animate.leave="swap-out">{{ text }}</span>
+              }
+            </span>
+            <span class="swap since">
+              @for (text of [row.since]; track text) {
+                <span class="swap-item" animate.enter="swap-in" animate.leave="swap-out">{{ text }}</span>
+              }
+            </span>
+            <span class="swap next">
+              @for (text of [row.next]; track text) {
+                <span class="swap-item" animate.enter="swap-in" animate.leave="swap-out">{{ text }}</span>
+              }
+            </span>
+            <button type="button" class="chevron" [attr.aria-expanded]="open" [attr.aria-controls]="'history-' + row.id"
+              [attr.aria-label]="(open ? 'Ocultar historial de ' : 'Ver historial de ') + row.name">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+          </div>
+
+          <div class="history" [id]="'history-' + row.id" [attr.inert]="open ? null : ''">
+            <div class="history-inner">
+              <div class="history-content">
+                @if (history) {
+                  @switch (history.status) {
+                    @case ('loading') {
+                      @for (n of skeletonLines; track n) {
+                        <div class="line line-skeleton" aria-hidden="true">
+                          <span class="sk" style="width: 110px; height: 18px"></span>
+                          <span class="sk" style="width: 60px"></span>
+                          <span class="sk" style="width: 100px"></span>
+                          <span class="sk" style="width: 40%"></span>
+                        </div>
+                      }
+                    }
+                    @case ('error') {
+                      <p class="history-note">No se pudo cargar el historial.
+                        <button type="button" class="link" (click)="loadHistory(row.id)">Reintentar</button>
+                      </p>
+                    }
+                    @case ('ready') {
+                      @for (line of history.lines; track line.key) {
+                        <div class="line" [style.--j]="$index">
+                          <app-status-step [tone]="line.tone">{{ line.label }}</app-status-step>
+                          <span class="line-value" [class.is-previous]="line.previous">{{ line.value }}</span>
+                          <span class="line-since">{{ line.since }}</span>
+                          @if (line.reason) {
+                            <span class="line-reason">{{ line.reason }}</span>
+                          } @else {
+                            <span class="line-reason is-empty">Sin motivo</span>
+                          }
+                        </div>
+                      } @empty {
+                        <p class="history-note">Este aditivo aún no tiene reglas.</p>
+                      }
+                    }
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+@if (panelOpen()) {
+  <app-new-rule-panel [preselectedId]="panelAdditiveId()" (created)="onRuleCreated($event)"
+    (closed)="onPanelClosed()" />
+}

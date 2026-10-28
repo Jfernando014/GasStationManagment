@@ -15,26 +15,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftTestData;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftOrigin;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
-import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftAssignmentRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidDateRangeException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.InvalidRotationLengthException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.PastDateException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.RotationNotAllowedException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftRoleMismatchException;
-import com.edu.unicauca.gasstation.backend.shifts.exception.WorkerNotAvailableException;
+import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftNoveltyRepository;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.time.LocalDate;
 import java.time.MonthDay;
 import java.time.YearMonth;
@@ -88,7 +84,7 @@ class ShiftScheduleServiceTest {
     private ShiftCodeRepository shiftCodeRepository;
 
     @Mock
-    private RoleRepository roleRepository;
+    private ShiftNoveltyRepository shiftNoveltyRepository;
 
     @Mock
     private ScheduleWorkerDirectory scheduleWorkerDirectory;
@@ -96,11 +92,15 @@ class ShiftScheduleServiceTest {
     @InjectMocks
     private ShiftScheduleService shiftScheduleService;
 
+    private ShiftRotationService shiftRotationService;
+
     private LocalDate today;
 
     @BeforeEach
     void setUp() {
         today = LocalDate.now(STATION_ZONE);
+        shiftRotationService = new ShiftRotationService(shiftAssignmentRepository, shiftCodeRepository,
+                shiftNoveltyRepository, scheduleWorkerDirectory);
     }
 
     // ---- assign ----
@@ -110,7 +110,7 @@ class ShiftScheduleServiceTest {
         LocalDate yesterday = today.minusDays(1);
 
         assertThatThrownBy(() -> shiftScheduleService.assign(ANA_ID, yesterday, "DIA", null))
-                .isInstanceOf(PastDateException.class)
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.PAST_DATE))
                 .hasMessage("La fecha " + yesterday + " ya pasó; solo se pueden programar turnos desde hoy");
         verifyNoInteractions(scheduleWorkerDirectory, shiftCodeRepository, shiftAssignmentRepository);
     }
@@ -120,7 +120,7 @@ class ShiftScheduleServiceTest {
         workersInDirectory(LUISA);
 
         assertThatThrownBy(() -> shiftScheduleService.assign(LUISA_ID, today, "DIA", null))
-                .isInstanceOf(WorkerNotAvailableException.class);
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.WORKER_INACTIVE));
         verify(shiftAssignmentRepository, never()).save(any());
     }
 
@@ -133,7 +133,7 @@ class ShiftScheduleServiceTest {
         when(shiftCodeRepository.findByCode("DIA")).thenReturn(Optional.of(inactiveDia));
 
         assertThatThrownBy(() -> shiftScheduleService.assign(ANA_ID, today, "DIA", null))
-                .isInstanceOf(ShiftCodeNotFoundException.class);
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.SHIFT_CODE_NOT_FOUND));
         verify(shiftAssignmentRepository, never()).save(any());
     }
 
@@ -143,7 +143,7 @@ class ShiftScheduleServiceTest {
         catalogWith("DIA");
 
         assertThatThrownBy(() -> shiftScheduleService.assign(CARLOS_ID, today, "DIA", null))
-                .isInstanceOf(ShiftRoleMismatchException.class)
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.ROLE_MISMATCH))
                 .hasMessage("El turno DIA es para el rol TITULAR y no corresponde al rol del vendedor");
         verify(shiftAssignmentRepository, never()).save(any());
     }
@@ -169,7 +169,7 @@ class ShiftScheduleServiceTest {
     @Test
     void assignReplacesCodeAndNoteOfAnExistingAssignment() {
         ShiftAssignment existing = ShiftAssignment.restore(UUID.randomUUID(), ANA_ID, today,
-                ShiftTestData.shiftCode("NOCHE"), "Anterior");
+                ShiftTestData.shiftCode("NOCHE"), "Anterior", ShiftOrigin.MANUAL);
         workersInDirectory(ANA);
         catalogWith("DIA");
         when(shiftAssignmentRepository.findByWorkerIdAndWorkDate(ANA_ID, today)).thenReturn(Optional.of(existing));
@@ -205,7 +205,7 @@ class ShiftScheduleServiceTest {
     @Test
     void getScheduleRejectsAnEndBeforeTheStart() {
         assertThatThrownBy(() -> shiftScheduleService.getSchedule(DAY_2, DAY_1, null, null))
-                .isInstanceOf(InvalidDateRangeException.class)
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.INVALID_DATE_RANGE))
                 .hasMessage("La fecha final (" + DAY_1 + ") no puede ser anterior a la fecha inicial (" + DAY_2 + ")");
     }
 
@@ -284,8 +284,8 @@ class ShiftScheduleServiceTest {
     void generateRotationRejectsLessThanOneCycleBeforeLookingUpTheWorker() {
         LocalDate start = today.plusDays(1);
 
-        assertThatThrownBy(() -> shiftScheduleService.generateRotation(ANA_ID, start, start.plusDays(4)))
-                .isInstanceOf(InvalidRotationLengthException.class)
+        assertThatThrownBy(() -> shiftRotationService.generateForWorker(ANA_ID, start, start.plusDays(4), null))
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.INVALID_ROTATION_LENGTH))
                 .hasMessage("La rotación debe cubrir al menos un ciclo completo y como máximo un trimestre: si inicia el "
                         + start + ", la fecha final debe estar entre " + start.plusDays(5) + " y "
                         + start.plusMonths(3).minusDays(1));
@@ -298,32 +298,32 @@ class ShiftScheduleServiceTest {
         LocalDate maxEnd = YearMonth.of(start.getYear() + 1, 2).atEndOfMonth().minusDays(1);
         stubRotation(start, maxEnd);
 
-        assertThat(shiftScheduleService.generateRotation(ANA_ID, start, maxEnd).saved()).isPositive();
-        assertThatThrownBy(() -> shiftScheduleService.generateRotation(ANA_ID, start, maxEnd.plusDays(1)))
-                .isInstanceOf(InvalidRotationLengthException.class);
+        assertThat(shiftRotationService.generateForWorker(ANA_ID, start, maxEnd, 0).saved()).isPositive();
+        assertThatThrownBy(() -> shiftRotationService.generateForWorker(ANA_ID, start, maxEnd.plusDays(1), 0))
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.INVALID_ROTATION_LENGTH));
     }
 
     @Test
     void generateRotationIsNotAllowedForSupportWorkers() {
         LocalDate start = today.plusDays(1);
         workersInDirectory(CARLOS);
-        when(roleRepository.findByName("TITULAR")).thenReturn(Optional.of(ShiftTestData.titularRole()));
+        activeCatalog();
 
-        assertThatThrownBy(() -> shiftScheduleService.generateRotation(CARLOS_ID, start, start.plusDays(5)))
-                .isInstanceOf(RotationNotAllowedException.class);
-        verifyNoInteractions(shiftAssignmentRepository);
+        assertThatThrownBy(() -> shiftRotationService.generateForWorker(CARLOS_ID, start, start.plusDays(5), null))
+                .isInstanceOfSatisfying(ShiftException.class, ex -> assertThat(ex.error()).isEqualTo(ShiftError.ROTATION_NOT_ALLOWED));
+        verify(shiftAssignmentRepository, never()).saveAll(any());
     }
 
     @Test
-    void generateRotationDeletesTheRangeAndSavesTheTwoByTwoPattern() {
+    void generateRotationSavesTheTwoByTwoPatternWithoutDeletingTheRange() {
         LocalDate start = today.plusDays(1);
         LocalDate end = start.plusDays(13);
         stubRotation(start, end);
 
-        ScheduleChange change = shiftScheduleService.generateRotation(ANA_ID, start, end);
+        ScheduleChange change = shiftRotationService.generateForWorker(ANA_ID, start, end, 0);
 
         InOrder order = inOrder(shiftAssignmentRepository);
-        order.verify(shiftAssignmentRepository).deleteByWorkerInRange(ANA_ID, start, end);
+        verify(shiftAssignmentRepository, never()).deleteByWorkerInRange(any(), any(), any());
         List<ShiftAssignment> rows = savedRotation(order);
         assertThat(change.saved()).isEqualTo(14);
         assertThat(rows).extracting(row -> row.getShiftCode().getCode()).containsExactly(
@@ -374,12 +374,17 @@ class ShiftScheduleServiceTest {
         when(shiftAssignmentRepository.findByWorkDateBetween(from, to)).thenReturn(rows);
     }
 
-    /** Ana is titular, the whole catalog exists and the range has no other rows (every day uncovered). */
+    /** Ana is titular, the whole catalog is active and the grid has no rows (every day uncovered). */
     private void stubRotation(LocalDate start, LocalDate end) {
         workersInDirectory(ANA);
-        when(roleRepository.findByName("TITULAR")).thenReturn(Optional.of(ShiftTestData.titularRole()));
-        catalogWith(ShiftTestData.CATALOG_CODES.toArray(String[]::new));
-        when(shiftAssignmentRepository.findByWorkDateBetween(start, end)).thenReturn(List.of());
+        activeCatalog();
+        when(shiftAssignmentRepository.findByWorkDateBetween(start.minusDays(12), end)).thenReturn(List.of());
+    }
+
+    /** The eleven codes of the catalog are active. */
+    private void activeCatalog() {
+        when(shiftCodeRepository.findActive())
+                .thenReturn(ShiftTestData.CATALOG_CODES.stream().map(ShiftTestData::shiftCode).toList());
     }
 
     @SuppressWarnings("unchecked")

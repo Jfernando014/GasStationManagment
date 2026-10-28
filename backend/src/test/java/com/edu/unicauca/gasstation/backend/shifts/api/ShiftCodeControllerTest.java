@@ -11,7 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
 import com.edu.unicauca.gasstation.backend.shifts.ShiftTestData;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftCatalogService;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftCodeMapperImpl;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -72,7 +73,7 @@ class ShiftCodeControllerTest {
 
     @Test
     void getByCodeReturnsNotFoundAsProblemDetails() throws Exception {
-        when(shiftCatalogService.getByCode("XYZ")).thenThrow(new ShiftCodeNotFoundException("XYZ"));
+        when(shiftCatalogService.getByCode("XYZ")).thenThrow(new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, "XYZ"));
 
         mockMvc.perform(get(BASE_URL + "/XYZ"))
                 .andExpect(status().isNotFound())

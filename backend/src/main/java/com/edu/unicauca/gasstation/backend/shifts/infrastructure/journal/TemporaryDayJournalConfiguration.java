@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.shifts.infrastructure.journal;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayJournalPort;
+import com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Set;

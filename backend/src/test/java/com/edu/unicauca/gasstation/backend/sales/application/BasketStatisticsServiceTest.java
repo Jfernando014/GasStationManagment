@@ -7,7 +7,8 @@ import com.edu.unicauca.gasstation.backend.sales.WorkedShiftsReadPort.WorkedShif
 import com.edu.unicauca.gasstation.backend.sales.api.dto.StatisticsChartResponse.*;
 import com.edu.unicauca.gasstation.backend.sales.domain.calculation.StatisticsPeriod;
 import com.edu.unicauca.gasstation.backend.sales.exception.StatisticsSourceException;
-import com.edu.unicauca.gasstation.backend.shifts.*;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.*;
+import com.edu.unicauca.gasstation.backend.shifts.spi.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;

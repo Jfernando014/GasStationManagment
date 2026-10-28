@@ -106,3 +106,41 @@
   border: 2px solid #dee2e6;
   color: #adb5bd;
 }
+
+/* Al completarse un paso, el círculo se rellena y la línea inferior crece: se ve qué paso acaba de cerrarse */
+.stepper li.stepper-completed .step-circle {
+  animation: stepper-fill var(--duration-normal) var(--spring) both;
+}
+
+.stepper li.stepper-completed {
+  position: relative;
+}
+
+.stepper li.stepper-completed::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--semantic-green);
+  transform-origin: left center;
+  animation: stepper-progress var(--duration-normal) var(--spring) both;
+}
+
+@keyframes stepper-fill {
+  from { transform: scale(0.7); }
+  to { transform: scale(1); }
+}
+
+@keyframes stepper-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper li.stepper-completed::after,
+  .stepper li.stepper-completed .step-circle {
+    animation: none;
+  }
+}

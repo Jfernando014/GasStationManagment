@@ -1,14 +1,11 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayJournalPort;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaff;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffAbsentee;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffMember;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffQuery;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffWarning;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory;
-import com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo;
-import com.edu.unicauca.gasstation.backend.shifts.Step1Status;
+import com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.Step1Status;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
@@ -89,33 +86,33 @@ public class DayStaffQueryService implements DayStaffQuery {
         boolean confirmed = status == Step1Status.CONFIRMED;
         // Novelties apply only once step 1 is confirmed; DESCANSO never makes a member
         DayLineup lineup = DayLineup.of(grid, confirmed ? novelties : List.of());
-        List<DayStaffMember> members = DayStaffAssembler.members(lineup, workers);
-        List<DayStaffAbsentee> absentees = confirmed ? DayStaffAssembler.absentees(lineup, workers) : List.of();
+        List<DayStaff.Member> members = DayStaffAssembler.members(lineup, workers);
+        List<DayStaff.Absentee> absentees = confirmed ? DayStaffAssembler.absentees(lineup, workers) : List.of();
         boolean noSchedule = grid.stream().noneMatch(row -> workers.containsKey(row.getWorkerId()));
         return new DayStaff(date, members, absentees, status, confirmed,
                 warnings(date, noSchedule && members.isEmpty(), lineup, workers));
     }
 
     /** NO_SCHEDULE alone when the day has nobody; otherwise the coverage warnings of the codes actually worked. */
-    private static List<DayStaffWarning> warnings(LocalDate date, boolean noSchedule, DayLineup lineup,
+    private static List<DayStaff.Warning> warnings(LocalDate date, boolean noSchedule, DayLineup lineup,
                                                   Map<UUID, ScheduleWorkerInfo> workers) {
         if (noSchedule) {
-            return List.of(DayStaffWarning.NO_SCHEDULE);
+            return List.of(DayStaff.Warning.NO_SCHEDULE);
         }
         List<ShiftAssignment> worked = lineup.lines().stream()
                 .filter(line -> workers.containsKey(line.workerId()))
                 .map(line -> new ShiftAssignment(line.workerId(), date, line.workedCode(), null))
                 .toList();
         DailyCoverage coverage = ScheduleCoverageCalculator.coverage(date, date, worked).get(0);
-        List<DayStaffWarning> warnings = new ArrayList<>();
+        List<DayStaff.Warning> warnings = new ArrayList<>();
         if (!coverage.dayCovered()) {
-            warnings.add(DayStaffWarning.DAY_TITULAR_MISSING);
+            warnings.add(DayStaff.Warning.DAY_TITULAR_MISSING);
         }
         if (!coverage.nightCovered()) {
-            warnings.add(DayStaffWarning.NIGHT_TITULAR_MISSING);
+            warnings.add(DayStaff.Warning.NIGHT_TITULAR_MISSING);
         }
         if (!coverage.supportCovered()) {
-            warnings.add(DayStaffWarning.SUPPORT_MISSING);
+            warnings.add(DayStaff.Warning.SUPPORT_MISSING);
         }
         return warnings;
     }
