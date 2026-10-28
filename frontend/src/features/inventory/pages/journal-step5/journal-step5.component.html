@@ -6,14 +6,11 @@
     </div>
     <div class="jr-p5-acciones">
       @if (completed()) {
-        <span class="jr-chip jr-chip--cerrada"><span class="jr-chip-punto"></span>Paso completado</span>
+      <span class="jr-chip jr-chip--cerrada"><span class="jr-chip-punto"></span>Paso completado</span>
       } @else if (!editable()) {
-        <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Solo lectura</span>
+      <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Solo lectura</span>
       }
-      <button
-        class="jr-btn jr-btn--pri jr-btn--sm"
-        type="button"
-        [disabled]="!canComplete()"
+      <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
         [attr.title]="completed() ? 'El paso ya está completado' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : '')"
         (click)="completeStep()">
         Marcar paso 5 completado
@@ -22,24 +19,15 @@
   </div>
 
   <div class="jr-tabs" role="tablist" aria-label="Inventario">
-    <button
-      type="button"
-      class="jr-tab"
-      role="tab"
-      [attr.aria-selected]="tab() === 'tanques'"
-      [class.is-activa]="tab() === 'tanques'"
-      (click)="tab.set('tanques')">
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'tanques'"
+      [class.is-activa]="tab() === 'tanques'" (click)="tab.set('tanques')">
       <span [class]="'jr-tab-punto ' + (allMeasured() ? 'jr-tab-punto--ok' : 'jr-tab-punto--aviso')"></span>
       Tanques
     </button>
-    <button
-      type="button"
-      class="jr-tab"
-      role="tab"
-      [attr.aria-selected]="tab() === 'lubricantes'"
-      [class.is-activa]="tab() === 'lubricantes'"
-      (click)="tab.set('lubricantes')">
-      <span [class]="'jr-tab-punto ' + (stock().some(product => product.status === 'NEGATIVE_STOCK') ? 'jr-tab-punto--error' : 'jr-tab-punto--ok')"></span>
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'lubricantes'"
+      [class.is-activa]="tab() === 'lubricantes'" (click)="tab.set('lubricantes')">
+      <span
+        [class]="'jr-tab-punto ' + (stock().some(product => product.status === 'NEGATIVE_STOCK') ? 'jr-tab-punto--error' : 'jr-tab-punto--ok')"></span>
       Lubricantes y aditivos
     </button>
   </div>
@@ -49,310 +37,37 @@
   </div>
 
   @if (formError(); as message) {
-    <div class="alert-box-danger" role="alert">{{ message }}</div>
+  <div class="alert-box-danger" role="alert">{{ message }}</div>
   }
 
   @if (loadError(); as message) {
-    <section class="jr-p5-card jr-p5-vacio">
-      <p>{{ message }}</p>
-      <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="loadError.set(null)">Cerrar</button>
-    </section>
+  <section class="jr-p5-card jr-p5-vacio">
+    <p>{{ message }}</p>
+    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="loadError.set(null)">Cerrar</button>
+  </section>
   } @else if (loading()) {
-    <p class="jr-p5-tenue" aria-live="polite">Cargando inventario de la jornada…</p>
+  <p class="jr-p5-tenue" aria-live="polite">Cargando inventario de la jornada…</p>
   } @else if (!date()) {
-    <p class="jr-p5-tenue">No hay una jornada abierta para hoy.</p>
+  <p class="jr-p5-tenue">No hay una jornada abierta para hoy.</p>
   } @else if (tab() === 'tanques') {
-    <div class="jr-p5-grid">
-      <section class="jr-p5-card">
-        <div class="jr-p5-card-cab">
-          <b>Medición del día</b>
-          <span class="jr-p5-tenue">Enter baja · pega las 6 alturas seguidas</span>
-        </div>
-
-        <table class="jr-p5-tabla">
-          <thead>
-            <tr>
-              <th>Tanque</th>
-              <th class="num">Altura (cm)</th>
-              <th class="num">Galones</th>
-              <th class="num">Llenado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (tank of tanks(); track tank.id; let index = $index) {
-              <tr>
-                <td class="jr-p5-tanque">
-                  <span class="jr-p5-punto" [style.background]="fuelColors[tank.fuelType]"></span>{{ tank.name }}
-                  <small>{{ tank.code }} · {{ fuelLabels[tank.fuelType] }}</small>
-                </td>
-                <td class="num">
-                  <span class="jr-cell jr-cell--edit" [class.jr-cell--invalido]="isHeightInvalid(tank)">
-                    <input
-                      #heightInput
-                      class="jr-input"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      [value]="heightText(tank.id)"
-                      [disabled]="!canEditHeights()"
-                      [attr.aria-label]="'Altura medida · ' + tank.name"
-                      (input)="onHeightInput(tank, $event)"
-                      (keydown)="onHeightKeydown($event, index)"
-                      (paste)="onHeightsPaste($event, index)">
-                  </span>
-                </td>
-                <td class="num">{{ formatGallons(gallons()[tank.id]) }}</td>
-                <td class="num">{{ fillPercent(tank) }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-
-        <div class="jr-p5-card-pie">
-          <span class="jr-p5-etq">{{ measuredCount() }} de {{ tanks().length }} tanques medidos</span>
-          @if (allMeasured()) {
-            <span class="jr-chip jr-chip--cerrada">Completo</span>
-          } @else {
-            <span class="jr-chip jr-chip--pendiente">Faltan alturas</span>
-          }
-          <button
-            class="jr-btn jr-btn--pri jr-btn--sm"
-            type="button"
-            style="margin-left: auto"
-            [disabled]="!canEditHeights() || savingHeights()"
-            (click)="saveMeasurements()">
-            {{ savingHeights() ? 'Guardando…' : 'Guardar medición' }}
-          </button>
-        </div>
-      </section>
-
-      <div class="jr-p5-columna">
-        <section class="jr-p5-card">
-          <div class="jr-p5-card-cab">
-            <b>Variación por combustible</b>
-            <a routerLink="/configuracion/tanques">Tanques</a>
-          </div>
-          <table class="jr-p5-tabla jr-p5-tabla-var">
-            <thead>
-              <tr>
-                <th>Combustible</th>
-                <th class="num">Inicial</th>
-                <th class="num">Entradas</th>
-                <th class="num">Vendido</th>
-                <th class="num">Teórico</th>
-                <th class="num">Medido</th>
-                <th class="num">Variación</th>
-                <th class="num">Tol.</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (variation of variations(); track variation.fuelType) {
-                <tr>
-                  <td class="jr-p5-tanque">
-                    <span class="jr-p5-punto" [style.background]="fuelColors[variation.fuelType]"></span>{{ fuelLabels[variation.fuelType] }}
-                  </td>
-                  <td class="num">{{ formatGallons(variation.initialGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.entriesGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.soldGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.theoreticalGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.measuredGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.varianceGallons) }}</td>
-                  <td class="num">{{ formatGallons(variation.toleranceGallons) }}</td>
-                  <td><span [class]="'jr-chip ' + variationTone(variation)">{{ variationLabel(variation) }}</span></td>
-                </tr>
-              } @empty {
-                <tr><td colspan="9" class="jr-p5-tenue">Sin datos de variación para la fecha.</td></tr>
-              }
-            </tbody>
-          </table>
-        </section>
-
-        <section class="jr-p5-card">
-          <div class="jr-p5-card-cab">
-            <b>Autonomía por combustible</b>
-            @if (autonomy().length > 0) {
-              <span class="jr-p5-tenue">Crítico ≤ {{ formatDays(autonomy()[0].criticalDays) }} · Advertencia ≤ {{ formatDays(autonomy()[0].warningDays) }}</span>
-            }
-          </div>
-          <table class="jr-p5-tabla jr-p5-tabla-var">
-            <thead>
-              <tr>
-                <th>Combustible</th>
-                <th class="num">Existencia</th>
-                <th class="num">Venta diaria</th>
-                <th class="num">Autonomía</th>
-                <th>Nivel</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of autonomy(); track row.fuelType) {
-                <tr>
-                  <td class="jr-p5-tanque">
-                    <span class="jr-p5-punto" [style.background]="fuelColors[row.fuelType]"></span>{{ fuelLabels[row.fuelType] }}
-                  </td>
-                  <td class="num">{{ formatGallons(row.stockGallons) }}</td>
-                  <td class="num">{{ formatGallons(row.expectedDailySalesGallons) }}</td>
-                  <td class="num">{{ formatDays(row.autonomyDays) }}</td>
-                  <td><span [class]="'jr-chip ' + autonomyTone(row)">{{ autonomyLabel(row) }}</span></td>
-                </tr>
-              } @empty {
-                <tr><td colspan="5" class="jr-p5-tenue">Sin datos de autonomía para la fecha.</td></tr>
-              }
-            </tbody>
-          </table>
-        </section>
-      </div>
+  <div class="jr-p5-grid">
+    <app-tank-measurements [tanks]="tanks()" [heights]="heights()" [gallons]="gallons()" [editable]="canEditHeights()"
+      [saving]="savingHeights()" (heightChanged)="onHeightChanged($event)" (heightsPasted)="onHeightsPasted($event)"
+      (saveRequested)="saveMeasurements()" />
+    <div class="jr-p5-columna">
+      <app-fuel-variation-table [variations]="variations()" />
+      <app-fuel-autonomy-table [autonomy]="autonomy()" />
     </div>
+  </div>
   } @else {
-    <div class="jr-p5-lub-barra">
-      <div class="jr-p5-seg" role="group" aria-label="Filtrar productos">
-        <button type="button" [class.is-activo]="productFilter() === 'movimiento'" (click)="changeProductFilter('movimiento')">Con movimiento hoy</button>
-        <button type="button" [class.is-activo]="productFilter() === 'LUBRICANTE'" (click)="changeProductFilter('LUBRICANTE')">Lubricantes</button>
-        <button type="button" [class.is-activo]="productFilter() === 'ADITIVO'" (click)="changeProductFilter('ADITIVO')">Aditivos</button>
-        <button type="button" [class.is-activo]="productFilter() === 'OTRO'" (click)="changeProductFilter('OTRO')">Otros</button>
-        <button type="button" [class.is-activo]="productFilter() === 'todos'" (click)="changeProductFilter('todos')">Todos</button>
-      </div>
-      <div class="jr-p5-lub-acciones">
-        <label class="jr-p5-buscar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="search"
-            placeholder="Buscar producto o código"
-            aria-label="Buscar producto"
-            [ngModel]="productSearch()"
-            (ngModelChange)="productSearch.set($event)">
-        </label>
-        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" [disabled]="!editable() || syncing()" (click)="syncSales()">
-          {{ syncing() ? 'Sincronizando…' : 'Sincronizar ventas del paso 2' }}
-        </button>
-        <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!editable() || savingTransfers() || !hasPendingTransfers()" (click)="saveTransfers()">
-          {{ savingTransfers() ? 'Guardando…' : 'Guardar traslados' }}
-        </button>
-      </div>
-    </div>
-
-    @if (unmatchedCodes().length > 0) {
-      <div class="jr-p5-aviso" role="status">
-        <b>Ventas sin producto en el catálogo:</b> {{ unmatchedCodes().join(', ') }}. No se bloquearon las ventas.
-      </div>
-    }
-
-    <section class="jr-p5-card">
-      <table class="jr-p5-tabla jr-p5-tabla-lub">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th class="num">Oficina</th>
-            <th class="num">Mostrador</th>
-            <th class="num">Vendido hoy</th>
-            <th class="num">Traslado a mostrador</th>
-            <th class="num">Existencia</th>
-            <th class="num">Queda en mostrador</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (product of visibleProducts(); track product.productId) {
-            <tr [class.is-atenuada]="existingTotal(product) <= 0">
-              <td><span class="jr-p5-sku">{{ product.productCode }}</span>{{ product.productName }}</td>
-              <td class="num">{{ product.office.closing }}</td>
-              <td class="num">{{ product.counter.closing }}</td>
-              <td class="num">
-                @if (product.office.sold + product.counter.sold > 0) {
-                  {{ product.office.sold + product.counter.sold }}
-                } @else {
-                  <span class="jr-p5-tenue">—</span>
-                }
-              </td>
-              <td class="num">
-                <span class="jr-cell jr-cell--edit jr-p5-traslado" [class.jr-cell--invalido]="transferInvalid(product)">
-                  <input
-                    class="jr-input"
-                    type="number"
-                    min="0"
-                    step="1"
-                    [value]="transferOf(product.productId) ?? ''"
-                    [disabled]="!editable() || product.office.closing <= 0"
-                    [attr.aria-label]="'Traslado a mostrador · ' + product.productName"
-                    [attr.placeholder]="product.office.closing > 0 ? '0' : '—'"
-                    (input)="onTransferInput(product, $event)">
-                </span>
-              </td>
-              <td class="num"><b>{{ existingTotal(product) }}</b></td>
-              <td class="num jr-p5-tenue">{{ counterAfterTransfer(product) }}</td>
-              <td>
-                @if (product.status === 'NEGATIVE_STOCK') {
-                  <span class="jr-chip jr-chip--falta" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</span>
-                } @else if (existingTotal(product) <= 0) {
-                  <span class="jr-chip jr-chip--falta">Agotado</span>
-                } @else if (product.office.closing <= 0) {
-                  <span class="jr-chip jr-chip--aviso">Sin reserva en oficina</span>
-                }
-              </td>
-              <td class="num jr-p5-acciones-fila">
-                <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openDialog(product, 'entry')">Entrada</button>
-                <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openDialog(product, 'initial')">Inicial</button>
-              </td>
-            </tr>
-          } @empty {
-            <tr><td colspan="9" class="jr-p5-tenue">No hay productos con este filtro.</td></tr>
-          }
-        </tbody>
-      </table>
-      <div class="jr-p5-card-pie jr-p5-lub-pie">
-        <span>Mostrando {{ visibleProducts().length }} de {{ stock().length }} productos</span>
-        <span>Existencia = oficina + mostrador. El traslado mueve unidades de oficina a mostrador.</span>
-      </div>
-    </section>
+  <app-lubricant-stock-table [products]="visibleProducts()" [totalProducts]="stock().length" [filter]="productFilter()"
+    [search]="productSearch()" [pendingTransfers]="pendingTransfers()" [editable]="editable()"
+    [savingTransfers]="savingTransfers()" [syncing]="syncing()" [hasPendingTransfers]="hasPendingTransfers()"
+    [unmatchedCodes]="unmatchedCodes()" (filterChanged)="changeProductFilter($event)"
+    (searchChanged)="setProductSearch($event)" (transferChanged)="onTransferChanged($event)"
+    (syncRequested)="syncSales()" (saveRequested)="saveTransfers()" (openMovement)="openMovement($event)" />
   }
 </div>
 
-<dialog #dialog class="apple-dialog-scrim" [class.visible]="dialogOpen()" (cancel)="onDialogCancel($event)">
-  @if (dialogContext(); as context) {
-    <div class="apple-dialog-card jr-p5-dialogo">
-      <h2>{{ context.mode === 'initial' ? 'Existencia inicial' : 'Registrar entrada' }}</h2>
-      <p class="jr-p5-tenue">{{ context.product.productCode }} · {{ context.product.productName }}</p>
-
-      @if (context.mode === 'initial') {
-        <label>
-          Oficina
-          <input type="number" min="0" step="1" [ngModel]="initialOffice()" (ngModelChange)="initialOffice.set($event === '' || $event === null ? null : +$event)">
-          @if (dialogFieldError('officeQuantity'); as message) {
-            <span class="jr-p5-error">{{ message }}</span>
-          }
-        </label>
-        <label>
-          Mostrador
-          <input type="number" min="0" step="1" [ngModel]="initialCounter()" (ngModelChange)="initialCounter.set($event === '' || $event === null ? null : +$event)">
-          @if (dialogFieldError('counterQuantity'); as message) {
-            <span class="jr-p5-error">{{ message }}</span>
-          }
-        </label>
-        <small class="jr-p5-tenue">La existencia inicial se registra una sola vez por producto.</small>
-      } @else {
-        <label>
-          Unidades que llegan a oficina
-          <input type="number" min="1" step="1" [ngModel]="entryQuantity()" (ngModelChange)="entryQuantity.set($event === '' || $event === null ? null : +$event)">
-          @if (dialogFieldError('quantity'); as message) {
-            <span class="jr-p5-error">{{ message }}</span>
-          }
-        </label>
-      }
-
-      @if (dialogError(); as message) {
-        <div class="alert-box-danger" role="alert">{{ message }}</div>
-      }
-
-      <div class="jr-p5-dialogo-acciones">
-        <button class="jr-btn jr-btn--ghost" type="button" (click)="closeDialog()">Cancelar</button>
-        <button class="jr-btn jr-btn--pri" type="button" [disabled]="dialogSaving()" (click)="confirmDialog()">
-          {{ dialogSaving() ? 'Guardando…' : 'Guardar' }}
-        </button>
-      </div>
-    </div>
-  }
-</dialog>
+<app-stock-movement-dialog [saving]="dialogSaving()" [errorMessage]="dialogError()" [fieldErrors]="dialogFieldErrors()"
+  (confirmed)="onMovementConfirmed($event)" />

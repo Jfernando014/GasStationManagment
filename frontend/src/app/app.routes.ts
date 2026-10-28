@@ -65,13 +65,13 @@ export const routes: Routes = [
         ]
       },
       {
-
         path: 'configuracion/tanques',
-        loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
+        loadComponent: () => import('../features/inventory/pages/tanks-page/tanks-page.component').then(m => m.TanksPageComponent)
       },
       {
         path: 'configuracion/aforo',
-        loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
+        loadComponent: () => import('../features/inventory/pages/gauge-tables-page/gauge-tables-page.component')
+          .then(m => m.GaugeTablesPageComponent)
       },
       {
         path: 'configuracion/productos',

@@ -1,4 +1,5 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import { vi } from 'vitest';
@@ -12,6 +13,7 @@ import { TanksService } from '../../../../core/services/tanks.service';
 import { JournalResponse, JournalStatus, JournalStepResponse, StepStatus } from '../../../../shared/models/journal.model';
 import { ProductStockResponse } from '../../../../shared/models/dtos/product-stock.dto';
 import { TankResponse } from '../../../../shared/models/dtos/tank.dto';
+import { TankMeasurementsComponent } from '../../components/tank-measurements/tank-measurements.component';
 import { JournalStep5Component } from './journal-step5.component';
 
 const JOURNAL_DATE = '2026-08-05';
@@ -86,6 +88,18 @@ describe('JournalStep5Component', () => {
     return fixture;
   }
 
+  /** Pastes through the measurements child, as the user does over the height column. */
+  function pasteHeights(fixture: ComponentFixture<JournalStep5Component>, text: string): ClipboardEvent {
+    const measurements = fixture.debugElement.query(By.directive(TankMeasurementsComponent))
+      .componentInstance as TankMeasurementsComponent;
+    const paste = {
+      clipboardData: { getData: () => text },
+      preventDefault: vi.fn()
+    } as unknown as ClipboardEvent;
+    measurements.onHeightsPaste(paste, 0);
+    return paste;
+  }
+
   beforeEach(async () => {
     journalSubject = new BehaviorSubject<JournalResponse | null>(JOURNAL);
     tanksService = { list: vi.fn(() => of(TANKS)) };
@@ -147,12 +161,7 @@ describe('JournalStep5Component', () => {
   it('pasting the six heights fills every tank and asks for the gallons', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
-    const paste = {
-      clipboardData: { getData: () => '100\n110\n120\n130\n140\n150' },
-      preventDefault: vi.fn()
-    } as unknown as ClipboardEvent;
-
-    component.onHeightsPaste(paste, 0);
+    const paste = pasteHeights(fixture, '100\n110\n120\n130\n140\n150');
     await new Promise(resolve => setTimeout(resolve, 400));
 
     expect(paste.preventDefault).toHaveBeenCalled();
@@ -173,10 +182,7 @@ describe('JournalStep5Component', () => {
       readings: TANKS.map(tank => ({ tankId: tank.id, heightCm: 100, volumeGallons: 2000 }))
     }));
 
-    component.onHeightsPaste({
-      clipboardData: { getData: () => '100\n100\n100\n100\n100\n100' },
-      preventDefault: vi.fn()
-    } as unknown as ClipboardEvent, 0);
+    pasteHeights(fixture, '100\n100\n100\n100\n100\n100');
     await new Promise(resolve => setTimeout(resolve, 400));
 
     component.saveMeasurements();
@@ -195,10 +201,7 @@ describe('JournalStep5Component', () => {
 
     expect(component.canComplete()).toBe(false);
 
-    component.onHeightsPaste({
-      clipboardData: { getData: () => '100\n110\n120\n130\n140\n150' },
-      preventDefault: vi.fn()
-    } as unknown as ClipboardEvent, 0);
+    pasteHeights(fixture, '100\n110\n120\n130\n140\n150');
     await new Promise(resolve => setTimeout(resolve, 400));
 
     expect(component.allMeasured()).toBe(true);
@@ -243,7 +246,7 @@ describe('JournalStep5Component', () => {
     const fixture = create();
     const component = fixture.componentInstance;
 
-    component.onTransferInput(STOCK[0], { target: { value: '3' } } as unknown as Event);
+    component.onTransferChanged({ productId: 7, quantity: 3 });
     component.saveTransfers();
 
     expect(stockService.registerTransfer).toHaveBeenCalledWith({
@@ -257,8 +260,8 @@ describe('JournalStep5Component', () => {
   it('rejects a transfer larger than the office stock', () => {
     const component = create().componentInstance;
 
-    component.onTransferInput(STOCK[0], { target: { value: '40' } } as unknown as Event);
-    expect(component.transferInvalid(STOCK[0])).toBe(true);
+    component.onTransferChanged({ productId: 7, quantity: 40 });
+    expect(component.hasPendingTransfers()).toBe(true);
 
     component.saveTransfers();
     expect(stockService.registerTransfer).not.toHaveBeenCalled();
