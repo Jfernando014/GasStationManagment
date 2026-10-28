@@ -2,13 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    command: ["tail", "-f", "/dev/null"]
+    command: ["sleep", "infinity"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/target:/app/target
 
   frontend:
     volumes:
