@@ -41,7 +41,7 @@ jobs:
             -e DOCKER_HOST=unix:///var/run/docker.sock \
             -e TESTCONTAINERS_RYUK_DISABLED=true \
             gas-station-backend-dev \
-            mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false -Dmaven.project.build.directory=target_ci
+            mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: docker exec -e CI=true gas-station-frontend-dev npx ng test --no-watch
