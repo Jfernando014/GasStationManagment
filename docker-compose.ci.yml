@@ -2,10 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    command: ["sleep", "infinity"]
+    command: ["tail", "-f", "/dev/null"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
   frontend:
     volumes:
       - /dev/null:/app/node_modules_mock
