@@ -1,0 +1,336 @@
+<div class="products-page">
+  <header class="products-header">
+    <div>
+      <div class="products-breadcrumb">Configuración <span>/</span> Productos</div>
+      <h1>Productos</h1>
+      <p>Catálogo de lubricantes, aditivos y otros productos que se venden en la estación.</p>
+    </div>
+    <button class="jr-btn jr-btn--pri" type="button" (click)="openCreate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      Nuevo producto
+    </button>
+  </header>
+
+  <nav class="jr-tabs" role="tablist" aria-label="Productos">
+    <button
+      type="button"
+      class="jr-tab"
+      role="tab"
+      [attr.aria-selected]="tab() === 'catalogo'"
+      [class.is-activa]="tab() === 'catalogo'"
+      (click)="tab.set('catalogo')">
+      Catálogo
+    </button>
+    <button
+      type="button"
+      class="jr-tab"
+      role="tab"
+      [attr.aria-selected]="tab() === 'margenes'"
+      [class.is-activa]="tab() === 'margenes'"
+      (click)="tab.set('margenes')">
+      Márgenes
+    </button>
+  </nav>
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (formOpen()) {
+    <section class="products-card products-form" aria-labelledby="products-form-title">
+      <div class="products-card-head">
+        <div>
+          <h2 id="products-form-title">{{ editingId() === null ? 'Nuevo producto' : 'Editar producto' }}</h2>
+          <p>El margen lo calcula el servidor con el precio y el costo.</p>
+        </div>
+      </div>
+
+      <div class="products-form-grid">
+        <label>
+          Código
+          <input
+            type="text"
+            maxlength="20"
+            autocomplete="off"
+            placeholder="Ej. 80216"
+            [class.products-field-invalid]="isInvalid('code') || fieldError('code')"
+            [ngModel]="draft().code"
+            (ngModelChange)="updateDraft('code', $event)">
+          @if (fieldError('code')) {
+            <span class="field-error">{{ fieldError('code') }}</span>
+          } @else if (isInvalid('code')) {
+            <span class="field-error">El código es obligatorio (máximo 20 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Nombre
+          <input
+            type="text"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Ej. Terpel Celerity 4T"
+            [class.products-field-invalid]="isInvalid('name') || fieldError('name')"
+            [ngModel]="draft().name"
+            (ngModelChange)="updateDraft('name', $event)">
+          @if (fieldError('name')) {
+            <span class="field-error">{{ fieldError('name') }}</span>
+          } @else if (isInvalid('name')) {
+            <span class="field-error">El nombre es obligatorio (máximo 100 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Categoría
+          <select
+            [class.products-field-invalid]="isInvalid('category') || fieldError('category')"
+            [ngModel]="draft().category"
+            (ngModelChange)="updateDraft('category', $event)">
+            <option value="">Seleccionar categoría</option>
+            @for (item of categories; track item) {
+              <option [value]="item">{{ categoryLabels[item] }}</option>
+            }
+          </select>
+          @if (fieldError('category')) {
+            <span class="field-error">{{ fieldError('category') }}</span>
+          } @else if (isInvalid('category')) {
+            <span class="field-error">La categoría es obligatoria.</span>
+          }
+        </label>
+
+        <label>
+          Precio de venta (COP)
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            [class.products-field-invalid]="isInvalid('price') || fieldError('price')"
+            [ngModel]="draft().price"
+            (ngModelChange)="updateDraft('price', $event)">
+          @if (fieldError('price')) {
+            <span class="field-error">{{ fieldError('price') }}</span>
+          } @else if (isInvalid('price')) {
+            <span class="field-error">El precio debe ser mayor que cero.</span>
+          }
+        </label>
+
+        <label>
+          Costo (COP, opcional)
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [class.products-field-invalid]="isInvalid('cost') || fieldError('cost')"
+            [ngModel]="draft().cost"
+            (ngModelChange)="updateDraft('cost', $event)">
+          @if (fieldError('cost')) {
+            <span class="field-error">{{ fieldError('cost') }}</span>
+          } @else if (isInvalid('cost')) {
+            <span class="field-error">El costo no puede ser negativo.</span>
+          }
+        </label>
+
+        <label>
+          Estado
+          <select
+            [class.products-field-invalid]="fieldError('active')"
+            [ngModel]="draft().active"
+            (ngModelChange)="updateDraft('active', $event)">
+            <option [ngValue]="true">Activo</option>
+            <option [ngValue]="false">Inactivo</option>
+          </select>
+          @if (fieldError('active')) {
+            <span class="field-error">{{ fieldError('active') }}</span>
+          }
+        </label>
+      </div>
+
+      @if (formError(); as message) {
+        <div class="products-alert" role="alert">{{ message }}</div>
+      }
+
+      <div class="products-actions">
+        <button class="jr-btn jr-btn--ghost" type="button" (click)="closeForm()">Cancelar</button>
+        <button class="jr-btn jr-btn--pri" type="button" [disabled]="!canSubmit()" (click)="save()">
+          {{ saving() ? 'Guardando…' : 'Guardar producto' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (tab() === 'catalogo') {
+    <section class="products-card">
+      <div class="products-filters">
+        <div class="category-pills-row" role="group" aria-label="Filtrar por categoría">
+          <button
+            type="button"
+            class="category-pill-btn"
+            [class.active]="category() === ''"
+            [attr.aria-pressed]="category() === ''"
+            (click)="onCategoryChange('')">
+            Todas las categorías
+          </button>
+          @for (item of categories; track item) {
+            <button
+              type="button"
+              class="category-pill-btn"
+              [class.active]="category() === item"
+              [attr.aria-pressed]="category() === item"
+              (click)="onCategoryChange(item)">
+              {{ categoryFilterLabels[item] }}
+            </button>
+          }
+        </div>
+
+        <label class="products-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="search"
+            placeholder="Buscar por nombre o código"
+            aria-label="Buscar producto"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)">
+        </label>
+
+        <label class="products-status">
+          <span>Estado</span>
+          <select aria-label="Filtrar por estado" [ngModel]="activeFilter()" (ngModelChange)="onActiveChange($event)">
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </label>
+
+        <span class="inv-header-badge products-badge">{{ visibleProducts().length }} productos</span>
+      </div>
+
+      @if (loadError(); as message) {
+        <div class="products-alert" role="alert">
+          <span>{{ message }}</span>
+          <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="retry()">Reintentar</button>
+        </div>
+      } @else if (loading()) {
+        <p class="products-empty" aria-live="polite">Cargando productos…</p>
+      } @else if (visibleProducts().length === 0) {
+        <p class="products-empty">
+          @if (search().trim() || category() || activeFilter() !== 'all') {
+            No hay productos con esos filtros.
+          } @else {
+            Aún no hay productos en el catálogo. Registra el primero.
+          }
+        </p>
+      } @else {
+        <div class="products-table-scroll">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th class="num">Costo</th>
+                <th class="num">Precio</th>
+                <th class="num">Margen</th>
+                <th class="num">Oficina</th>
+                <th class="num">Mostrador</th>
+                <th class="num">Total</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of visibleProducts(); track product.id) {
+                <tr [class.is-inactive]="!product.active">
+                  <td class="tnum">{{ product.code }}</td>
+                  <td><strong>{{ product.name }}</strong></td>
+                  <td><span class="products-tag">{{ categoryLabels[product.category] }}</span></td>
+                  <td class="num tnum">{{ formatCop(product.cost) }}</td>
+                  <td class="num tnum">{{ formatCop(product.price) }}</td>
+                  <td class="num tnum">{{ formatPercent(product.marginPercent) }}</td>
+                  @if (stockOf(product); as stock) {
+                    <td class="num tnum">{{ stock.office.closing }}</td>
+                    <td class="num tnum">{{ stock.counter.closing }}</td>
+                    <td class="num tnum"><b>{{ stock.office.closing + stock.counter.closing }}</b></td>
+                  } @else {
+                    <td class="num">—</td>
+                    <td class="num">—</td>
+                    <td class="num">—</td>
+                  }
+                  <td>
+                    @if (!product.active) {
+                      <span class="jr-chip jr-chip--pendiente">Inactivo</span>
+                    } @else if (stockOf(product)?.status === 'NEGATIVE_STOCK') {
+                      <span class="jr-chip jr-chip--falta" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</span>
+                    } @else {
+                      <span class="jr-chip jr-chip--cerrada">Activo</span>
+                    }
+                  </td>
+                  <td class="num">
+                    <button class="products-action" type="button" (click)="openEdit(product)">Editar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <p class="products-note">
+        Las existencias son las de hoy y se mueven en la jornada, paso 5.
+        <a routerLink="/jornada/inventario">Ir al paso 5</a>
+        @if (stockError()) {
+          <span class="products-note-warn">No se pudieron cargar las existencias; el catálogo sigue disponible.</span>
+        }
+      </p>
+    </section>
+  } @else {
+    <section class="products-card">
+      <div class="jr-indicadores products-kpis">
+        <div class="jr-indicador">
+          <span>Margen promedio</span>
+          <b>{{ formatPercent(averageMargin()) }}</b>
+        </div>
+        <div class="jr-indicador">
+          <span>Mayor margen</span>
+          <b>{{ bestMargin() ? formatPercent(bestMargin()!.marginPercent) : '—' }}</b>
+        </div>
+        <div class="jr-indicador" [class.jr-indicador--aviso]="withoutCost() > 0">
+          <span>Sin costo registrado</span>
+          <b>{{ withoutCost() }}</b>
+        </div>
+      </div>
+
+      @if (margins().length === 0) {
+        <p class="products-empty">Registra el costo de los productos para ver su margen.</p>
+      } @else {
+        <div class="products-table-scroll">
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th class="num">Costo</th>
+                <th class="num">Precio</th>
+                <th class="num">Margen</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of margins(); track product.id) {
+                <tr>
+                  <td><strong>{{ product.name }}</strong> <small class="products-sku">{{ product.code }}</small></td>
+                  <td>{{ categoryLabels[product.category] }}</td>
+                  <td class="num tnum">{{ formatCop(product.cost) }}</td>
+                  <td class="num tnum">{{ formatCop(product.price) }}</td>
+                  <td class="num tnum"><b>{{ formatPercent(product.marginPercent) }}</b></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

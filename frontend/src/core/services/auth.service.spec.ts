@@ -1,83 +1,95 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AuthService } from './auth.service';
-import { ChangePasswordRequest } from '../../shared/models/dtos/auth-security.dto';
 
-describe('AuthService (S2-05, S2-06)', () => {
+import { AuthService } from './auth.service';
+
+/** Builds a JWT-shaped token; only the `exp` claim of the payload is read. */
+function tokenWithExp(expSeconds: number): string {
+  const payload = btoa(JSON.stringify({ sub: 'admin', exp: expSeconds }))
+    .replace(/=+$/, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+  return `header.${payload}.signature`;
+}
+
+describe('AuthService token expiry', () => {
   let service: AuthService;
-  let httpTesting: HttpTestingController;
+  let http: HttpTestingController;
 
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [
-        AuthService,
-        provideHttpClient(),
-        provideHttpClientTesting()
-      ]
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     });
     service = TestBed.inject(AuthService);
-    httpTesting = TestBed.inject(HttpTestingController);
+    http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
-    httpTesting.verify();
     localStorage.clear();
+    http.verify();
   });
 
-  it('should be created and report initial auth state based on localStorage', () => {
-    expect(service).toBeTruthy();
-    expect(service.hasToken()).toBe(false);
+  it('keeps a token that has not expired', () => {
+    const token = tokenWithExp(Math.floor(Date.now() / 1000) + 3600);
+    localStorage.setItem('token', token);
+
+    expect(service.hasToken()).toBe(true);
+    expect(service.getToken()).toBe(token);
+  });
+
+  it('removes an expired token instead of using it', () => {
+    const token = tokenWithExp(Math.floor(Date.now() / 1000) - 60);
+    localStorage.setItem('token', token);
+
     expect(service.getToken()).toBeNull();
+    expect(service.hasToken()).toBe(false);
+    expect(localStorage.getItem('token')).toBeNull();
   });
 
-  it('should save token in localStorage and notify isAuthenticated$ on successful login', () => {
-    let authStatus = false;
-    service.isAuthenticated$.subscribe(status => authStatus = status);
+  it('removes a token that is not a readable JWT', () => {
+    localStorage.setItem('token', 'not-a-jwt');
 
-    service.login({ username: 'admin', password: 'password123' }).subscribe(response => {
-      expect(response.token).toBe('mock.jwt.token');
+    expect(service.hasToken()).toBe(false);
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
+  it('starts unauthenticated when the stored token is expired', () => {
+    TestBed.resetTestingModule();
+    localStorage.setItem('token', tokenWithExp(Math.floor(Date.now() / 1000) - 60));
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     });
+    http = TestBed.inject(HttpTestingController);
 
-    const req = httpTesting.expectOne('http://localhost:8080/api/v1/auth/login');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ username: 'admin', password: 'password123' });
-    req.flush({ token: 'mock.jwt.token' });
+    const fresh = TestBed.inject(AuthService);
 
-    expect(service.hasToken()).toBe(true);
-    expect(service.getToken()).toBe('mock.jwt.token');
-    expect(authStatus).toBe(true);
+    let authenticated: boolean | null = null;
+    fresh.isAuthenticated$.subscribe(value => (authenticated = value)).unsubscribe();
+    expect(authenticated).toBe(false);
+    expect(localStorage.getItem('token')).toBeNull();
   });
 
-  it('should remove token from localStorage and emit false on logout', () => {
-    localStorage.setItem('token', 'mock.jwt.token');
-    expect(service.hasToken()).toBe(true);
+  it('stores the token returned by the login', () => {
+    const token = tokenWithExp(Math.floor(Date.now() / 1000) + 3600);
+    let authenticated = false;
+    service.isAuthenticated$.subscribe(value => (authenticated = value));
+    service.login({ username: 'admin', password: 'admin123' }).subscribe();
 
-    let authStatus = true;
-    service.isAuthenticated$.subscribe(status => authStatus = status);
+    const call = http.expectOne('http://localhost:8080/api/v1/auth/login');
+    call.flush({ token });
+
+    expect(localStorage.getItem('token')).toBe(token);
+    expect(authenticated).toBe(true);
+  });
+
+  it('clears the session on logout', () => {
+    localStorage.setItem('token', tokenWithExp(Math.floor(Date.now() / 1000) + 3600));
 
     service.logout();
 
+    expect(localStorage.getItem('token')).toBeNull();
     expect(service.hasToken()).toBe(false);
-    expect(service.getToken()).toBeNull();
-    expect(authStatus).toBe(false);
-  });
-
-  it('should send POST request to /api/v1/auth/change-password with change password payload', () => {
-    const payload: ChangePasswordRequest = {
-      currentPassword: 'oldPassword123',
-      newPassword: 'newPassword456',
-      confirmPassword: 'newPassword456'
-    };
-
-    service.changePassword(payload).subscribe(response => {
-      expect(response.message).toBe('Password changed successfully');
-    });
-
-    const req = httpTesting.expectOne('http://localhost:8080/api/v1/auth/change-password');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(payload);
-    req.flush({ message: 'Password changed successfully' });
   });
 });

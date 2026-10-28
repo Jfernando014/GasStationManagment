@@ -287,6 +287,9 @@ export class ConfigurationPageComponent {
     operation.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         this.replaceTank(this.fromResponse(saved));
+        // Saving closes the editor so the fields stop being editable until "Editar" is pressed again.
+        this.selectedTankId.set('');
+        this.tankSubmitted.set(false);
         this.success('Configuración del tanque guardada correctamente.');
       },
       error: error => this.setServerError(error, 'code')

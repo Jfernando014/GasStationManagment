@@ -24,6 +24,11 @@ export const routes: Routes = [
               .then(m => m.VendorCloseStep2Component)
           },
           {
+            path: 'inventario',
+            loadComponent: () => import('../features/inventory/pages/journal-step5/journal-step5.component')
+              .then(m => m.JournalStep5Component)
+          },
+          {
             path: '',
             pathMatch: 'full',
             redirectTo: 'vendedores'
@@ -67,6 +72,14 @@ export const routes: Routes = [
       {
         path: 'configuracion/aforo',
         loadComponent: () => import('../features/configuration/pages/configuration-page/configuration-page.component').then(m => m.ConfigurationPageComponent)
+      },
+      {
+        path: 'configuracion/productos',
+        loadComponent: () => import('../features/configuration/pages/products-page/products-page.component').then(m => m.ProductsPageComponent)
+      },
+      {
+        path: 'configuracion/recepciones',
+        loadComponent: () => import('../features/configuration/pages/receptions-page/receptions-page.component').then(m => m.ReceptionsPageComponent)
       },
       {
         path: 'gastos',
