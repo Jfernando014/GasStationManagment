@@ -9,5 +9,5 @@ services:
     mem_limit: 4g
     shm_size: '2gb'
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx2560m -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -Dspring.devtools.restart.enabled=false -Djava.awt.headless=true
-      - MAVEN_OPTS=-Xmx512m -Dsurefire.forkCount=0 -Dmaven.test.failure.ignore=false
+      - JAVA_TOOL_OPTIONS=-Xint -Xmx2g -XX:MaxMetaspaceSize=256m -Dspring.devtools.restart.enabled=false -Djava.awt.headless=true
+      - MAVEN_OPTS=-Xint -Xmx512m
