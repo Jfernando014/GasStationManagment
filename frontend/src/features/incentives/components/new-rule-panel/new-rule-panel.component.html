@@ -1,0 +1,143 @@
+<!-- The scrim closes the panel with the mouse; from the keyboard it closes with Escape or the X button. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<dialog #dialog class="host" [class.is-closing]="closing()" aria-labelledby="rule-panel-title" aria-modal="true"
+  (cancel)="onCancel($event)">
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+  <div class="scrim" (click)="onScrimClick($event)">
+    <section #panel class="panel">
+      <header class="header">
+        <h2 id="rule-panel-title">Nueva regla</h2>
+        <button type="button" class="close" aria-label="Cerrar" (click)="requestClose()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </header>
+
+      <form id="rule-form" class="body" novalidate (submit)="$event.preventDefault(); submit()">
+        <!-- Aditivo -->
+        <div class="field" style="--k: 0" [class.has-error]="fieldErrors().additive">
+          <label for="rule-additive">Aditivo</label>
+          <select id="rule-additive" class="control" [disabled]="submitting() || noChange() !== null"
+            [attr.aria-invalid]="fieldErrors().additive ? 'true' : null"
+            aria-describedby="rule-additive-note" (change)="onAdditive($event)">
+            <option value="" disabled [selected]="additiveId() === null">Elige un aditivo</option>
+            @for (option of options(); track option.additiveId) {
+              <option [value]="option.additiveId" [selected]="option.additiveId === additiveId()">{{ option.additiveName }}</option>
+            }
+          </select>
+          <div class="note" id="rule-additive-note">
+            @if (fieldErrors().additive; as message) {
+              @for (text of [message]; track text) {
+                <span class="error-text swap-item" animate.enter="note-in" animate.leave="note-out">{{ text }}</span>
+              }
+            } @else if (hint()) {
+              @for (text of [hint()]; track text) {
+                <span class="hint swap-item" animate.enter="note-in" animate.leave="note-out">{{ text }}</span>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Valor por unidad -->
+        <div class="field" style="--k: 1" [class.has-error]="fieldErrors().value || liveValueError()">
+          <label for="rule-value">Valor por unidad</label>
+          <div class="control money" [class.is-disabled]="submitting() || noChange() !== null">
+            <span class="prefix" aria-hidden="true">$</span>
+            <input id="rule-value" type="text" inputmode="numeric" autocomplete="off" placeholder="0"
+              [value]="valueText()" [disabled]="submitting() || noChange() !== null"
+              [attr.aria-invalid]="fieldErrors().value || liveValueError() ? 'true' : null"
+              aria-describedby="rule-value-note" (input)="onValue($event)">
+          </div>
+          <div class="note" id="rule-value-note">
+            @if (fieldErrors().value || liveValueError(); as message) {
+              @for (text of [message]; track text) {
+                <span class="error-text swap-item" animate.enter="note-in" animate.leave="note-out">{{ text }}</span>
+              }
+            } @else {
+              <span class="hint">Entre $0 y $100.000. Con $0 deja de pagar incentivo.</span>
+            }
+          </div>
+        </div>
+
+        <!-- Aplica desde -->
+        <div class="field" style="--k: 2" [class.has-error]="fieldErrors().date">
+          <label for="rule-date">Aplica desde</label>
+          <input id="rule-date" class="control" type="date" [value]="date()"
+            [disabled]="submitting() || noChange() !== null"
+            [attr.aria-invalid]="fieldErrors().date ? 'true' : null"
+            aria-describedby="rule-date-note" (input)="onDate($event)">
+          <div class="note" id="rule-date-note">
+            @if (fieldErrors().date; as message) {
+              @for (text of [message]; track text) {
+                <span class="error-text swap-item" animate.enter="note-in" animate.leave="note-out">{{ text }}</span>
+              }
+            } @else {
+              <span class="hint">Posterior a la última jornada cerrada.</span>
+            }
+          </div>
+        </div>
+
+        <!-- Motivo -->
+        <div class="field" style="--k: 3">
+          <div class="label-row">
+            <label for="rule-reason">Motivo</label>
+            <span class="counter">opcional · {{ reason().length }}/{{ maxReasonLength }}</span>
+          </div>
+          <textarea id="rule-reason" class="control area" [maxLength]="maxReasonLength" [value]="reason()"
+            [disabled]="submitting() || noChange() !== null" (input)="onReason($event)"></textarea>
+        </div>
+
+        <!-- Resultado, aviso o sin cambios -->
+        <div class="boxes" aria-live="polite">
+          @if (noChange(); as parts) {
+            <p class="box box--info" animate.enter="box-in">
+              @for (part of parts; track $index) {<span [class.strong]="part.bold">{{ part.text }}</span>}
+            </p>
+          } @else {
+            @if (preview(); as parts) {
+              <p class="box box--result" animate.enter="box-in" animate.leave="box-out">
+                @for (key of [previewKey()]; track key) {
+                  <span class="swap-item" animate.enter="note-in" animate.leave="note-out">
+                    @for (part of parts; track $index) {<span [class.strong]="part.bold">{{ part.text }}</span>}
+                  </span>
+                }
+              </p>
+            }
+            @if (warning(); as message) {
+              <p class="box box--warning" animate.enter="box-in" animate.leave="box-out">
+                @for (text of [message]; track text) {
+                  <span class="swap-item" animate.enter="note-in" animate.leave="note-out">{{ text }}</span>
+                }
+              </p>
+            }
+          }
+        </div>
+      </form>
+
+      @if (generalError(); as message) {
+        <p class="general-error" role="alert" animate.enter="box-in" animate.leave="box-out">{{ message }}</p>
+      }
+
+      <footer class="footer">
+        @if (noChange() !== null) {
+          <button type="button" class="secondary" (click)="changeData()">Cambiar datos</button>
+          <button type="button" class="primary" (click)="requestClose()">Entendido</button>
+        } @else {
+          <button type="button" class="secondary" [disabled]="submitting()" (click)="requestClose()">Cancelar</button>
+          <button type="submit" form="rule-form" class="primary" [disabled]="!canSubmit()" [attr.aria-busy]="submitting()">
+            <span class="label" [class.is-hidden]="submitting()">Crear regla</span>
+            @if (submitting()) {
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="sr">Guardando…</span>
+            }
+          </button>
+        }
+      </footer>
+    </section>
+  </div>
+
+  @if (confirmOpen()) {
+    <app-confirm-dialog heading="¿Descartar la regla?" message="Lo que escribiste no se ha guardado."
+      confirmLabel="Descartar" cancelLabel="Seguir editando" (confirmed)="discard()" (cancelled)="keepEditing()" />
+  }
+</dialog>

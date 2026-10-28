@@ -1,0 +1,204 @@
+<section class="sp" aria-labelledby="sp-title">
+  <header class="sp-head">
+    <div class="sp-title">
+      <span class="sp-eyebrow">Personal</span>
+      <h1 id="sp-title">Malla de turnos</h1>
+    </div>
+
+    <div class="sp-month" role="group" aria-label="Mes de la malla">
+      <button type="button" class="sp-month-step" aria-label="Mes anterior" (click)="changeMonth(-1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+      </button>
+      <h2 class="sp-month-label" aria-live="polite">{{ monthTitle() }}</h2>
+      <button type="button" class="sp-month-step" aria-label="Mes siguiente" (click)="changeMonth(1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+      <button appButton type="button" variant="ghost" size="sm" (click)="goToToday()">Hoy</button>
+    </div>
+
+    <div class="sp-actions">
+      <button appButton type="button" variant="secondary" (click)="openRange()" title="Mismo turno para un vendedor en varios días seguidos">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 10h18M8 2v4M16 2v4M7 15h10" /></svg>
+        Asignar rango
+      </button>
+      <button appButton type="button" variant="primary" (click)="openRotation()" title="Arma el mes de los titulares con el ciclo 2x2, con vista previa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
+        Generar rotación
+      </button>
+    </div>
+  </header>
+
+  @if (loadError(); as message) {
+    <div class="ps-card sp-board">
+      <app-empty-state heading="No se pudo cargar la malla" [description]="message" tone="error" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" />
+        </svg>
+        <button appButton type="button" variant="secondary" size="sm" (click)="retry()">Reintentar</button>
+      </app-empty-state>
+    </div>
+  } @else if (loading()) {
+    <div class="ps-card sp-board sp-skeleton" aria-busy="true">
+      <span class="jr-sr" aria-live="polite">Cargando la malla de {{ monthTitle() }}…</span>
+      @for (r of [0, 1, 2, 3, 4]; track r) {
+        <div class="sp-skel-row" [style.--r]="r">
+          <span class="sp-skel sp-skel--name"></span>
+          @for (c of days(); track c) { <span class="sp-skel"></span> }
+        </div>
+      }
+    </div>
+  } @else if (!rows().length) {
+    <div class="ps-card sp-board">
+      <app-empty-state heading="No hay vendedores activos" description="Registra vendedores para poder armar su malla de turnos.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+        </svg>
+        <a appButton variant="secondary" size="sm" routerLink="/personal/vendedores">Ir a Vendedores</a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="ps-card sp-board">
+      <div class="sp-board-bar">
+        @if (uncoveredCount() > 0) {
+          <p class="sp-status sp-status--bad">
+            <b>{{ uncoveredCount() }}</b> {{ uncoveredCount() === 1 ? 'día queda' : 'días quedan' }} sin cobertura completa
+          </p>
+          <button appButton type="button" variant="ghost" size="sm" (click)="goToFirstUncovered()">Ver el primero</button>
+        } @else {
+          <p class="sp-status sp-status--ok">Todo el mes tiene cobertura completa</p>
+        }
+        @if (filter(); as tone) {
+          <span class="sp-filter-pill" role="status">
+            Solo <b>{{ filterLabel() }}</b>
+            <button type="button" class="sp-filter-off" aria-label="Quitar el filtro de la leyenda" (click)="toggleFilter(tone)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </span>
+        }
+        <span class="sp-board-hint">Toca un día para cambiarlo</span>
+        <div class="sp-legend-wrap">
+          <button
+            type="button"
+            class="sp-legend-btn"
+            [class.is-on]="legendOpen()"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="legendOpen()"
+            (click)="toggleLegend()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+            Cómo leer la malla
+          </button>
+          @if (legendOpen()) {
+            <div class="sp-legend" role="dialog" aria-label="Cómo leer la malla">
+              <div class="sp-leg-col">
+                <h3 class="sp-leg-h">Turnos</h3>
+                <ul class="sp-leg-list">
+                  @for (item of legendShifts; track item.code; let i = $index) {
+                    <li [style.--i]="i">
+                      <button
+                        type="button"
+                        class="sp-leg-btn"
+                        [class.is-on]="filter() === item.tone"
+                        [class.is-none]="!countOf(item.tone)"
+                        [attr.aria-pressed]="filter() === item.tone"
+                        [attr.aria-label]="item.label + ': ' + countOf(item.tone) + ' días en el mes. Toca para ver solo estos días.'"
+                        (click)="toggleFilter(item.tone)">
+                        <i class="sp-sw"><app-shift-chip variant="cell" [code]="item.code" /></i>
+                        <span class="sp-leg-text">
+                          <b>{{ item.label }}</b>
+                          @if (item.hint) { <small>{{ item.hint }}</small> }
+                        </span>
+                        <span class="sp-leg-count">{{ countOf(item.tone) }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+                <p class="sp-leg-foot">Toca un turno para ver solo esos días</p>
+              </div>
+
+              <div class="sp-leg-col">
+                <h3 class="sp-leg-h">Cobertura · falta</h3>
+                <ul class="sp-leg-list sp-leg-list--plain">
+                  <li><b class="sp-miss">D</b><span>titular de día</span></li>
+                  <li><b class="sp-miss">N</b><span>titular de noche</span></li>
+                  <li><b class="sp-miss">A</b><span>apoyo para un turno corto</span></li>
+                </ul>
+                <h3 class="sp-leg-h">Otros</h3>
+                <ul class="sp-leg-list sp-leg-list--plain">
+                  <li><i class="sp-dot"></i><span>día con nota</span></li>
+                  <li><i class="sp-past"></i><span>días pasados: solo lectura</span></li>
+                </ul>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <app-schedule-grid
+        [rows]="rows()"
+        [days]="days()"
+        [coverage]="coverage()"
+        [editableFrom]="today"
+        [highlight]="highlight"
+        [sweep]="sweep()"
+        [updatedKey]="updatedKey()"
+        [savingKey]="savingKey()"
+        [filter]="filter()"
+        [codeInfo]="codeInfo()"
+        (cellOpen)="openDay($event)" />
+
+    </div>
+  }
+</section>
+
+<app-side-panel
+  [open]="panel() !== null"
+  [heading]="panelHeading()"
+  [description]="panelDescription()"
+  [width]="panelWidth()"
+  (closed)="closePanel()">
+  @switch (panel()) {
+    @case ('day') {
+      @if (dayRef(); as ref) {
+        <app-day-editor
+          [workerName]="dayWorker()?.name ?? ''"
+          [roleName]="dayRole()"
+          [date]="ref.date"
+          [cell]="dayCell()"
+          [catalog]="catalog()"
+          [readOnly]="ref.date < today"
+          [saving]="!!daySavingCode()"
+          [savingCode]="daySavingCode()"
+          [errorMessage]="dayError()"
+          (chosen)="chooseCode($event)" />
+      }
+    }
+    @case ('range') {
+      @if (rangeErrorMessage(); as message) {
+        <p class="sp-panel-error" role="alert">{{ message }}</p>
+      }
+      <app-range-assign-form
+        [workers]="workers()"
+        [catalog]="catalog()"
+        [editableFrom]="today"
+        [defaultFrom]="rangeDefaultFrom()"
+        [defaultTo]="rangeDefaultTo()"
+        [initialWorkerId]="rangeWorkerId()"
+        [saving]="rangeSaving()"
+        [submitError]="rangeError()"
+        (submitted)="submitRange($event)"
+        (cancelled)="closePanel()" />
+    }
+    @case ('rotation') {
+      <app-rotation-wizard
+        [titulares]="titulares()"
+        [today]="today"
+        [initialMonth]="month()"
+        (done)="rotationDone($event)"
+        (cancelled)="closePanel()" />
+    }
+  }
+</app-side-panel>
+
+<div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+  <span class="toast-check">✓</span> {{ toastText() }}
+</div>

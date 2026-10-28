@@ -4,7 +4,8 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.SalesTargetServ
 import com.edu.unicauca.gasstation.backend.sales.SalesTargetDistributionTestData;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.DistributionProfileRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.adapters.PublicShiftCoverageResolver;
-import com.edu.unicauca.gasstation.backend.shifts.*;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.*;
+import com.edu.unicauca.gasstation.backend.shifts.spi.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.mappers.SalesTargetApiMapper;

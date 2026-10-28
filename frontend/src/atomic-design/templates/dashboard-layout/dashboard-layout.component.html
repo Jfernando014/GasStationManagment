@@ -4,26 +4,40 @@
   <aside #sidebar class="app-floating-sidebar" id="dashboard-sidebar" [class.mobile-open]="mobileMenuOpen()">
     <button type="button" class="mobile-menu-close" aria-label="Cerrar menú" (click)="closeMenu()">✕</button>
 
-    <!-- Encabezado de Marca -->
-    <div class="sidebar-brand-box jr-brand-inicio" routerLink="/" title="Ir al inicio" tabindex="0">
-      <div class="brand-logo-tile">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <!-- Encabezado de Marca · también contrae y expande la barra -->
+    <button
+      type="button"
+      class="sidebar-brand-box jr-brand-inicio"
+      id="sidebar-brand"
+      aria-controls="dashboard-sidebar"
+      [attr.aria-expanded]="!sidebarCollapsed()"
+      [attr.title]="sidebarCollapsed() ? 'Expandir el menú' : 'Contraer el menú'"
+      (click)="toggleSidebar()">
+      <span class="brand-logo-tile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
           <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
           <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
           <circle cx="10" cy="9" r="2" />
         </svg>
-      </div>
-      <div class="brand-meta-group">
-        <div class="brand-name-text">
+        <span class="brand-logo-switch" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </span>
+      </span>
+      <span class="brand-meta-group">
+        <span class="brand-name-text">
           <span>EDS Bellavista</span>
           <span class="brand-live-dot"></span>
-        </div>
+        </span>
         <span class="brand-desc-text">Gestión Operativa y Admin</span>
-      </div>
-    </div>
+      </span>
+      <span class="jr-sr">{{ sidebarCollapsed() ? 'Expandir el menú lateral' : 'Contraer el menú lateral' }}</span>
+    </button>
 
     <!-- Scroll de Módulos y Submódulos -->
-    <div class="sidebar-nav-scroll">
+    <div class="sidebar-nav-scroll" (mouseover)="onNavPointer($event)" (focusin)="onNavPointer($event)"
+      (mouseleave)="hideNavTip()" (focusout)="hideNavTip()">
       <div class="nav-label-pill">General</div>
       <button class="sidebar-action-btn" routerLink="/" routerLinkActive="active"
         [routerLinkActiveOptions]="{exact: true}">
@@ -72,8 +86,8 @@
         <span class="active-notch"></span>
       </button>
 
-      <div class="collapsible-group open">
-        <button class="sidebar-action-btn" type="button">
+      <div class="collapsible-group" [class.open]="personalOpen()">
+        <button class="sidebar-action-btn" type="button" [attr.aria-expanded]="personalOpen()" (click)="togglePersonal()">
           <div class="btn-prefix-stack">
             <svg class="sidebar-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -90,7 +104,7 @@
         <div class="collapsible-sub-menu">
           <a class="sub-item-link sub-nav-item" routerLink="/personal/vendedores"
             routerLinkActive="active">Vendedores</a>
-          <a class="sub-item-link sub-nav-item" routerLink="/personal/malla" routerLinkActive="active">Malla de
+          <a class="sub-item-link sub-nav-item" routerLink="/personal/turnos" routerLinkActive="active">Malla de
             turnos</a>
         </div>
       </div>
@@ -134,7 +148,7 @@
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/rendimiento"
             routerLinkActive="active">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
-            routerLinkActive="active">Incentivos</a>
+            routerLinkActive="active" #incentivesNav="routerLinkActive">Incentivos</a>
         </div>
       </div>
 
@@ -159,18 +173,26 @@
             aforo</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/tanques"
             routerLinkActive="active">Tanques</a>
+          <button type="button" class="sub-item-link sub-nav-item" (click)="openChangePasswordModal()"
+            style="background: none; border: none; text-align: left; width: 100%; cursor: pointer; font: inherit;">
+            Cambiar contraseña
+          </button>
         </div>
       </div>
 
     </div>
 
     <!-- Pie de página del sidebar -->
-    <div class="sidebar-bottom-pill">
+    <div class="sidebar-bottom-pill" [attr.title]="sidebarCollapsed() ? 'Sede Popayán · En línea' : null">
       <span class="dot-green-pulse"></span>
-      <span>Sede Popayán · En línea</span>
+      <span class="bottom-pill-text">Sede Popayán · En línea</span>
     </div>
 
   </aside>
+
+  @if (navTip(); as tip) {
+    <span class="sidebar-nav-tip" role="tooltip" [style.left.px]="tip.left" [style.top.px]="tip.top">{{ tip.text }}</span>
+  }
 
   <!-- 2. CANVAS DERECHO FLOTANTE -->
   <div class="canvas-right-stack">
@@ -186,7 +208,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 
@@ -195,6 +217,17 @@
           <span class="dot-green-pulse"></span>
           <span>Operación Activa</span>
         </div>
+
+        <!-- Botón Cambiar Contraseña (S2-06) -->
+        <button type="button" class="btn-change-password-header" (click)="openChangePasswordModal()"
+          title="Cambiar contraseña de administrador"
+          style="height: 34px; padding: 0 12px; border-radius: var(--radius-pill); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 119, 182, 0.1); color: #0077b6; border: 1px solid rgba(0, 119, 182, 0.25); cursor: pointer; font-weight: 600;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Seguridad</span>
+        </button>
 
         <!-- Botón de Cerrar Sesión -->
         <button class="btn-solid-primary" (click)="logout()"
@@ -210,4 +243,10 @@
     </main>
 
   </div>
+
+  <!-- Modal de Cambio de Contraseña de Administrador (S2-06) -->
+  <app-change-password-modal
+    [open]="changePasswordModalOpen()"
+    (closed)="closeChangePasswordModal()">
+  </app-change-password-modal>
 </div>

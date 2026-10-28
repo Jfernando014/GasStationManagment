@@ -1,0 +1,73 @@
+:host { display: inline-flex; vertical-align: middle; }
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-light);
+  cursor: help;
+  transition: color var(--duration-fast) ease;
+}
+
+.trigger:hover,
+.trigger:focus-visible { color: var(--brand-primary); }
+.trigger:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+/* With content in place of the icon the button takes the look of its surroundings. */
+.trigger--inline { color: inherit; font: inherit; height: 100%; cursor: not-allowed; }
+.trigger--inline:hover,
+.trigger--inline:focus-visible { color: inherit; }
+
+.bubble {
+  position: fixed;
+  z-index: 3000;
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-navy);
+  color: #E2E8F0;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  box-shadow: var(--shadow-popover);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--duration-normal) var(--spring),
+    transform var(--duration-normal) var(--spring),
+    visibility 0s linear var(--duration-normal);
+}
+
+.bubble.is-above { transform: translateY(calc(-100% - 4px)); }
+
+.bubble.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.bubble.is-above.is-open { transform: translateY(-100%); }
+
+.arrow {
+  position: absolute;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface-navy);
+  transform: rotate(45deg);
+}
+
+.bubble.is-above .arrow { top: auto; bottom: -5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble, .bubble.is-open { transition: none; }
+}

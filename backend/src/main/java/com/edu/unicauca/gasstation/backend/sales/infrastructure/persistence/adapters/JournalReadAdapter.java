@@ -2,15 +2,17 @@ package com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.ada
 
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalSnapshot;
+import com.edu.unicauca.gasstation.backend.sales.domain.repositories.JournalDateReadPort;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.JournalReadPort;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalRepository;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public class JournalReadAdapter implements JournalReadPort {
+public class JournalReadAdapter implements JournalReadPort, JournalDateReadPort {
 
     private final JournalRepository journalRepository;
 
@@ -22,6 +24,12 @@ public class JournalReadAdapter implements JournalReadPort {
     @Transactional(readOnly = true)
     public Optional<JournalSnapshot> findSnapshotById(Long journalId) {
         return journalRepository.findById(journalId).map(JournalReadAdapter::toSnapshot);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<JournalSnapshot> findSnapshotByDate(LocalDate date) {
+        return journalRepository.findByDate(date).map(JournalReadAdapter::toSnapshot);
     }
 
     private static JournalSnapshot toSnapshot(Journal journal) {

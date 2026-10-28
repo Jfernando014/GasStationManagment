@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -169,16 +170,19 @@ public class InventoryExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Invalid data",
                 "The required parameter is missing '" + ex.getParameterName() + "'", request);
     }
+
     @ExceptionHandler(InvalidTankMeasurementException.class)
     public ResponseEntity<Map<String, Object>> handleTankMeasurement(
             InvalidTankMeasurementException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
+
     @ExceptionHandler(TankMeasurementNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleTankMeasurementNotFound(
             TankMeasurementNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
+
     @ExceptionHandler(FuelReceptionNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleFuelReceptionNotFound(
             FuelReceptionNotFoundException ex, HttpServletRequest request) {
@@ -194,6 +198,36 @@ public class InventoryExceptionHandler {
     @ExceptionHandler(InvalidFuelReceptionException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidFuelReception(
             InvalidFuelReceptionException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidAutonomyThresholdException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidAutonomyThreshold(
+            InvalidAutonomyThresholdException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AutonomyThresholdAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleAutonomyThresholdAlreadyExists(
+            AutonomyThresholdAlreadyExistsException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(NoSalesDataException.class)
+    public ResponseEntity<Map<String, Object>> handleNoSalesData(
+            NoSalesDataException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(StockConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleStockConflict(
+            StockConflictException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidStockMovementException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStockMovement(
+            InvalidStockMovementException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
 }

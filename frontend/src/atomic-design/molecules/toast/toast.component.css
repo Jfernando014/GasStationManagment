@@ -1,0 +1,55 @@
+:host {
+  position: fixed;
+  top: 76px;
+  right: 28px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 56px));
+  padding: 10px 16px 10px 12px;
+  border: 1px solid #A7F3D0;
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-popover);
+  color: var(--text-heading);
+  font-size: 13px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    opacity var(--duration-normal) var(--spring),
+    transform var(--duration-normal) var(--spring);
+}
+
+:host(.is-visible) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--semantic-green);
+  color: #FFFFFF;
+}
+
+/* The check pops in each time the toast shows. */
+:host(.is-visible) .check { animation: check-in var(--duration-normal) var(--spring) backwards; }
+
+@keyframes check-in {
+  from { transform: scale(0.85); }
+}
+
+b { font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  :host { transition: opacity var(--duration-fast) ease; transform: none; }
+  :host(.is-visible) .check { animation: none; }
+}

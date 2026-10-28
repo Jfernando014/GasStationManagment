@@ -2,6 +2,7 @@ package com.edu.unicauca.gasstation.backend.sales.infrastructure.services;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.models.FundLedger;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.LedgerEntry;
+import com.edu.unicauca.gasstation.backend.sales.domain.models.SavingsFundDaySummary;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.SavingsFundMovement;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.SavingsFundMovementType;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.SavingsFundMovementRepository;
@@ -61,6 +62,25 @@ public class SavingsFundServiceImpl implements SavingsFundService {
         return repository.findUpTo(date).stream()
                 .map(SavingsFundMovement::signedAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SavingsFundDaySummary summarize(LocalDate date) {
+        BigDecimal previousBalance = BigDecimal.ZERO;
+        BigDecimal contribution = BigDecimal.ZERO;
+        BigDecimal payments = BigDecimal.ZERO;
+        // findUpTo includes the date itself, so a movement that is not before it belongs to that day
+        for (SavingsFundMovement movement : repository.findUpTo(date)) {
+            if (movement.getMovementDate().isBefore(date)) {
+                previousBalance = previousBalance.add(movement.signedAmount());
+            } else if (movement.getMovementType() == SavingsFundMovementType.CONTRIBUTION) {
+                contribution = contribution.add(movement.getAmount());
+            } else {
+                payments = payments.add(movement.getAmount());
+            }
+        }
+        return new SavingsFundDaySummary(previousBalance, contribution, payments);
     }
 
     @Override

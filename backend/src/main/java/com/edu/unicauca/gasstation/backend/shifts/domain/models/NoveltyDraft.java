@@ -1,6 +1,6 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
-import com.edu.unicauca.gasstation.backend.shifts.NoveltyType;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.NoveltyType;
 import java.util.UUID;
 
 /**

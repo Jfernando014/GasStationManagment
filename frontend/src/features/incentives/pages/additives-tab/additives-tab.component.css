@@ -1,0 +1,375 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* ---- Entrada de la pantalla ---- */
+.enter { animation: rise-in var(--duration-normal) var(--spring) backwards; }
+.enter-2 { animation-delay: 60ms; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* ---- Fila de título ---- */
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-heading);
+}
+
+.title-row p { margin-top: 2px; font-size: 14px; color: var(--text-muted); }
+
+.controls { display: flex; align-items: center; gap: 12px; }
+
+.date-field { position: relative; }
+
+.date-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--jr-cell-border);
+  border-radius: 10px;
+  background: var(--surface-card);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.date-picker:hover { border-color: var(--text-light); }
+.date-prefix { color: var(--text-muted); }
+.date-value { font-weight: 600; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+
+/* Real date input that only supplies the browser's calendar; the button shows the date as dd/mm/aaaa. */
+.date-native {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.new-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand-primary);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease, transform var(--duration-fast) var(--spring-fast);
+}
+
+.new-rule:hover { background: var(--brand-primary-hover); }
+.new-rule:active { transform: scale(0.98); }
+
+.date-picker:focus-visible,
+.new-rule:focus-visible,
+.chevron:focus-visible,
+.retry:focus-visible,
+.link:focus-visible {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px #FFE4CC;
+}
+
+/* ---- Aviso de fecha pasada: el espacio siempre está reservado ---- */
+.past-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  margin-bottom: -4px;
+  font-size: 14px;
+  color: #475569;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--duration-normal) var(--spring),
+    transform var(--duration-normal) var(--spring),
+    visibility 0s linear var(--duration-normal);
+}
+
+.past-line.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.link {
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--shift-support-strong);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.link:hover { text-decoration: underline; }
+
+/* ---- Tarjeta y grilla ---- */
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px 150px 240px 40px;
+  column-gap: 20px;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.head {
+  height: 46px;
+  border-bottom: 1px solid var(--border-main);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.head-next { display: inline-flex; align-items: center; gap: 6px; }
+
+.list { list-style: none; }
+
+.item {
+  border-bottom: 1px solid var(--surface-subtle);
+  transition: opacity var(--duration-normal) var(--spring);
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+  animation-delay: calc(100ms + var(--i, 0) * 30ms);
+}
+
+.item:last-child { border-bottom: 0; }
+.item.is-open { background: #FAFBFC; }
+.card.is-refreshing .item { opacity: 0.5; }
+
+.row {
+  height: 64px;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.row:hover { background: #FAFBFC; }
+
+.name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-heading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Old and new text share the cell while a value changes, so it can cross-fade. */
+.swap { display: grid; align-items: center; min-width: 0; }
+.swap > * { grid-area: 1 / 1; min-width: 0; }
+.swap-item { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.value { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 700; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+.value .is-muted { font-family: inherit; font-size: 14px; font-weight: 400; color: var(--text-light); }
+.since { font-size: 14px; color: #475569; font-variant-numeric: tabular-nums; }
+.next { font-size: 14px; font-weight: 600; color: var(--shift-support-strong); font-variant-numeric: tabular-nums; }
+
+.swap-in { animation: swap-in var(--duration-normal) var(--spring) backwards; }
+.swap-out { animation: swap-out var(--duration-fast) ease forwards; }
+
+@keyframes swap-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+@keyframes swap-out {
+  to { opacity: 0; }
+}
+
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease;
+}
+
+.chevron svg { transition: transform var(--duration-normal) var(--spring); }
+.chevron:hover { color: var(--text-muted); }
+.item.is-open .chevron svg { transform: rotate(180deg); }
+
+/* ---- Historial desplegable ---- */
+.history {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--duration-normal) var(--spring),
+    visibility 0s linear var(--duration-normal);
+}
+
+.item.is-open .history {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.history-inner { min-height: 0; overflow: hidden; }
+
+.history-content {
+  padding: 0 24px 18px 48px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--duration-normal) var(--spring),
+    transform var(--duration-normal) var(--spring);
+}
+
+.item.is-open .history-content { opacity: 1; transform: none; }
+
+.line {
+  position: relative;
+  display: grid;
+  grid-template-columns: 150px 100px 150px 1fr;
+  column-gap: 16px;
+  align-items: center;
+  height: 44px;
+  font-size: 14px;
+}
+
+/* Line of the timeline: from this step down to the next one. It draws itself when the history opens. */
+.line:not(:last-child, .line-skeleton)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  width: 2px;
+  height: 100%;
+  background: var(--border-main);
+  transform-origin: top;
+}
+
+.item.is-open .line:not(:last-child, .line-skeleton)::after {
+  animation: draw var(--duration-normal) var(--spring) backwards;
+  animation-delay: calc(var(--j, 0) * 50ms + 140ms);
+}
+
+@keyframes draw {
+  from { transform: scaleY(0); }
+}
+
+.item.is-open .line {
+  animation: line-in var(--duration-normal) var(--spring) backwards;
+  animation-delay: calc(var(--j, 0) * 50ms);
+}
+
+@keyframes line-in {
+  from { opacity: 0; transform: translateX(-6px); }
+}
+
+.line-value { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+.line-value.is-previous { color: var(--text-light); }
+.line-since { color: var(--text-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.line-reason { min-width: 0; overflow: hidden; color: #475569; text-overflow: ellipsis; white-space: nowrap; }
+.line-reason.is-empty { color: var(--text-light); font-style: italic; }
+.history-note { padding: 8px 0; font-size: 14px; color: var(--text-muted); }
+
+/* ---- Estados ---- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.retry {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--jr-cell-border);
+  border-radius: 10px;
+  background: var(--surface-card);
+  color: var(--text-heading);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.retry:hover { border-color: var(--text-light); }
+
+.row-skeleton { height: 64px; border-bottom: 1px solid var(--surface-subtle); }
+.row-skeleton:last-child { border-bottom: 0; }
+
+.sk {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: var(--border-main);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ---- Pantallas angostas: sin columna "Desde" para no desbordar ---- */
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: minmax(0, 1fr) 120px 190px 40px; column-gap: 14px; padding: 0 16px; }
+  .grid > :nth-child(3) { display: none; }
+  .history-content { padding-left: 16px; padding-right: 16px; }
+  .line { grid-template-columns: 138px 80px 132px 1fr; column-gap: 10px; }
+}
+
+@media (max-width: 640px) {
+  .grid { grid-template-columns: minmax(0, 1fr) 100px 40px; }
+  .grid > :nth-child(4) { display: none; }
+  .line { grid-template-columns: 138px 70px 1fr; }
+  .line > :nth-child(4) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter, .item, .swap-in, .swap-out, .line, .sk { animation: none; }
+  .item.is-open .line:not(:last-child, .line-skeleton)::after { animation: none; }
+  .history, .history-content, .past-line, .chevron svg { transition: none; }
+}

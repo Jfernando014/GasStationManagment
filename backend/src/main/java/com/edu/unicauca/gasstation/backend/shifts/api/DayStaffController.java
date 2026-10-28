@@ -1,8 +1,8 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ConfirmDayStaffRequest;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffStepResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RegisterNoveltyRequest;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffDtos.ConfirmDayStaffRequest;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffDtos.DayStaffStepResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.DayStaffDtos.RegisterNoveltyRequest;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftDayStaffService;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.DayStaffStepMapper;
 import io.swagger.v3.oas.annotations.Operation;

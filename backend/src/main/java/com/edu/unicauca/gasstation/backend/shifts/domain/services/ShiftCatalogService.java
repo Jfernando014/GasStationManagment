@@ -1,12 +1,13 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
-import com.edu.unicauca.gasstation.backend.shifts.RoleInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo;
-import com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.RoleInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftCodeInfo;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.RoleRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
-import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftCodeNotFoundException;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
+import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +40,10 @@ public class ShiftCatalogService implements ShiftExternalService {
     /**
      * One shift code by its code (DIA6, 12-7...), active or not.
      *
-     * @throws ShiftCodeNotFoundException if the code does not exist
+     * @throws ShiftException {@code SHIFT_CODE_NOT_FOUND} if the code does not exist
      */
     public ShiftCode getByCode(String code) {
-        return shiftCodeRepository.findByCode(code).orElseThrow(() -> new ShiftCodeNotFoundException(code));
+        return shiftCodeRepository.findByCode(code).orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, code));
     }
 
     @Override

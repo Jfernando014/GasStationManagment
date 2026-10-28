@@ -1,8 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.models;
 
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffAbsentee;
-import com.edu.unicauca.gasstation.backend.shifts.DayStaffMember;
-import com.edu.unicauca.gasstation.backend.shifts.Step1Status;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff.Step1Status;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +22,9 @@ public record DayStaffStep(
         LocalDate date,
         Step1Status step1Status,
         boolean editable,
-        List<DayStaffMember> members,
+        List<DayStaff.Member> members,
         List<RestingWorker> resting,
-        List<DayStaffAbsentee> absentees,
+        List<DayStaff.Absentee> absentees,
         List<ShiftNovelty> novelties,
         List<StaffingWarning> warnings) {
 

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { JournalPageComponent } from './journal-page.component';
 import { JournalService } from '../../../core/services/journal.service';
@@ -9,7 +9,15 @@ import { JournalResponse, JournalStatus, StepStatus } from '../../../shared/mode
 describe('JournalPageComponent (C-02, S1-15)', () => {
   let component: JournalPageComponent;
   let fixture: ComponentFixture<JournalPageComponent>;
-  const journalService = { openJournal: vi.fn(), completeStep: vi.fn() };
+  // La página lee la jornada del estado compartido del servicio, no de la respuesta de openJournal:
+  // el doble reemite lo que recibe para que el componente la vea igual que en la app.
+  const currentJournal = new BehaviorSubject<JournalResponse | null>(null);
+  const journalService = {
+    openJournal: vi.fn(),
+    completeStep: vi.fn(),
+    currentJournal$: currentJournal.asObservable(),
+    setCurrentJournal: vi.fn((journal: JournalResponse) => currentJournal.next(journal))
+  };
 
   const mockJournal: JournalResponse = {
     id: 10,
@@ -29,6 +37,8 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
   beforeEach(async () => {
     journalService.openJournal.mockReset();
     journalService.completeStep.mockReset();
+    journalService.setCurrentJournal.mockClear();
+    currentJournal.next(null);
 
     await TestBed.configureTestingModule({
       imports: [JournalPageComponent],

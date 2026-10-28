@@ -1,33 +1,23 @@
 /**
- * Shifts module: catalog of shift codes and roles, Colombian holidays, the monthly shift schedule, step 1 of the
- * journal with its novelties and the staff of each operational day.
+ * Shifts module: catalog of shift codes and roles, Colombian holidays, the monthly shift schedule with its automatic
+ * rotation, step 1 of the journal with its novelties, and the staff of each operational day.
  *
- * <p>Public API (usable by other modules): {@link com.edu.unicauca.gasstation.backend.shifts.ShiftExternalService}
- * and the records {@link com.edu.unicauca.gasstation.backend.shifts.RoleInfo} and
- * {@link com.edu.unicauca.gasstation.backend.shifts.ShiftCodeInfo}. Every subpackage is internal.
+ * <p>Other modules may only use its three named interfaces; every other subpackage is internal:
+ * <ul>
+ *   <li>{@code catalog}: the read-only catalog of shift codes and roles
+ *       ({@link com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService}).</li>
+ *   <li>{@code daystaff}: who works an operational day, with which code, in which role and on which dispenser
+ *       ({@link com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery} and
+ *       {@link com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff}).</li>
+ *   <li>{@code spi}: what other modules implement for this one, so it never depends on them. {@code workers}
+ *       implements {@link com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory} and {@code sales}
+ *       implements {@link com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort}; until {@code sales} does,
+ *       a temporary in-memory implementation of {@code infrastructure.journal} is used.</li>
+ * </ul>
  *
- * <p>{@link com.edu.unicauca.gasstation.backend.shifts.DayStaffQuery} answers who works a day, with which code, in
- * which role and on which dispenser. Its result types are public too:
- * {@link com.edu.unicauca.gasstation.backend.shifts.DayStaff},
- * {@link com.edu.unicauca.gasstation.backend.shifts.DayStaffMember},
- * {@link com.edu.unicauca.gasstation.backend.shifts.DayStaffNovelty},
- * {@link com.edu.unicauca.gasstation.backend.shifts.DayStaffAbsentee},
- * {@link com.edu.unicauca.gasstation.backend.shifts.NoveltyType},
- * {@link com.edu.unicauca.gasstation.backend.shifts.Step1Status} and
- * {@link com.edu.unicauca.gasstation.backend.shifts.DayStaffWarning}.
- *
- * <p>{@link com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerDirectory} and its record
- * {@link com.edu.unicauca.gasstation.backend.shifts.ScheduleWorkerInfo} go the other way: this module declares them
- * and {@code workers} implements them, so the schedule can read workers without {@code shifts} depending on
- * {@code workers}.
- *
- * <p>{@link com.edu.unicauca.gasstation.backend.shifts.DayJournalPort} goes the other way too: this module declares
- * it and {@code sales} implements it, so step 1 can ask whether a journal is editable and mark its step 1 without
- * {@code shifts} depending on {@code sales}. Until {@code sales} publishes it, a temporary in-memory implementation
- * of {@code infrastructure.journal} is used.
- *
- * <p>Layers: {@code api} (REST controllers and DTOs) and {@code infrastructure} (persistence and mappers) depend
- * on {@code domain} (pure models, repository interfaces and use cases); {@code domain} depends on neither.
+ * <p>Layers: {@code api} (REST controllers and DTOs) and {@code infrastructure} (persistence, mappers, the catalog
+ * seed and the temporary journal) depend on {@code domain} (pure models, repository interfaces and use cases);
+ * {@code domain} depends on neither. Errors are {@code exception.ShiftException} with a {@code exception.ShiftError}.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Shifts")
 package com.edu.unicauca.gasstation.backend.shifts;

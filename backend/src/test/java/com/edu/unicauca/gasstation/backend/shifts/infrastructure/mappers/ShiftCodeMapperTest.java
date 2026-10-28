@@ -4,9 +4,9 @@ import static com.edu.unicauca.gasstation.backend.shifts.ShiftTestData.SUPPORT_R
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.edu.unicauca.gasstation.backend.shifts.ShiftTestData;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RoleResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeResponse;
-import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftSchedule;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeDtos.RoleResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ShiftCodeDtos.ShiftCodeResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ShiftSchedule;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

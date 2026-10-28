@@ -33,13 +33,13 @@ class ShiftAssignmentTest {
         assertThatThrownBy(() -> new ShiftAssignment(null, DATE, dia, null)).hasMessage("workerId");
         assertThatThrownBy(() -> new ShiftAssignment(WORKER_ID, null, dia, null)).hasMessage("workDate");
         assertThatThrownBy(() -> new ShiftAssignment(WORKER_ID, DATE, null, null)).hasMessage("shiftCode");
-        assertThatThrownBy(() -> ShiftAssignment.restore(null, WORKER_ID, DATE, dia, null)).hasMessage("id");
+        assertThatThrownBy(() -> ShiftAssignment.restore(null, WORKER_ID, DATE, dia, null, ShiftOrigin.MANUAL)).hasMessage("id");
     }
 
     @Test
     void changeReplacesTheCodeAndCanRemoveTheNote() {
         UUID id = UUID.randomUUID();
-        ShiftAssignment assignment = ShiftAssignment.restore(id, WORKER_ID, DATE, ShiftTestData.shiftCode("DIA"), "Inicial");
+        ShiftAssignment assignment = ShiftAssignment.restore(id, WORKER_ID, DATE, ShiftTestData.shiftCode("DIA"), "Inicial", ShiftOrigin.MANUAL);
 
         assignment.change(ShiftTestData.shiftCode("NOCHE"), null);
 

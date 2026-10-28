@@ -31,6 +31,16 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+    @Builder.Default
+    @Column(name = "failed_attempts", nullable = false)
+    private Integer failedAttempts = 0;
+
+    @Column(name = "locked_until")
+    private java.time.LocalDateTime lockedUntil;
+
+    @Column(name = "password_changed_at")
+    private java.time.LocalDateTime passwordChangedAt;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
@@ -43,7 +53,10 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        if (lockedUntil == null) {
+            return true;
+        }
+        return java.time.LocalDateTime.now().isAfter(lockedUntil);
     }
 
     @Override
