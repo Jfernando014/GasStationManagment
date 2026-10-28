@@ -6,8 +6,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /app/target
-    mem_limit: 6g        
+    mem_limit: 4g
     shm_size: '2gb'
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx4g -XX:MaxMetaspaceSize=512m -Djava.awt.headless=true
-      - MAVEN_OPTS=-Xmx4g -XX:MaxMetaspaceSize=512m
+      - JAVA_TOOL_OPTIONS=-Xmx2560m -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -Dspring.devtools.restart.enabled=false -Djava.awt.headless=true
+      - MAVEN_OPTS=-Xmx512m -Dsurefire.forkCount=0 -Dmaven.test.failure.ignore=false
