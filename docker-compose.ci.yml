@@ -2,9 +2,14 @@ version: '3.8'
 
 services:
   backend:
-    profiles:
-      - donotstartin_ci
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    entrypoint: ["echo", "Backend de desarrollo omitido en CI"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   frontend:
+    depends_on: [] 
     volumes:
       - /dev/null:/app/node_modules_mock
   backend-tests:
