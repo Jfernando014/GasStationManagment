@@ -40,7 +40,7 @@ jobs:
             -e MAVEN_OPTS="-Xmx2g -XX:MaxMetaspaceSize=512m" \
             -e DOCKER_HOST=unix:///var/run/docker.sock \
             -e TESTCONTAINERS_RYUK_DISABLED=true \
-            gas-station-backend-dev \
+            gas-station-backend-tests \
             mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false
 
       - name: Ejecutar pruebas del Frontend (Angular)
