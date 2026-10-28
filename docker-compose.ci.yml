@@ -6,6 +6,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /app/target
-  frontend:
-    volumes:
-      - /dev/null:/app/node_modules_mock
+    mem_limit: 6g        
+    shm_size: '2gb'
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx4g -XX:MaxMetaspaceSize=512m -Djava.awt.headless=true
+      - MAVEN_OPTS=-Xmx4g -XX:MaxMetaspaceSize=512m
