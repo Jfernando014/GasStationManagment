@@ -5,10 +5,6 @@ services:
     command: ["tail", "-f", "/dev/null"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - JAVA_TOOL_OPTIONS=-Xmx2g -XX:MaxMetaspaceSize=512m
-      - MAVEN_OPTS=-Xmx2g -XX:MaxMetaspaceSize=512m
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - TESTCONTAINERS_RYUK_DISABLED=true
-    mem_limit: 4g
-    shm_size: '2gb'
+  frontend:
+    volumes:
+      - /dev/null:/app/node_modules_mock
