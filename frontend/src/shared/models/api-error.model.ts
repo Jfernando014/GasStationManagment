@@ -15,12 +15,12 @@ export class ApiError extends Error {
   readonly fieldErrors: FieldError[];
 
   constructor(status: number, problem: ProblemDetails) {
-    super(problem.detail ?? problem.title ?? DEFAULT_ERROR_MESSAGE);
+    super(problem.detail ?? problem.message ?? problem.title ?? problem.error ?? DEFAULT_ERROR_MESSAGE);
     this.name = 'ApiError';
     this.status = status;
     this.code = problem.code;
-    this.title = problem.title;
-    this.detail = problem.detail;
-    this.fieldErrors = problem.errors ?? [];
+    this.title = problem.title ?? problem.error;
+    this.detail = problem.detail ?? problem.message;
+    this.fieldErrors = problem.errors ?? problem.fields ?? [];
   }
 }

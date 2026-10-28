@@ -1,0 +1,62 @@
+<div class="configuration-page">
+  <header class="configuration-header">
+    <div>
+      <div class="configuration-breadcrumb">Configuración <span>/</span> Tabla de aforo</div>
+      <h1>Tabla de aforo</h1>
+      <p>Registra primero las tablas que podrán utilizar los tanques.</p>
+    </div>
+    <button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">+ Nueva tabla</button>
+  </header>
+
+  <nav class="configuration-tabs" aria-label="Configuración">
+    <a routerLink="/configuracion/aforo" class="active">Tabla de aforo</a>
+    <a routerLink="/configuracion/tanques">Tanques</a>
+  </nav>
+
+  @if (error()) {
+    <div class="alert-box-danger" role="alert">
+      <span>{{ error() }}</span>
+    </div>
+  }
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (newGaugeTableOpen()) {
+    <section class="configuration-card new-tank-card">
+      <div class="card-heading"><div><h2>Registrar tabla de aforo</h2><p>Se crea con dos puntos iniciales editables.</p></div></div>
+      <div class="form-grid">
+        <label>Nombre de la tabla <input [class.configuration-field-invalid]="isRequiredTextInvalid(newGaugeTable().name) || fieldError('name')" [ngModel]="newGaugeTable().name" (ngModelChange)="updateNewGaugeTableName($event)" placeholder="Ej. Tabla T1 - 250 cm">@if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> } @else if (isRequiredTextInvalid(newGaugeTable().name)) { <span class="field-error">Este campo es obligatorio.</span> }</label>
+      </div>
+      <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newGaugeTableOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="createGaugeTable()">Guardar tabla</button></div>
+    </section>
+  }
+
+  @if (gaugeTableLoading()) {
+    <section class="configuration-card configuration-empty-state"><h2>Cargando tablas...</h2></section>
+  } @else if (gaugeTables().length === 0) {
+    <section class="configuration-card configuration-empty-state"><h2>No hay tablas de aforo registradas</h2><p>Registra una tabla antes de crear un tanque.</p><button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">Registrar primera tabla</button></section>
+  } @else {
+    <section class="configuration-card aforo-toolbar">
+      <label>Seleccionar tabla de aforo
+        <select [ngModel]="selectedGaugeTableId()" (ngModelChange)="selectGaugeTable($event)">@for (table of gaugeTables(); track table.id) { <option [value]="table.id">{{ table.name }}</option> }</select>
+      </label>
+      <div class="aforo-stats"><span>Volumen máximo <b>{{ (selectedTable?.maxVolumeGallons ?? 0) | number }} Gal</b></span><span>Altura máxima <b>{{ (selectedTable?.maxHeightCm ?? 0) | number:'1.1-1' }} cm</b></span><span class="state-pill-tag optimal">{{ selectedCurve.length }} puntos</span></div>
+    </section>
+    <section class="configuration-card">
+      <input #csvInput type="file" accept=".csv,text/csv" hidden (change)="importCsv($event)">
+      <div class="card-heading">
+        <div><h2>Puntos de calibración</h2><p>Edita la relación entre altura y volumen.</p></div>
+        <div class="configuration-actions">
+          <button class="jr-btn jr-btn--sec" type="button" (click)="openImport()">Importar tabla</button>
+          <button class="jr-btn jr-btn--sec" type="button" (click)="exportCsv()">Exportar tabla</button>
+          <button class="jr-btn jr-btn--sec" type="button" (click)="addPoint()">Agregar fila</button>
+          <button class="jr-btn jr-btn--pri" type="button" (click)="saveCurve()">Guardar cambios</button>
+        </div>
+      </div>
+      <div class="table-scroll"><table class="configuration-table calibration-table"><thead><tr><th># Punto</th><th>Altura (cm)</th><th>Volumen (galones)</th><th>Acciones</th></tr></thead><tbody>
+        @for (point of selectedCurve; track $index) { <tr><td class="muted">#{{ $index + 1 }}</td><td><input type="number" step="0.1" [class.configuration-field-invalid]="isPointInvalid(point)" [ngModel]="point.height" (ngModelChange)="updatePoint($index, 'height', $event)">@if (isPointInvalid(point)) { <span class="field-error">Valor obligatorio y no negativo.</span> }</td><td><input type="number" step="0.01" [class.configuration-field-invalid]="isPointInvalid(point)" [ngModel]="point.gallons" (ngModelChange)="updatePoint($index, 'gallons', $event)">@if (isPointInvalid(point)) { <span class="field-error">Valor obligatorio y no negativo.</span> }</td><td><button class="table-action danger" type="button" (click)="deletePoint($index)">Eliminar</button></td></tr> }
+      </tbody></table></div>
+    </section>
+  }
+</div>

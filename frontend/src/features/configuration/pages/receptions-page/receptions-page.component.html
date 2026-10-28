@@ -1,0 +1,184 @@
+<div class="receptions-page">
+  <header class="receptions-header">
+    <div>
+      <div class="receptions-breadcrumb">Configuración <span>/</span> Recepciones</div>
+      <h1>Recepciones de combustible</h1>
+      <p>Combustible que llega a cada tanque, con su proveedor y su fecha.</p>
+    </div>
+  </header>
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  <section class="receptions-card" aria-labelledby="receptions-form-title">
+    <div class="receptions-card-head">
+      <div>
+        <h2 id="receptions-form-title">Nueva recepción</h2>
+        <p>Los galones recibidos se suman a la existencia del tanque en la variación del día.</p>
+      </div>
+    </div>
+
+    <div class="receptions-form-grid">
+      <label>
+        Tanque
+        <select
+          [class.receptions-field-invalid]="isInvalid('tankId') || fieldError('tankId')"
+          [ngModel]="draft().tankId"
+          (ngModelChange)="updateDraft('tankId', $event)">
+          <option [ngValue]="0">Seleccionar tanque</option>
+          @for (tank of tanks(); track tank.id) {
+            <option [ngValue]="tank.id">{{ tank.name }} · {{ fuelLabels[tank.fuelType] }}</option>
+          }
+        </select>
+        @if (fieldError('tankId')) {
+          <span class="field-error">{{ fieldError('tankId') }}</span>
+        } @else if (isInvalid('tankId')) {
+          <span class="field-error">Selecciona el tanque que recibe el combustible.</span>
+        }
+      </label>
+
+      <label>
+        Fecha de la recepción
+        <input
+          type="date"
+          [class.receptions-field-invalid]="isInvalid('receptionDate') || fieldError('receptionDate')"
+          [ngModel]="draft().receptionDate"
+          (ngModelChange)="updateDraft('receptionDate', $event)">
+        @if (fieldError('receptionDate')) {
+          <span class="field-error">{{ fieldError('receptionDate') }}</span>
+        } @else if (isInvalid('receptionDate')) {
+          <span class="field-error">La fecha es obligatoria y no puede ser futura.</span>
+        }
+      </label>
+
+      <label>
+        Galones recibidos
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          [class.receptions-field-invalid]="isInvalid('gallons') || fieldError('gallons')"
+          [ngModel]="draft().gallons"
+          (ngModelChange)="updateDraft('gallons', $event)">
+        @if (fieldError('gallons')) {
+          <span class="field-error">{{ fieldError('gallons') }}</span>
+        } @else if (isInvalid('gallons')) {
+          <span class="field-error">Los galones deben ser mayores que cero.</span>
+        }
+      </label>
+
+      <label>
+        Proveedor
+        <input
+          type="text"
+          maxlength="80"
+          autocomplete="off"
+          placeholder="Ej. Terpel"
+          [class.receptions-field-invalid]="isInvalid('supplier') || fieldError('supplier')"
+          [ngModel]="draft().supplier"
+          (ngModelChange)="updateDraft('supplier', $event)">
+        @if (fieldError('supplier')) {
+          <span class="field-error">{{ fieldError('supplier') }}</span>
+        } @else if (isInvalid('supplier')) {
+          <span class="field-error">El proveedor es obligatorio.</span>
+        }
+      </label>
+    </div>
+
+    @if (formError(); as message) {
+      <div class="receptions-alert" role="alert">{{ message }}</div>
+    }
+
+    <div class="receptions-actions">
+      <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
+        {{ saving() ? 'Guardando…' : 'Registrar recepción' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="receptions-card" aria-labelledby="receptions-history-title">
+    <div class="receptions-card-head">
+      <div>
+        <h2 id="receptions-history-title">Historial de recepciones</h2>
+        <p>Consulta lo recibido por tanque y por rango de fechas.</p>
+      </div>
+      <div class="jr-indicadores">
+        <div class="jr-indicador">
+          <span>Recepciones</span>
+          <b>{{ receptions().length }}</b>
+        </div>
+        <div class="jr-indicador">
+          <span>Galones recibidos</span>
+          <b>{{ formatGallons(totalGallons()) }}</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="receptions-filters">
+      <label class="receptions-filter">
+        <span>Tanque</span>
+        <select [ngModel]="filters().tankId ?? 0" (ngModelChange)="onTankFilter($event)">
+          <option [ngValue]="0">Todos</option>
+          @for (tank of tanks(); track tank.id) {
+            <option [ngValue]="tank.id">{{ tank.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="receptions-filter">
+        <span>Desde</span>
+        <input type="date" [ngModel]="filters().from ?? ''" (ngModelChange)="onDateFilter('from', $event)">
+      </label>
+
+      <label class="receptions-filter">
+        <span>Hasta</span>
+        <input type="date" [ngModel]="filters().to ?? ''" (ngModelChange)="onDateFilter('to', $event)">
+      </label>
+
+      <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+
+    @if (loadError(); as message) {
+      <div class="receptions-alert" role="alert">
+        <span>{{ message }}</span>
+        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="load()">Reintentar</button>
+      </div>
+    } @else if (loading()) {
+      <p class="receptions-empty" aria-live="polite">Cargando recepciones…</p>
+    } @else if (receptions().length === 0) {
+      <p class="receptions-empty">
+        @if (filters().tankId || filters().from || filters().to) {
+          No hay recepciones con esos filtros.
+        } @else {
+          Aún no hay recepciones registradas.
+        }
+      </p>
+    } @else {
+      <div class="receptions-table-scroll">
+        <table class="receptions-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tanque</th>
+              <th>Proveedor</th>
+              <th class="num">Galones</th>
+              <th>Registrada</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reception of receptions(); track reception.id) {
+              <tr>
+                <td class="tnum">{{ reception.receptionDate }}</td>
+                <td>{{ tankName(reception.tankId) }}</td>
+                <td>{{ reception.supplier }}</td>
+                <td class="num tnum"><b>{{ formatGallons(reception.gallons) }}</b></td>
+                <td class="tnum">{{ reception.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

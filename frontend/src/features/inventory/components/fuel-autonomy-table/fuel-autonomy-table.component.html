@@ -1,0 +1,34 @@
+<section class="jr-p5-card">
+  <div class="jr-p5-card-cab">
+    <b>Autonomía por combustible</b>
+    @if (autonomy().length > 0) {
+      <span class="jr-p5-tenue">Crítico ≤ {{ formatDays(autonomy()[0].criticalDays) }} · Advertencia ≤ {{ formatDays(autonomy()[0].warningDays) }}</span>
+    }
+  </div>
+  <table class="jr-p5-tabla jr-p5-tabla-var">
+    <thead>
+      <tr>
+        <th>Combustible</th>
+        <th class="num">Existencia</th>
+        <th class="num">Venta diaria</th>
+        <th class="num">Autonomía</th>
+        <th>Nivel</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of autonomy(); track row.fuelType) {
+        <tr>
+          <td class="jr-p5-tanque">
+            <span class="jr-p5-punto" [style.background]="fuelColors[row.fuelType]"></span>{{ fuelLabels[row.fuelType] }}
+          </td>
+          <td class="num">{{ formatGallons(row.stockGallons) }}</td>
+          <td class="num">{{ formatGallons(row.expectedDailySalesGallons) }}</td>
+          <td class="num">{{ formatDays(row.autonomyDays) }}</td>
+          <td><span [class]="'jr-chip ' + autonomyTone(row)">{{ autonomyLabel(row) }}</span></td>
+        </tr>
+      } @empty {
+        <tr><td colspan="5" class="jr-p5-tenue">Sin datos de autonomía para la fecha.</td></tr>
+      }
+    </tbody>
+  </table>
+</section>
