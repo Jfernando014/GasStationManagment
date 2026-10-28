@@ -2,12 +2,16 @@ version: '3.8'
 
 services:
   backend:
-    command: ["tail", "-f", "/dev/null"]
+    profiles:
+      - donotstartin_ci
+  frontend:
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /app/target
+      - /dev/null:/app/node_modules_mock
+  backend-tests:
+    command: ["tail", "-f", "/dev/null"]
     mem_limit: 4g
     shm_size: '2gb'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - JAVA_TOOL_OPTIONS=-Xint -Xmx2g -XX:MaxMetaspaceSize=256m -Dspring.devtools.restart.enabled=false -Djava.awt.headless=true
-      - MAVEN_OPTS=-Xint -Xmx512m
+      - JAVA_TOOL_OPTIONS=-Xmx3g -XX:MaxMetaspaceSize=384m -Djava.awt.headless=true
