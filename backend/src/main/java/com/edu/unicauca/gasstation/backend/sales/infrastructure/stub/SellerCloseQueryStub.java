@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Component;
  *
  * @author javiersolanop777
  */
+@Primary 
 @Component
 @Profile("stub")
 public class SellerCloseQueryStub implements SellerCloseQuery {
