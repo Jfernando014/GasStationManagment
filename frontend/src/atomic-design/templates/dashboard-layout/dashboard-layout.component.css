@@ -62,6 +62,17 @@
 /* Mientras el ancho se anima, el texto no debe reacomodarse en varias líneas */
 .btn-prefix-stack span, .sub-item-link, .sidebar-bottom-pill { white-space: nowrap; }
 
+
+.sub-nav-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: left;
+}
+
 .brand-meta-group, .brand-name-text { min-width: 0; }
 .brand-name-text span:first-child, .brand-desc-text { white-space: nowrap; }
 

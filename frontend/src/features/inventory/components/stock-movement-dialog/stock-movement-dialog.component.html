@@ -1,0 +1,45 @@
+<dialog #dialog class="apple-dialog-scrim" [class.visible]="visible()" (cancel)="onCancel($event)">
+  @if (context(); as context) {
+    <div class="apple-dialog-card jr-p5-dialogo">
+      <h2>{{ context.mode === 'initial' ? 'Existencia inicial' : 'Registrar entrada' }}</h2>
+      <p class="jr-p5-tenue">{{ context.product.productCode }} · {{ context.product.productName }}</p>
+
+      @if (context.mode === 'initial') {
+        <label>
+          Oficina
+          <input type="number" min="0" step="1" [ngModel]="initialOffice()" (ngModelChange)="initialOffice.set($event === '' || $event === null ? null : +$event)">
+          @if (fieldError('officeQuantity'); as message) {
+            <span class="jr-p5-error">{{ message }}</span>
+          }
+        </label>
+        <label>
+          Mostrador
+          <input type="number" min="0" step="1" [ngModel]="initialCounter()" (ngModelChange)="initialCounter.set($event === '' || $event === null ? null : +$event)">
+          @if (fieldError('counterQuantity'); as message) {
+            <span class="jr-p5-error">{{ message }}</span>
+          }
+        </label>
+        <small class="jr-p5-tenue">La existencia inicial se registra una sola vez por producto.</small>
+      } @else {
+        <label>
+          Unidades que llegan a oficina
+          <input type="number" min="1" step="1" [ngModel]="entryQuantity()" (ngModelChange)="entryQuantity.set($event === '' || $event === null ? null : +$event)">
+          @if (fieldError('quantity'); as message) {
+            <span class="jr-p5-error">{{ message }}</span>
+          }
+        </label>
+      }
+
+      @if (error(); as message) {
+        <div class="alert-box-danger" role="alert">{{ message }}</div>
+      }
+
+      <div class="jr-p5-dialogo-acciones">
+        <button class="jr-btn jr-btn--ghost" type="button" (click)="close()">Cancelar</button>
+        <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="confirm()">
+          {{ saving() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>

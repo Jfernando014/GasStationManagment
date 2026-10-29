@@ -1,0 +1,14 @@
+.jr-p5-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jr-p5-vacio {
+  align-items: center;
+  padding: 18px;
+  gap: 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}

@@ -3357,3 +3357,68 @@
     .gs-tabla-wrap tfoot td { position: sticky; bottom: 0; background: var(--surface-subtle); font-weight: 700; border-top: 1px solid var(--border-main); }
     .gs-quitar { border: 0; background: transparent; color: var(--semantic-red-strong); font: inherit; font-size: 11.5px; cursor: pointer; }
     .gs-quitar:hover { text-decoration: underline; }
+
+    /* ===== Configuración › Tanques / Tabla de aforo =====
+       Shared chrome of the two inventory configuration screens. Scoped under
+       .configuration-page so generic names (.form-grid, .field-error, .muted)
+       keep working for the rest of the app. */
+    .configuration-page { max-width: 1360px; margin: 0 auto; padding: 26px 30px 48px; color: var(--text-body); }
+    .configuration-page .configuration-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+    .configuration-page .configuration-breadcrumb { color: var(--text-muted); font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+    .configuration-page .configuration-breadcrumb span { margin: 0 8px; color: var(--text-light); }
+    .configuration-page h1 { color: var(--text-heading); font-size: 28px; letter-spacing: -.03em; margin-bottom: 6px; }
+    .configuration-page .configuration-header p { color: var(--text-muted); font-size: 13px; }
+    .configuration-page .configuration-actions,
+    .configuration-page .card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+    .configuration-page .configuration-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-main); margin-bottom: 18px; }
+    .configuration-page .configuration-tabs a { color: var(--text-muted); padding: 11px 2px; text-decoration: none; font-size: 13px; font-weight: 700; border-bottom: 2px solid transparent; }
+    .configuration-page .configuration-tabs a.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+    .configuration-page .configuration-card { background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); margin-bottom: 18px; overflow: hidden; }
+    .configuration-page .new-tank-card,
+    .configuration-page .tank-editor { padding: 20px 22px; }
+    .configuration-page .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 22px; border-bottom: 1px solid var(--border-hairline); }
+    .configuration-page .card-heading h2 { color: var(--text-heading); font-size: 15px; margin-bottom: 4px; }
+    .configuration-page .card-heading p { color: var(--text-muted); font-size: 12px; }
+    .configuration-page .configuration-empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 54px 24px; text-align: center; }
+    .configuration-page .configuration-empty-state h2 { color: var(--text-heading); font-size: 17px; }
+    .configuration-page .configuration-empty-state p { color: var(--text-muted); font-size: 13px; }
+    .configuration-page .table-scroll { overflow-x: auto; }
+    .configuration-page .configuration-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .configuration-page .configuration-table th { background: var(--surface-subtle); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 12px 18px; white-space: nowrap; }
+    .configuration-page .configuration-table td { border-top: 1px solid var(--border-hairline); padding: 14px 18px; white-space: nowrap; }
+    .configuration-page .configuration-table td:first-child { min-width: 220px; }
+    .configuration-page .configuration-table td strong { display: block; color: var(--text-heading); }
+    .configuration-page .configuration-table td small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 3px; }
+    .configuration-page .table-action { border: 0; background: transparent; color: var(--brand-primary-strong); font-size: 12px; font-weight: 700; cursor: pointer; margin-left: 12px; }
+    .configuration-page .table-action:first-child { margin-left: 0; }
+    .configuration-page .table-action.danger { color: var(--semantic-red-strong); }
+    .configuration-page .muted { color: var(--text-muted); }
+    .configuration-page .form-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 15px; padding: 20px 0; }
+    .configuration-page .new-tank-card .form-grid { padding-bottom: 16px; grid-template-columns: repeat(3, 1fr); }
+    .configuration-page .form-grid label { display: flex; flex-direction: column; gap: 7px; color: var(--text-heading); font-size: 12px; font-weight: 700; }
+    .configuration-page .form-grid input,
+    .configuration-page .form-grid select { width: 100%; height: 38px; border: 1px solid var(--border-main); border-radius: var(--radius-sm); background: #fff; padding: 0 10px; color: var(--text-heading); font: inherit; font-weight: 500; outline: none; }
+    .configuration-page .form-grid input:focus,
+    .configuration-page .form-grid select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(255, 107, 0, .12); }
+    .configuration-page .configuration-field-invalid { border-color: var(--semantic-red-strong) !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, .1); }
+    .configuration-page .field-error { margin: -2px 0 0; color: var(--semantic-red-strong); font-size: 11.5px; font-weight: 600; }
+    .configuration-page .jr-btn { border: 0; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .configuration-page .jr-btn--pri { background: var(--brand-primary); color: #fff; }
+    .configuration-page .jr-btn--sec,
+    .configuration-page .jr-btn--ghost { background: var(--surface-subtle); color: var(--text-heading); border: 1px solid var(--border-main); }
+    .configuration-page .state-pill-tag { padding: 5px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+    .configuration-page .state-pill-tag.optimal { background: var(--semantic-green-subtle); color: var(--semantic-green-strong); }
+
+    @media (max-width:900px) {
+        .configuration-page { padding: 20px 16px 36px; }
+        .configuration-page .configuration-header { align-items: stretch; flex-direction: column; }
+        .configuration-page .configuration-actions { justify-content: flex-start; flex-wrap: wrap; }
+        .configuration-page .form-grid,
+        .configuration-page .new-tank-card .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width:560px) {
+        .configuration-page .form-grid,
+        .configuration-page .new-tank-card .form-grid { grid-template-columns: 1fr; }
+        .configuration-page h1 { font-size: 24px; }
+    }

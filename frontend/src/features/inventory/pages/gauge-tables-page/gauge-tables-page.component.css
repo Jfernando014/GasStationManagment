@@ -1,0 +1,69 @@
+.aforo-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 22px;
+}
+
+.aforo-toolbar label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 300px;
+    color: var(--text-heading);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.aforo-toolbar select,
+.calibration-table input {
+    height: 38px;
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    padding: 0 10px;
+    color: var(--text-heading);
+    font: inherit;
+    font-weight: 500;
+    outline: none;
+}
+
+.aforo-toolbar select {
+    width: 100%;
+}
+
+.aforo-toolbar select:focus,
+.calibration-table input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, .12);
+}
+
+.aforo-stats {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.aforo-stats b {
+    color: var(--text-heading);
+    margin-left: 4px;
+}
+
+.calibration-table input {
+    width: 145px;
+}
+
+@media (max-width:900px) {
+    .aforo-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .aforo-toolbar label {
+        width: 100%;
+    }
+}
