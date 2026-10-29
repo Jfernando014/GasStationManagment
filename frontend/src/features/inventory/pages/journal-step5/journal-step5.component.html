@@ -1,0 +1,73 @@
+﻿<div class="jr-p5">
+  <div class="jr-p5-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Tanques e inventario</h1>
+      <p>Digita la altura medida con la regla. Los galones, la variación y la autonomía los calcula el servidor.</p>
+    </div>
+    <div class="jr-p5-acciones">
+      @if (completed()) {
+      <span class="jr-chip jr-chip--cerrada"><span class="jr-chip-punto"></span>Paso completado</span>
+      } @else if (!editable()) {
+      <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Solo lectura</span>
+      }
+      <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
+        [attr.title]="completed() ? 'El paso ya está completado' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : '')"
+        (click)="completeStep()">
+        Marcar paso 5 completado
+      </button>
+    </div>
+  </div>
+
+  <div class="jr-tabs" role="tablist" aria-label="Inventario">
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'tanques'"
+      [class.is-activa]="tab() === 'tanques'" (click)="tab.set('tanques')">
+      <span [class]="'jr-tab-punto ' + (allMeasured() ? 'jr-tab-punto--ok' : 'jr-tab-punto--aviso')"></span>
+      Tanques
+    </button>
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'lubricantes'"
+      [class.is-activa]="tab() === 'lubricantes'" (click)="tab.set('lubricantes')">
+      <span
+        [class]="'jr-tab-punto ' + (stock().some(product => product.status === 'NEGATIVE_STOCK') ? 'jr-tab-punto--error' : 'jr-tab-punto--ok')"></span>
+      Lubricantes y aditivos
+    </button>
+  </div>
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (formError(); as message) {
+  <div class="alert-box-danger" role="alert">{{ message }}</div>
+  }
+
+  @if (loadError(); as message) {
+  <section class="jr-p5-card jr-p5-vacio">
+    <p>{{ message }}</p>
+    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="loadError.set(null)">Cerrar</button>
+  </section>
+  } @else if (loading()) {
+  <p class="jr-p5-tenue" aria-live="polite">Cargando inventario de la jornada…</p>
+  } @else if (!date()) {
+  <p class="jr-p5-tenue">No hay una jornada abierta para hoy.</p>
+  } @else if (tab() === 'tanques') {
+  <div class="jr-p5-grid">
+    <app-tank-measurements [tanks]="tanks()" [heights]="heights()" [gallons]="gallons()" [editable]="canEditHeights()"
+      [saving]="savingHeights()" (heightChanged)="onHeightChanged($event)" (heightsPasted)="onHeightsPasted($event)"
+      (saveRequested)="saveMeasurements()" />
+    <div class="jr-p5-columna">
+      <app-fuel-variation-table [variations]="variations()" />
+      <app-fuel-autonomy-table [autonomy]="autonomy()" />
+    </div>
+  </div>
+  } @else {
+  <app-lubricant-stock-table [products]="visibleProducts()" [totalProducts]="stock().length" [filter]="productFilter()"
+    [search]="productSearch()" [pendingTransfers]="pendingTransfers()" [editable]="editable()"
+    [savingTransfers]="savingTransfers()" [syncing]="syncing()" [hasPendingTransfers]="hasPendingTransfers()"
+    [unmatchedCodes]="unmatchedCodes()" (filterChanged)="changeProductFilter($event)"
+    (searchChanged)="setProductSearch($event)" (transferChanged)="onTransferChanged($event)"
+    (syncRequested)="syncSales()" (saveRequested)="saveTransfers()" (openMovement)="openMovement($event)" />
+  }
+</div>
+
+<app-stock-movement-dialog [saving]="dialogSaving()" [errorMessage]="dialogError()" [fieldErrors]="dialogFieldErrors()"
+  (confirmed)="onMovementConfirmed($event)" />

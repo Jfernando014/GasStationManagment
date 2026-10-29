@@ -1,0 +1,48 @@
+.jr-p5-dialogo {
+  padding: 22px 24px;
+  gap: 10px;
+}
+
+.jr-p5-dialogo h2 {
+  font-size: 17px;
+  color: var(--text-heading);
+}
+
+.jr-p5-dialogo label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.jr-p5-dialogo input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--jr-cell-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-heading);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.jr-p5-dialogo input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-primary-subtle);
+}
+
+.jr-p5-dialogo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.jr-p5-error {
+  color: var(--semantic-red-strong);
+  font-size: 11px;
+  font-weight: 600;
+}

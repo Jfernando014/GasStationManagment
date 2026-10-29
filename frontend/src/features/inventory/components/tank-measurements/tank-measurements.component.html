@@ -1,0 +1,62 @@
+<section class="jr-p5-card">
+  <div class="jr-p5-card-cab">
+    <b>Medición del día</b>
+    <span class="jr-p5-tenue">Enter baja · pega las 6 alturas seguidas</span>
+  </div>
+
+  <table class="jr-p5-tabla">
+    <thead>
+      <tr>
+        <th>Tanque</th>
+        <th class="num">Altura (cm)</th>
+        <th class="num">Galones</th>
+        <th class="num">Llenado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tank of tanks(); track tank.id; let index = $index) {
+        <tr>
+          <td class="jr-p5-tanque">
+            <span class="jr-p5-punto" [style.background]="fuelColors[tank.fuelType]"></span>{{ tank.name }}
+            <small>{{ tank.code }} · {{ fuelLabels[tank.fuelType] }}</small>
+          </td>
+          <td class="num">
+            <span class="jr-cell jr-cell--edit" [class.jr-cell--invalido]="isHeightInvalid(tank)">
+              <input
+                #heightInput
+                class="jr-input"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                [value]="heightText(tank.id)"
+                [disabled]="!editable()"
+                [attr.aria-label]="'Altura medida · ' + tank.name"
+                (input)="onHeightInput(tank, $event)"
+                (keydown)="onHeightKeydown($event, index)"
+                (paste)="onHeightsPaste($event, index)">
+            </span>
+          </td>
+          <td class="num">{{ formatGallons(gallons()[tank.id]) }}</td>
+          <td class="num">{{ fillPercent(tank) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="jr-p5-card-pie">
+    <span class="jr-p5-etq">{{ measuredCount() }} de {{ tanks().length }} tanques medidos</span>
+    @if (allMeasured()) {
+      <span class="jr-chip jr-chip--cerrada">Completo</span>
+    } @else {
+      <span class="jr-chip jr-chip--pendiente">Faltan alturas</span>
+    }
+    <button
+      class="jr-btn jr-btn--pri jr-btn--sm"
+      type="button"
+      style="margin-left: auto"
+      [disabled]="!editable() || saving()"
+      (click)="saveRequested.emit()">
+      {{ saving() ? 'Guardando…' : 'Guardar medición' }}
+    </button>
+  </div>
+</section>

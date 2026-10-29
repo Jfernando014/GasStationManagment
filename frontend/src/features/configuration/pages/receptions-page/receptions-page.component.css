@@ -1,0 +1,190 @@
+.receptions-page {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 26px 30px 48px;
+  color: var(--text-body);
+}
+
+.receptions-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.receptions-breadcrumb {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.receptions-breadcrumb span {
+  margin: 0 8px;
+  color: var(--text-light);
+}
+
+.receptions-header h1 {
+  color: var(--text-heading);
+  font-size: 28px;
+  letter-spacing: -.03em;
+  margin-bottom: 6px;
+}
+
+.receptions-header p {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.receptions-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+
+.receptions-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.receptions-card-head h2 {
+  color: var(--text-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.receptions-card-head p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.receptions-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.receptions-form-grid label,
+.receptions-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.receptions-form-grid input,
+.receptions-form-grid select,
+.receptions-filter input,
+.receptions-filter select {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--jr-cell-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-heading);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.receptions-form-grid input:focus,
+.receptions-form-grid select:focus,
+.receptions-filter input:focus,
+.receptions-filter select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-primary-subtle);
+}
+
+.receptions-field-invalid {
+  border-color: var(--semantic-red) !important;
+}
+
+.field-error {
+  color: var(--semantic-red-strong);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.receptions-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.receptions-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.receptions-table-scroll {
+  overflow: auto;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+}
+
+.receptions-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.receptions-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border-main);
+  white-space: nowrap;
+}
+
+.receptions-table td {
+  padding: 9px 10px;
+  font-size: 12.5px;
+  color: var(--text-heading);
+  border-bottom: 1px solid var(--surface-subtle);
+  white-space: nowrap;
+}
+
+.receptions-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.receptions-table .num {
+  text-align: right;
+}
+
+.receptions-empty {
+  padding: 24px 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.receptions-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  background: var(--semantic-red-subtle);
+  color: var(--semantic-red-strong);
+  font-size: 12.5px;
+}

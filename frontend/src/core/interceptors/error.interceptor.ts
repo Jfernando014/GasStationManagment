@@ -42,5 +42,10 @@ function isProblemDetails(body: unknown): body is ProblemDetails {
     return false;
   }
   const problem = body as ProblemDetails;
-  return typeof problem.detail === 'string' || typeof problem.title === 'string';
+  return (
+    typeof problem.detail === 'string' ||
+    typeof problem.title === 'string' ||
+    typeof problem.message === 'string' ||
+    typeof problem.error === 'string'
+  );
 }

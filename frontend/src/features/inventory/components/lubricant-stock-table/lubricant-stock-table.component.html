@@ -1,0 +1,103 @@
+<div class="jr-p5-lub-barra">
+  <div class="jr-p5-seg" role="group" aria-label="Filtrar productos">
+    <button type="button" [class.is-activo]="filter() === 'movimiento'" (click)="filterChanged.emit('movimiento')">Con movimiento hoy</button>
+    <button type="button" [class.is-activo]="filter() === 'LUBRICANTE'" (click)="filterChanged.emit('LUBRICANTE')">Lubricantes</button>
+    <button type="button" [class.is-activo]="filter() === 'ADITIVO'" (click)="filterChanged.emit('ADITIVO')">Aditivos</button>
+    <button type="button" [class.is-activo]="filter() === 'OTRO'" (click)="filterChanged.emit('OTRO')">Otros</button>
+    <button type="button" [class.is-activo]="filter() === 'todos'" (click)="filterChanged.emit('todos')">Todos</button>
+  </div>
+  <div class="jr-p5-lub-acciones">
+    <label class="jr-p5-buscar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="search"
+        placeholder="Buscar producto o código"
+        aria-label="Buscar producto"
+        [ngModel]="search()"
+        (ngModelChange)="searchChanged.emit($event)">
+    </label>
+    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" [disabled]="!editable() || syncing()" (click)="syncRequested.emit()">
+      {{ syncing() ? 'Sincronizando…' : 'Sincronizar ventas del paso 2' }}
+    </button>
+    <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!editable() || savingTransfers() || !hasPendingTransfers()" (click)="saveRequested.emit()">
+      {{ savingTransfers() ? 'Guardando…' : 'Guardar traslados' }}
+    </button>
+  </div>
+</div>
+
+@if (unmatchedCodes().length > 0) {
+  <div class="jr-p5-aviso" role="status">
+    <b>Ventas sin producto en el catálogo:</b> {{ unmatchedCodes().join(', ') }}. No se bloquearon las ventas.
+  </div>
+}
+
+<section class="jr-p5-card">
+  <table class="jr-p5-tabla jr-p5-tabla-lub">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th class="num">Oficina</th>
+        <th class="num">Mostrador</th>
+        <th class="num">Vendido hoy</th>
+        <th class="num">Traslado a mostrador</th>
+        <th class="num">Existencia</th>
+        <th class="num">Queda en mostrador</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of products(); track product.productId) {
+        <tr [class.is-atenuada]="existingTotal(product) <= 0">
+          <td><span class="jr-p5-sku">{{ product.productCode }}</span>{{ product.productName }}</td>
+          <td class="num">{{ product.office.closing }}</td>
+          <td class="num">{{ product.counter.closing }}</td>
+          <td class="num">
+            @if (product.office.sold + product.counter.sold > 0) {
+              {{ product.office.sold + product.counter.sold }}
+            } @else {
+              <span class="jr-p5-tenue">—</span>
+            }
+          </td>
+          <td class="num">
+            <span class="jr-cell jr-cell--edit jr-p5-traslado" [class.jr-cell--invalido]="transferInvalid(product)">
+              <input
+                class="jr-input"
+                type="number"
+                min="0"
+                step="1"
+                [value]="transferOf(product.productId) ?? ''"
+                [disabled]="!editable() || product.office.closing <= 0"
+                [attr.aria-label]="'Traslado a mostrador · ' + product.productName"
+                [attr.placeholder]="product.office.closing > 0 ? '0' : '—'"
+                (input)="onTransferInput(product, $event)">
+            </span>
+          </td>
+          <td class="num"><b>{{ existingTotal(product) }}</b></td>
+          <td class="num jr-p5-tenue">{{ counterAfterTransfer(product) }}</td>
+          <td>
+            @if (product.status === 'NEGATIVE_STOCK') {
+              <span class="jr-chip jr-chip--falta" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</span>
+            } @else if (existingTotal(product) <= 0) {
+              <span class="jr-chip jr-chip--falta">Agotado</span>
+            } @else if (product.office.closing <= 0) {
+              <span class="jr-chip jr-chip--aviso">Sin reserva en oficina</span>
+            }
+          </td>
+          <td class="num jr-p5-acciones-fila">
+            <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openMovement.emit({ product, mode: 'entry' })">Entrada</button>
+            <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openMovement.emit({ product, mode: 'initial' })">Inicial</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="9" class="jr-p5-tenue">No hay productos con este filtro.</td></tr>
+      }
+    </tbody>
+  </table>
+  <div class="jr-p5-card-pie jr-p5-lub-pie">
+    <span>Mostrando {{ products().length }} de {{ totalProducts() }} productos</span>
+    <span>Existencia = oficina + mostrador. El traslado mueve unidades de oficina a mostrador.</span>
+  </div>
+</section>
