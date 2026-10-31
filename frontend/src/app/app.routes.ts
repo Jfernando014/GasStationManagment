@@ -69,6 +69,11 @@ export const routes: Routes = [
         loadComponent: () => import('../features/inventory/pages/tanks-page/tanks-page.component').then(m => m.TanksPageComponent)
       },
       {
+        path: 'configuracion/umbrales',
+        loadComponent: () => import('../features/inventory/pages/autonomy-thresholds-page/autonomy-thresholds-page.component')
+          .then(m => m.AutonomyThresholdsPageComponent)
+      },
+      {
         path: 'configuracion/aforo',
         loadComponent: () => import('../features/inventory/pages/gauge-tables-page/gauge-tables-page.component')
           .then(m => m.GaugeTablesPageComponent)

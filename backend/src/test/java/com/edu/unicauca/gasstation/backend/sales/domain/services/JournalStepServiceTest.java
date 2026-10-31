@@ -145,7 +145,7 @@ class JournalStepServiceTest {
     @DisplayName("Should throw IllegalArgumentException when step to complete does not exist")
     void throwsExceptionWhenTargetStepNotFound() {
         Long journalId = 1L;
-        Integer stepNumber = 5;
+        Integer stepNumber = 3;
 
         when(journalStepRepository.findByJournalIdAndStepNumber(journalId, stepNumber))
                 .thenReturn(Optional.empty());
@@ -153,6 +153,58 @@ class JournalStepServiceTest {
         assertThatThrownBy(() -> journalStepService.markStepAsCompleted(journalId, stepNumber))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Paso no encontrado");
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalStateException when completing step 5 if step 2 is not completed (S2-28)")
+    void throwsExceptionWhenStep5CompletedWithoutStep2() {
+        Long journalId = 1L;
+
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .status(StepStatus.PENDING)
+                .build();
+
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 2))
+                .thenReturn(Optional.of(step2));
+
+        assertThatThrownBy(() -> journalStepService.markStepAsCompleted(journalId, 5))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("el paso 2 no está completado");
+
+        verify(journalStepRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should mark step 5 as completed when step 2 is already completed (S2-28)")
+    void marksStep5CompletedWhenSalesAreClosed() {
+        Long journalId = 1L;
+
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .status(StepStatus.COMPLETED)
+                .build();
+
+        JournalStep step5 = JournalStep.builder()
+                .id(50L)
+                .stepNumber(5)
+                .status(StepStatus.PENDING)
+                .build();
+
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 2))
+                .thenReturn(Optional.of(step2));
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 5))
+                .thenReturn(Optional.of(step5));
+        when(journalStepRepository.save(any(JournalStep.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        JournalStep result = journalStepService.markStepAsCompleted(journalId, 5);
+
+        assertThat(result.getStatus()).isEqualTo(StepStatus.COMPLETED);
+        assertThat(result.getCompletedAt()).isNotNull();
+        verify(journalStepRepository).save(step5);
     }
 
     @Test
