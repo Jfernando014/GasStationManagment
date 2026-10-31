@@ -22,8 +22,8 @@ const STEPS: JournalStepResponse[] = Array.from({ length: 6 }, (_, index) => ({
   id: index + 1,
   stepNumber: index + 1,
   name: `Paso ${index + 1}`,
-  status: StepStatus.PENDING,
-  completedAt: null
+  status: index + 1 === 2 ? StepStatus.COMPLETED : StepStatus.PENDING,
+  completedAt: index + 1 === 2 ? '2026-08-05T07:00:00' : null
 }));
 
 const JOURNAL: JournalResponse = {
@@ -228,6 +228,33 @@ describe('JournalStep5Component', () => {
 
     expect(journalService.completeStep).toHaveBeenCalledWith(10, 5);
     expect(journalService.updateCurrentStep).toHaveBeenCalled();
+  });
+
+  it('does not allow completion while step 2 has not been closed', async () => {
+    journalSubject.next({
+      ...JOURNAL,
+      steps: STEPS.map(step => step.stepNumber === 2
+        ? { ...step, status: StepStatus.PENDING, completedAt: null }
+        : step)
+    });
+
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    pasteHeights(fixture, '100\n100\n100\n100\n100\n100');
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    measurementsService.save.mockReturnValue(of({
+      id: 6,
+      journalDate: JOURNAL_DATE,
+      measuredAt: '2026-08-05T09:45:00',
+      readings: TANKS.map(tank => ({ tankId: tank.id, heightCm: 100, volumeGallons: 2000 }))
+    }));
+    component.saveMeasurements();
+
+    expect(component.salesCompleted()).toBe(false);
+    expect(component.canComplete()).toBe(false);
+    expect(journalService.completeStep).not.toHaveBeenCalled();
   });
 
   it('does not allow editing when step 6 is completed', () => {

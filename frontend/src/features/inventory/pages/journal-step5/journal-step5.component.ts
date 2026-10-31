@@ -74,6 +74,9 @@ export class JournalStep5Component {
   readonly date = computed(() => this.journal()?.date ?? null);
   readonly step = computed(() => this.journal()?.steps.find(item => item.stepNumber === STEP_NUMBER) ?? null);
   readonly completed = computed(() => this.step()?.status === StepStatus.COMPLETED);
+  readonly salesCompleted = computed(() =>
+    this.journal()?.steps.find(item => item.stepNumber === 2)?.status === StepStatus.COMPLETED
+  );
   readonly editable = computed(() => {
     const journal = this.journal();
     if (!journal || journal.status !== JournalStatus.OPEN) return false;
@@ -120,7 +123,7 @@ export class JournalStep5Component {
     return this.tanks().every(tank => measurement.readings.some(reading => reading.tankId === tank.id));
   });
   readonly canComplete = computed(() =>
-    this.editable() && !this.completed() && this.savedAllTanks() && !this.savingHeights()
+    this.editable() && !this.completed() && this.salesCompleted() && this.savedAllTanks() && !this.savingHeights()
   );
   readonly canEditHeights = computed(() => this.editable() && !this.completed());
   readonly hasPendingTransfers = computed(() =>
