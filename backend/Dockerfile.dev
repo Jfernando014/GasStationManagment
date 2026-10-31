@@ -1,10 +1,15 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine
 
+RUN apk add --no-cache fontconfig ttf-dejavu
+ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+
 WORKDIR /app
 
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
+COPY . .
+
 EXPOSE 8080
 
-CMD ["mvn", "spring-boot:run"]
+CMD ["sh", "-c", "mvn -B -ntp test && mvn -B spring-boot:run"]

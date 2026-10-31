@@ -3,34 +3,37 @@ version: '3.8'
 services:
 
   frontend:
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile.dev
-        args:
-          - FRONTEND_PORT=${FRONTEND_PORT}
-      container_name: gas-station-frontend-dev
-      ports:
-        - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-      volumes:
-        - ./frontend:/app
-        - /app/node_modules
-      environment:
-        - NODE_ENV=development
-      depends_on:
-        - backend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+      args:
+        - FRONTEND_PORT=${FRONTEND_PORT}
+    container_name: gas-station-frontend-dev
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      backend:
+        condition: service_healthy
 
   backend:
     build:
-      context: ./backend        
+      context: ./backend
       dockerfile: Dockerfile.dev
     container_name: gas-station-backend-dev
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
-      - ./backend:/app         
+      - ./backend:/app
+      - backend_target_dev:/app/target
       - ~/.m2:/root/.m2
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=${BACKEND_PROFILES:-dev}
       - SERVER_PORT=${SERVER_PORT}
       - DB_URL=jdbc:postgresql://db:5432/${POSTGRES_DB_NAME}
       - DB_USER=${POSTGRES_DB_USER}
@@ -39,6 +42,14 @@ services:
       - JPA_SHOW_SQL=${JPA_SHOW_SQL}
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
+      - MAVEN_OPTS=-Dmaven.compiler.parameters=true
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "wget -S --spider -T 3 http://localhost:${SERVER_PORT}${API_DOCS_PATH} 2>&1 | grep -q 'HTTP/'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 300s
     depends_on:
       db:
         condition: service_healthy
@@ -62,3 +73,4 @@ services:
 
 volumes:
   postgres_dev_data:
+  backend_target_dev:
