@@ -6,7 +6,6 @@ import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSum
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Fixed data for the daily download tests: one vendor, four products, one date with data.
@@ -44,24 +43,5 @@ public final class DailyDownloadTestData {
 
     public static BigDecimal bd(String prmValue) {
         return new BigDecimal(prmValue);
-    }
-
-    /** Hand-written fake: has data only for DATE. */
-    public static class FakeSellerCloseQuery implements SellerCloseQuery {
-
-        @Override
-        public Optional<DaySummary> findDaySummary(LocalDate prmDate) {
-            return DATE.equals(prmDate) ? Optional.of(day()) : Optional.empty();
-        }
-
-        @Override
-        public List<VendorCloseSummary> findVendorClosesByDate(LocalDate prmDate) {
-            return DATE.equals(prmDate) ? List.of(vendor()) : List.of();
-        }
-
-        @Override
-        public Optional<VendorCloseSummary> findVendorClose(LocalDate prmDate, String prmVendorDocument) {
-            return findVendorClosesByDate(prmDate).stream().findFirst();
-        }
     }
 }

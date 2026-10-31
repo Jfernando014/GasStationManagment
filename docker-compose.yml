@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
 
   frontend:
@@ -15,7 +17,8 @@ services:
     environment:
       - NODE_ENV=development
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   backend:
     build:
@@ -28,6 +31,7 @@ services:
       - ./backend:/app
       - backend_target_dev:/app/target
       - ~/.m2:/root/.m2
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - SPRING_PROFILES_ACTIVE=${BACKEND_PROFILES:-dev}
       - SERVER_PORT=${SERVER_PORT}
@@ -38,22 +42,14 @@ services:
       - JPA_SHOW_SQL=${JPA_SHOW_SQL}
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
-    depends_on:
-      db:
-        condition: service_healthy
-
-  backend-tests:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    container_name: gas-station-backend-tests
-    command: ["mvn", "test", "-Dspring.profiles.active=test", "-Dtest=DailyDownload*,SellerCloseQueryStub*,StubProfileConventionTest"]
-    volumes:
-      - ~/.m2:/root/.m2  
-    environment:
-      - DB_URL=jdbc:postgresql://db:5432/${POSTGRES_DB_NAME}
-      - DB_USER=${POSTGRES_DB_USER}
-      - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
+      - MAVEN_OPTS=-Dmaven.compiler.parameters=true
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "wget -S --spider -T 3 http://localhost:${SERVER_PORT}${API_DOCS_PATH} 2>&1 | grep -q 'HTTP/'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 300s
     depends_on:
       db:
         condition: service_healthy

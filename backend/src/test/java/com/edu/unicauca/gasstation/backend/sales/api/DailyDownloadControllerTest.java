@@ -2,17 +2,21 @@ package com.edu.unicauca.gasstation.backend.sales.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.FakeSellerCloseQuery;
+import com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData;
+import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery;
 import com.edu.unicauca.gasstation.backend.sales.application.DailyDownloadService;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.export.DailyDownloadWorkbookExporter;
 import java.io.ByteArrayInputStream;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,19 +29,30 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
- * Level 3: HTTP answers of the daily download endpoints.
- *
  * @author javiersolanop777
  */
 class DailyDownloadControllerTest {
 
     private static final String BASE = "/api/v1/sales/downloads/";
     private MockMvc atrMockMvc;
+    private SellerCloseQuery mockSellerCloseQuery;
 
     @BeforeEach
     void setUp() {
+        mockSellerCloseQuery = mock(SellerCloseQuery.class);
+
+        when(mockSellerCloseQuery.findDaySummary(DailyDownloadTestData.DATE))
+                .thenReturn(Optional.of(DailyDownloadTestData.day()));
+                
+        when(mockSellerCloseQuery.findVendorClosesByDate(DailyDownloadTestData.DATE))
+                .thenReturn(List.of(DailyDownloadTestData.vendor()));
+        
+        when(mockSellerCloseQuery.findDaySummary(DailyDownloadTestData.DATE_WITHOUT_DATA))
+                .thenReturn(Optional.empty());
+
         DailyDownloadService objService =
-                new DailyDownloadService(new FakeSellerCloseQuery(), new DailyDownloadWorkbookExporter());
+                new DailyDownloadService(mockSellerCloseQuery, new DailyDownloadWorkbookExporter());
+                
         atrMockMvc = MockMvcBuilders.standaloneSetup(new DailyDownloadController(objService))
                 .setControllerAdvice(new DailyDownloadExceptionHandler())
                 .build();

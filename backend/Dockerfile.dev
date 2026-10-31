@@ -1,4 +1,4 @@
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS base
+FROM maven:3.9.6-eclipse-temurin-21-alpine
 
 RUN apk add --no-cache fontconfig ttf-dejavu
 ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
@@ -10,9 +10,6 @@ RUN mvn dependency:go-offline -B
 
 COPY . .
 
-FROM base AS development
 EXPOSE 8080
-CMD ["mvn", "spring-boot:run"]
 
-FROM base AS test-runner
-CMD ["mvn", "clean", "test", "-T", "1", "-Dmaven.compiler.useIncrementalCompilation=false", "-Dmaven.compiler.parameters=true", "-Dspring.profiles.active=stub"]
+CMD ["sh", "-c", "mvn -B -ntp test && mvn -B spring-boot:run"]
