@@ -1,0 +1,108 @@
+<div class="configuration-page">
+  <header class="configuration-header">
+    <div>
+      <div class="configuration-breadcrumb">Configuración <span>/</span> Umbrales de autonomía</div>
+      <h1>Umbrales de autonomía</h1>
+      <p>Define desde qué días de autonomía se genera una advertencia y desde cuándo una alerta crítica.</p>
+    </div>
+  </header>
+
+  <nav class="configuration-tabs" aria-label="Configuración">
+    <a routerLink="/configuracion/aforo">Tabla de aforo</a>
+    <a routerLink="/configuracion/tanques">Tanques</a>
+    <a routerLink="/configuracion/umbrales" class="active">Umbrales</a>
+  </nav>
+
+  @if (error()) {
+    <div class="alert-box-danger" role="alert">
+      <span>{{ error() }}</span>
+    </div>
+  }
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  <section class="configuration-card">
+    <div class="card-heading">
+      <div>
+        <h2>Nueva vigencia</h2>
+        <p>Los umbrales no se modifican: cada cambio se registra con una fecha de vigencia nueva.</p>
+      </div>
+    </div>
+    <div class="form-grid thresholds-form">
+      <label>Vigente desde
+        <input [class.configuration-field-invalid]="isFieldInvalid('validFrom')" type="date"
+          [ngModel]="form().validFrom" (ngModelChange)="updateForm('validFrom', $event)">
+        @if (fieldError('validFrom')) {
+          <span class="field-error">{{ fieldError('validFrom') }}</span>
+        } @else if (isFieldInvalid('validFrom')) {
+          <span class="field-error">{{ validationMessage('validFrom') }}</span>
+        }
+      </label>
+      <label>Días de advertencia
+        <input [class.configuration-field-invalid]="isFieldInvalid('warningDays')" type="number" min="0.1" step="0.1"
+          inputmode="decimal" placeholder="Ej. 5" [ngModel]="form().warningDays"
+          (ngModelChange)="updateForm('warningDays', $event)">
+        @if (fieldError('warningDays')) {
+          <span class="field-error">{{ fieldError('warningDays') }}</span>
+        } @else if (isFieldInvalid('warningDays')) {
+          <span class="field-error">{{ validationMessage('warningDays') }}</span>
+        }
+      </label>
+      <label>Días críticos
+        <input [class.configuration-field-invalid]="isFieldInvalid('criticalDays')" type="number" min="0.1" step="0.1"
+          inputmode="decimal" placeholder="Ej. 2" [ngModel]="form().criticalDays"
+          (ngModelChange)="updateForm('criticalDays', $event)">
+        @if (fieldError('criticalDays')) {
+          <span class="field-error">{{ fieldError('criticalDays') }}</span>
+        } @else if (isFieldInvalid('criticalDays')) {
+          <span class="field-error">{{ validationMessage('criticalDays') }}</span>
+        }
+      </label>
+    </div>
+    <div class="card-actions thresholds-actions">
+      <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
+        {{ saving() ? 'Guardando…' : 'Guardar umbrales' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="configuration-card">
+    <div class="card-heading">
+      <div>
+        <h2>Vigencias registradas</h2>
+        <p>El paso 5 usa los umbrales vigentes en la fecha de la jornada.</p>
+      </div>
+      @if (thresholds().length > 0) {
+        <span class="state-pill-tag optimal">{{ thresholds().length }} vigencia{{ thresholds().length === 1 ? '' : 's' }}</span>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="configuration-empty-state"><h2>Cargando umbrales...</h2></div>
+    } @else if (thresholds().length === 0) {
+      <div class="configuration-empty-state">
+        <h2>Aún no hay umbrales registrados</h2>
+        <p>Sin umbrales la autonomía se calcula, pero no se clasifica como advertencia o crítica.</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table class="configuration-table">
+          <thead>
+            <tr><th>Vigente desde</th><th>Advertencia</th><th>Crítico</th><th>Registrado</th></tr>
+          </thead>
+          <tbody>
+            @for (threshold of thresholds(); track threshold.id) {
+              <tr>
+                <td><strong>{{ formatDate(threshold.validFrom) }}</strong></td>
+                <td class="tnum">{{ threshold.warningDays }} días</td>
+                <td class="tnum">{{ threshold.criticalDays }} días</td>
+                <td>{{ formatDate(threshold.createdAt.slice(0, 10)) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

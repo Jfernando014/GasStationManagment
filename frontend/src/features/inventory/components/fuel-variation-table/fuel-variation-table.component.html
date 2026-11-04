@@ -3,38 +3,40 @@
     <b>Variación por combustible</b>
     <a routerLink="/configuracion/tanques">Tanques</a>
   </div>
-  <table class="jr-p5-tabla jr-p5-tabla-var">
-    <thead>
-      <tr>
-        <th>Combustible</th>
-        <th class="num">Inicial</th>
-        <th class="num">Entradas</th>
-        <th class="num">Vendido</th>
-        <th class="num">Teórico</th>
-        <th class="num">Medido</th>
-        <th class="num">Variación</th>
-        <th class="num">Tol.</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (variation of variations(); track variation.fuelType) {
+  <div class="jr-p5-tabla-scroll">
+    <table class="jr-p5-tabla jr-p5-tabla-var">
+      <thead>
         <tr>
-          <td class="jr-p5-tanque">
-            <span class="jr-p5-punto" [style.background]="fuelColors[variation.fuelType]"></span>{{ fuelLabels[variation.fuelType] }}
-          </td>
-          <td class="num">{{ formatGallons(variation.initialGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.entriesGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.soldGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.theoreticalGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.measuredGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.varianceGallons) }}</td>
-          <td class="num">{{ formatGallons(variation.toleranceGallons) }}</td>
-          <td><span [class]="'jr-chip ' + variationTone(variation)">{{ variationLabel(variation) }}</span></td>
+          <th>Combustible</th>
+          <th class="num">Inicial</th>
+          <th class="num">Entradas</th>
+          <th class="num">Vendido</th>
+          <th class="num">Teórico</th>
+          <th class="num">Medido</th>
+          <th class="num">Variación</th>
+          <th class="num">Tol.</th>
+          <th>Estado</th>
         </tr>
-      } @empty {
-        <tr><td colspan="9" class="jr-p5-tenue">Sin datos de variación para la fecha.</td></tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (variation of variations(); track variation.fuelType) {
+          <tr>
+            <td class="jr-p5-tanque">
+              <span class="jr-p5-punto" [style.background]="fuelColors[variation.fuelType]"></span>{{ fuelLabels[variation.fuelType] }}
+            </td>
+            <td class="num">{{ formatGallons(variation.initialGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.entriesGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.soldGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.theoreticalGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.measuredGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.varianceGallons) }}</td>
+            <td class="num">{{ formatGallons(variation.toleranceGallons) }}</td>
+            <td><span [class]="'jr-chip ' + variationTone(variation)">{{ variationLabel(variation) }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" class="jr-p5-tenue">Sin datos de variación para la fecha.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </section>

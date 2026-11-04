@@ -22,6 +22,10 @@ public class JournalStepService {
             checkStepCompleted(journalId, 2);
             checkStepCompleted(journalId, 3);
         }
+        // El paso 5 calcula la variación y el stock con las ventas del paso 2
+        if (stepNumber == 5) {
+            checkStepCompleted(journalId, 2);
+        }
 
         JournalStep step = journalStepRepository.findByJournalIdAndStepNumber(journalId, stepNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Paso no encontrado"));

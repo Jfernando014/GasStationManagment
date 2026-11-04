@@ -9,9 +9,13 @@
       <span class="jr-chip jr-chip--cerrada"><span class="jr-chip-punto"></span>Paso completado</span>
       } @else if (!editable()) {
       <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Solo lectura</span>
+      } @else if (!salesCompleted()) {
+      <span class="jr-chip jr-chip--aviso"
+        title="La variación y el stock usan las ventas del paso 2"><span class="jr-chip-punto"></span>Paso 2
+        pendiente</span>
       }
       <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
-        [attr.title]="completed() ? 'El paso ya está completado' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : '')"
+        [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 (cierre de vendedores) primero' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : ''))"
         (click)="completeStep()">
         Marcar paso 5 completado
       </button>
