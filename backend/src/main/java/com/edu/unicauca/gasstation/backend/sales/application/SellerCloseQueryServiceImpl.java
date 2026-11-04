@@ -12,7 +12,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
  * Service implementation of the public SellerCloseQuery contract for cross-module consumption.
  */
 @Service
+@Getter 
+@Setter 
 @RequiredArgsConstructor
 public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
 

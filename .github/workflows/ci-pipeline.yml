@@ -25,27 +25,28 @@ jobs:
           echo "SWAGGER_PATH=/swagger-ui.html" >> .env
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
-      - name: Construir y levantar contenedores con Docker Compose
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
-
-      - name: Esperar a que la base de datos esté lista
+      - name: Construir infraestructura y arrancar servicios base
         run: |
-          until [ "$(docker inspect --format='{{.State.Health.Status}}' gas-station-db-dev)" == "healthy" ]; do
-            sleep 2
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+
+      - name: Esperar a que las pruebas de Java pasen y el Backend esté listo
+        run: |
+          echo "Ejecutando pruebas de Java y levantando el contexto de Spring..."
+          until [ "$(docker inspect --format='{{.State.Health.Status}}' gas-station-backend-dev)" == "healthy" ]; do
+            # Si el contenedor se apaga prematuramente significa que las pruebas de Java fallaron
+            if [ "$(docker inspect --format='{{.State.Status}}' gas-station-backend-dev)" == "exited" ]; then
+              echo "ERROR: Las pruebas del Backend (Java) fallaron."
+              docker logs gas-station-backend-dev
+              exit 1
+            fi
+            sleep 5
           done
-
-      - name: Ejecutar pruebas del Backend (Java)
-        run: |
-          docker exec --user root \
-            -e MAVEN_OPTS="-Xmx2g -XX:MaxMetaspaceSize=512m" \
-            -e DOCKER_HOST=unix:///var/run/docker.sock \
-            -e TESTCONTAINERS_RYUK_DISABLED=true \
-            gas-station-backend-dev \
-            mvn clean test -T 1 -Dmaven.compiler.useIncrementalCompilation=false
+          echo "Pruebas de Java exitosas. Servidor Backend en línea."
 
       - name: Ejecutar pruebas del Frontend (Angular)
-        run: docker exec -e CI=true gas-station-frontend-dev npx ng test --no-watch
+        run: |
+          docker exec -e CI=true gas-station-frontend-dev npx ng test --no-watch
 
-      - name: Apagar contenedores
+      - name: Apagar contenedores y limpiar volúmenes residuales
         if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
