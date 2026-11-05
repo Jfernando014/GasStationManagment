@@ -2,9 +2,12 @@ package com.edu.unicauca.gasstation.backend.sales.api;
 
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalStepResponse;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.Step3ReconciliationResponse;
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService.Step3ReconciliationResult;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,6 +24,7 @@ public class JournalController {
 
     private final JournalService journalService;
     private final JournalStepService journalStepService;
+    private final JournalStep3ValidationService journalStep3ValidationService;
 
     @PostMapping("/open")
     public ResponseEntity<JournalResponse> getOrCreateJournal(
@@ -41,6 +45,46 @@ public class JournalController {
                 .status(step.getStatus())
                 .completedAt(step.getCompletedAt())
                 .build());
+    }
+
+    /**
+     * GET /api/v1/journals/{journalId}/steps/3/reconciliation
+     *
+     * <p>Returns the Step 3 commission reconciliation preview without persisting any change.
+     * Use this to show the user the Credibanco commission breakdown before confirming.
+     */
+    @GetMapping("/{journalId}/steps/3/reconciliation")
+    public ResponseEntity<Step3ReconciliationResponse> previewStep3Reconciliation(
+            @PathVariable Long journalId) {
+        Step3ReconciliationResult result = journalStep3ValidationService.previewReconciliation(journalId);
+        return ResponseEntity.ok(toStep3Response(result, false));
+    }
+
+    /**
+     * POST /api/v1/journals/{journalId}/steps/3/complete
+     *
+     * <p>Validates Step 3 (Credibanco commission reconciliation against declared vendor closes)
+     * and marks it as COMPLETED when everything reconciles.
+     */
+    @PostMapping("/{journalId}/steps/3/complete")
+    public ResponseEntity<Step3ReconciliationResponse> completeStep3(
+            @PathVariable Long journalId) {
+        JournalStep completedStep = journalStep3ValidationService.validateAndCompleteStep3(journalId);
+        Step3ReconciliationResult preview = journalStep3ValidationService.previewReconciliation(journalId);
+        return ResponseEntity.ok(toStep3Response(preview, completedStep != null));
+    }
+
+    private Step3ReconciliationResponse toStep3Response(Step3ReconciliationResult result, boolean stepCompleted) {
+        return new Step3ReconciliationResponse(
+                result.journalId(),
+                result.journalDate(),
+                result.totalCredibanco(),
+                result.commissionRate(),
+                result.expectedCommission(),
+                result.totalDelivered(),
+                result.reconciles(),
+                stepCompleted
+        );
     }
 
     private JournalResponse mapToResponse(Journal journal) {
