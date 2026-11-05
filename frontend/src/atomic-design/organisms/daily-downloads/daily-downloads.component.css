@@ -1,0 +1,18 @@
+/* The card, the rows and the buttons use the global classes jr-p6-* and jr-btn of the prototype. */
+.daily-downloads-status {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.daily-downloads-message {
+  margin: 0;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-main);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--semantic-green-strong);
+}
+
+.daily-downloads-message--error {
+  color: var(--semantic-red-strong);
+}
