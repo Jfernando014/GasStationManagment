@@ -25,23 +25,41 @@ jobs:
           echo "SWAGGER_PATH=/swagger-ui.html" >> .env
           echo "API_DOCS_PATH=/v3/api-docs" >> .env
 
-      - name: Construir infraestructura y arrancar servicios base
+      - name: Construir imágenes y arrancar la base de datos
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml build backend frontend
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d db
 
-      - name: Esperar a que las pruebas de Java pasen y el Backend esté listo
+      - name: Ejecutar pruebas del Backend (Java)
         run: |
-          echo "Ejecutando pruebas de Java y levantando el contexto de Spring..."
-          until [ "$(docker inspect --format='{{.State.Health.Status}}' gas-station-backend-dev)" == "healthy" ]; do
-            # Si el contenedor se apaga prematuramente significa que las pruebas de Java fallaron
-            if [ "$(docker inspect --format='{{.State.Status}}' gas-station-backend-dev)" == "exited" ]; then
-              echo "ERROR: Las pruebas del Backend (Java) fallaron."
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm --no-deps backend mvn -B -ntp test
+
+      - name: Arrancar el Backend y esperar a que esté listo
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend || {
+            docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color backend
+            exit 1
+          }
+          for attempt in $(seq 1 60); do
+            state=$(docker inspect --format='{{.State.Status}}' gas-station-backend-dev)
+            health=$(docker inspect --format='{{.State.Health.Status}}' gas-station-backend-dev)
+            if [ "$health" = "healthy" ]; then
+              echo "Backend en línea."
+              exit 0
+            fi
+            if [ "$state" = "exited" ]; then
+              echo "ERROR: El proceso del Backend terminó antes de estar listo."
               docker logs gas-station-backend-dev
               exit 1
             fi
             sleep 5
           done
-          echo "Pruebas de Java exitosas. Servidor Backend en línea."
+          echo "ERROR: El Backend no quedó saludable dentro del tiempo esperado."
+          docker logs gas-station-backend-dev
+          exit 1
+
+      - name: Arrancar el Frontend
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d frontend
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: |
