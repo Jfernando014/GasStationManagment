@@ -230,4 +230,21 @@ public class InventoryExceptionHandler {
             InvalidStockMovementException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
     }
+    @ExceptionHandler(InventoryAlertNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleInventoryAlertNotFound(
+            InventoryAlertNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidInventoryAlertException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidInventoryAlert(
+            InvalidInventoryAlertException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InventoryAlertConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleInventoryAlertConflict(
+            InventoryAlertConflictException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
 }
