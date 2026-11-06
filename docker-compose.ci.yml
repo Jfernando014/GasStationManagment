@@ -4,9 +4,13 @@ services:
   backend:
     mem_limit: 4g
     shm_size: '2gb'
+    command: ["mvn", "-B", "-ntp", "spring-boot:run"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - JAVA_TOOL_OPTIONS=-Xmx2560m -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -Dspring.devtools.restart.enabled=false -Djava.awt.headless=true
       - MAVEN_OPTS=-Dsurefire.forkCount=0 -Dsurefire.useManifestOnlyJar=false -Dmaven.compiler.parameters=true
+      - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   frontend:

@@ -5,6 +5,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepService;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.config.SecurityConfig;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
@@ -47,6 +48,9 @@ class JournalControllerTest {
 
     @MockBean
     private JournalStepService journalStepService;
+
+    @MockBean
+    private JournalStep3ValidationService journalStep3ValidationService;
 
     @MockBean
     private UserDetailsService userDetailsService;
