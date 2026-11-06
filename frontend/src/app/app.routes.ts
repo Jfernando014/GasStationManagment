@@ -24,6 +24,11 @@ export const routes: Routes = [
               .then(m => m.VendorCloseStep2Component)
           },
           {
+            path: 'electronicos',
+            loadComponent: () => import('../features/sales/pages/electronic-payments-step3/electronic-payments-step3.component')
+              .then(m => m.ElectronicPaymentsStep3Component)
+          },
+          {
             path: 'inventario',
             loadComponent: () => import('../features/inventory/pages/journal-step5/journal-step5.component')
               .then(m => m.JournalStep5Component)

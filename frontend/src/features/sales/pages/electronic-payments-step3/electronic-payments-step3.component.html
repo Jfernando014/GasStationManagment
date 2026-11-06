@@ -1,0 +1,475 @@
+<div class="jr-p3">
+  <div class="jr-p3-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Medios electrónicos</h1>
+      <p>
+        Comprobantes de Credibanco, QR de Redeban y Puntos Colombia contra lo declarado en las planillas del paso 2@if (dateLabel()) {
+        (jornada del {{ dateLabel() }})}.
+      </p>
+    </div>
+    <div class="ep-acciones">
+      @if (headerChip(); as chip) {
+      <span [class]="'jr-chip ' + chip.css"><span class="jr-chip-punto"></span>{{ chip.label }}</span>
+      }
+      <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" [disabled]="!status()" (click)="copyStepSummary()">
+        Copiar resumen
+      </button>
+      <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
+        [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 primero' : (status()?.canComplete ? '' : 'Todavía hay diferencias o datos pendientes'))"
+        (click)="completeStep()">
+        {{ completing() ? 'Completando…' : 'Marcar paso 3 completado' }}
+      </button>
+    </div>
+  </div>
+
+  @if (!salesCompleted() && !completed() && date()) {
+  <div class="jr-p3-aviso-paso2" role="status">
+    Las planillas salen del paso 2, que aún no está completado.
+    <a routerLink="/jornada/vendedores">Ir al paso 2</a>
+  </div>
+  }
+
+  @if (status(); as current) {
+  @if (!completed() && current.blockers.length > 0) {
+  <div class="jr-p3-aviso-paso2" role="status">
+    <b>Falta para completar el paso:</b>
+    <ul class="ep-bloqueos">
+      @for (blocker of current.blockers; track blocker.code + blocker.message) {
+      <li>{{ blocker.message }}</li>
+      }
+    </ul>
+  </div>
+  }
+  }
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (formError(); as message) {
+  <div class="alert-box-danger" role="alert">{{ message }}</div>
+  }
+
+  @if (loadError(); as message) {
+  <section class="ep-vacio">
+    <p>{{ message }}</p>
+    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="closeLoadError()">Cerrar</button>
+  </section>
+  } @else if (loading()) {
+  <p class="jr-p3-nota" aria-live="polite">Cargando medios electrónicos de la jornada…</p>
+  } @else if (!date()) {
+  <p class="jr-p3-nota">No hay una jornada abierta para hoy.</p>
+  } @else if (status()) {
+
+  <div class="jr-tabs" role="tablist" aria-label="Medios electrónicos">
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'credibanco'"
+      [class.is-activa]="tab() === 'credibanco'" (click)="setTab('credibanco')">
+      <span [class]="'jr-tab-punto jr-tab-punto--' + (tones()?.credibanco ?? 'aviso')"></span>
+      Credibanco
+    </button>
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'qr'"
+      [class.is-activa]="tab() === 'qr'" (click)="setTab('qr')">
+      <span [class]="'jr-tab-punto jr-tab-punto--' + (tones()?.qr ?? 'aviso')"></span>
+      QR
+    </button>
+    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'puntos'"
+      [class.is-activa]="tab() === 'puntos'" (click)="setTab('puntos')">
+      <span [class]="'jr-tab-punto jr-tab-punto--' + (tones()?.puntos ?? 'aviso')"></span>
+      Puntos Colombia
+    </button>
+  </div>
+
+  @switch (tab()) {
+
+  <!-- ===================================================== 3a · Credibanco -->
+  @case ('credibanco') {
+  <div class="jr-tabpanel" role="tabpanel" aria-label="Credibanco">
+    <div>
+      @if (credibancoRows().length === 0) {
+      <p class="jr-p3-nota jr-p3-nota--pendiente">
+        No hay cierres de vendedores del paso 2 para esta fecha.
+        <a routerLink="/jornada/vendedores">Ir al paso 2</a>
+      </p>
+      } @else {
+      <div class="jr-p3-tabla-wrap ep-scroll">
+        <table class="jr-p3-tabla">
+          <caption class="jr-sr">Comprobantes de Credibanco por vendedor contra la planilla</caption>
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              @for (column of voucherColumns; track column.field) {
+              <th class="num">{{ column.label }}</th>
+              }
+              <th class="num">Total comprobantes</th>
+              <th class="num">Planilla (paso 2)</th>
+              <th class="num" title="Comprobantes menos planilla">Diferencia</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of credibancoRows(); track item.row.workerId) {
+            <tr>
+              <td class="jr-p3-nombre">{{ rowLabel(item.row) }}</td>
+              @for (column of voucherColumns; track column.field) {
+              <td class="num">
+                <span class="jr-cell jr-cell--edit" [class.jr-cell--invalido]="isInvalid(item.row.workerId, column.field)">
+                  <input class="jr-input" type="text" inputmode="decimal" autocomplete="off" placeholder="0"
+                    [attr.aria-label]="column.label + ' de ' + rowLabel(item.row)"
+                    [value]="amount(item.row[column.field])" [disabled]="!canEdit()"
+                    (focus)="selectAll($event)" (change)="onVoucherChange(item.row.workerId, column.field, $event)">
+                </span>
+              </td>
+              }
+              <td class="num">{{ item.check ? money(item.check.vouchersTotal) : '—' }}</td>
+              <td class="num jr-p3-planilla">{{ money(item.row.planillaCredibanco) }}</td>
+              <td class="num">{{ item.check ? signed(item.check.difference) : '—' }}</td>
+              <td>
+                @if (!item.check) {
+                <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Sin calcular</span>
+                } @else if (item.check.matches) {
+                <span class="jr-chip jr-chip--cuadra"><span class="jr-chip-punto"></span>Cuadra</span>
+                } @else {
+                <span class="jr-chip jr-chip--falta"><span class="jr-chip-punto"></span>No cuadra</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td [attr.colspan]="voucherColumns.length + 1">Total de la estación</td>
+              <td class="num">{{ money(credibancoTotals().vouchers) }}</td>
+              <td class="num">{{ money(credibancoTotals().planilla) }}</td>
+              <td class="num">{{ signed(credibancoTotals().difference) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      @if (saving()) {
+      <p class="jr-p3-nota" aria-live="polite">Guardando comprobantes…</p>
+      }
+      }
+
+      @if (credibanco(); as c) {
+      <section class="jr-p3-reporte" aria-label="Reporte contable del día">
+        <div class="jr-p3-reporte-cab"><b>Reporte contable del día</b></div>
+        <div class="jr-p3-reporte-fila">
+          <div class="jr-p3-reporte-celda"><span>AMEX</span><b>{{ money(c.accounting.amex) }}</b></div>
+          <div class="jr-p3-reporte-celda"><span>MASTERCARD</span><b>{{ money(c.accounting.mastercard) }}</b></div>
+          <div class="jr-p3-reporte-celda"><span>VISA</span><b>{{ money(c.accounting.visa) }}</b></div>
+          <div class="jr-p3-reporte-celda"
+            [attr.title]="c.qrAdded ? 'QR del día' : 'El QR se suma cuando todos los vendedores cuadran'">
+            <span>QR</span><b>{{ c.qrAdded && c.accounting.qr !== null ? money(c.accounting.qr) : '—' }}</b>
+          </div>
+          <div class="jr-p3-reporte-celda"
+            [attr.title]="c.allMatch ? 'Total contable del día' : 'El total se calcula cuando todos los vendedores cuadran'">
+            <span>TOTAL</span><b>{{ c.accounting.total !== null ? money(c.accounting.total) : '—' }}</b>
+          </div>
+          <div class="jr-p3-reporte-celda" title="TOTAL EDS acumulado del mes: el QR no paga comisión">
+            <span>BASE COMISIÓN</span><b>{{ money(c.commissionBase) }}</b>
+          </div>
+          <div class="jr-p3-reporte-celda is-comision"
+            [attr.title]="'Tasa tomada de los parámetros: ' + c.commissionRate">
+            <span>COMISIÓN</span><b>{{ money(c.commission) }}</b>
+          </div>
+        </div>
+        <p class="jr-p3-acumulado">
+          TOTAL EDS del día: <b>{{ money(c.totalEds) }}</b>.
+          Acumulado del mes: <b>{{ money(c.monthToDate.totalEds) }}</b>.
+          Mes anterior: <b>{{ money(c.previousMonth.totalEds) }}</b>.
+        </p>
+      </section>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ============================================================== 3b · QR -->
+  @case ('qr') {
+  @if (qr(); as q) {
+  <div class="jr-tabpanel" role="tabpanel" aria-label="QR">
+    <div>
+      <div class="jr-archivo" [class.is-arrastre]="dragging()" [attr.data-estado]="q.redebanLoaded ? 'cargado' : 'vacio'"
+        (dragover)="onDragOver($event)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
+        <div class="jr-archivo-vacio">
+          <span class="jr-archivo-icono" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+          </span>
+          <span class="jr-archivo-textos">
+            <b>Archivo de Redeban (CSV)</b>
+            <small>Arrástralo aquí o elígelo desde tu equipo. Solo se suman los QR aprobados del día.</small>
+          </span>
+          @if (canEdit()) {
+          <label class="jr-btn jr-btn--pri jr-btn--sm ep-archivo-boton" [class.is-ocupado]="uploading()">
+            {{ uploading() ? 'Subiendo…' : 'Elegir archivo' }}
+            <input class="jr-sr" type="file" accept=".csv,text/csv" [disabled]="uploading()"
+              (change)="onFileSelected($event)">
+          </label>
+          }
+        </div>
+        <div class="jr-archivo-cargado">
+          <span class="jr-archivo-icono jr-archivo-icono--ok" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </span>
+          <span class="jr-archivo-textos">
+            <b>{{ importedFileName() ?? 'Archivo de Redeban cargado' }}</b>
+            <small>Total Redeban {{ money(q.redebanTotal) }}. {{ importSummary() }}</small>
+          </span>
+          @if (canEdit()) {
+          <label class="jr-btn jr-btn--sec jr-btn--sm ep-archivo-boton" [class.is-ocupado]="uploading()">
+            {{ uploading() ? 'Subiendo…' : 'Reemplazar archivo' }}
+            <input class="jr-sr" type="file" accept=".csv,text/csv" [disabled]="uploading()"
+              (change)="onFileSelected($event)">
+          </label>
+          }
+        </div>
+      </div>
+
+      @if (!q.redebanLoaded) {
+      @if (q.planillaTotal === 0) {
+      <div class="jr-p3-mensaje jr-p3-mensaje--ok">Las planillas no declaran QR hoy: no hay nada que cargar.</div>
+      } @else {
+      <p class="jr-p3-nota jr-p3-nota--pendiente">
+        Las planillas declaran {{ money(q.planillaTotal) }} en QR. Carga el archivo de Redeban para ver qué vendedores cuadran.
+      </p>
+      }
+      } @else {
+
+      <div class="jr-p3-tiempos">
+        <div class="jr-p3-tiempo" [class.jr-p3-tiempo--ok]="q.matchesDay" [class.jr-p3-tiempo--error]="!q.matchesDay">
+          <span class="jr-p3-tiempo-icono" aria-hidden="true">{{ q.matchesDay ? '✓' : '!' }}</span>
+          <div>
+            <b>Total del día</b>
+            <span>
+              Redeban <strong>{{ money(q.redebanTotal) }}</strong> contra planillas <strong>{{ money(q.planillaTotal) }}</strong>
+              @if (!q.matchesDay) { (diferencia {{ signed(q.difference) }}) }
+            </span>
+          </div>
+        </div>
+        <span class="jr-p3-flecha" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+        </span>
+        <div class="jr-p3-tiempo" [class.jr-p3-tiempo--ok]="qrVendorsState() === 'ok'"
+          [class.jr-p3-tiempo--error]="qrVendorsState() === 'error'">
+          <span class="jr-p3-tiempo-icono" aria-hidden="true">{{ qrVendorsState() === 'ok' ? '✓' : (qrVendorsState() === 'error' ? '!' : '…') }}</span>
+          <div>
+            <b>Por vendedor</b>
+            <span>
+              @if (qrVendorsState() === 'pending') {
+              Hay transacciones sin asignar: la comparación por vendedor es parcial.
+              } @else {
+              <strong>{{ qrVendorsMatching() }} de {{ q.vendors.length }}</strong> vendedores cuadran.
+              }
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="jr-p3-qr-grid">
+        <div class="jr-p3-tabla-wrap ep-scroll">
+          <table class="jr-p3-tabla">
+            <caption class="jr-sr">QR de Redeban por vendedor contra la planilla</caption>
+            <thead>
+              <tr>
+                <th>Vendedor</th>
+                <th class="num">Redeban</th>
+                <th class="num">Planilla</th>
+                <th class="num" title="Redeban menos planilla">Diferencia</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (vendor of q.vendors; track vendor.workerId) {
+              <tr>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, vendor.shiftCode) }}</td>
+                <td class="num">{{ money(vendor.redeban) }}</td>
+                <td class="num jr-p3-planilla">{{ money(vendor.planilla) }}</td>
+                <td class="num">{{ signed(vendor.difference) }}</td>
+                <td>
+                  @if (vendor.matches) {
+                  <span class="jr-chip jr-chip--cuadra"><span class="jr-chip-punto"></span>Cuadra</span>
+                  } @else if (!q.perVendorReliable) {
+                  <span class="jr-chip jr-chip--aviso" title="Hay transacciones sin asignar; puede faltar parte del valor"><span class="jr-chip-punto"></span>Parcial</span>
+                  } @else {
+                  <span class="jr-chip jr-chip--falta"><span class="jr-chip-punto"></span>No cuadra</span>
+                  }
+                </td>
+              </tr>
+              }
+              <tr class="jr-p3-sin-asignar" [class.tiene]="q.unassignedTotal > 0">
+                <td>Sin asignar a un vendedor</td>
+                <td class="num">{{ money(q.unassignedTotal) }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td class="num">{{ money(q.redebanTotal) }}</td>
+                <td class="num">{{ money(q.planillaTotal) }}</td>
+                <td class="num">{{ signed(q.difference) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="ep-columna">
+          <section class="jr-p3-whatsapp" aria-label="Resumen para WhatsApp">
+            <div class="jr-p3-whatsapp-cab">
+              <b>Resumen para WhatsApp</b>
+              <label>
+                <span class="jr-sr">Vendedor</span>
+                <select class="flat-select" (change)="selectWhatsappVendor($event)">
+                  @for (vendor of q.vendors; track vendor.workerId) {
+                  <option [value]="vendor.workerId" [selected]="vendor.workerId === whatsappWorkerId()">
+                    {{ checkLabel(vendor.workerName, vendor.shiftCode) }}
+                  </option>
+                  }
+                </select>
+              </label>
+            </div>
+            <div class="jr-p3-burbuja-fondo">
+              <div class="jr-p3-burbuja" aria-live="polite">
+                @if (whatsappLoading()) {
+                Preparando el texto…
+                } @else if (whatsappText()) {
+                {{ whatsappText() }}
+                } @else {
+                Elige un vendedor para ver su texto.
+                }
+              </div>
+            </div>
+            <div class="jr-p3-whatsapp-acciones">
+              <button class="jr-btn jr-btn--sec jr-btn--sm" type="button"
+                [disabled]="!whatsappText() || whatsappLoading()" (click)="copyWhatsapp()">
+                Copiar texto
+              </button>
+            </div>
+          </section>
+
+          @if (q.unassigned.length > 0) {
+          <details class="jr-plegable">
+            <summary>
+              Transacciones sin asignar
+              <span class="jr-plegable-resumen">{{ q.unassigned.length }} por {{ money(q.unassignedTotal) }}</span>
+            </summary>
+            <div class="jr-plegable-cuerpo">
+              <table class="jr-p3-tabla">
+                <thead>
+                  <tr><th>Fila</th><th>Hora</th><th class="num">Valor</th><th>Motivo</th></tr>
+                </thead>
+                <tbody>
+                  @for (row of q.unassigned; track row.row) {
+                  <tr>
+                    <td>{{ row.row }}</td>
+                    <td>{{ time(row.time) }}</td>
+                    <td class="num">{{ money(row.amount) }}</td>
+                    <td>{{ reason(row.status) }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+  }
+
+  <!-- ========================================================= 3c · Puntos -->
+  @case ('puntos') {
+  @if (points(); as p) {
+  <div class="jr-tabpanel" role="tabpanel" aria-label="Puntos Colombia">
+    <div>
+      @if (p.status === 'COMPLETED_ZERO') {
+      <div class="jr-p3-sin-redenciones">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="8 12 11 15 16 9" /></svg>
+        <div>
+          <b>Hoy no hubo redenciones</b>
+          <span>Las planillas declaran $0 en Puntos Colombia. No hay nada que digitar.</span>
+        </div>
+      </div>
+      } @else {
+      <div class="jr-p3-puntos-grid">
+        <div class="jr-p3-tabla-wrap">
+          <div class="jr-p3-caja-cab"><b>Redenciones declaradas en las planillas</b></div>
+          <table class="jr-p3-tabla">
+            <caption class="jr-sr">Redenciones de Puntos Colombia por vendedor</caption>
+            <thead>
+              <tr><th>Vendedor</th><th class="num">Redenciones</th></tr>
+            </thead>
+            <tbody>
+              @for (vendor of p.vendors; track vendor.workerId) {
+              <tr>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, null) }}</td>
+                <td class="num">{{ money(vendor.redemptions) }}</td>
+              </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr><td>Total declarado</td><td class="num">{{ money(p.declared) }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="ep-columna">
+          <section class="jr-p3-cuadre">
+            <b>Cuadre del día</b>
+            <div class="jr-p3-cuadre-fila">
+              <label>
+                Total de Puntos Colombia
+                <span class="jr-cell jr-cell--edit">
+                  <input class="jr-input" type="text" inputmode="decimal" autocomplete="off" placeholder="0"
+                    [value]="pointsDraft()" [disabled]="!canEdit()" (focus)="selectAll($event)"
+                    (input)="onPointsInput($event)" (keydown.enter)="savePoints()">
+                </span>
+              </label>
+              <span class="jr-p3-vs" aria-hidden="true">vs</span>
+              <label>
+                Redenciones de las planillas
+                <span class="jr-cell jr-cell--calc">{{ money(p.declared) }}</span>
+              </label>
+            </div>
+
+            @switch (p.status) {
+            @case ('PENDING_TOTAL') {
+            <div class="jr-p3-mensaje jr-p3-mensaje--aviso">Falta digitar el total de Puntos Colombia del día.</div>
+            }
+            @case ('MATCH') {
+            <div class="jr-p3-mensaje jr-p3-mensaje--ok">Cuadra: el total coincide con las redenciones de las planillas.</div>
+            }
+            @case ('DIFFERENCE') {
+            <div class="jr-p3-mensaje jr-p3-mensaje--error">
+              No cuadra: el total difiere en {{ signed(p.difference ?? 0) }} (total menos redenciones).
+            </div>
+            }
+            }
+
+            @if (canEdit()) {
+            <div class="jr-p3-whatsapp-acciones">
+              <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="savingPoints()"
+                (click)="savePoints()">
+                {{ savingPoints() ? 'Guardando…' : 'Guardar total' }}
+              </button>
+            </div>
+            }
+          </section>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+  }
+
+  }
+  }
+</div>

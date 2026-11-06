@@ -1,0 +1,69 @@
+/* Las clases jr-p3-*, jr-archivo, jr-chip y jr-tabs vienen de los estilos globales (views.css y components.css). */
+
+.ep-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ep-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Tablas anchas (once columnas en Credibanco): se desplazan dentro de su caja, nunca la página. */
+.ep-scroll {
+  overflow-x: auto;
+}
+
+.ep-bloqueos {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-weight: 500;
+}
+
+.ep-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+}
+
+/* El botón de elegir archivo es un label con el input oculto dentro. */
+.ep-archivo-boton {
+  position: relative;
+  cursor: pointer;
+}
+
+.ep-archivo-boton:focus-within {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.ep-archivo-boton.is-ocupado {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* El texto de WhatsApp conserva sus saltos de línea. */
+.jr-p3-burbuja {
+  white-space: pre-line;
+}
+
+@media (max-width: 960px) {
+  .jr-p3-qr-grid,
+  .jr-p3-puntos-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
