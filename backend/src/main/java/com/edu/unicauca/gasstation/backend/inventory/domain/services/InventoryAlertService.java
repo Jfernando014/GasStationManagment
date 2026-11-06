@@ -10,6 +10,8 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.Invento
 import com.edu.unicauca.gasstation.backend.inventory.exception.InvalidInventoryAlertException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.InventoryAlertConflictException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.InventoryAlertNotFoundException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +36,7 @@ public class InventoryAlertService {
     private final FuelAutonomyService autonomyService;
     private final Clock clock;
 
-
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void reconcile(LocalDate journalDate) {
         if (journalDate == null) {
             throw new InvalidInventoryAlertException("The journal date is required");
