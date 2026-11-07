@@ -18,10 +18,14 @@ import java.util.Objects;
  * @param savingsFund               rent savings fund of the day
  * @param expenses                  administrative expenses of the day ("Recibos, vales y otros")
  * @param cashBalance               cash balance accumulated up to and including {@code date}
- * @param dailyCash                 station cash of the day, taken from the sellers' close (step 2);
- *                                  null until step 2 is published
+ * @param dailyCash                 station cash of the day: the sum of the cash the sellers declared in step 2
+ *                                  ({@code sellerCloseQuery}); null while the day has no seller close
+ * @param planillaCashBalance       "saldo de efectivo en planilla de ventas": {@code cashBalance} plus the station
+ *                                  cash of every day from the opening day up to and including this date; null while
+ *                                  the day has no seller close or the initial cash balance was not registered
  * @param dominusAccumulatedBalance accumulated balance pasted from Dominus; null until it is stored
- * @param difference                difference against Dominus; null while any of its sources is missing
+ * @param difference                {@code dominusAccumulatedBalance - planillaCashBalance}; negative means that the
+ *                                  planilla has more cash than Dominus. Null while any of the two is missing
  */
 public record CashBalanceTableInfo(
         LocalDate date,
@@ -31,6 +35,7 @@ public record CashBalanceTableInfo(
         ExpensesInfo expenses,
         BigDecimal cashBalance,
         BigDecimal dailyCash,
+        BigDecimal planillaCashBalance,
         BigDecimal dominusAccumulatedBalance,
         BigDecimal difference) {
 
