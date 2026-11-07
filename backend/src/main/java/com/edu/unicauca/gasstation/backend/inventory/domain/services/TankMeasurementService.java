@@ -10,6 +10,8 @@ import com.edu.unicauca.gasstation.backend.inventory.exception.InvalidTankMeasur
 import com.edu.unicauca.gasstation.backend.inventory.exception.TankNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.TankWithoutGaugeTableException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import com.edu.unicauca.gasstation.backend.inventory.domain.events.TankMeasurementSavedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,7 @@ public class TankMeasurementService {
     private final TankRepository tankRepository;
     private final GaugeTableService gaugeTableService;
     private final Clock clock;
-
+    private final ApplicationEventPublisher eventPublisher;
     /**
      * Guarda las lecturas de la jornada. Cada lectura trae tankId y heightCm; los galones se calculan aquí.
      * Si ya existe una medición para esa fecha, las lecturas enviadas reemplazan las del mismo tanque
@@ -64,7 +66,9 @@ public class TankMeasurementService {
         measurement.setReadings(List.copyOf(merged.values()));
         measurement.setMeasuredAt(LocalDateTime.now(clock));
 
-        return measurementRepository.save(measurement);
+        TankMeasurement saved = measurementRepository.save(measurement);
+        eventPublisher.publishEvent(new TankMeasurementSavedEvent(journalDate));
+        return saved;
     }
 
     @Transactional(readOnly = true)

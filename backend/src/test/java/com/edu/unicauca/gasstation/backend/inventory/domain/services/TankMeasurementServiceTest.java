@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import com.edu.unicauca.gasstation.backend.inventory.domain.events.TankMeasurementSavedEvent;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -54,6 +56,9 @@ class TankMeasurementServiceTest {
     @Mock
     private GaugeTableRepository gaugeTableRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private TankMeasurementService service;
 
     @BeforeEach
@@ -61,7 +66,8 @@ class TankMeasurementServiceTest {
         // GaugeTableService real: así se comprueba el cálculo completo (curva menos 20 gal)
         GaugeTableService gaugeTableService = new GaugeTableService(
                 gaugeTableRepository, tankRepository, new GaugeCsvParser(), new BigDecimal("20"));
-        service = new TankMeasurementService(measurementRepository, tankRepository, gaugeTableService, CLOCK);
+        service = new TankMeasurementService(
+                measurementRepository, tankRepository, gaugeTableService, CLOCK, eventPublisher);
     }
 
     // ---------- cálculo ----------
@@ -150,14 +156,14 @@ class TankMeasurementServiceTest {
     void rejectsAnEmptyMeasurement() {
         assertThatThrownBy(() -> service.save(DATE, List.of())).isInstanceOf(InvalidTankMeasurementException.class);
         assertThatThrownBy(() -> service.save(DATE, null)).isInstanceOf(InvalidTankMeasurementException.class);
-        verifyNoInteractions(measurementRepository, tankRepository);
+        verifyNoInteractions(measurementRepository, tankRepository, eventPublisher);
     }
 
     @Test
     void rejectsTheSameTankTwice() {
         assertThatThrownBy(() -> service.save(DATE, List.of(reading(1L, "10", null), reading(1L, "20", null))))
                 .isInstanceOf(InvalidTankMeasurementException.class);
-        verifyNoInteractions(measurementRepository, tankRepository);
+        verifyNoInteractions(measurementRepository, tankRepository, eventPublisher);
     }
 
     @Test
@@ -197,7 +203,11 @@ class TankMeasurementServiceTest {
         // la primera lectura es válida, la segunda pasa de 238 cm: no se guarda ninguna
         assertThatThrownBy(() -> service.save(DATE, List.of(reading(1L, "55", null), reading(2L, "300", null))))
                 .isInstanceOf(HeightExceedsGaugeException.class);
-        verify(measurementRepository, never()).save(any());
+        // Validar la altura exige leer cada tanque y su tabla de aforo; eso sí es esperado.
+        verify(tankRepository).findById(1L);
+        verify(tankRepository).findById(2L);
+        // Nada se persiste ni se publica el evento.
+        verifyNoInteractions(measurementRepository, eventPublisher);
     }
 
     // ---------- consultas ----------
@@ -218,6 +228,17 @@ class TankMeasurementServiceTest {
         assertThat(service.findLatestBefore(DATE)).containsSame(previous);
     }
 
+    @Test
+    void publishesTheSavedEventWithTheJournalDate() {
+        givenTankWithCurve(1L);
+        givenCurve();
+        givenNoMeasurementYet();
+        givenSaveReturnsItsArgument();
+
+        service.save(DATE, List.of(reading(1L, "55", null)));
+
+        verify(eventPublisher).publishEvent(new TankMeasurementSavedEvent(DATE));
+    }
     // ---------- helpers ----------
 
     private void givenTankWithCurve(long tankId) {
