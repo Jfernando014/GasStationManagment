@@ -92,6 +92,11 @@ export const routes: Routes = [
           .then(m => m.AdministrativeExpensesPageComponent)
       },
       {
+        path: 'alertas',
+        loadComponent: () => import('../features/inventory/pages/inventory-alerts-page/inventory-alerts-page.component')
+          .then(m => m.InventoryAlertsPageComponent)
+      },
+      {
         path: '',
         loadComponent: () => import('../atomic-design/pages/home/home-page.component').then(m => m.HomePageComponent)
       }

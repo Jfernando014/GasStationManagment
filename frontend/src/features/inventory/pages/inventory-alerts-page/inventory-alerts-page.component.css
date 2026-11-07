@@ -1,0 +1,198 @@
+/* Bandeja de alertas de inventario (HU-29). Reuses the inventory card and KPI classes. */
+.alerts-page {
+  gap: 16px;
+}
+
+.alerts-loading {
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.alerts-result-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.alerts-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.alert-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.alert-card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.02em;
+  margin: 2px 0 0;
+}
+
+.alert-card-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 3px 0 0;
+}
+
+.alert-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alert-card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.alert-autonomy-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+}
+
+.alert-metric-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.alert-metric-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.02em;
+}
+
+.alert-meta-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 20px;
+  flex: 1;
+}
+
+.alert-meta-list > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alert-meta-list b {
+  font-size: 13px;
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.alert-meta-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.alert-card-note {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border-hairline);
+  font-size: 12.5px;
+  color: var(--text-heading);
+}
+
+.alert-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.alert-attend-dialog {
+  padding: 22px 24px;
+  gap: 12px;
+}
+
+.alert-attend-dialog h2 {
+  font-size: 17px;
+  color: var(--text-heading);
+  margin: 0;
+}
+
+.alert-attend-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.alert-attend-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.alert-attend-field textarea {
+  padding: 9px 11px;
+  border: 1px solid var(--jr-cell-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-heading);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.alert-attend-field textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-primary-subtle);
+}
+
+.alert-attend-counter {
+  align-self: flex-end;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.alert-attend-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .alert-card-actions {
+    justify-content: stretch;
+  }
+
+  .alert-card-actions > button {
+    flex: 1;
+  }
+}

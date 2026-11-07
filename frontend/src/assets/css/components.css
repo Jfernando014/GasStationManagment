@@ -163,6 +163,13 @@
       border: 2px solid #FFFFFF;
     }
 
+    .bell-dot-counter--wide {
+      width: auto;
+      min-width: 20px;
+      padding: 0 4px;
+      border-radius: var(--radius-pill);
+    }
+
     .user-profile-pill {
       display: flex;
       align-items: center;
@@ -483,6 +490,12 @@
     .state-pill-tag.critical {
       background-color: var(--semantic-red-subtle);
       color: var(--semantic-red);
+    }
+
+    .state-pill-tag.neutral {
+      background-color: var(--surface-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-hairline);
     }
 
     .inv-header-bar {
