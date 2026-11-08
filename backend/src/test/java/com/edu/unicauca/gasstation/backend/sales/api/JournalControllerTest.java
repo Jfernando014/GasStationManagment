@@ -4,6 +4,9 @@ import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
+import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.InventoryAlertSummary;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService.ClosingSummaryResult;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepService;
@@ -21,6 +24,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,13 +32,14 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = JournalController.class, properties = "server.port=0")
-@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtService.class})
-@DisplayName("JournalController - Daily Journal REST API (S1-13, S1-14)")
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtService.class, JournalExceptionHandler.class})
+@DisplayName("JournalController - Daily Journal REST API (S1-13, S1-14, S3-03, S3-05)")
 class JournalControllerTest {
 
     @Autowired
@@ -51,6 +56,9 @@ class JournalControllerTest {
 
     @MockBean
     private JournalStep3ValidationService journalStep3ValidationService;
+
+    @MockBean
+    private JournalClosingSummaryService journalClosingSummaryService;
 
     @MockBean
     private UserDetailsService userDetailsService;
@@ -139,5 +147,82 @@ class JournalControllerTest {
         mockMvc.perform(post("/api/v1/journals/open")
                         .param("date", "2026-08-05"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/journals/{id}/close should return 200 OK with CLOSED status and closedAt timestamp")
+    void closesJournalSuccessfully() throws Exception {
+        LocalDate date = LocalDate.of(2026, 8, 5);
+        LocalDateTime closedAt = LocalDateTime.of(2026, 8, 5, 22, 15);
+
+        JournalStep step6 = JournalStep.builder()
+                .id(6L)
+                .stepNumber(6)
+                .name("Medición final y cuadre")
+                .status(StepStatus.COMPLETED)
+                .completedAt(closedAt)
+                .build();
+
+        Journal closedJournal = Journal.builder()
+                .id(1L)
+                .date(date)
+                .consecutive(10L)
+                .status(JournalStatus.CLOSED)
+                .steps(List.of(step6))
+                .build();
+
+        when(journalService.closeJournal(1L)).thenReturn(closedJournal);
+
+        mockMvc.perform(post("/api/v1/journals/1/close")
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.status").value("CLOSED"))
+                .andExpect(jsonPath("$.closedAt").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/journals/{id}/steps/{step}/complete should return 409 Conflict when journal is closed")
+    void returnsConflictWhenEditingClosedJournal() throws Exception {
+        when(journalStepService.markStepAsCompleted(1L, 2))
+                .thenThrow(new IllegalStateException("La jornada ya está cerrada y no permite modificaciones."));
+
+        mockMvc.perform(post("/api/v1/journals/1/steps/2/complete")
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("JOURNAL_STATE_CONFLICT"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/journals/{id}/closing-summary should return 200 OK with new alerts and step summary")
+    void returnsClosingSummarySuccessfully() throws Exception {
+        LocalDate date = LocalDate.of(2026, 8, 5);
+        ClosingSummaryResult summaryResult = new ClosingSummaryResult(
+                1L,
+                date,
+                10L,
+                JournalStatus.OPEN,
+                null,
+                5,
+                5,
+                1,
+                1,
+                0,
+                1,
+                List.of(),
+                List.of(),
+                List.of(new InventoryAlertSummary(7L, "AUTONOMY", "DIESEL", "CRITICAL", "ACTIVE", new BigDecimal("1.50"), date))
+        );
+
+        when(journalClosingSummaryService.getClosingSummary(1L)).thenReturn(summaryResult);
+
+        mockMvc.perform(get("/api/v1/journals/1/closing-summary")
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.journalId").value(1))
+                .andExpect(jsonPath("$.completedStepsCount").value(5))
+                .andExpect(jsonPath("$.newAlertsCount").value(1))
+                .andExpect(jsonPath("$.newAlerts[0].fuelType").value("DIESEL"))
+                .andExpect(jsonPath("$.newAlerts[0].level").value("CRITICAL"));
     }
 }

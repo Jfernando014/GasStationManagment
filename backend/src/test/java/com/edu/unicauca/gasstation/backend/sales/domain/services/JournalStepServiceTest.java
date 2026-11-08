@@ -1,5 +1,7 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.services;
 
+import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStepRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
@@ -256,5 +258,32 @@ class JournalStepServiceTest {
         boolean editable = journalStepService.isJournalEditable(journalId);
 
         assertThat(editable).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalStateException when trying to complete any step after journal is closed (S3-03)")
+    void throwsExceptionWhenCompletingStepAfterJournalIsClosed() {
+        Long journalId = 1L;
+
+        Journal closedJournal = Journal.builder()
+                .id(journalId)
+                .status(JournalStatus.CLOSED)
+                .build();
+
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .journal(closedJournal)
+                .status(StepStatus.PENDING)
+                .build();
+
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 2))
+                .thenReturn(Optional.of(step2));
+
+        assertThatThrownBy(() -> journalStepService.markStepAsCompleted(journalId, 2))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cerrada");
+
+        verify(journalStepRepository, never()).save(any());
     }
 }

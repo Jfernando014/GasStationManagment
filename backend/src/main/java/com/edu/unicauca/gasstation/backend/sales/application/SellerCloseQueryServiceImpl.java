@@ -1,6 +1,10 @@
 package com.edu.unicauca.gasstation.backend.sales.application;
 
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery;
+import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalRepository;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
+import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.DiscrepancyStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.VendorShiftClose;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort;
@@ -14,9 +18,9 @@ import java.util.List;
 import java.util.Optional;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Getter 
 @Setter 
-@RequiredArgsConstructor
 public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
 
     private final VendorShiftCloseRepository vendorShiftCloseRepository;
@@ -34,6 +37,32 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
     private final DiscrepancyToleranceService toleranceService;
     private final DayStaffReadPort dayStaffReadPort;
     private final FuelPriceReadPort fuelPriceReadPort;
+    private final JournalRepository journalRepository;
+
+    public SellerCloseQueryServiceImpl(
+            VendorShiftCloseRepository vendorShiftCloseRepository,
+            VendorCloseCalculationEngine calculationEngine,
+            DiscrepancyToleranceService toleranceService,
+            DayStaffReadPort dayStaffReadPort,
+            FuelPriceReadPort fuelPriceReadPort) {
+        this(vendorShiftCloseRepository, calculationEngine, toleranceService, dayStaffReadPort, fuelPriceReadPort, null);
+    }
+
+    @Autowired
+    public SellerCloseQueryServiceImpl(
+            VendorShiftCloseRepository vendorShiftCloseRepository,
+            VendorCloseCalculationEngine calculationEngine,
+            DiscrepancyToleranceService toleranceService,
+            DayStaffReadPort dayStaffReadPort,
+            FuelPriceReadPort fuelPriceReadPort,
+            JournalRepository journalRepository) {
+        this.vendorShiftCloseRepository = vendorShiftCloseRepository;
+        this.calculationEngine = calculationEngine;
+        this.toleranceService = toleranceService;
+        this.dayStaffReadPort = dayStaffReadPort;
+        this.fuelPriceReadPort = fuelPriceReadPort;
+        this.journalRepository = journalRepository;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -75,6 +104,13 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
      */
     @Transactional
     public List<VendorShiftClose> registerVendorCloses(LocalDate journalDate, List<VendorShiftClose> incomingCloses) {
+        if (journalRepository != null && journalDate != null) {
+            Journal journal = journalRepository.findByDate(journalDate).orElse(null);
+            if (journal != null && isClosed(journal)) {
+                throw new IllegalStateException(
+                        "La jornada del " + journalDate + " ya está cerrada y no permite modificaciones.");
+            }
+        }
         BigDecimal effectiveTolerance = toleranceService.getEffectiveTolerance(journalDate);
         List<VendorShiftClose> evaluated = incomingCloses.stream()
                 .map(c -> calculationEngine.calculateVendorClose(
@@ -109,6 +145,14 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
 
     public Optional<BigDecimal> getEffectiveFuelPrice(String fuelType, LocalDate date) {
         return fuelPriceReadPort.findEffectivePrice(fuelType, date);
+    }
+
+    private boolean isClosed(Journal journal) {
+        if (journal.getStatus() == JournalStatus.CLOSED) {
+            return true;
+        }
+        return journal.getSteps() != null && journal.getSteps().stream()
+                .anyMatch(s -> s.getStepNumber() != null && s.getStepNumber() == 6 && s.getStatus() == StepStatus.COMPLETED);
     }
 
     private VendorCloseSummary toSummary(VendorShiftClose close) {
