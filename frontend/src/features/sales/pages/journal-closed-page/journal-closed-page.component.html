@@ -106,8 +106,8 @@
               <td class="num">{{ formatCurrency(v.basketDominusAmount) }}</td>
               <td class="num">{{ formatCurrency(v.totalDelivered) }}</td>
               <td class="num">
-                <span class="jr-chip" [ngClass]="v.status === 'MATCH' ? 'jr-chip--cuadra' : v.status === 'SURPLUS' ? 'jr-chip--sobra' : 'jr-chip--falta'">
-                  {{ v.status === 'MATCH' ? 'Cuadra' : (v.status === 'SURPLUS' ? 'Sobra ' : 'Falta ') + formatCurrency(v.discrepancyAmount) }}
+                <span class="jr-chip" [ngClass]="v.resultStatus === 'CUADRA' ? 'jr-chip--cuadra' : v.resultStatus === 'SOBRA' ? 'jr-chip--sobra' : 'jr-chip--falta'">
+                  {{ v.resultStatus === 'CUADRA' ? 'Cuadra' : (v.resultStatus === 'SOBRA' ? 'Sobra ' : 'Falta ') + formatCurrency(v.realDiscrepancy) }}
                 </span>
               </td>
             </tr>

@@ -34,11 +34,26 @@ export const routes: Routes = [
               .then(m => m.JournalStep5Component)
           },
           {
+            path: 'cierre',
+            loadComponent: () => import('../features/sales/pages/journal-closing-step6/journal-closing-step6.component')
+              .then(m => m.JournalClosingStep6Component)
+          },
+          {
+            path: 'cerrada',
+            loadComponent: () => import('../features/sales/pages/journal-closed-page/journal-closed-page.component')
+              .then(m => m.JournalClosedPageComponent)
+          },
+          {
             path: '',
             pathMatch: 'full',
             redirectTo: 'vendedores'
           }
         ]
+      },
+      {
+        path: 'historial',
+        loadComponent: () => import('../features/sales/pages/journal-history-page/journal-history-page.component')
+          .then(m => m.JournalHistoryPageComponent)
       },
       {
         path: 'personal/vendedores',
