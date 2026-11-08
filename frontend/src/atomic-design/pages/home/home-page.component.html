@@ -1,0 +1,317 @@
+<div class="inv-subview active home-page">
+  <div class="subview-breadcrumb">INVENTARIO <span class="bc-sep">/</span> PANEL DE INVENTARIO</div>
+
+  <header class="inv-header-bar">
+    <div class="inv-header-left">
+      <span class="inv-header-title">
+        Panel de inventario
+        <span class="inv-header-badge">HU-7 · HU-29</span>
+      </span>
+      <span class="inv-header-sub">Existencias por combustible y tanque desde la última medición registrada.</span>
+    </div>
+    <div class="inv-header-actions">
+      <button class="btn-flat-secondary" type="button" [disabled]="loading()" (click)="loadHome()">
+        {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+      <a class="btn-solid-primary" routerLink="/alertas">
+        Bandeja de alertas
+        @if (pendingAlerts() > 0) {
+          <span class="alert-counter-badge">{{ pendingAlerts() > 99 ? '99+' : pendingAlerts() }}</span>
+        }
+      </a>
+    </div>
+  </header>
+
+  @if (error(); as message) {
+    <div class="alert-box-danger" role="alert">{{ message }}</div>
+  }
+
+  @if (loading()) {
+    <section class="inv-card home-loading" aria-live="polite">Cargando el inventario…</section>
+  } @else if (home(); as data) {
+    @if (data.mostCriticalAlert; as alert) {
+      <div class="critical-alert-card">
+        <div class="alert-card-left">
+          <span class="alert-icon-square-box" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+              <path d="M12 9v4M12 17h.01" />
+            </svg>
+          </span>
+          <div>
+            <div class="alert-headline-strong">
+              {{ levelLabel(alert.level) }} en {{ fuelLabels[alert.fuelType] }}
+            </div>
+            <div class="alert-description-text">
+              Autonomía estimada de {{ formatDays(alert.autonomyDays) }}. Programe el reabastecimiento.
+            </div>
+          </div>
+        </div>
+        <a class="btn-solid-primary" routerLink="/alertas">Ver bandeja</a>
+      </div>
+    } @else {
+      <div class="optimal-alert-banner">
+        <div class="alert-card-left">
+          <span class="optimal-icon-square-box" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </span>
+          <div>
+            <div class="alert-headline-strong">Operación estable</div>
+            <div class="alert-description-text">Ningún combustible está por debajo de los umbrales de autonomía.</div>
+          </div>
+        </div>
+        <a class="btn-flat-secondary" routerLink="/alertas">Ver bandeja</a>
+      </div>
+    }
+
+    <div class="kpis-quad-row">
+      <div class="kpi-tile-box">
+        <div class="kpi-tile-top">
+          <span class="kpi-tile-name">Galones disponibles</span>
+          <span class="kpi-calc-badge">Última medición</span>
+        </div>
+        <div class="kpi-figure-lead tnum">{{ formatGallons(totalGallons()) }}</div>
+        <div class="kpi-figure-foot">de {{ formatGallons(totalCapacity()) }} de capacidad</div>
+      </div>
+      <div class="kpi-tile-box">
+        <div class="kpi-tile-top">
+          <span class="kpi-tile-name">Tanques medidos</span>
+          <span class="kpi-calc-badge">{{ totalTanks() }} en total</span>
+        </div>
+        <div class="kpi-figure-lead tnum">{{ measuredTanks() }} / {{ totalTanks() }}</div>
+        <div class="kpi-figure-foot">Con lectura registrada</div>
+      </div>
+      <div class="kpi-tile-box">
+        <div class="kpi-tile-top">
+          <span class="kpi-tile-name">Alertas pendientes</span>
+          <span class="state-pill-tag critical">Campana</span>
+        </div>
+        <div class="kpi-figure-lead tnum">{{ pendingAlerts() }}</div>
+        <div class="kpi-figure-foot">Activas o leídas sin atender</div>
+      </div>
+      <div class="kpi-tile-box">
+        <div class="kpi-tile-top">
+          <span class="kpi-tile-name">Combustibles</span>
+          <span class="kpi-calc-badge">Configurados</span>
+        </div>
+        <div class="kpi-figure-lead tnum">{{ data.fuels.length }}</div>
+        <div class="kpi-figure-foot">Con tanque asociado</div>
+      </div>
+    </div>
+
+    <div class="jr-tabs" role="tablist" aria-label="Vistas del inventario">
+      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'resumen'"
+        [class.is-activa]="tab() === 'resumen'" (click)="changeTab('resumen')">
+        <span class="jr-tab-punto jr-tab-punto--ok"></span>
+        Resumen
+      </button>
+      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'control'"
+        [class.is-activa]="tab() === 'control'" (click)="changeTab('control')">
+        <span class="jr-tab-punto jr-tab-punto--aviso"></span>
+        Control del día
+      </button>
+    </div>
+
+    @if (tab() === 'resumen') {
+      <section class="home-section">
+        <div class="section-headline-bar">
+          <span class="headline-main-txt">Combustibles</span>
+          <span class="headline-sub-txt">Existencia neta y nivel de alerta por combustible.</span>
+        </div>
+        <div class="home-grid">
+          @for (fuel of data.fuels; track fuel.fuelType) {
+            <article class="inv-card home-fuel-card">
+              <div class="inv-card-title">
+                <span class="home-fuel-name">
+                  <span class="home-fuel-dot" [style.background]="fuelColors[fuel.fuelType]"></span>
+                  {{ fuelLabels[fuel.fuelType] }}
+                </span>
+                <span [class]="'state-pill-tag ' + levelTone(fuel.alertLevel)">{{ levelLabel(fuel.alertLevel) }}</span>
+              </div>
+              <div class="home-fuel-figures">
+                <span class="tnum">{{ formatGallons(fuel.currentGallons) }}</span>
+                <small>/ {{ formatGallons(fuel.capacityGallons) }} Gal</small>
+              </div>
+              <div class="alert-bar-track">
+                <div class="alert-bar-fill" [style.width.%]="fuel.percentage ?? 0"
+                  [style.background]="fuelColors[fuel.fuelType]"></div>
+              </div>
+              <div class="home-fuel-foot">
+                <span>{{ formatPercent(fuel.percentage) }} de la capacidad</span>
+                <span [class]="'state-pill-tag ' + (fuel.complete ? 'optimal' : 'warning')">
+                  {{ fuel.complete ? 'Medición completa' : 'Medición incompleta' }}
+                </span>
+              </div>
+            </article>
+          } @empty {
+            <app-empty-state heading="Sin combustibles"
+              description="Registra tanques y mediciones para ver el inventario.">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
+                <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              </svg>
+            </app-empty-state>
+          }
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-headline-bar">
+          <span class="headline-main-txt">Tanques</span>
+          <span class="headline-sub-txt">{{ measuredTanks() }} de {{ totalTanks() }} con medición.</span>
+        </div>
+        <div class="home-grid">
+          @for (tank of data.tanks; track tank.tankId) {
+            <article class="inv-card home-tank-card">
+              <div class="inv-card-title">
+                <span>{{ tank.tankCode }} <small class="home-muted">{{ fuelLabels[tank.fuelType] }}</small></span>
+                <span [class]="'state-pill-tag ' + levelTone(tank.alertLevel)">{{ levelLabel(tank.alertLevel) }}</span>
+              </div>
+              @if (tank.gallons === null) {
+                <p class="home-muted">Sin medición registrada.</p>
+              } @else {
+                <div class="home-tank-figures">
+                  <div><span class="home-label">Altura</span><b class="tnum">{{ tank.heightCm }} cm</b></div>
+                  <div><span class="home-label">Galones</span><b class="tnum">{{ formatGallons(tank.gallons) }}</b></div>
+                  <div><span class="home-label">Capacidad</span><b class="tnum">{{ formatGallons(tank.capacityGallons) }}</b></div>
+                  <div><span class="home-label">Medido</span><b>{{ tank.measuredOn ? formatShortDate(tank.measuredOn) : '—' }}</b></div>
+                </div>
+                <div class="alert-bar-track">
+                  <div class="alert-bar-fill" [style.width.%]="tank.percentage ?? 0"
+                    [style.background]="fuelColors[tank.fuelType]"></div>
+                </div>
+                @if (tank.measuredAt) {
+                  <span class="home-muted">Registrado el {{ formatDateTime(tank.measuredAt) }}</span>
+                }
+              }
+            </article>
+          } @empty {
+            <app-empty-state heading="Sin tanques"
+              description="Configura los tanques para ver su estado.">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+              </svg>
+            </app-empty-state>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="inv-filter-toolbar">
+        <div class="filter-item-group">
+          <label class="filter-item-label" for="control-date">Fecha del diario</label>
+          <input id="control-date" class="flat-input" type="date" [value]="controlDate()"
+            (change)="onControlDateChange($event)" />
+        </div>
+        <button class="btn-action-primary" type="button" [disabled]="controlLoading()" (click)="loadControl()">
+          {{ controlLoading() ? 'Consultando…' : 'Consultar' }}
+        </button>
+        @if (control(); as controlData) {
+          <span class="state-pill-tag optimal">{{ formatShortDate(controlData.journalDate) }}</span>
+        }
+      </section>
+
+      @if (controlError(); as message) {
+        <div class="alert-box-danger" role="alert">{{ message }}</div>
+      } @else if (controlLoading()) {
+        <section class="inv-card home-loading" aria-live="polite">Cargando el control del día…</section>
+      } @else if (control(); as controlData) {
+        <section class="home-section">
+          <div class="section-headline-bar">
+            <span class="headline-main-txt">Combustibles</span>
+            <span class="headline-sub-txt">Variación y autonomía del {{ formatShortDate(controlData.journalDate) }}.</span>
+          </div>
+          <div class="inv-table-wrapper">
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th>Combustible</th>
+                  <th class="right">Inicial</th>
+                  <th class="right">Entradas</th>
+                  <th class="right">Vendido</th>
+                  <th class="right">Teórico</th>
+                  <th class="right">Medido</th>
+                  <th class="right">Diferencia</th>
+                  <th class="right">Autonomía</th>
+                  <th>Nivel</th>
+                  <th>Agotamiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fuel of controlData.fuels; track fuel.fuelType) {
+                  <tr>
+                    <td>
+                      <strong>{{ fuelLabels[fuel.fuelType] }}</strong>
+                      <small class="home-muted">{{ variationLabel(fuel.variation.status) }}</small>
+                    </td>
+                    <td class="right tnum">{{ formatGallons(fuel.variation.initialGallons) }}</td>
+                    <td class="right tnum">{{ formatGallons(fuel.variation.entriesGallons) }}</td>
+                    <td class="right tnum">{{ formatGallons(fuel.variation.soldGallons) }}</td>
+                    <td class="right tnum">{{ formatGallons(fuel.variation.theoreticalGallons) }}</td>
+                    <td class="right tnum">{{ formatGallons(fuel.variation.measuredGallons) }}</td>
+                    <td class="right tnum" [class.home-negative]="fuel.variation.outOfTolerance">
+                      {{ formatGallons(fuel.variation.varianceGallons) }}
+                    </td>
+                    <td class="right tnum">{{ formatDays(fuel.autonomy.autonomyDays) }}</td>
+                    <td>
+                      <span [class]="'state-pill-tag ' + levelTone(fuel.autonomy.level)">
+                        {{ autonomyLabel(fuel.autonomy.status, fuel.autonomy.level) }}
+                      </span>
+                    </td>
+                    <td>{{ fuel.estimatedDepletionDate ? formatShortDate(fuel.estimatedDepletionDate) : '—' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="10" class="home-empty-cell">Sin combustibles para la fecha.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="section-headline-bar">
+            <span class="headline-main-txt">Lubricantes y aditivos</span>
+            <span class="headline-sub-txt">Unidades vendidas y existencia de cierre.</span>
+          </div>
+          <div class="inv-table-wrapper">
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th class="right">Vendidos</th>
+                  <th class="right">Oficina</th>
+                  <th class="right">Mostrador</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of controlData.products; track product.productId) {
+                  <tr>
+                    <td>{{ product.productCode }}</td>
+                    <td><strong>{{ product.productName }}</strong></td>
+                    <td>{{ categoryLabels[product.category] }}</td>
+                    <td class="right tnum">{{ product.sold }}</td>
+                    <td class="right tnum">{{ product.officeStock }}</td>
+                    <td class="right tnum">{{ product.counterStock }}</td>
+                    <td>
+                      <span [class]="'state-pill-tag ' + productStatusTone(product)">
+                        {{ productStatusLabel(product) }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="7" class="home-empty-cell">Sin productos para la fecha.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    }
+  }
+</div>

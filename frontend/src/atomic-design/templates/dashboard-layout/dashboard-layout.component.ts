@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { InventoryAlertsService } from '../../../core/services/inventory-alerts.service';
 import { ChangePasswordModalComponent } from '../../organisms/change-password-modal/change-password-modal.component';
 
 /** Clave del ancho de la barra lateral: se recuerda entre visitas, como el resto de preferencias de la vista. */
@@ -42,11 +43,14 @@ function usesMobileLayout(url: string): boolean {
 export class DashboardLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private readonly alertsService = inject(InventoryAlertsService);
   readonly configurationOpen = signal(true);
   readonly resultsOpen = signal(true);
   readonly personalOpen = signal(true);
   readonly mobileMenuOpen = signal(false);
   readonly changePasswordModalOpen = signal(false);
+  /** Alerts the administrator has not attended yet; it feeds the bell and the sidebar badge. */
+  readonly pendingAlerts = signal(0);
   readonly statisticsActive = signal(usesMobileLayout(this.router.url));
   /** Preferencia del usuario; en pantallas angostas no se aplica porque ahí la barra es un cajón. */
   private readonly collapsePreference = signal(storedCollapsed());
@@ -74,8 +78,13 @@ export class DashboardLayoutComponent {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(event => {
         this.statisticsActive.set(usesMobileLayout(event.urlAfterRedirects));
+        this.alertsService.refreshPending();
         this.closeMenu(false);
       });
+
+    this.alertsService.pending$.pipe(takeUntilDestroyed())
+      .subscribe(pending => this.pendingAlerts.set(pending));
+    this.alertsService.refreshPending();
   }
 
   /** El logo contrae y expande la barra; el ancho que suelta lo toma el contenido de la derecha. */
