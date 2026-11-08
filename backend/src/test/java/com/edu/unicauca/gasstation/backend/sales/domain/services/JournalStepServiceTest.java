@@ -1,5 +1,7 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.services;
 
+import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStepRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
@@ -263,14 +265,20 @@ class JournalStepServiceTest {
     void throwsExceptionWhenCompletingStepAfterJournalIsClosed() {
         Long journalId = 1L;
 
-        JournalStep step6Completed = JournalStep.builder()
-                .id(60L)
-                .stepNumber(6)
-                .status(StepStatus.COMPLETED)
+        Journal closedJournal = Journal.builder()
+                .id(journalId)
+                .status(JournalStatus.CLOSED)
                 .build();
 
-        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 6))
-                .thenReturn(Optional.of(step6Completed));
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .journal(closedJournal)
+                .status(StepStatus.PENDING)
+                .build();
+
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 2))
+                .thenReturn(Optional.of(step2));
 
         assertThatThrownBy(() -> journalStepService.markStepAsCompleted(journalId, 2))
                 .isInstanceOf(IllegalStateException.class)

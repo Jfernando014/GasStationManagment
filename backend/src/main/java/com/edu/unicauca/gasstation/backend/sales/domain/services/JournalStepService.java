@@ -18,13 +18,6 @@ public class JournalStepService {
 
     @Transactional
     public JournalStep markStepAsCompleted(Long journalId, Integer stepNumber) {
-        // Si el paso 6 ya está completado, la jornada está cerrada y en solo lectura (S3-03)
-        if (journalStepRepository.findByJournalIdAndStepNumber(journalId, 6)
-                .map(step6 -> step6.getStatus() == StepStatus.COMPLETED)
-                .orElse(false)) {
-            throw new IllegalStateException("La jornada ya está cerrada y no permite modificaciones.");
-        }
-
         // Validación específica: el paso 4 requiere el 2 y el 3
         if (stepNumber == 4) {
             checkStepCompleted(journalId, 2);
@@ -38,7 +31,7 @@ public class JournalStepService {
         JournalStep step = journalStepRepository.findByJournalIdAndStepNumber(journalId, stepNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Paso no encontrado"));
 
-        if (step.getJournal() != null && step.getJournal().getStatus() == JournalStatus.CLOSED) {
+        if (isJournalClosed(step)) {
             throw new IllegalStateException("La jornada ya está cerrada y no permite modificaciones.");
         }
 
@@ -46,6 +39,20 @@ public class JournalStepService {
         step.setCompletedAt(LocalDateTime.now());
         
         return journalStepRepository.save(step);
+    }
+
+    private boolean isJournalClosed(JournalStep step) {
+        if (step.getStepNumber() != null && step.getStepNumber() == 6 && step.getStatus() == StepStatus.COMPLETED) {
+            return true;
+        }
+        if (step.getJournal() == null) {
+            return false;
+        }
+        if (step.getJournal().getStatus() == JournalStatus.CLOSED) {
+            return true;
+        }
+        return step.getJournal().getSteps() != null && step.getJournal().getSteps().stream()
+                .anyMatch(s -> s.getStepNumber() != null && s.getStepNumber() == 6 && s.getStatus() == StepStatus.COMPLETED);
     }
 
     public boolean isJournalEditable(Long journalId) {
