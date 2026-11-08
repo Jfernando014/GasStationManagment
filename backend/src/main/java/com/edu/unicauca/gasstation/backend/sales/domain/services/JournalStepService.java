@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.services;
 
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStepRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
@@ -17,6 +18,13 @@ public class JournalStepService {
 
     @Transactional
     public JournalStep markStepAsCompleted(Long journalId, Integer stepNumber) {
+        // Si el paso 6 ya está completado, la jornada está cerrada y en solo lectura (S3-03)
+        if (journalStepRepository.findByJournalIdAndStepNumber(journalId, 6)
+                .map(step6 -> step6.getStatus() == StepStatus.COMPLETED)
+                .orElse(false)) {
+            throw new IllegalStateException("La jornada ya está cerrada y no permite modificaciones.");
+        }
+
         // Validación específica: el paso 4 requiere el 2 y el 3
         if (stepNumber == 4) {
             checkStepCompleted(journalId, 2);
@@ -30,6 +38,10 @@ public class JournalStepService {
         JournalStep step = journalStepRepository.findByJournalIdAndStepNumber(journalId, stepNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Paso no encontrado"));
 
+        if (step.getJournal() != null && step.getJournal().getStatus() == JournalStatus.CLOSED) {
+            throw new IllegalStateException("La jornada ya está cerrada y no permite modificaciones.");
+        }
+
         step.setStatus(StepStatus.COMPLETED);
         step.setCompletedAt(LocalDateTime.now());
         
@@ -37,10 +49,16 @@ public class JournalStepService {
     }
 
     public boolean isJournalEditable(Long journalId) {
-        // En el futuro: si el paso 6 (cierre) está completo, ya no es editable
         return journalStepRepository.findByJournalIdAndStepNumber(journalId, 6)
-                .map(step -> step.getStatus() != StepStatus.COMPLETED)
+                .map(step -> step.getStatus() != StepStatus.COMPLETED
+                        && (step.getJournal() == null || step.getJournal().getStatus() != JournalStatus.CLOSED))
                 .orElse(false);
+    }
+
+    public void assertJournalEditable(Long journalId) {
+        if (!isJournalEditable(journalId)) {
+            throw new IllegalStateException("La jornada ya está cerrada y no permite modificaciones.");
+        }
     }
 
     private void checkStepCompleted(Long journalId, Integer stepNumber) {

@@ -61,6 +61,10 @@ public class ElectronicPaymentsService {
 
     @Transactional
     public ElectronicPaymentsStatus saveVouchers(LocalDate date, UUID workerId, ElectronicVoucherRequest request) {
+        Journal journal = journals.findByDate(date).orElse(null);
+        if (journal != null && (journal.getStatus() == JournalStatus.CLOSED || isStepCompleted(journal, 6))) {
+            throw new IllegalStateException("La jornada del " + date + " ya está cerrada y no permite modificaciones.");
+        }
         List<VendorCloseSummary> closes = sellerCloseQuery.findVendorClosesByDate(date);
         VendorCloseSummary close = closes.stream()
                 .filter(item -> workerId(item).equals(workerId))
