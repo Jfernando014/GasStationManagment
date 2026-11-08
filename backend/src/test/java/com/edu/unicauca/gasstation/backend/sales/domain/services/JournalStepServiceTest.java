@@ -257,4 +257,25 @@ class JournalStepServiceTest {
 
         assertThat(editable).isFalse();
     }
+
+    @Test
+    @DisplayName("Should throw IllegalStateException when trying to complete any step after journal is closed (S3-03)")
+    void throwsExceptionWhenCompletingStepAfterJournalIsClosed() {
+        Long journalId = 1L;
+
+        JournalStep step6Completed = JournalStep.builder()
+                .id(60L)
+                .stepNumber(6)
+                .status(StepStatus.COMPLETED)
+                .build();
+
+        when(journalStepRepository.findByJournalIdAndStepNumber(journalId, 6))
+                .thenReturn(Optional.of(step6Completed));
+
+        assertThatThrownBy(() -> journalStepService.markStepAsCompleted(journalId, 2))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cerrada");
+
+        verify(journalStepRepository, never()).save(any());
+    }
 }
