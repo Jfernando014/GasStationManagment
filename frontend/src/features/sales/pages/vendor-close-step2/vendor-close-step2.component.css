@@ -80,3 +80,10 @@
 .jr-p2-panel-aviso { font-size: 10.5px; color: #d97706; margin: 1px 0 3px; }
 .global-toast { position: fixed; bottom: 16px; right: 16px; background: #0f172a; color: #fff; padding: 6px 12px; border-radius: 5px; font-size: 12px; z-index: 1000; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .global-toast.visible { opacity: 1; }
+
+.jr-p2-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

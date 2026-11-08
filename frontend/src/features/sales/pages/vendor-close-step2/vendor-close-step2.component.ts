@@ -1,8 +1,11 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
+import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import {
   AssignedVendorDto,
   CatalogProductItem,
@@ -38,13 +41,16 @@ export const FUEL_PRICES: Record<string, number> = {
 })
 export class VendorCloseStep2Component implements OnInit {
   private readonly salesService = inject(SalesVendorCloseService);
+  private readonly journalService = inject(JournalService, { optional: true });
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly denominations = DENOMINATIONS;
   readonly packetValue = 200000;
 
   journalDate = '2026-08-05';
+  isReadOnly = false;
   assignedVendors: AssignedVendorDto[] = [];
   captures: Record<string, VendorGridCapture> = {};
 
@@ -69,6 +75,22 @@ export class VendorCloseStep2Component implements OnInit {
   private toastTimer: any = null;
 
   ngOnInit(): void {
+    if (this.journalService) {
+      this.journalService.currentJournal$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(journal => {
+          if (!journal) return;
+          const closingStep = journal.steps?.find(s => s.stepNumber === 6);
+          this.isReadOnly = journal.status === JournalStatus.CLOSED || closingStep?.status === StepStatus.COMPLETED;
+          if (journal.date && journal.date !== this.journalDate) {
+            this.journalDate = journal.date;
+            this.initData();
+          } else {
+            this.cdr.detectChanges();
+          }
+        });
+    }
+
     this.route.queryParams.subscribe(params => {
       if (params['date']) {
         this.journalDate = params['date'];
@@ -277,6 +299,7 @@ export class VendorCloseStep2Component implements OnInit {
   }
 
   onFieldChange(doc: string): void {
+    if (this.isReadOnly) return;
     const cap = this.captures[doc];
     if (cap) {
       cap.conDatos = true;
@@ -555,6 +578,7 @@ export class VendorCloseStep2Component implements OnInit {
 
   // --- Save to Backend ---
   saveCloses(): void {
+    if (this.isReadOnly) return;
     this.isSaving = true;
     this.saveSuccessMessage = '';
     this.errorMessage = '';

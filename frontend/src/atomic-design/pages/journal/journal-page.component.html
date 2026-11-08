@@ -18,10 +18,18 @@
   </div>
 
   <ng-container *ngIf="journal">
+    <div *ngIf="journal.status === 'CLOSED'" class="readonly-banner" role="status">
+      <span><b>Jornada cerrada · solo lectura.</b> Ningún paso puede editarse después del cierre.</span>
+      <div class="readonly-banner-links">
+        <a routerLink="/jornada/cerrada">Pantalla de cierre</a>
+        <a routerLink="/historial">Historial de jornadas</a>
+      </div>
+    </div>
+
     <app-journal-stepper [steps]="journal.steps"></app-journal-stepper>
     
     <!-- Aquí se inyectan las pantallas de cada paso -->
-    <div class="step-content-container">
+    <div class="step-content-container" [class.jr-solo-lectura]="journal.status === 'CLOSED'">
       <router-outlet></router-outlet>
     </div>
   </ng-container>
