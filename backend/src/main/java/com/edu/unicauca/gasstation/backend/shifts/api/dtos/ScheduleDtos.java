@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -150,6 +151,142 @@ public final class ScheduleDtos {
 
             @Schema(description = "True when the day, night and support conditions are all met", example = "false")
             boolean covered) {
+    }
+
+    /**
+     * Month of one worker: every day with the schedule code, the code worked and the novelties of the day staff, plus
+     * the totals of the month.
+     *
+     * @param workerId worker identifier
+     * @param month    month described
+     * @param days     one element per day of the month
+     * @param summary  totals of the month, calculated over the schedule
+     */
+    @Schema(description = "Mes de un vendedor: cada día con el código de la malla, el código trabajado y sus "
+            + "novedades, más los totales del mes")
+    public record WorkerMonthResponse(
+            @Schema(description = "Identificador del vendedor", example = "d3c8c22b-9a86-4678-a326-ac90b26057cb")
+            UUID workerId,
+
+            @Schema(description = "Mes consultado (yyyy-MM)", type = "string", example = "2026-08")
+            YearMonth month,
+
+            @Schema(description = "Un elemento por cada día del mes, en orden")
+            List<WorkerMonthDay> days,
+
+            @Schema(description = "Totales del mes; se calculan sobre la malla, es decir, lo programado")
+            WorkerMonthSummary summary) {
+    }
+
+    /**
+     * One day of the month of a worker.
+     *
+     * @param date       day
+     * @param gridCode   code of the schedule; null when the worker has no row
+     * @param workedCode code actually worked once the novelties apply; null when the worker was absent
+     * @param hours      hours of the schedule code according to the catalog; 0 without a row
+     * @param note       note of the schedule row; null when there is none
+     * @param novelties  active novelties of the day that involve the worker
+     */
+    @Schema(description = "Un día del mes de un vendedor")
+    public record WorkerMonthDay(
+            @Schema(description = "Día", example = "2026-08-12")
+            LocalDate date,
+
+            @Schema(description = "Código de la malla; nulo si el vendedor no tiene fila ese día", example = "DIA6",
+                    nullable = true)
+            String gridCode,
+
+            @Schema(description = "Código realmente trabajado con las novedades activas; nulo si estuvo ausente",
+                    example = "NOCHE", nullable = true)
+            String workedCode,
+
+            @Schema(description = "Horas del código de la malla según el catálogo; 0 si no hay fila", example = "6")
+            int hours,
+
+            @Schema(description = "Nota de la malla; nula si no hay", example = "Cambio solicitado por el vendedor",
+                    nullable = true)
+            String note,
+
+            @Schema(description = "Novedades activas de ese día vistas desde este vendedor")
+            List<WorkerMonthNovelty> novelties) {
+    }
+
+    /**
+     * A novelty seen from the worker.
+     *
+     * @param kind                ABSENT, COVERING, SHIFT_CHANGE or SWAP
+     * @param originalCode        code the worker had in the schedule that day; DESCANSO without a row
+     * @param finalCode           code the worker worked instead; null when absent
+     * @param reason              reason registered with the novelty
+     * @param exceptionalCoverage a code of another role was accepted on purpose
+     */
+    @Schema(description = "Novedad de un día vista desde el vendedor")
+    public record WorkerMonthNovelty(
+            @Schema(description = "Qué le pasó al vendedor: ABSENT = faltó (con o sin reemplazo), COVERING = cubrió a "
+                    + "otro, SHIFT_CHANGE = trabajó otro código, SWAP = intercambió turno con un compañero",
+                    example = "SWAP", allowableValues = {"ABSENT", "COVERING", "SHIFT_CHANGE", "SWAP"})
+            String kind,
+
+            @Schema(description = "Código que el vendedor tenía en la malla ese día (DESCANSO si no tenía fila); en una "
+                    + "ausencia, el código que iba a trabajar", example = "DIA")
+            String originalCode,
+
+            @Schema(description = "Código que trabajó en su lugar; nulo si estuvo ausente", example = "NOCHE",
+                    nullable = true)
+            String finalCode,
+
+            @Schema(description = "Motivo registrado con la novedad", example = "Cita médica")
+            String reason,
+
+            @Schema(description = "Se aceptó a propósito un código de otro rol", example = "false")
+            boolean exceptionalCoverage) {
+    }
+
+    /**
+     * Totals of the month of a worker, over the schedule.
+     *
+     * @param scheduledHours   sum of the hours of the schedule codes
+     * @param scheduledShifts  days with a code other than DESCANSO
+     * @param restDays         days with DESCANSO
+     * @param shiftsByCode     days of each working code; only codes with at least one day
+     * @param replacementsMade times the worker covered a colleague
+     * @param absences         days the worker did not work, with or without a replacement
+     */
+    @Schema(description = "Totales del mes de un vendedor, calculados sobre la malla")
+    public record WorkerMonthSummary(
+            @Schema(description = "Suma de las horas de los códigos de la malla", example = "225")
+            int scheduledHours,
+
+            @Schema(description = "Días con un código distinto de DESCANSO", example = "21")
+            int scheduledShifts,
+
+            @Schema(description = "Días con DESCANSO", example = "10")
+            int restDays,
+
+            @Schema(description = "Cantidad de días de cada código de trabajo; solo los que tienen algún día")
+            List<WorkerMonthCodeCount> shiftsByCode,
+
+            @Schema(description = "Veces que cubrió a un compañero", example = "0")
+            int replacementsMade,
+
+            @Schema(description = "Días que faltó, con o sin reemplazo", example = "0")
+            int absences) {
+    }
+
+    /**
+     * A working code and the number of days it has in the month.
+     *
+     * @param code  code of the catalog
+     * @param count days with that code
+     */
+    @Schema(description = "Un código de trabajo y cuántos días tiene en el mes")
+    public record WorkerMonthCodeCount(
+            @Schema(description = "Código del catálogo", example = "NOCHE")
+            String code,
+
+            @Schema(description = "Días con ese código", example = "10")
+            int count) {
     }
 
     /**
