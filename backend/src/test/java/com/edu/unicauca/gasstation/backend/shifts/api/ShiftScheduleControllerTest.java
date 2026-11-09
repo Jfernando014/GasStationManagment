@@ -21,10 +21,12 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftRotationService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftScheduleService;
+import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftWorkerMonthService;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftError;
 import com.edu.unicauca.gasstation.backend.shifts.exception.ShiftException;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftRotationMapperImpl;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftScheduleMapperImpl;
+import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftWorkerMonthMapperImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -54,7 +56,7 @@ import org.springframework.test.web.servlet.ResultActions;
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
 @AutoConfigureMockMvc(addFilters = false)
-@Import({ShiftScheduleMapperImpl.class, ShiftRotationMapperImpl.class})
+@Import({ShiftScheduleMapperImpl.class, ShiftRotationMapperImpl.class, ShiftWorkerMonthMapperImpl.class})
 @TestPropertySource(properties = "server.port=0")
 class ShiftScheduleControllerTest {
 
@@ -74,6 +76,9 @@ class ShiftScheduleControllerTest {
 
     @MockBean
     private ShiftRotationService shiftRotationService;
+
+    @MockBean
+    private ShiftWorkerMonthService shiftWorkerMonthService;
 
     // ---- POST /rotation ----
 
