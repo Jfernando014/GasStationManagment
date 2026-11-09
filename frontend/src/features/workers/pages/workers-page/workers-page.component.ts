@@ -1,6 +1,7 @@
 import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
@@ -29,7 +30,8 @@ const DIALOG_CLOSE_DELAY_MS = 320;
     StatusBadgeComponent,
     EmptyStateComponent,
     SelectFieldComponent,
-    WorkerFormComponent
+    WorkerFormComponent,
+    RouterLink
   ],
   templateUrl: './workers-page.component.html',
   styleUrl: './workers-page.component.css'

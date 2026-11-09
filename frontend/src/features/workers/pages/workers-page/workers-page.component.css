@@ -28,6 +28,11 @@
 
 .workers-cargando { animation: workers-pulse 1.2s ease-in-out infinite; }
 
+/* "Ver perfil" sits above the edit form, aligned to the right */
+.workers-ver-perfil { display: flex; justify-content: flex-end; padding: 10px 14px 0; }
+.workers-ver-perfil svg { transition: transform var(--duration-normal) var(--spring); }
+.workers-ver-perfil a:hover svg { transform: translateX(3px); }
+
 /* The edit form slides in when another worker is chosen */
 .workers-panel { animation: workers-panel-in var(--duration-normal) var(--spring) both; }
 
