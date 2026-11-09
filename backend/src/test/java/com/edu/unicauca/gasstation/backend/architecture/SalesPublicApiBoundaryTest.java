@@ -8,7 +8,6 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -49,7 +48,6 @@ class SalesPublicApiBoundaryTest {
     }
 
     @Test
-    @Disabled("Enable in the PR where reports adds its consumer of CashBalanceQuery")
     void reportsConsumeTheCashBalanceQuery() {
         boolean consumed = mainClasses.stream()
                 .filter(javaClass -> javaClass.getPackageName().startsWith(ROOT + ".reports"))
