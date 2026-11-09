@@ -1,0 +1,23 @@
+<div class="tablist" role="tablist" [attr.aria-label]="label() || null">
+  @for (tab of tabs(); track tab.id) {
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [id]="tabId(tab.id)"
+      [class.is-active]="tab.id === active()"
+      [attr.aria-selected]="tab.id === active()"
+      [attr.aria-controls]="panelId(tab.id)"
+      [tabindex]="tab.id === active() ? 0 : -1"
+      (click)="select(tab.id)"
+      (keydown)="onKeydown($event)">
+      {{ tab.label }}
+    </button>
+  }
+  <span
+    class="underline"
+    aria-hidden="true"
+    [class.is-ready]="ready()"
+    [style.width.px]="indicator().width"
+    [style.transform]="'translateX(' + indicator().left + 'px)'"></span>
+</div>

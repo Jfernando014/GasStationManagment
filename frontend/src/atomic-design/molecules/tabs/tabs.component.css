@@ -1,0 +1,48 @@
+:host { display: block; }
+
+.tablist {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-main);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tablist::-webkit-scrollbar { display: none; }
+
+.tab {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease;
+}
+
+.tab:hover { color: var(--text-heading); background: var(--surface-subtle); }
+.tab.is-active { color: var(--text-heading); }
+.tab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
+
+/* One underline that slides under the active tab instead of one per tab */
+.underline {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--brand-primary);
+  pointer-events: none;
+}
+.underline.is-ready {
+  transition: transform var(--duration-normal) var(--spring), width var(--duration-normal) var(--spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .underline.is-ready { transition: none; }
+}
