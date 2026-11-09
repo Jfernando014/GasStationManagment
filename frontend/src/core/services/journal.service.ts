@@ -1,8 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 
-import { JournalResponse, JournalStepResponse } from '../../shared/models/journal.model';
+import {
+  JournalClosingSummaryResponse,
+  JournalHistoryDayDetailResponse,
+  JournalHistoryMonthResponse,
+  JournalResponse,
+  JournalStepResponse
+} from '../../shared/models/journal.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +22,8 @@ export class JournalService {
   private readonly currentJournalSubject = new BehaviorSubject<JournalResponse | null>(null);
   readonly currentJournal$ = this.currentJournalSubject.asObservable();
 
+  private selectedDate: string | null = null;
+
   openJournal(date: string): Observable<JournalResponse> {
     return this.http.post<JournalResponse>(`${this.apiUrl}/open?date=${date}`, {});
   }
@@ -24,8 +32,41 @@ export class JournalService {
     return this.http.post<JournalStepResponse>(`${this.apiUrl}/${journalId}/steps/${stepNumber}/complete`, {});
   }
 
+  getClosingSummary(journalId: number): Observable<JournalClosingSummaryResponse> {
+    return this.http.get<JournalClosingSummaryResponse>(`${this.apiUrl}/${journalId}/closing-summary`);
+  }
+
+  closeJournal(journalId: number): Observable<JournalResponse> {
+    return this.http.post<JournalResponse>(`${this.apiUrl}/${journalId}/close`, {}).pipe(
+      tap(closed => this.setCurrentJournal(closed))
+    );
+  }
+
+  getJournalHistory(yearMonth: string): Observable<JournalHistoryMonthResponse> {
+    return this.http.get<JournalHistoryMonthResponse>(`${this.apiUrl}/history`, {
+      params: { yearMonth }
+    });
+  }
+
+  getJournalHistoryDayDetail(date: string): Observable<JournalHistoryDayDetailResponse> {
+    return this.http.get<JournalHistoryDayDetailResponse>(`${this.apiUrl}/history/${date}`);
+  }
+
   setCurrentJournal(journal: JournalResponse): void {
+    this.selectedDate = journal.date;
     this.currentJournalSubject.next(journal);
+  }
+
+  getCurrentJournalSnapshot(): JournalResponse | null {
+    return this.currentJournalSubject.value;
+  }
+
+  setSelectedDate(date: string): void {
+    this.selectedDate = date;
+  }
+
+  getSelectedDate(): string | null {
+    return this.selectedDate;
   }
 
   /** Aplica localmente el resultado de completar un paso, sin volver a abrir la jornada. */

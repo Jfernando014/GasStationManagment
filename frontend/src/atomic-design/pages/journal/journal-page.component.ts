@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { JournalService } from '../../../core/services/journal.service';
 import { JournalResponse } from '../../../shared/models/journal.model';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
@@ -15,6 +15,7 @@ import { JournalStepperComponent } from '../../organisms/journal-stepper/journal
 })
 export class JournalPageComponent implements OnInit {
   private journalService = inject(JournalService);
+  private route = inject(ActivatedRoute, { optional: true });
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
@@ -22,8 +23,10 @@ export class JournalPageComponent implements OnInit {
   errorMessage = '';
 
   ngOnInit(): void {
-    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
-    this.journalService.openJournal(today).subscribe({
+    const queryDate = this.route?.snapshot?.queryParamMap?.get('date');
+    const selectedDate = (this.journalService as { getSelectedDate?: () => string | null }).getSelectedDate?.();
+    const targetDate = queryDate || selectedDate || new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    this.journalService.openJournal(targetDate).subscribe({
       next: (res) => this.journalService.setCurrentJournal(res),
       error: (err) => {
         console.error('Error opening journal:', err);

@@ -42,14 +42,14 @@
       </button>
 
       <!-- Botón Cargar Datos Demo Hoja 05 -->
-      <button type="button" class="btn-ghost" id="btn-cargar-hoja05" (click)="loadDemoHoja05()">
+      <button type="button" class="btn-ghost" id="btn-cargar-hoja05" [disabled]="isReadOnly" (click)="loadDemoHoja05()">
         Cargar hoja 05
       </button>
 
       <!-- Botón Guardar Cierres -->
-      <button type="button" class="btn-primary" id="btn-guardar-cierres" [disabled]="isSaving" (click)="saveCloses()">
+      <button type="button" class="btn-primary" id="btn-guardar-cierres" [disabled]="isSaving || isReadOnly" (click)="saveCloses()">
         <span *ngIf="isSaving">Guardando...</span>
-        <span *ngIf="!isSaving">Guardar Cierres</span>
+        <span *ngIf="!isSaving">{{ isReadOnly ? 'Solo lectura' : 'Guardar Cierres' }}</span>
       </button>
     </div>
   </div>
@@ -63,6 +63,7 @@
   </div>
 
   <!-- Rejilla compacta de conciliación -->
+  <fieldset class="jr-p2-fieldset" [disabled]="isReadOnly">
   <div class="jr-p2-rejilla-wrapper">
     <div class="jr-grid-wrap">
       <table class="jr-grid" id="jr-p2-rejilla">
@@ -444,6 +445,7 @@
       </table>
     </div>
   </div>
+  </fieldset>
 
   <!-- Tarjeta de Consolidación Diaria (S2-10) -->
   <div class="jr-consolidado-card">

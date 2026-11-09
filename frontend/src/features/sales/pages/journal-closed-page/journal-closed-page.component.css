@@ -1,0 +1,21 @@
+.jr-cerrada-pie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.jr-paso-construccion {
+  padding: 24px;
+  text-align: center;
+  background: var(--surface-card);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+}
+
+.jr-paso-bloqueado-acciones {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}

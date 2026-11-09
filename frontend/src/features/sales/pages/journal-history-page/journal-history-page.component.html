@@ -1,0 +1,194 @@
+<div id="jr-subview-historial" class="inv-subview jr-hist">
+  <div class="jr-hist-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Historial de jornadas</h1>
+      <p>Consulta cualquier día. Una jornada cerrada se abre en solo lectura; una pendiente o en curso, para seguir trabajándola.</p>
+    </div>
+
+    <div class="jr-indicadores" id="jr-hist-indicadores" *ngIf="monthData">
+      <div class="jr-indicador">
+        <span class="jr-indicador-label">Cerradas en el sistema</span>
+        <b class="jr-indicador-val">{{ monthData.closedSystemCount }}</b>
+      </div>
+      <div class="jr-indicador">
+        <span class="jr-indicador-label">Datos migrados</span>
+        <b class="jr-indicador-val">{{ monthData.migratedCount }}</b>
+      </div>
+      <div class="jr-indicador" [class.jr-indicador--aviso]="monthData.withMarkersCount > 0">
+        <span class="jr-indicador-label">Con descuadres o alertas</span>
+        <b class="jr-indicador-val">{{ monthData.withMarkersCount }}</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="jr-hist-cuerpo">
+    <!-- Calendario Mensual -->
+    <section class="jr-hist-card">
+      <div class="jr-hist-barra">
+        <div class="jr-hist-mes">
+          <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" aria-label="Mes anterior" (click)="changeMonth(-1)">‹</button>
+          <label>
+            <span class="jr-sr">Mes</span>
+            <input
+              type="month"
+              class="flat-input"
+              id="jr-hist-periodo"
+              [ngModel]="yearMonth"
+              (ngModelChange)="onPeriodInputChange($event)">
+          </label>
+          <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" aria-label="Mes siguiente" (click)="changeMonth(1)">›</button>
+        </div>
+
+        <div class="jr-hist-leyenda">
+          <span><i class="jr-hist-punto jr-hist-punto--cerrada"></i>Cerrada</span>
+          <span><i class="jr-hist-punto jr-hist-punto--migrada"></i>Datos migrados</span>
+          <span><i class="jr-hist-punto jr-hist-punto--en-curso"></i>En curso</span>
+          <span><i class="jr-hist-punto jr-hist-punto--pendiente"></i>Pendiente</span>
+          <span><i class="jr-hist-marca jr-hist-marca--descuadre"></i>Descuadre</span>
+          <span><i class="jr-hist-marca jr-hist-marca--alerta"></i>Alerta</span>
+        </div>
+      </div>
+
+      <div class="jr-hist-calendario" id="jr-hist-calendario" *ngIf="monthData">
+        <div class="jr-hist-cab-dia" *ngFor="let dayName of weekdays">{{ dayName }}</div>
+
+        <div class="jr-hist-dia jr-hist-dia--fuera" aria-hidden="true" *ngFor="let empty of leadingEmptyCells"></div>
+
+        <button
+          *ngFor="let day of monthData.days"
+          type="button"
+          class="jr-hist-dia"
+          [ngClass]="['jr-hist-dia--' + dayCssKey(day), day.date === selectedMigratedDate ? 'is-sel' : '']"
+          [attr.data-date]="day.date"
+          (click)="onDayClick(day)">
+          <span class="jr-hist-num">{{ day.dayOfMonth }}</span>
+          <span class="jr-hist-estado">
+            <i class="jr-hist-punto" [ngClass]="'jr-hist-punto--' + dayCssKey(day)"></i>
+            {{ dayLabel(day) }}
+          </span>
+          <span class="jr-hist-marcas">
+            <i
+              *ngFor="let marker of day.markers"
+              class="jr-hist-marca"
+              [ngClass]="'jr-hist-marca--' + markerCssKey(marker)"
+              [attr.title]="markerTitle(marker)">
+            </i>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Panel Derecho: Detalle de día migrado o ayuda -->
+    <section class="jr-hist-card jr-hist-panel" id="jr-hist-panel">
+      <div class="jr-hist-ayuda" *ngIf="!selectedDayDetail">
+        <b>Elige un día</b>
+        <p>
+          Las jornadas del sistema se abren directamente: cerradas en solo lectura (los 6 pasos, sus tablas y el PDF),
+          pendientes o en curso para seguir trabajando.
+        </p>
+        <p>
+          Los días migrados de los Excel muestran aquí lo que traen los datos, sin inventar lo que falta.
+        </p>
+      </div>
+
+      <ng-container *ngIf="selectedDayDetail as detail">
+        <div class="jr-hist-panel-cab">
+          <div>
+            <b>{{ longSpanishDate(detail.date) }}</b>
+            <span class="jr-chip jr-chip--cerrada">
+              <span class="jr-chip-punto"></span>Cerrada (datos migrados)
+            </span>
+          </div>
+          <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="closeMigratedPanel()">✕</button>
+        </div>
+
+        <p class="jr-hist-nota">
+          Día anterior al sistema: no tiene pasos de jornada. Solo lectura con los datos que existen en los Excel.
+        </p>
+
+        <h4>Ventas por vendedor</h4>
+        <table class="jr-hist-tabla" *ngIf="detail.vendorSales.length > 0; else noSalesTpl">
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>Turno</th>
+              <th class="num">Galones</th>
+              <th class="num">Canastilla</th>
+              <th class="num">Ventas</th>
+              <th class="num">Descuadre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of detail.vendorSales">
+              <td>{{ shortVendorName(s.vendorName) }}</td>
+              <td>{{ s.shift === 'noche' ? 'Noche' : 'Día' }}</td>
+              <td class="num">{{ formatNumber(s.gallons, 1) }}</td>
+              <td class="num">{{ formatCurrency(s.basketsAmount) }}</td>
+              <td class="num">{{ formatCurrency(s.totalSalesAmount) }}</td>
+              <td class="num">
+                <span *ngIf="absValue(s.discrepancyAmount) <= 0.5" class="jr-chip jr-chip--cuadra">Cuadra</span>
+                <span *ngIf="s.discrepancyAmount < -0.5" class="jr-chip jr-chip--sobra">
+                  Sobra {{ formatCurrency(absValue(s.discrepancyAmount)) }}
+                </span>
+                <span *ngIf="s.discrepancyAmount > 0.5" class="jr-chip jr-chip--falta">
+                  Falta {{ formatCurrency(absValue(s.discrepancyAmount)) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noSalesTpl>
+          <p class="jr-hist-sin">Sin ventas en los Excel migrados.</p>
+        </ng-template>
+
+        <h4>Credibanco y QR</h4>
+        <div class="jr-hist-cifras" *ngIf="detail.credibancoSummary as cred; else noCredTpl">
+          <span>Mastercard<b>{{ formatCurrency(cred.mastercardAmount) }}</b></span>
+          <span>Visa<b>{{ formatCurrency(cred.visaAmount) }}</b></span>
+          <span>QR<b>{{ formatCurrency(cred.qrAmount) }}</b></span>
+          <span>TOTAL EDS<b>{{ formatCurrency(cred.totalEdsAmount) }}</b></span>
+        </div>
+        <ng-template #noCredTpl>
+          <p class="jr-hist-sin">Sin reporte Credibanco en los Excel migrados.</p>
+        </ng-template>
+
+        <h4>Variación por combustible</h4>
+        <table class="jr-hist-tabla" *ngIf="detail.fuelVariations.length > 0; else noVarTpl">
+          <thead>
+            <tr>
+              <th>Combustible</th>
+              <th class="num">Vendido</th>
+              <th class="num">Teórico</th>
+              <th class="num">Físico</th>
+              <th class="num">Variación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of detail.fuelVariations">
+              <td>{{ shortFuelName(r.fuelName) }}</td>
+              <td class="num">{{ formatNumber(r.soldGallons, 2) }}</td>
+              <td class="num">{{ formatNumber(r.theoreticalGallons, 2) }}</td>
+              <td class="num">{{ formatNumber(r.physicalGallons, 2) }}</td>
+              <td class="num">{{ formatNumber(r.variationGallons, 2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noVarTpl>
+          <p class="jr-hist-sin">Sin hoja VARIACIÓN en los Excel migrados.</p>
+        </ng-template>
+
+        <h4>Saldo en caja</h4>
+        <div class="jr-hist-cifras" *ngIf="detail.cashBalanceSummary as saldo; else noSaldoTpl">
+          <span>Planilla<b>{{ saldo.sheetNumber }}</b></span>
+          <span>Saldo anterior<b>{{ formatCurrency(saldo.previousCashAmount) }}</b></span>
+          <span>Ahorro acumulado<b>{{ formatCurrency(saldo.accumulatedSavingsAmount) }}</b></span>
+          <span>Saldo Dominus<b>{{ formatCurrency(saldo.dominusBalanceAmount) }}</b></span>
+        </div>
+        <ng-template #noSaldoTpl>
+          <p class="jr-hist-sin">Sin planilla de saldo en caja del {{ shortDayMonth(detail.date) }} en los Excel migrados.</p>
+        </ng-template>
+      </ng-container>
+    </section>
+  </div>
+</div>
+

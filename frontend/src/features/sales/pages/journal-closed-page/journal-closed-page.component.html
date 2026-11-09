@@ -1,0 +1,208 @@
+<div class="jr-cerrada" id="jr-cerrada-contenido">
+  <!-- Estado cuando la jornada aún no está cerrada -->
+  <div class="jr-paso-construccion" *ngIf="journal && !isClosed()">
+    <p>La jornada de este día todavía no está cerrada.</p>
+    <div class="jr-paso-bloqueado-acciones">
+      <a routerLink="/jornada/cierre" class="jr-btn jr-btn--pri">Ir al cierre de jornada</a>
+    </div>
+  </div>
+
+  <!-- Subvista: Inicio de jornada cerrada con 3 opciones -->
+  <ng-container *ngIf="!journal || isClosed()">
+    <ng-container *ngIf="viewMode === 'inicio'">
+      <div class="jr-cerrada-titulo">
+        <span class="jr-cerrada-check" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <div>
+          <h1>{{ formattedHeaderTitle() }}</h1>
+          <p>
+            Quedó en solo lectura{{ closedTimeFormatted() ? ' (cerrada a las ' + closedTimeFormatted() + ')' : '' }}.
+            Base de datos, objetivos, incentivos, horas extra y alertas ya se actualizaron.
+          </p>
+        </div>
+      </div>
+
+      <div class="jr-cerrada-opciones">
+        <button type="button" class="jr-cerrada-opcion" id="btn-opcion-rendimiento" (click)="setViewMode('rendimiento')">
+          <span class="jr-cerrada-icono" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </span>
+          <b>Ver rendimiento de los vendedores del día</b>
+          <span>
+            Galones y lubricantes contra la meta del día y contra el promedio de la estación para ese turno.
+            Aditivos, incentivo del día, acumulado del mes y descuadre.
+          </span>
+          <small>{{ vendorGallonsSummaryText() }}</small>
+        </button>
+
+        <button type="button" class="jr-cerrada-opcion" id="btn-opcion-inventario" (click)="setViewMode('inventario')">
+          <span class="jr-cerrada-icono" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <path d="M3.3 7 12 12l8.7-5M12 22V12"></path>
+            </svg>
+          </span>
+          <b>Ver control de inventario del día</b>
+          <span>
+            Tanques: medido contra teórico, variación, evaporación y días de autonomía.
+            Lubricantes y aditivos: vendidos, existencia en oficina y mostrador, y qué reponer.
+          </span>
+          <small>{{ inventorySummaryText() }}</small>
+        </button>
+
+        <button type="button" class="jr-cerrada-opcion" id="btn-opcion-jornada-completa" (click)="openFullJournalReadOnly()">
+          <span class="jr-cerrada-icono" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6M8 13h8M8 17h8"></path>
+            </svg>
+          </span>
+          <b>Ver la jornada completa</b>
+          <span>Los 6 pasos en solo lectura, con sus tablas y el PDF de Dominus con el saldo en caja.</span>
+          <small>Nada se puede editar después del cierre</small>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Subvista: Rendimiento de los vendedores del día -->
+    <ng-container *ngIf="viewMode === 'rendimiento'">
+      <div class="jr-cerrada-detalle-cab">
+        <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="setViewMode('inicio')">
+          ← Volver
+        </button>
+        <div>
+          <h1>Rendimiento de los vendedores del día</h1>
+          <p>Contra la meta del día y contra el promedio de la estación para el mismo tipo de turno y día de la semana.</p>
+        </div>
+      </div>
+
+      <div class="jr-cerrada-tabla-wrap">
+        <table class="jr-cerrada-tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Vendedor</th>
+              <th class="num">Galones</th>
+              <th class="num">Lubricantes y otros</th>
+              <th class="num">Total entregado</th>
+              <th class="num">Descuadre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let v of vendorCloses; let idx = index">
+              <td class="jr-cerrada-pos">{{ idx + 1 }}</td>
+              <td>
+                <b>{{ v.vendorName }}</b>
+                <small>{{ v.shiftName }} · Surtidor {{ v.pumpNumber || '-' }}</small>
+              </td>
+              <td class="num"><b>{{ formatNumber(totalVendorGallons(v), 1) }}</b></td>
+              <td class="num">{{ formatCurrency(v.basketDominusAmount) }}</td>
+              <td class="num">{{ formatCurrency(v.totalDelivered) }}</td>
+              <td class="num">
+                <span class="jr-chip" [ngClass]="v.resultStatus === 'CUADRA' ? 'jr-chip--cuadra' : v.resultStatus === 'SOBRA' ? 'jr-chip--sobra' : 'jr-chip--falta'">
+                  {{ v.resultStatus === 'CUADRA' ? 'Cuadra' : (v.resultStatus === 'SOBRA' ? 'Sobra ' : 'Falta ') + formatCurrency(v.realDiscrepancy) }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="vendorCloses.length === 0">
+              <td colspan="6">Sin cierres de vendedor registrados en esta jornada.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="jr-cerrada-nota">
+          Consulta las gráficas y tablas completas en <a routerLink="/resultados/estadisticas">Resultados · Estadísticas</a>.
+        </p>
+      </div>
+    </ng-container>
+
+    <!-- Subvista: Control de inventario del día -->
+    <ng-container *ngIf="viewMode === 'inventario'">
+      <div class="jr-cerrada-detalle-cab">
+        <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="setViewMode('inicio')">
+          ← Volver
+        </button>
+        <div>
+          <h1>Control de inventario del día</h1>
+          <p>Tanques contra el teórico y autonomía; lubricantes y aditivos después de las ventas y traslados.</p>
+        </div>
+      </div>
+
+      <div class="jr-cerrada-inv">
+        <div class="jr-cerrada-tabla-wrap">
+          <table class="jr-cerrada-tabla">
+            <thead>
+              <tr>
+                <th>Combustible</th>
+                <th class="num">Teórico</th>
+                <th class="num">Medido</th>
+                <th class="num">Variación</th>
+                <th class="num">Tolerancia</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of fuelVariations()">
+                <td><b>{{ c.fuelName }}</b></td>
+                <td class="num">{{ formatNumber(c.theoreticalGallons, 2) }}</td>
+                <td class="num">{{ formatNumber(c.measuredGallons, 2) }}</td>
+                <td class="num">{{ formatNumber(c.variationGallons, 2) }}</td>
+                <td class="num">±{{ formatNumber(c.toleranceGallons, 1) }}</td>
+                <td>
+                  <span class="jr-chip" [ngClass]="c.status === 'NORMAL' ? 'jr-chip--cuadra' : 'jr-chip--aviso'">
+                    {{ c.status === 'NORMAL' ? 'Normal' : c.status }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="fuelVariations().length === 0">
+                <td colspan="6">Consulta el detalle de tanques en <a routerLink="/jornada/inventario">Paso 5 · Tanques e inventario</a>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="jr-cerrada-tabla-wrap">
+          <table class="jr-cerrada-tabla">
+            <thead>
+              <tr>
+                <th>Tanque</th>
+                <th>Combustible</th>
+                <th class="num">Días de autonomía</th>
+                <th>Alcanza hasta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of autonomyAlerts()">
+                <td><b>{{ a.tankId }}</b></td>
+                <td>{{ a.fuelName }}</td>
+                <td class="num">
+                  <span class="jr-chip" [ngClass]="a.severity === 'CRITICAL' ? 'jr-chip--falta' : 'jr-chip--aviso'">
+                    {{ formatNumber(a.autonomyDays, 1) }} d
+                  </span>
+                </td>
+                <td>{{ a.reachesUntilDate }}</td>
+              </tr>
+              <tr *ngIf="autonomyAlerts().length === 0">
+                <td colspan="4">Sin alertas nuevas de autonomía en este cierre.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="jr-cerrada-nota">
+            Revisa todos los tanques y productos del día en <a routerLink="/jornada/inventario">ver en el paso 5</a>.
+          </p>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <footer class="jr-jornada-pie jr-cerrada-pie">
+    <a routerLink="/" class="jr-btn jr-btn--ghost">Volver al inicio</a>
+    <a routerLink="/historial" class="jr-btn jr-btn--sec">Historial de jornadas</a>
+  </footer>
+</div>
