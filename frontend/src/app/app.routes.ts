@@ -60,6 +60,11 @@ export const routes: Routes = [
         loadComponent: () => import('../features/workers/pages/workers-page/workers-page.component').then(m => m.WorkersPageComponent)
       },
       {
+        path: 'personal/vendedores/:workerId',
+        loadComponent: () => import('../features/workers/pages/worker-profile-page/worker-profile-page.component')
+          .then(m => m.WorkerProfilePageComponent)
+      },
+      {
         path: 'personal/turnos',
         loadComponent: () => import('../features/shifts/pages/shifts-schedule-page/shifts-schedule-page.component').then(m => m.ShiftsSchedulePageComponent)
       },

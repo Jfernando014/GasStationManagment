@@ -1,0 +1,66 @@
+<section class="ps-card wp-perf" aria-labelledby="wp-perf-title">
+  <header class="wp-perf-head">
+    <h2 id="wp-perf-title">
+      Desempeño por día de la semana
+      <app-info-tooltip label="Cómo leer esta tabla" [text]="helpText" />
+    </h2>
+    @if (range(); as label) {
+      <p class="wp-range">{{ label }}</p>
+    }
+  </header>
+
+  <div class="wp-table-wrap">
+    <table class="wp-table">
+      <caption class="jr-sr">Turnos, promedio de galones y rendimiento por día de la semana, como titular y como apoyo</caption>
+      <thead>
+        <tr class="wp-group-row">
+          <th rowspan="2" scope="col" class="wp-day-col">Día</th>
+          <th colspan="3" scope="colgroup" class="wp-group wp-group--holder">Como titular</th>
+          <th colspan="3" scope="colgroup" class="wp-group">Como apoyo</th>
+        </tr>
+        <tr>
+          <th scope="col" class="num">Turnos</th>
+          <th scope="col" class="num">Promedio</th>
+          <th scope="col" class="wp-perf-col">Rendimiento</th>
+          <th scope="col" class="num wp-split">Turnos</th>
+          <th scope="col" class="num">Promedio</th>
+          <th scope="col" class="wp-perf-col">Rendimiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.weekday; let i = $index) {
+          <tr [style.--i]="i">
+            <th scope="row" class="wp-day-col">{{ row.weekday }}</th>
+            <td class="num" [class.is-dim]="row.holder.dim">{{ row.holder.shifts }}</td>
+            <td class="num" [class.is-dim]="row.holder.dim">{{ row.holder.average }}</td>
+            <td class="wp-perf-col" [class.is-dim]="row.holder.dim">
+              <span class="wp-perf-cell">
+                <span class="wp-percent">{{ row.holder.percent }}</span>
+                @if (row.holder.percentValue !== null) {
+                  <app-percent-bar [value]="row.holder.percentValue" [muted]="row.holder.dim" />
+                }
+              </span>
+            </td>
+            <td class="num wp-split" [class.is-dim]="row.support.dim">{{ row.support.shifts }}</td>
+            <td class="num" [class.is-dim]="row.support.dim">{{ row.support.average }}</td>
+            <td class="wp-perf-col" [class.is-dim]="row.support.dim">
+              <span class="wp-perf-cell">
+                <span class="wp-percent">{{ row.support.percent }}</span>
+                @if (row.support.percentValue !== null) {
+                  <app-percent-bar [value]="row.support.percentValue" [muted]="row.support.dim" />
+                }
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="wp-perf-foot">
+    <p>Promedio en galones por turno. La rayita de la barra marca 100 % (igual a la estación).</p>
+    @if (hasDimmed()) {
+      <p>En gris: menos de {{ minShifts }} turnos, el promedio todavía es poco confiable.</p>
+    }
+  </footer>
+</section>

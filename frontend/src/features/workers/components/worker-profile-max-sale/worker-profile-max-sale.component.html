@@ -1,0 +1,20 @@
+<section class="ps-card wp-max" aria-labelledby="wp-max-title">
+  <h2 id="wp-max-title" class="wp-max-title">Venta máxima en un turno</h2>
+
+  @if (sale(); as best) {
+    <p class="wp-max-gallons"><b>{{ best.gallons }}</b> <span>gal</span></p>
+    <p class="wp-max-when">
+      <app-shift-chip [code]="best.code" [toneOverride]="best.tone" />
+      <span>{{ best.date }}</span>
+    </p>
+  } @else {
+    <p class="wp-max-none">Todavía no hay una venta registrada.</p>
+  }
+
+  <div class="wp-max-count">
+    <p>Turnos con jornada cerrada: <b>{{ performance().closedShifts.total }}</b></p>
+    <p class="wp-max-split">
+      {{ performance().closedShifts.asHolder }} como titular · {{ performance().closedShifts.asSupport }} como apoyo
+    </p>
+  </div>
+</section>

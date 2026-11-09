@@ -1,0 +1,64 @@
+:host { display: block; min-width: 0; }
+
+.wp-perf { padding: 18px 0 14px; min-width: 0; }
+
+.wp-perf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 0 20px 12px;
+}
+
+.wp-perf-head h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.wp-range { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+/* The table scrolls inside its card on narrow screens */
+.wp-table-wrap { overflow-x: auto; }
+
+.wp-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wp-table th,
+.wp-table td { padding: 11px 14px; text-align: left; white-space: nowrap; }
+
+.wp-table thead th { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.wp-table .num { text-align: right; }
+
+.wp-group-row th { padding-bottom: 4px; }
+.wp-group { text-align: center; border-bottom: 1px solid var(--border-main); color: var(--text-heading); font-size: 13px; }
+.wp-group--holder { border-right: 0; }
+.wp-table .wp-split { border-left: 1px solid var(--border-main); }
+
+.wp-table tbody th { font-weight: 600; color: var(--text-heading); }
+.wp-table tbody tr { border-top: 1px solid var(--surface-subtle); animation: wp-row-in var(--duration-normal) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+.wp-table td { color: var(--text-heading); transition: color var(--duration-fast) ease; }
+.wp-table td.is-dim { color: var(--text-light); }
+
+.wp-perf-cell { display: inline-flex; align-items: center; gap: 10px; min-width: 128px; }
+.wp-percent { min-width: 46px; text-align: right; font-weight: 600; }
+
+.wp-perf-foot { padding: 12px 20px 0; }
+.wp-perf-foot p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+
+@keyframes wp-row-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-table tbody tr { animation: none; }
+}
