@@ -98,6 +98,15 @@ class ProductRepositoryAdapterTest {
         assertThat(adapter.existsByCodeAndIdNot("80216", second.getId())).isTrue();
     }
 
+    @Test
+    void findByCodeReturnsTheProductEvenWhenInactive() {
+        Product saved = saveProduct("80216", "Producto", ProductCategory.LUBRICANTE, false);
+
+        assertThat(adapter.findByCode("80216")).get()
+                .extracting(Product::getId).isEqualTo(saved.getId());
+        assertThat(adapter.findByCode("00000")).isEmpty();
+    }
+
     // ---------- findAll: las 4 combinaciones de filtros (null = no filtrar) ----------
 
     @Test
