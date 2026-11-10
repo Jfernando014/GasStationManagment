@@ -9,7 +9,10 @@ public enum IncentiveError {
     INVALID_VALUE_PER_UNIT("El valor por unidad debe ser un número entero de pesos entre 0 y %s"),
     VALID_FROM_NOT_AFTER_LAST_CLOSED("La fecha de vigencia debe ser posterior a la última jornada cerrada (%s)"),
     RULE_ALREADY_EXISTS("El aditivo '%s' ya tiene una regla con vigencia desde el %s; las reglas no se editan, "
-            + "elija otra fecha de vigencia");
+            + "elija otra fecha de vigencia"),
+    ADDITIVE_SALES_NOT_REGISTERED("No hay registro de ventas de aditivos para la fecha %s"),
+    ADDITIVE_SALES_PROCESSING_FAILED("No se pudieron procesar las ventas de aditivos del %s; la fecha quedó "
+            + "pendiente. Intente reprocesarla de nuevo");
 
     private final String messageTemplate;
 
