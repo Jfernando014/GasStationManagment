@@ -1,0 +1,75 @@
+<app-warning-panel>
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+
+  @if (pendingCount() === 0) {
+    <b>Todos los días pendientes ya se procesaron.</b> Sus incentivos ya están en los totales.
+  } @else {
+    @if (pendingCount() === 1) {
+      <b>1 día todavía no se ha procesado.</b>
+    } @else {
+      <b>{{ pendingCount() }} días todavía no se han procesado.</b>
+    }
+    Esas jornadas se cerraron, pero sus incentivos no se calcularon, así que los totales de abajo no los incluyen.
+    @if (canReprocess()) {
+      Puedes reprocesarlos uno por uno.
+    } @else {
+      Solo el administrador puede reprocesarlos.
+    }
+  }
+
+  <div panelDetails>
+    @if (canReprocess()) {
+      <ul class="days">
+        @for (row of rows(); track row.date) {
+          <li class="day" [attr.data-day]="row.date" tabindex="-1" [style.--i]="$index">
+            <span class="date">{{ row.label }}</span>
+
+            @switch (row.status) {
+              @case ('pending') {
+                <span class="note">Pendiente</span>
+                <span class="actions">
+                  <button appButton size="sm" type="button" [attr.aria-label]="'Reprocesar el ' + row.label"
+                    (click)="ask(row.date)">Reprocesar</button>
+                </span>
+              }
+              @case ('asking') {
+                <span class="question">¿Reprocesar el {{ row.short }}? Se calculan los incentivos de ese día y se suman a los totales.</span>
+                <span class="actions">
+                  <button appButton size="sm" type="button" (click)="cancel(row.date)">Cancelar</button>
+                  <button appButton variant="primary" size="sm" type="button"
+                    (click)="reprocess(row.date)">Sí, reprocesar</button>
+                </span>
+              }
+              @case ('running') {
+                <span class="note" aria-live="polite">Procesando…</span>
+                <span class="actions">
+                  <button appButton size="sm" type="button" disabled aria-busy="true">Reprocesar</button>
+                </span>
+              }
+              @case ('done') {
+                <span class="done">
+                  <app-tag variant="green">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                    Procesado · se sumó a los totales
+                  </app-tag>
+                </span>
+                <span></span>
+              }
+              @case ('failed') {
+                <span class="failure">No se pudo procesar: {{ row.message }}</span>
+                <span class="actions">
+                  <button appButton size="sm" type="button" [attr.aria-label]="'Reintentar el ' + row.label"
+                    (click)="reprocess(row.date)">Reintentar</button>
+                </span>
+              }
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="read-only">{{ datesLine() }}</p>
+    }
+  </div>
+</app-warning-panel>
