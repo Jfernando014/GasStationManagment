@@ -29,6 +29,11 @@ export const routes: Routes = [
               .then(m => m.ElectronicPaymentsStep3Component)
           },
           {
+            path: 'caja',
+            loadComponent: () => import('../features/sales/pages/cash-balance-step4/cash-balance-step4.component')
+              .then(m => m.CashBalanceStep4Component)
+          },
+          {
             path: 'inventario',
             loadComponent: () => import('../features/inventory/pages/journal-step5/journal-step5.component')
               .then(m => m.JournalStep5Component)
