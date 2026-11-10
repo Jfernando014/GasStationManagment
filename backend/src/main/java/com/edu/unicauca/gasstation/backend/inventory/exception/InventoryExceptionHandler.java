@@ -247,4 +247,22 @@ public class InventoryExceptionHandler {
             InventoryAlertConflictException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
+
+    @ExceptionHandler(InspectionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleInspectionNotFound(
+            InspectionNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidInspectionException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidInspection(
+            InvalidInspectionException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid data", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateInspectionCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateInspectionCode(
+            DuplicateInspectionCodeException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
 }
