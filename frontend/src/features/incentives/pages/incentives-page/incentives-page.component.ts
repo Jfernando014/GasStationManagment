@@ -26,6 +26,6 @@ export class IncentivesPageComponent {
   readonly tabs: IncentiveTab[] = [
     { label: 'Metas de combustible', path: 'metas', enabled: false },
     { label: 'Aditivos', path: 'aditivos', enabled: true },
-    { label: 'Liquidación del mes', path: 'liquidacion', enabled: false }
+    { label: 'Cálculo del mes', path: 'calculo', enabled: true }
   ];
 }

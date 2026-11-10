@@ -1,0 +1,18 @@
+<div class="stat">
+  <span class="label">Total de incentivos de {{ monthName() }}</span>
+  @if (loading()) {
+    <app-skeleton width="180px" height="30px" />
+  } @else {
+    <b class="value"><app-animated-number [value]="total()" [format]="formatCop" /></b>
+  }
+  <em>Suma de lo que gana cada vendedor este mes</em>
+</div>
+<div class="stat">
+  <span class="label">Vendedores con ventas</span>
+  @if (loading()) {
+    <app-skeleton width="60px" height="30px" />
+  } @else {
+    <b class="value"><app-animated-number [value]="vendorCount()" /></b>
+  }
+  <em>Vendieron al menos un aditivo</em>
+</div>

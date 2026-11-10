@@ -1,0 +1,122 @@
+<section class="card" [attr.aria-busy]="loading()">
+  <div class="toolbar">
+    <app-search-field class="search" fieldId="incentives-vendor-search" label="Buscar vendedor"
+      placeholder="Buscar por nombre o documento" (searchChange)="query.set($event)" />
+    <div class="seg" role="group" aria-label="Ordenar vendedores">
+      <span>Ordenar por</span>
+      <button type="button" [class.is-on]="sort() === 'name'" [attr.aria-pressed]="sort() === 'name'"
+        (click)="sort.set('name')">Nombre</button>
+      <button type="button" [class.is-on]="sort() === 'total'" [attr.aria-pressed]="sort() === 'total'"
+        (click)="sort.set('total')">Total</button>
+    </div>
+  </div>
+
+  <div class="grid head">
+    <span>Vendedor</span>
+    <span class="end">Total del mes</span>
+    <span class="end head-accumulated">Acumulado
+      <app-info-tooltip [text]="accumulatedHelp()" label="Qué es el acumulado" />
+    </span>
+    <span></span>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton-list">
+      @for (n of skeletonRows; track n) {
+        <div class="grid row-skeleton">
+          <span class="skeleton-name">
+            <app-skeleton width="220px" />
+            <app-skeleton width="110px" height="10px" />
+          </span>
+          <app-skeleton class="end" width="100px" />
+          <app-skeleton class="end" width="120px" />
+          <span></span>
+        </div>
+      }
+    </div>
+  } @else if (rows().length === 0) {
+    <p class="no-results">Ningún vendedor coincide con la búsqueda.</p>
+  } @else {
+    <ul class="list">
+      @for (row of rows(); track row.document) {
+        @let open = openDocument() === row.document;
+        @let canOpen = row.lines.length > 0;
+        <li class="item" [class.is-open]="open" [style.--i]="$index">
+          <div class="grid row" [class.is-clickable]="canOpen" (click)="canOpen && toggle(row.document)">
+            <div class="who">
+              <b [attr.title]="row.name">{{ row.name }}</b>
+              <span><span class="jr-sr">Documento </span>{{ row.document }}</span>
+            </div>
+            <div class="month-total end">
+              <span class="cell-label">Total del mes</span>
+              @if (row.hasSales) {
+                <span class="money">{{ row.monthTotal }}</span>
+              } @else {
+                <span class="muted">Sin ventas este mes</span>
+              }
+            </div>
+            <div class="accumulated end">
+              <span class="cell-label">Acumulado</span>
+              <b>{{ row.accumulated }}</b>
+              @if (row.missing) {
+                <span class="missing"><i aria-hidden="true"></i>{{ row.missing }}</span>
+              }
+            </div>
+            <button type="button" class="chevron" [disabled]="!canOpen" [attr.aria-expanded]="canOpen ? open : null"
+              [attr.aria-controls]="canOpen ? 'incentive-detail-' + row.document : null"
+              [attr.aria-label]="canOpen ? (open ? 'Ocultar detalle de ' : 'Ver detalle de ') + row.name : 'Sin detalle para ' + row.name">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+          </div>
+
+          @if (canOpen) {
+            <div class="detail" [id]="'incentive-detail-' + row.document" [attr.inert]="open ? null : ''">
+              <div class="detail-inner">
+                <div class="detail-content">
+                  <div class="detail-scroll">
+                    <table>
+                      <caption class="jr-sr">Detalle de aditivos de {{ row.name }} en {{ monthName() }}</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">SKU</th>
+                          <th scope="col">Aditivo</th>
+                          <th scope="col">Valor aplicado</th>
+                          <th scope="col" class="end">Unidades</th>
+                          <th scope="col" class="end">Por unidad</th>
+                          <th scope="col" class="end">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (line of row.lines; track line.key) {
+                          <tr [style.--j]="$index">
+                            <td [class.dim]="line.repeated">{{ line.sku }}</td>
+                            <td class="product" [class.dim]="line.repeated">{{ line.name }}</td>
+                            <td class="when" [class.is-changed]="line.changed">{{ line.when }}</td>
+                            <td class="end">{{ line.units }}</td>
+                            <td class="end">{{ line.unitValue }}</td>
+                            <td class="end strong">{{ line.subtotal }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td></td>
+                          <th scope="row">Total de {{ monthName() }}</th>
+                          <td></td>
+                          <td class="end">{{ row.unitsTotal }}</td>
+                          <td></td>
+                          <td class="end">{{ row.monthTotal }}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -86,6 +86,11 @@ export const routes: Routes = [
             loadComponent: () => import('../features/incentives/pages/additives-tab/additives-tab.component')
               .then(m => m.AdditivesTabComponent)
           },
+          {
+            path: 'calculo',
+            loadComponent: () => import('../features/incentives/pages/calculation-tab/calculation-tab.component')
+              .then(m => m.CalculationTabComponent)
+          },
           { path: '', pathMatch: 'full', redirectTo: 'aditivos' }
         ]
       },
