@@ -7,6 +7,7 @@ import com.edu.unicauca.gasstation.backend.incentives.domain.models.UnresolvedRe
 import com.edu.unicauca.gasstation.backend.incentives.domain.models.VendorIncentive;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /** Responses of the monthly incentive calculation API. */
@@ -16,7 +17,7 @@ public final class IncentiveCalculationDtos {
     }
 
     @Schema(description = "Unidades de un aditivo que ganaron el mismo valor por unidad. Si la regla cambió durante "
-            + "el mes, el aditivo aparece una vez por cada valor")
+            + "el mes, el aditivo aparece una vez por cada regla, con el periodo del mes en que esa regla aplicó")
     public record LineResponse(
             @Schema(description = "SKU del aditivo, el código del producto en Inventario", example = "ADT-001")
             String sku,
@@ -32,11 +33,20 @@ public final class IncentiveCalculationDtos {
             BigDecimal valuePerUnit,
 
             @Schema(description = "Unidades por valor por unidad, en pesos", example = "5000")
-            BigDecimal subtotal) {
+            BigDecimal subtotal,
+
+            @Schema(description = "Primer día del mes en que aplicó este valor: el mayor entre el inicio de la regla "
+                    + "y el primer día del mes consultado", example = "2026-03-01")
+            LocalDate periodStart,
+
+            @Schema(description = "Último día del mes en que aplicó este valor: el día anterior al siguiente cambio "
+                    + "de regla si ese cambio cae dentro del mes. Nulo si el valor siguió vigente hasta el final del "
+                    + "mes consultado (en el mes en curso, hasta hoy)", example = "2026-03-15", nullable = true)
+            LocalDate periodEnd) {
 
         static LineResponse from(IncentiveLine line) {
             return new LineResponse(line.sku(), line.productName(), line.units(), line.valuePerUnit(),
-                    line.subtotal());
+                    line.subtotal(), line.periodStart(), line.periodEnd());
         }
     }
 
