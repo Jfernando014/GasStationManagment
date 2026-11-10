@@ -11,6 +11,8 @@ public enum IncentiveError {
     RULE_ALREADY_EXISTS("El aditivo '%s' ya tiene una regla con vigencia desde el %s; las reglas no se editan, "
             + "elija otra fecha de vigencia"),
     ADDITIVE_SALES_NOT_REGISTERED("No hay registro de ventas de aditivos para la fecha %s"),
+    MONTH_IN_FUTURE("No se puede calcular el mes %s porque aún no llega; el último mes disponible es %s"),
+    MONTH_BEFORE_START("No se puede calcular el mes %s: el cálculo de incentivos empieza en %s"),
     ADDITIVE_SALES_PROCESSING_FAILED("No se pudieron procesar las ventas de aditivos del %s; la fecha quedó "
             + "pendiente. Intente reprocesarla de nuevo");
 
