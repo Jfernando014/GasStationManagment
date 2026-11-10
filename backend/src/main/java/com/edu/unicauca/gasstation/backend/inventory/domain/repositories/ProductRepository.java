@@ -12,6 +12,8 @@ public interface ProductRepository {
 
     Optional<Product> findById(Long id);
 
+    Optional<Product> findByCode(String code);
+
     List<Product> findAll(ProductCategory category, Boolean active);
 
     boolean existsByCode(String code);

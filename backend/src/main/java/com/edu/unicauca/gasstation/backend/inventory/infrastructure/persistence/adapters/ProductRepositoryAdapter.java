@@ -32,6 +32,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    public Optional<Product> findByCode(String code) {
+        return repository.findByCode(code).map(mapper::toDomain);
+    }
+
+    @Override
     public List<Product> findAll(ProductCategory category, Boolean active) {
         return repository.search(category, active).stream().map(mapper::toDomain).toList();
     }
