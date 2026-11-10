@@ -122,6 +122,10 @@ export const routes: Routes = [
         loadComponent: () => import('../features/configuration/pages/receptions-page/receptions-page.component').then(m => m.ReceptionsPageComponent)
       },
       {
+        path: 'configuracion/inspecciones',
+        loadComponent: () => import('../features/configuration/pages/inspections-page/inspections-page.component').then(m => m.InspectionsPageComponent)
+      },
+      {
         path: 'gastos',
         loadComponent: () => import('../atomic-design/pages/administrative-expenses/administrative-expenses-page.component')
           .then(m => m.AdministrativeExpensesPageComponent)

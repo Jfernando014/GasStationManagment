@@ -1,0 +1,290 @@
+<div class="inspections-page">
+  <header class="inspections-header">
+    <div>
+      <div class="inspections-breadcrumb">Configuración <span>/</span> Inspecciones</div>
+      <h1>Inspecciones y limpieza</h1>
+      <p>Bitácora de calibraciones ONAC, hermeticidad, plan ambiental y bombas, con su vencimiento.</p>
+    </div>
+    <div class="inspections-header-actions">
+      <button class="jr-btn jr-btn--ghost" type="button" (click)="exportCsv()">Exportar</button>
+      <button class="jr-btn jr-btn--pri" type="button" (click)="openCreate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Nueva inspección
+      </button>
+    </div>
+  </header>
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  <div class="jr-indicadores inspections-kpis">
+    <div class="jr-indicador">
+      <span>Total</span>
+      <b>{{ counts().total }}</b>
+    </div>
+    <div class="jr-indicador">
+      <span>Vigentes</span>
+      <b>{{ counts().vigentes }}</b>
+    </div>
+    <div class="jr-indicador" [class.jr-indicador--aviso]="counts().proximos > 0">
+      <span>Próximos a vencer</span>
+      <b>{{ counts().proximos }}</b>
+    </div>
+    <div class="jr-indicador" [class.jr-indicador--aviso]="counts().vencidos > 0">
+      <span>Vencidos</span>
+      <b>{{ counts().vencidos }}</b>
+    </div>
+  </div>
+
+  @if (formOpen()) {
+    <section class="inspections-card inspections-form" aria-labelledby="inspections-form-title">
+      <div class="inspections-card-head">
+        <div>
+          <h2 id="inspections-form-title">{{ editingId() === null ? 'Nueva inspección' : 'Editar inspección' }}</h2>
+          <p>El estado normativo lo calcula el servidor con la fecha de vencimiento.</p>
+        </div>
+      </div>
+
+      <div class="inspections-form-grid">
+        <label>
+          Código del acta
+          <input
+            type="text"
+            maxlength="20"
+            autocomplete="off"
+            placeholder="Ej. CAL-ONAC-2026-08"
+            [class.inspections-field-invalid]="isInvalid('code') || fieldError('code')"
+            [ngModel]="draft().code"
+            (ngModelChange)="updateDraft('code', $event)">
+          @if (fieldError('code')) {
+            <span class="field-error">{{ fieldError('code') }}</span>
+          } @else if (isInvalid('code')) {
+            <span class="field-error">El código del acta es obligatorio (máximo 20 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Categoría
+          <select
+            [class.inspections-field-invalid]="isInvalid('category') || fieldError('category')"
+            [ngModel]="draft().category"
+            (ngModelChange)="updateDraft('category', $event)">
+            <option value="">Seleccionar categoría</option>
+            @for (category of categories; track category) {
+              <option [value]="category">{{ categoryLabels[category] }}</option>
+            }
+          </select>
+          @if (fieldError('category')) {
+            <span class="field-error">{{ fieldError('category') }}</span>
+          } @else if (isInvalid('category')) {
+            <span class="field-error">Selecciona la categoría de la inspección.</span>
+          }
+        </label>
+
+        <label>
+          Equipo o tanque
+          <input
+            type="text"
+            maxlength="150"
+            autocomplete="off"
+            placeholder="Ej. Dispensador 1 y 2"
+            [class.inspections-field-invalid]="isInvalid('target') || fieldError('target')"
+            [ngModel]="draft().target"
+            (ngModelChange)="updateDraft('target', $event)">
+          @if (fieldError('target')) {
+            <span class="field-error">{{ fieldError('target') }}</span>
+          } @else if (isInvalid('target')) {
+            <span class="field-error">Indica el equipo o tanque inspeccionado (máximo 150 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Fecha de ejecución
+          <input
+            type="date"
+            [max]="today"
+            [class.inspections-field-invalid]="isInvalid('dateExecuted') || fieldError('dateExecuted')"
+            [ngModel]="draft().dateExecuted"
+            (ngModelChange)="updateDraft('dateExecuted', $event)">
+          @if (fieldError('dateExecuted')) {
+            <span class="field-error">{{ fieldError('dateExecuted') }}</span>
+          } @else if (isInvalid('dateExecuted')) {
+            <span class="field-error">La fecha de ejecución es obligatoria y no puede ser futura.</span>
+          }
+        </label>
+
+        <label>
+          Fecha de vencimiento
+          <input
+            type="date"
+            [min]="draft().dateExecuted || null"
+            [class.inspections-field-invalid]="isInvalid('dateDue') || fieldError('dateDue')"
+            [ngModel]="draft().dateDue"
+            (ngModelChange)="updateDraft('dateDue', $event)">
+          @if (fieldError('dateDue')) {
+            <span class="field-error">{{ fieldError('dateDue') }}</span>
+          } @else if (isInvalid('dateDue')) {
+            <span class="field-error">El vencimiento debe ser posterior a la fecha de ejecución.</span>
+          }
+        </label>
+
+        <label>
+          Entidad certificadora
+          <input
+            type="text"
+            maxlength="150"
+            autocomplete="off"
+            placeholder="Ej. Metrología del Cauca SAS"
+            [class.inspections-field-invalid]="isInvalid('certifier') || fieldError('certifier')"
+            [ngModel]="draft().certifier"
+            (ngModelChange)="updateDraft('certifier', $event)">
+          @if (fieldError('certifier')) {
+            <span class="field-error">{{ fieldError('certifier') }}</span>
+          } @else if (isInvalid('certifier')) {
+            <span class="field-error">La entidad certificadora es obligatoria (máximo 150 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Tolerancia medida
+          <input
+            type="text"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Ej. +3,8 mL (Límite ±15 mL)"
+            [class.inspections-field-invalid]="isInvalid('toleranceMeasured') || fieldError('toleranceMeasured')"
+            [ngModel]="draft().toleranceMeasured"
+            (ngModelChange)="updateDraft('toleranceMeasured', $event)">
+          @if (fieldError('toleranceMeasured')) {
+            <span class="field-error">{{ fieldError('toleranceMeasured') }}</span>
+          } @else if (isInvalid('toleranceMeasured')) {
+            <span class="field-error">La tolerancia medida es obligatoria (máximo 100 caracteres).</span>
+          }
+        </label>
+
+        <label>
+          Documento del acta (opcional)
+          <input
+            type="text"
+            maxlength="200"
+            autocomplete="off"
+            placeholder="Ej. CERT-ONAC-0812.pdf"
+            [class.inspections-field-invalid]="isInvalid('certDoc') || fieldError('certDoc')"
+            [ngModel]="draft().certDoc"
+            (ngModelChange)="updateDraft('certDoc', $event)">
+          @if (fieldError('certDoc')) {
+            <span class="field-error">{{ fieldError('certDoc') }}</span>
+          } @else if (isInvalid('certDoc')) {
+            <span class="field-error">El documento no puede superar 200 caracteres.</span>
+          }
+        </label>
+      </div>
+
+      @if (formError(); as message) {
+        <div class="inspections-alert" role="alert">{{ message }}</div>
+      }
+
+      <div class="inspections-actions">
+        <button class="jr-btn jr-btn--ghost" type="button" (click)="closeForm()">Cancelar</button>
+        <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Guardando…' : 'Guardar inspección' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  <section class="inspections-card" aria-labelledby="inspections-log-title">
+    <div class="inspections-card-head">
+      <div>
+        <h2 id="inspections-log-title">Bitácora de inspecciones</h2>
+        <p>Consulta las actas por categoría y estado normativo.</p>
+      </div>
+      <div class="inspections-filters">
+        <label class="inspections-filter">
+          <span>Categoría</span>
+          <select [ngModel]="categoryFilter()" (ngModelChange)="onCategoryFilter($event)">
+            <option value="">Todas</option>
+            @for (category of categories; track category) {
+              <option [value]="category">{{ categoryLabels[category] }}</option>
+            }
+          </select>
+        </label>
+        <label class="inspections-filter">
+          <span>Estado</span>
+          <select [ngModel]="statusFilter()" (ngModelChange)="onStatusFilter($event)">
+            <option value="">Todos</option>
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </label>
+        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    </div>
+
+    @if (loadError(); as message) {
+      <div class="inspections-alert" role="alert">
+        <span>{{ message }}</span>
+        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="load()">Reintentar</button>
+      </div>
+    } @else if (loading()) {
+      <p class="inspections-empty" aria-live="polite">Cargando inspecciones…</p>
+    } @else if (visibleInspections().length === 0) {
+      <p class="inspections-empty">
+        @if (categoryFilter() || statusFilter()) {
+          No hay inspecciones con esos filtros.
+        } @else {
+          Aún no hay inspecciones registradas. Registra la primera.
+        }
+      </p>
+    } @else {
+      <div class="inspections-table-scroll">
+        <table class="inspections-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Categoría</th>
+              <th>Equipo o tanque</th>
+              <th>Ejecución</th>
+              <th>Vencimiento</th>
+              <th>Entidad certificadora</th>
+              <th>Tolerancia medida</th>
+              <th>Estado</th>
+              <th>Documento</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inspection of visibleInspections(); track inspection.id) {
+              <tr [class.is-expired]="inspection.status === 'VENCIDO'">
+                <td class="tnum"><b>{{ inspection.code }}</b></td>
+                <td><span class="inspections-category">{{ categoryLabels[inspection.category] }}</span></td>
+                <td>{{ inspection.target }}</td>
+                <td class="tnum">{{ formatDate(inspection.dateExecuted) }}</td>
+                <td class="tnum"><b>{{ formatDate(inspection.dateDue) }}</b></td>
+                <td>{{ inspection.certifier }}</td>
+                <td>{{ inspection.toleranceMeasured }}</td>
+                <td>
+                  <span
+                    class="state-pill-tag"
+                    [class.optimal]="inspection.status === 'VIGENTE'"
+                    [class.warning]="inspection.status === 'PROXIMO'"
+                    [class.critical]="inspection.status === 'VENCIDO'">
+                    {{ statusLabels[inspection.status] }}
+                  </span>
+                </td>
+                <td>{{ inspection.certDoc ?? '—' }}</td>
+                <td class="num">
+                  <button class="inspections-action" type="button" (click)="openEdit(inspection)">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
