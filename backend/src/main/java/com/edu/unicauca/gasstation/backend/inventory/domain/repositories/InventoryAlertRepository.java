@@ -5,6 +5,7 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.models.AlertStatus;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.AlertType;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.InventoryAlert;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,8 @@ public interface InventoryAlertRepository {
     Optional<InventoryAlert> findOpen(AlertType alertType, FuelType fuelType);
 
     List<InventoryAlert> findByStatuses(Collection<AlertStatus> statuses);
+
+    List<InventoryAlert> findByOpenedOn(LocalDate openedOn);
 
     long countByStatuses(Collection<AlertStatus> statuses);
 }

@@ -10,6 +10,7 @@ import com.edu.unicauca.gasstation.backend.inventory.infrastructure.persistence.
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,13 @@ public class InventoryAlertRepositoryAdapter implements InventoryAlertRepository
     @Override
     public List<InventoryAlert> findByStatuses(Collection<AlertStatus> statuses) {
         return jpaRepository.findByStatusInOrderByOpenedOnDescIdDesc(statuses).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<InventoryAlert> findByOpenedOn(LocalDate openedOn) {
+        return jpaRepository.findByOpenedOnOrderByIdAsc(openedOn).stream()
                 .map(mapper::toDomain)
                 .toList();
     }

@@ -1,11 +1,17 @@
 package com.edu.unicauca.gasstation.backend.sales;
 
+import com.edu.unicauca.gasstation.backend.inventory.JournalClosingNotification;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
  * Public domain event published by the {@code sales} module when an operational journal is closed (Step 6, C-08).
+ *
+ * <p>It implements {@link JournalClosingNotification}, the inbound contract owned by {@code inventory},
+ * so that module can listen to the event without importing {@code sales}. That keeps the dependency
+ * direction {@code sales -> inventory} and avoids a module cycle (S3-19).
  *
  * <p>Consumed by:
  * <ul>
@@ -26,7 +32,7 @@ public record JournalClosedEvent(
         LocalDate journalDate,
         Long consecutive,
         LocalDateTime closedAt
-) {
+) implements JournalClosingNotification {
 
     public JournalClosedEvent {
         Objects.requireNonNull(journalDate, "journalDate must not be null");

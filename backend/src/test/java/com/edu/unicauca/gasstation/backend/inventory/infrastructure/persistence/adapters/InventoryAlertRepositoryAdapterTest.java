@@ -138,6 +138,20 @@ class InventoryAlertRepositoryAdapterTest {
     }
 
     @Test
+    void findByOpenedOnReturnsOnlyTheAlertsOpenedThatDayInIdOrder() {
+        adapter.save(alert(null, MOTOR, AutonomyLevel.WARNING, AlertStatus.ACTIVE, "4.00", AUG_1));
+        InventoryAlert diesel = adapter.save(alert(null, DIESEL, AutonomyLevel.CRITICAL, AlertStatus.READ, "1.00", AUG_5));
+        InventoryAlert maxPro = adapter.save(alert(null, MAX_PRO, AutonomyLevel.WARNING, AlertStatus.ACTIVE, "3.00", AUG_5));
+        flushAndClear();
+
+        List<InventoryAlert> opened = adapter.findByOpenedOn(AUG_5);
+
+        assertThat(opened).extracting(InventoryAlert::getId)
+                .containsExactly(diesel.getId(), maxPro.getId());
+        assertThat(adapter.findByOpenedOn(AUG_3)).isEmpty();
+    }
+
+    @Test
     void countByStatusesCountsOnlyThoseStatuses() {
         adapter.save(alert(null, MOTOR, AutonomyLevel.WARNING, AlertStatus.ACTIVE, "4.00", AUG_5));
         adapter.save(alert(null, DIESEL, AutonomyLevel.WARNING, AlertStatus.READ, "4.00", AUG_5));
