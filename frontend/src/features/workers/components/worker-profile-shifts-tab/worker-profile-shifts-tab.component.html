@@ -1,0 +1,19 @@
+<div class="wp-shifts">
+  <app-worker-profile-calendar
+    [month]="month()"
+    [data]="data()"
+    [loading]="loading()"
+    [error]="error()"
+    [catalog]="catalog()"
+    [today]="today"
+    [direction]="direction()"
+    (previous)="goTo(-1)"
+    (next)="goTo(1)"
+    (retry)="retry()" />
+  <app-worker-profile-summary
+    [month]="month()"
+    [summary]="data()?.summary ?? null"
+    [loading]="loading()"
+    [failed]="!!error()"
+    [catalog]="catalog()" />
+</div>

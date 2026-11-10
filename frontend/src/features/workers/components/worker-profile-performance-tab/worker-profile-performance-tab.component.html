@@ -1,0 +1,36 @@
+@if (error(); as message) {
+  <div class="ps-card wp-state">
+    <app-empty-state heading="No se pudo cargar el desempeño" [description]="message" tone="error" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" />
+      </svg>
+      <button type="button" class="jr-btn jr-btn--sec wp-retry" (click)="retry()">Reintentar</button>
+    </app-empty-state>
+  </div>
+} @else if (loading() || !data()) {
+  <div class="wp-perf-grid" aria-busy="true">
+    <span class="jr-sr" aria-live="polite">Cargando el desempeño…</span>
+    <div class="ps-card wp-skeleton" aria-hidden="true">
+      @for (row of [0, 1, 2, 3, 4, 5, 6, 7]; track row) { <span class="wp-skel-row" [style.--i]="row"></span> }
+    </div>
+    <div class="ps-card wp-skeleton wp-skeleton--side" aria-hidden="true">
+      <span class="wp-skel-row"></span><span class="wp-skel-row wp-skel-row--big"></span><span class="wp-skel-row"></span>
+    </div>
+  </div>
+} @else {
+  @let performance = data()!;
+  @if (performance.closedShifts.total === 0) {
+    <div class="ps-card wp-state">
+      <app-empty-state heading="Aún no hay jornadas cerradas" description="Cuando se cierren jornadas con este vendedor, aquí verás cuánto vende por día de la semana.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18" /><path d="M7 16v-4M12 16V8M17 16v-7" />
+        </svg>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="wp-perf-grid">
+      <app-worker-profile-performance-table [performance]="performance" />
+      <app-worker-profile-max-sale [performance]="performance" [catalog]="catalog()" />
+    </div>
+  }
+}

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { shiftTone, shortCode } from '../../../shared/helpers/shift-display.helpers';
+import { ShiftTone, shiftTone, shortCode } from '../../../shared/helpers/shift-display.helpers';
 
 /**
  * Código de turno con el color de su familia (día, día 6 h, 9-6, noche, descanso, apoyo).
@@ -10,7 +10,7 @@ import { shiftTone, shortCode } from '../../../shared/helpers/shift-display.help
   selector: 'app-shift-chip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `{{ text() }}`,
+  template: `{{ text() }}<ng-content />`,
   styleUrl: './shift-chip.component.css',
   host: {
     '[class]': "'shift-chip shift-chip--' + variant() + ' shift-chip--' + tone()",
@@ -24,7 +24,9 @@ export class ShiftChipComponent {
   /** Marca un código distinto al de la malla (por una novedad). */
   readonly changed = input(false);
   readonly title = input('');
+  /** Forces the color family when the caller knows it better than the code name does (for example, from the catalog). */
+  readonly toneOverride = input<ShiftTone | null>(null);
 
-  readonly tone = computed(() => shiftTone(this.code()));
+  readonly tone = computed(() => this.toneOverride() ?? shiftTone(this.code()));
   readonly text = computed(() => (this.variant() === 'cell' ? shortCode(this.code()) : (this.code() ?? '—')));
 }

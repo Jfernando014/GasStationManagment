@@ -1,0 +1,13 @@
+:host { display: block; }
+
+/* Calendar on the left, summary on the right; on narrow screens the summary goes below */
+.wp-shifts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .wp-shifts { grid-template-columns: minmax(0, 1fr); }
+}

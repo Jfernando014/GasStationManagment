@@ -1,0 +1,42 @@
+:host {
+  position: relative;
+  display: inline-block;
+  width: 64px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  vertical-align: middle;
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--semantic-green);
+  transform-origin: left center;
+  animation: percent-bar-grow var(--duration-normal) var(--spring) backwards;
+}
+
+:host(.is-below) .fill { background: var(--brand-primary); }
+:host(.is-muted) .fill { background: var(--text-light); }
+
+/* The tick that marks 100 %: taller than the track so it reads as a reference line */
+.mark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-heading);
+  opacity: 0.55;
+}
+
+@keyframes percent-bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill { animation: none; }
+}

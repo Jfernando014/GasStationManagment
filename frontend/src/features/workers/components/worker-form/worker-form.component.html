@@ -41,8 +41,13 @@
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="dialog-header">
       <div class="dialog-titles">
-        <h3 id="worker-dialog-title">Registrar Nuevo Vendedor</h3>
-        <p>Alta de personal operativo para rotación 2×2</p>
+        @if (worker()) {
+          <h3 id="worker-dialog-title">Editar datos del vendedor</h3>
+          <p>Cambia el documento, el nombre o el rol</p>
+        } @else {
+          <h3 id="worker-dialog-title">Registrar Nuevo Vendedor</h3>
+          <p>Alta de personal operativo para rotación 2×2</p>
+        }
       </div>
       <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="cancelled.emit()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">

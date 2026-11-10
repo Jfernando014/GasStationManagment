@@ -9,11 +9,14 @@ import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.Rotation
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.RotationResultResponse;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleResponse;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleUpdateResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.WorkerMonthResponse;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftRotationService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftScheduleService;
+import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftWorkerMonthService;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftRotationMapper;
 import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftScheduleMapper;
+import com.edu.unicauca.gasstation.backend.shifts.infrastructure.mappers.ShiftWorkerMonthMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,12 +25,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,6 +55,8 @@ public class ShiftScheduleController {
     private final ShiftRotationService shiftRotationService;
     private final ShiftScheduleMapper shiftScheduleMapper;
     private final ShiftRotationMapper shiftRotationMapper;
+    private final ShiftWorkerMonthService shiftWorkerMonthService;
+    private final ShiftWorkerMonthMapper shiftWorkerMonthMapper;
 
     @Operation(summary = "Preview the automatic rotation of a month",
             description = "Calculates, without saving anything, the 2x2 rotation of every active titular for the month: "
@@ -189,5 +196,28 @@ public class ShiftScheduleController {
                     + "filtering; omit for all")
             @RequestParam(required = false) ShiftPeriod period) {
         return shiftScheduleMapper.toResponse(shiftScheduleService.getSchedule(from, to, workerId, period));
+    }
+
+    @Operation(summary = "Obtener el mes de un vendedor con sus novedades",
+            description = "Devuelve cada día del mes con el código de la malla, el código realmente trabajado una vez "
+                    + "aplicadas las novedades activas del personal del día (nulo si el vendedor estuvo ausente), las "
+                    + "horas programadas y las novedades de ese día vistas desde el vendedor. El resumen se calcula "
+                    + "sobre la malla; los reemplazos hechos y las ausencias se cuentan aparte, sin las novedades "
+                    + "anuladas. No valida que el vendedor exista: sin malla en el mes devuelve todos los días vacíos "
+                    + "y los totales en cero. Incluye días pasados.")
+    @ApiResponse(responseCode = "200", description = "Mes encontrado",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = WorkerMonthResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Mes faltante o con formato inválido, o identificador del "
+            + "vendedor mal formado",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                    schema = @Schema(implementation = ProblemDetail.class)))
+    @GetMapping("/workers/{workerId}")
+    public WorkerMonthResponse getWorkerMonth(
+            @Parameter(description = "Identificador del vendedor", example = "d3c8c22b-9a86-4678-a326-ac90b26057cb")
+            @PathVariable UUID workerId,
+            @Parameter(description = "Mes a consultar (yyyy-MM)", example = "2026-08")
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+        return shiftWorkerMonthMapper.toResponse(shiftWorkerMonthService.getWorkerMonth(workerId, month));
     }
 }

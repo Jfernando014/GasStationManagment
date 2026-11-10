@@ -33,6 +33,11 @@ export class WorkersService {
     return this.http.get<Worker[]>(this.apiUrl, { params });
   }
 
+  /** One worker, active or not. The error is 404 when it does not exist and 400 when the id is malformed. */
+  getById(id: string): Observable<Worker> {
+    return this.http.get<Worker>(`${this.apiUrl}/${encodeURIComponent(id)}`);
+  }
+
   create(request: WorkerRequest): Observable<Worker> {
     return this.http.post<Worker>(this.apiUrl, request);
   }

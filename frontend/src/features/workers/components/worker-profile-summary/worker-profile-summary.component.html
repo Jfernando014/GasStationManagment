@@ -1,0 +1,48 @@
+<section class="ps-card wp-summary" aria-labelledby="wp-summary-title" [attr.aria-busy]="loading()">
+  <h2 id="wp-summary-title" class="wp-summary-title">Resumen de {{ monthWord() }}</h2>
+
+  @if (failed()) {
+    <p class="wp-summary-failed">No se pudo cargar el resumen de este mes.</p>
+  } @else if (loading() || !summary()) {
+    <div class="wp-summary-skeleton" aria-hidden="true">
+      <span class="wp-skel wp-skel--big"></span>
+      <span class="wp-skel wp-skel--chips"></span>
+      <span class="wp-skel wp-skel--row"></span>
+      <span class="wp-skel wp-skel--row"></span>
+      <span class="wp-skel wp-skel--row"></span>
+    </div>
+    <span class="jr-sr" aria-live="polite">Cargando el resumen…</span>
+  } @else {
+    @let totals = summary()!;
+    <div class="wp-summary-body">
+      <p class="wp-hours"><b>{{ totals.scheduledHours }}</b> <span>horas programadas</span></p>
+
+      @if (codes().length) {
+        <ul class="wp-codes" aria-label="Días por código de turno">
+          @for (entry of codes(); track entry.code) {
+            <li><app-shift-chip [code]="entry.code" [toneOverride]="entry.tone">&nbsp;·&nbsp;{{ entry.count }}</app-shift-chip></li>
+          }
+        </ul>
+      }
+
+      <dl class="wp-totals">
+        <div><dt>Turnos trabajados</dt><dd>{{ totals.scheduledShifts }}</dd></div>
+        <div><dt>Descansos</dt><dd>{{ totals.restDays }}</dd></div>
+        <div>
+          <dt>
+            Reemplazos hechos
+            <app-info-tooltip label="Qué son los reemplazos hechos" text="Veces que cubrió a un compañero que no pudo trabajar su turno." />
+          </dt>
+          <dd>{{ totals.replacementsMade }}</dd>
+        </div>
+        <div>
+          <dt>
+            Ausencias
+            <app-info-tooltip label="Qué son las ausencias" text="Días que faltó, con o sin reemplazo de un compañero." />
+          </dt>
+          <dd>{{ totals.absences }}</dd>
+        </div>
+      </dl>
+    </div>
+  }
+</section>

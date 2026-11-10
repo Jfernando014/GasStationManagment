@@ -1,0 +1,20 @@
+<section class="ps-card wp-header" aria-label="Datos del vendedor">
+  <app-avatar class="wp-avatar" [name]="worker().fullName" size="lg" />
+  <div class="wp-id">
+    <div class="wp-title">
+      <h1>{{ worker().fullName }}</h1>
+      <app-status-badge [active]="worker().active" />
+    </div>
+    <dl class="wp-facts">
+      <div><dt>Documento</dt><dd>{{ worker().document }}</dd></div>
+      <div><dt>Rol</dt><dd>{{ roleLabel(worker()) }}</dd></div>
+      <div><dt>Surtidor</dt><dd>{{ worker().dispenser }}</dd></div>
+    </dl>
+  </div>
+  <button #editButton type="button" class="jr-btn jr-btn--sec wp-edit" (click)="editRequested.emit()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+    Editar datos
+  </button>
+</section>

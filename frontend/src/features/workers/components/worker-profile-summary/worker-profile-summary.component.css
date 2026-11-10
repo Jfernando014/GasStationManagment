@@ -1,0 +1,57 @@
+:host { display: block; min-width: 0; }
+
+.wp-summary { padding: 18px 20px; }
+
+.wp-summary-title {
+  margin: 0 0 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.wp-summary-body { animation: wp-summary-in var(--duration-normal) var(--spring) backwards; }
+
+.wp-hours { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; }
+.wp-hours b {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+.wp-hours span { font-size: 14px; color: var(--text-muted); }
+
+.wp-codes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+.wp-codes app-shift-chip { font-size: 12px; padding: 3px 10px; }
+
+.wp-totals { margin: 0; border-top: 1px solid var(--surface-subtle); }
+.wp-totals > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--surface-subtle);
+}
+.wp-totals > div:last-child { border-bottom: 0; }
+.wp-totals dt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-body); }
+.wp-totals dd { margin: 0; font-size: 16px; font-weight: 700; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+
+.wp-summary-failed { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+
+/* ---- Skeleton ---- */
+.wp-summary-skeleton { display: flex; flex-direction: column; gap: 10px; }
+.wp-skel { display: block; border-radius: var(--radius-sm); background: var(--surface-subtle); animation: wp-summary-pulse 1.2s ease-in-out infinite; }
+.wp-skel--big { width: 70%; height: 36px; }
+.wp-skel--chips { width: 90%; height: 24px; }
+.wp-skel--row { height: 28px; }
+
+@keyframes wp-summary-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes wp-summary-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-summary-body { animation: none; }
+  .wp-skel { animation: none; }
+}
