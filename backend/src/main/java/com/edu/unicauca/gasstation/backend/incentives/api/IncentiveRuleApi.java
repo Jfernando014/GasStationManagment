@@ -38,10 +38,7 @@ public interface IncentiveRuleApi {
                     + "a hoy: PROGRAMADO (vigencia futura), VIGENTE (la que aplica hoy) o ANTERIOR. Un aditivo "
                     + "inactivo conserva su historial.")
     @ApiResponse(responseCode = "200", description = "Historial del aditivo")
-    @ApiResponse(responseCode = "400", description = "El producto no es un aditivo",
-            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                    schema = @Schema(implementation = ProblemDetail.class)))
-    @ApiResponse(responseCode = "404", description = "No existe el producto",
+    @ApiResponse(responseCode = "404", description = "No existe el producto o no es un aditivo",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
     List<RuleHistoryResponse> history(Long productId);
@@ -54,11 +51,11 @@ public interface IncentiveRuleApi {
     @ApiResponse(responseCode = "201", description = "Regla creada, con sus advertencias si las hay")
     @ApiResponse(responseCode = "200", description = "No se creó porque el valor ya era el que aplica en esa fecha")
     @ApiResponse(responseCode = "400", description = "Datos inválidos, valor fuera de 0 a "
-            + IncentiveRule.MAX_VALUE_PER_UNIT + " o producto que no es aditivo",
+            + IncentiveRule.MAX_VALUE_PER_UNIT,
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "403", description = "El usuario no es administrador")
-    @ApiResponse(responseCode = "404", description = "No existe el producto",
+    @ApiResponse(responseCode = "404", description = "No existe el producto o no es un aditivo",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "409", description = "Aditivo inactivo, vigencia no posterior a la última jornada "
