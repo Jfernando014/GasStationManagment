@@ -59,6 +59,12 @@
             <artifactId>spring-modulith-starter-jpa</artifactId>
         </dependency>
 
+        <!-- Targeted recovery of only statistics' incomplete event publications. -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-events-core</artifactId>
+        </dependency>
+
         <!-- Utilities -->
         <dependency>
             <groupId>org.projectlombok</groupId>
