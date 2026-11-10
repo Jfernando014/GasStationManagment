@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,17 @@ public class SavingsFundServiceImpl implements SavingsFundService {
         }
         return repository.save(SavingsFundMovement.create(
                 SavingsFundMovementType.CONTRIBUTION, date, amount, normalize(description)));
+    }
+
+    @Override
+    @Transactional
+    public Optional<SavingsFundMovement> registerContributionIfAbsent(LocalDate date, BigDecimal amount,
+                                                                     String description) {
+        if (repository.existsContributionOn(date)) {
+            return Optional.empty();
+        }
+        return Optional.of(repository.save(SavingsFundMovement.create(
+                SavingsFundMovementType.CONTRIBUTION, date, amount, normalize(description))));
     }
 
     @Override
