@@ -31,6 +31,21 @@ public class AdditiveSaleRepositoryImpl implements AdditiveSaleRepository {
                 .toList();
     }
 
+    @Override
+    public List<AdditiveSaleUnits> findBetween(LocalDate from, LocalDate to) {
+        return repository.findByJournalDateBetweenOrderByJournalDateAscVendorNameAscSkuAsc(from, to).stream()
+                .map(AdditiveSaleRepositoryImpl::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<AdditiveSaleUnits> findBetweenForVendor(LocalDate from, LocalDate to, String vendorDocument) {
+        return repository.findByJournalDateBetweenAndVendorDocumentOrderByJournalDateAscSkuAsc(from, to, vendorDocument)
+                .stream()
+                .map(AdditiveSaleRepositoryImpl::toDomain)
+                .toList();
+    }
+
     private static AdditiveSaleUnits toDomain(IncentiveAdditiveSaleEntity entity) {
         return new AdditiveSaleUnits(entity.getJournalDate(), entity.getVendorDocument(), entity.getVendorName(),
                 entity.getSku(), entity.getProductName(), entity.getUnits());

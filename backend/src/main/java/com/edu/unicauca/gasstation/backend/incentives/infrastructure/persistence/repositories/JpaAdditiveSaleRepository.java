@@ -13,6 +13,12 @@ public interface JpaAdditiveSaleRepository extends JpaRepository<IncentiveAdditi
 
     List<IncentiveAdditiveSaleEntity> findByJournalDateOrderByVendorNameAscVendorDocumentAscSkuAsc(LocalDate journalDate);
 
+    List<IncentiveAdditiveSaleEntity> findByJournalDateBetweenOrderByJournalDateAscVendorNameAscSkuAsc(
+            LocalDate from, LocalDate to);
+
+    List<IncentiveAdditiveSaleEntity> findByJournalDateBetweenAndVendorDocumentOrderByJournalDateAscSkuAsc(
+            LocalDate from, LocalDate to, String vendorDocument);
+
     // Runs right away so the new rows of the date do not collide with the old ones on the unique index
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from IncentiveAdditiveSaleEntity sale where sale.journalDate = :journalDate")
