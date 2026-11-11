@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.statistics.domain.repositories;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ClosedJournalSnapshot;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.JournalSalesProcessing;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleHistory;
+import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleHistoryRange;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleIdentity;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +26,9 @@ public interface ShiftSaleHistoryRepository {
     Optional<JournalSalesProcessing> findProcessing(LocalDate journalDate);
 
     List<JournalSalesProcessing> findPending();
+
+    /** One consistent inclusive read, including pending, absent and confirmed empty dates. */
+    ShiftSaleHistoryRange readRange(LocalDate fromInclusive, LocalDate toInclusive);
 
     List<ShiftSaleHistory> findByDate(LocalDate journalDate);
 
