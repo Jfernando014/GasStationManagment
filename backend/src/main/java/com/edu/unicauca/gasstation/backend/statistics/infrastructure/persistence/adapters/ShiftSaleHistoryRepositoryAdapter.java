@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.statistics.infrastructure.persistenc
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ClosedJournalSnapshot;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.JournalSalesProcessing;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleHistory;
+import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleHistoryRange;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleIdentity;
 import com.edu.unicauca.gasstation.backend.statistics.domain.repositories.ShiftSaleHistoryRepository;
 import com.edu.unicauca.gasstation.backend.statistics.infrastructure.persistence.mappers.ShiftSaleHistoryRowMapper;
@@ -10,6 +11,8 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,6 +134,36 @@ public class ShiftSaleHistoryRepositoryAdapter implements ShiftSaleHistoryReposi
         return jdbc.query(SALES_SELECT + " AND s.journal_date = ? AND s.vendor_document = ? AND s.shift_name = ?",
                 ShiftSaleHistoryRowMapper::sale, Date.valueOf(identity.journalDate()),
                 identity.vendorDocument(), identity.shiftName()).stream().findFirst();
+    }
+
+    @Override
+    public ShiftSaleHistoryRange readRange(LocalDate fromInclusive, LocalDate toInclusive) {
+        ShiftSaleHistoryRange.validateDates(fromInclusive, toInclusive);
+        var processingByDate = new HashMap<LocalDate, JournalSalesProcessing>();
+        var salesByDate = new HashMap<LocalDate, List<ShiftSaleHistory>>();
+        // A single PostgreSQL statement sees markers and sales at the same MVCC snapshot.
+        // The join never exposes unconfirmed sale rows; no per-date queries or additional locks are needed.
+        jdbc.query("""
+                SELECT j.*, s.*
+                FROM statistics_journal_sales j
+                LEFT JOIN statistics_shift_sale s
+                    ON s.journal_date = j.journal_date AND j.status = 'PROCESSED'
+                WHERE j.journal_date BETWEEN ? AND ?
+                ORDER BY j.journal_date, s.vendor_document, s.shift_name
+                """, (org.springframework.jdbc.core.RowCallbackHandler) rs -> {
+                    var state = ShiftSaleHistoryRowMapper.processing(rs, 0);
+                    var date = state.journal().journalDate();
+                    processingByDate.putIfAbsent(date, state);
+                    if (rs.getObject("id") != null) {
+                        salesByDate.computeIfAbsent(date, ignored -> new ArrayList<>())
+                                .add(ShiftSaleHistoryRowMapper.sale(rs, 0));
+                    }
+                }, Date.valueOf(fromInclusive), Date.valueOf(toInclusive));
+        var days = fromInclusive.datesUntil(toInclusive.plusDays(1))
+                .map(date -> new ShiftSaleHistoryRange.Day(date, processingByDate.get(date),
+                        salesByDate.getOrDefault(date, List.of())))
+                .toList();
+        return new ShiftSaleHistoryRange(fromInclusive, toInclusive, days);
     }
 
     /** Insert handles the absent-row race; FOR UPDATE serializes both fresh dates and existing pending dates. */
