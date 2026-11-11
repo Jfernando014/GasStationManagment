@@ -91,8 +91,8 @@ public class IncentiveCalculationService {
                 totals.addUnresolved(sale, UnresolvedReason.PRODUCT_NOT_FOUND, inMonth);
                 continue;
             }
-            Optional<BigDecimal> value = unitValueCalculator.valuePerUnit(
-                    timelines.getOrDefault(productId, RuleTimeline.of(List.of())), sale);
+            RuleTimeline rules = timelines.getOrDefault(productId, RuleTimeline.of(List.of()));
+            Optional<BigDecimal> value = unitValueCalculator.valuePerUnit(rules, sale);
             if (value.isEmpty()) {
                 totals.addUnresolved(sale, UnresolvedReason.NO_RULE_IN_FORCE, inMonth);
                 continue;
@@ -100,7 +100,7 @@ public class IncentiveCalculationService {
             BigDecimal subtotal = value.get().multiply(BigDecimal.valueOf(sale.units()));
             totals.accumulated = totals.accumulated.add(subtotal);
             if (inMonth) {
-                totals.addLine(sale, value.get(), subtotal);
+                totals.addLine(sale, value.get(), subtotal, periodOf(rules, sale.journalDate(), month));
             }
         }
         return vendors.values().stream()
@@ -134,7 +134,25 @@ public class IncentiveCalculationService {
         return accumulationStart.month().atDay(1);
     }
 
-    private record LineKey(String sku, BigDecimal valuePerUnit) {
+    /**
+     * Validity of the rule in force on {@code saleDate}, cut to the month: it starts on the later of the rule's start
+     * and the first day of the month, and ends the day before the next rule if that one starts inside the month.
+     * Without a change inside the month the end is null, meaning it holds through the end of the month asked.
+     */
+    private static LinePeriod periodOf(RuleTimeline rules, LocalDate saleDate, YearMonth month) {
+        LocalDate firstDay = month.atDay(1);
+        LocalDate start = rules.effectiveOn(saleDate).map(IncentiveRule::validFrom)
+                .filter(ruleStart -> ruleStart.isAfter(firstDay)).orElse(firstDay);
+        LocalDate end = rules.nextAfter(saleDate).map(IncentiveRule::validFrom)
+                .filter(nextStart -> !nextStart.isAfter(month.atEndOfMonth()))
+                .map(nextStart -> nextStart.minusDays(1)).orElse(null);
+        return new LinePeriod(start, end);
+    }
+
+    private record LinePeriod(LocalDate start, LocalDate end) {
+    }
+
+    private record LineKey(String sku, BigDecimal valuePerUnit, LinePeriod period) {
     }
 
     private record UnresolvedKey(String sku, UnresolvedReason reason) {
@@ -173,8 +191,10 @@ public class IncentiveCalculationService {
             this.vendorDocument = vendorDocument;
         }
 
-        private void addLine(AdditiveSaleUnits sale, BigDecimal valuePerUnit, BigDecimal subtotal) {
-            LineTotals line = lines.computeIfAbsent(new LineKey(sale.sku(), valuePerUnit),
+        // The period is part of the key, so equal values from two different rules stay on separate lines
+        private void addLine(AdditiveSaleUnits sale, BigDecimal valuePerUnit, BigDecimal subtotal,
+                             LinePeriod period) {
+            LineTotals line = lines.computeIfAbsent(new LineKey(sale.sku(), valuePerUnit, period),
                     key -> new LineTotals(sale.productName()));
             line.units += sale.units();
             line.subtotal = line.subtotal.add(subtotal);
@@ -192,10 +212,12 @@ public class IncentiveCalculationService {
         private VendorIncentive toVendorIncentive() {
             List<IncentiveLine> incentiveLines = lines.entrySet().stream()
                     .map(entry -> new IncentiveLine(entry.getKey().sku(), entry.getValue().productName,
-                            entry.getValue().units, entry.getKey().valuePerUnit(), entry.getValue().subtotal))
+                            entry.getValue().units, entry.getKey().valuePerUnit(), entry.getValue().subtotal,
+                            entry.getKey().period().start(), entry.getKey().period().end()))
                     .sorted(Comparator.comparing(IncentiveLine::productName)
                             .thenComparing(IncentiveLine::sku)
-                            .thenComparing(IncentiveLine::valuePerUnit))
+                            .thenComparing(IncentiveLine::valuePerUnit)
+                            .thenComparing(IncentiveLine::periodStart))
                     .toList();
             List<UnresolvedAdditive> unresolvedAdditives = unresolved.entrySet().stream()
                     .map(entry -> new UnresolvedAdditive(entry.getKey().sku(), entry.getValue().productName,

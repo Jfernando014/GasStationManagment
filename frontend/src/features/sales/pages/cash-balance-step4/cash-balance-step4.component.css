@@ -1,0 +1,17 @@
+/* Los estilos de .jr-p4, .jr-p4-cuadre, .jr-p4-cuerpo, .jr-p4-tabla, .jr-p4-tarjeta y .jr-p4-pdf provienen de views.css y components.css. */
+
+.jr-p4-dlg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.jr-p4-dlg-ayuda {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.jr-jornada-pie {
+  margin-top: 4px;
+}
+

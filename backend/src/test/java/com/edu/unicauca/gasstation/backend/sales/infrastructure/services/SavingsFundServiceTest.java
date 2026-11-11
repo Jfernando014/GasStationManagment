@@ -14,11 +14,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class SavingsFundServiceTest {
@@ -112,5 +115,48 @@ class SavingsFundServiceTest {
     @Test
     void emptyFundHasZeroBalance() {
         assertEquals(0, BigDecimal.ZERO.compareTo(service.getBalanceAt(LocalDate.of(2026, 7, 31))));
+    }
+
+    @Test
+    void contributionIfAbsentRegistersTheContributionOfAFreeDay() {
+        LocalDate day = LocalDate.of(2026, 8, 1);
+
+        Optional<SavingsFundMovement> registered =
+                service.registerContributionIfAbsent(day, cop(250_000), "  Cierre ");
+
+        assertTrue(registered.isPresent());
+        assertEquals(SavingsFundMovementType.CONTRIBUTION, registered.get().getMovementType());
+        assertEquals("Cierre", registered.get().getDescription());
+        assertEquals(0, cop(250_000).compareTo(service.getBalanceAt(day)));
+    }
+
+    @Test
+    void contributionIfAbsentDoesNothingWhenTheDayAlreadyHasOne() {
+        LocalDate day = LocalDate.of(2026, 8, 1);
+        service.registerContribution(day, cop(300_000), "manual");
+
+        Optional<SavingsFundMovement> registered = service.registerContributionIfAbsent(day, cop(250_000), null);
+
+        assertTrue(registered.isEmpty());
+        assertEquals(0, cop(300_000).compareTo(service.getBalanceAt(day)));
+    }
+
+    @Test
+    void contributionIfAbsentCanBeRepeatedWithoutDuplicating() {
+        LocalDate day = LocalDate.of(2026, 8, 1);
+
+        service.registerContributionIfAbsent(day, cop(250_000), null);
+        service.registerContributionIfAbsent(day, cop(250_000), null);
+
+        assertEquals(0, cop(250_000).compareTo(service.getBalanceAt(day)));
+    }
+
+    @Test
+    void theFundGrowsByTheContributionOfEachClosedDay() {
+        for (int day = 1; day <= 3; day++) {
+            service.registerContributionIfAbsent(LocalDate.of(2026, 8, day), cop(250_000), null);
+        }
+
+        assertEquals(0, cop(750_000).compareTo(service.getBalanceAt(LocalDate.of(2026, 8, 3))));
     }
 }

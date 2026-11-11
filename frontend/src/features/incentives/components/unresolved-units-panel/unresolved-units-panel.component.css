@@ -1,0 +1,83 @@
+:host { display: block; }
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: -4px -8px -4px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--semantic-amber-strong);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.toggle:hover { background: var(--semantic-amber-subtle); }
+.toggle:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+.toggle svg { transition: transform var(--duration-normal) var(--spring); }
+.toggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+/* ---- Lista desplegable ---- */
+.details {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--duration-normal) var(--spring),
+    visibility 0s linear var(--duration-normal);
+}
+
+.details.is-open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.details-inner { min-height: 0; overflow: hidden; }
+.scroll { overflow-x: auto; }
+
+table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13.5px; color: #334155; font-variant-numeric: tabular-nums; }
+
+th, td { padding: 8px 14px 8px 0; text-align: left; vertical-align: middle; border-top: 1px solid #F5EBC8; }
+th:last-child, td:last-child { padding-right: 0; }
+
+thead th {
+  padding-top: 2px;
+  padding-bottom: 4px;
+  border-top: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #92400E;
+}
+
+.end { text-align: right; }
+.units { font-weight: 700; }
+.product { color: var(--text-heading); }
+.unknown { color: var(--text-light); font-style: italic; }
+.link-cell { text-align: right; white-space: nowrap; }
+
+a {
+  font-weight: 600;
+  color: var(--brand-primary-strong);
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+tbody tr { animation: row-in var(--duration-normal) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  tbody tr { animation: none; }
+  .details, .toggle svg { transition: none; }
+}

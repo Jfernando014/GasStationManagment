@@ -1,0 +1,53 @@
+<app-warning-panel>
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+    stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+
+  @if (totalUnits() === 1) {
+    <b>1 unidad de {{ monthName() }} no se pudo valorar.</b>
+  } @else {
+    <b>{{ totalUnits() }} unidades de {{ monthName() }} no se pudieron valorar.</b>
+  }
+  No suman al total hasta que se resuelvan.
+
+  <button panelAction type="button" class="toggle" [attr.aria-expanded]="open()" aria-controls="unresolved-units-list"
+    [attr.aria-label]="open() ? 'Ocultar unidades sin resolver' : 'Ver unidades sin resolver'" (click)="open.set(!open())">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </button>
+
+  <div panelDetails id="unresolved-units-list" class="details" [class.is-open]="open()" [attr.inert]="open() ? null : ''">
+    <div class="details-inner">
+      <div class="scroll">
+        <table>
+          <caption class="jr-sr">Unidades de {{ monthName() }} que no se pudieron valorar</caption>
+          <thead>
+            <tr>
+              <th scope="col">SKU</th>
+              <th scope="col">Producto</th>
+              <th scope="col" class="end">Unidades</th>
+              <th scope="col">Por qué</th>
+              <th scope="col"><span class="jr-sr">Dónde resolverlo</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.key) {
+              <tr [style.--i]="$index">
+                <td>{{ row.sku }}</td>
+                <td>
+                  @if (row.name) {
+                    <span class="product">{{ row.name }}</span>
+                  } @else {
+                    <span class="unknown">Desconocido</span>
+                  }
+                </td>
+                <td class="end units">{{ row.units }}</td>
+                <td>{{ row.reason }}</td>
+                <td class="link-cell"><a [routerLink]="row.linkTarget">{{ row.linkLabel }}</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</app-warning-panel>

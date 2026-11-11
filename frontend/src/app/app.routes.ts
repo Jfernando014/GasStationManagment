@@ -29,6 +29,11 @@ export const routes: Routes = [
               .then(m => m.ElectronicPaymentsStep3Component)
           },
           {
+            path: 'caja',
+            loadComponent: () => import('../features/sales/pages/cash-balance-step4/cash-balance-step4.component')
+              .then(m => m.CashBalanceStep4Component)
+          },
+          {
             path: 'inventario',
             loadComponent: () => import('../features/inventory/pages/journal-step5/journal-step5.component')
               .then(m => m.JournalStep5Component)
@@ -86,6 +91,11 @@ export const routes: Routes = [
             loadComponent: () => import('../features/incentives/pages/additives-tab/additives-tab.component')
               .then(m => m.AdditivesTabComponent)
           },
+          {
+            path: 'calculo',
+            loadComponent: () => import('../features/incentives/pages/calculation-tab/calculation-tab.component')
+              .then(m => m.CalculationTabComponent)
+          },
           { path: '', pathMatch: 'full', redirectTo: 'aditivos' }
         ]
       },
@@ -110,6 +120,10 @@ export const routes: Routes = [
       {
         path: 'configuracion/recepciones',
         loadComponent: () => import('../features/configuration/pages/receptions-page/receptions-page.component').then(m => m.ReceptionsPageComponent)
+      },
+      {
+        path: 'configuracion/inspecciones',
+        loadComponent: () => import('../features/configuration/pages/inspections-page/inspections-page.component').then(m => m.InspectionsPageComponent)
       },
       {
         path: 'gastos',

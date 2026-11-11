@@ -1,3 +1,4 @@
+import { InspectionCategory, InspectionStatus } from '../models/dtos/inspection.dto';
 import { ProductCategory } from '../models/dtos/product.dto';
 import { FuelType } from '../models/dtos/tank.dto';
 
@@ -29,6 +30,19 @@ export const PRODUCT_CATEGORY_FILTER_LABELS: Record<ProductCategory, string> = {
   ADITIVO: 'Aditivos',
   REFRIGERANTE: 'Refrigerantes',
   OTRO: 'Varios'
+};
+
+export const INSPECTION_CATEGORY_LABELS: Record<InspectionCategory, string> = {
+  ONAC: 'Calibración ONAC',
+  HERMETICIDAD: 'Hermeticidad MinMinas',
+  AMBIENTAL: 'Ambiental CRC',
+  BOMBAS: 'Mecánico Bombas'
+};
+
+export const INSPECTION_STATUS_LABELS: Record<InspectionStatus, string> = {
+  VIGENTE: 'Vigente',
+  PROXIMO: 'Próximo a vencer',
+  VENCIDO: 'Vencido'
 };
 
 const COP = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });

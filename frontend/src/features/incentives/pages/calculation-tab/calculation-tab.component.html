@@ -1,0 +1,53 @@
+<header class="title-row">
+  <div>
+    <h1>Cálculo del mes</h1>
+    <p>Lo que gana cada vendedor por los aditivos que vendió, según las jornadas cerradas.</p>
+  </div>
+  <app-select-field class="month" fieldId="incentives-month" label="Mes" [labelHidden]="true"
+    [control]="monthControl" [options]="monthOptions" placeholder="Elige un mes" [required]="true"
+    hint="Desde noviembre 2025. Los meses futuros no se pueden elegir." />
+</header>
+
+@if (view() !== 'invalid' && visiblePendingDays().length > 0) {
+  <app-pending-days-panel [days]="visiblePendingDays()" [canReprocess]="canReprocess()" (reprocessed)="refresh()" />
+}
+
+@if (view() === 'invalid') {
+  <section class="card">
+    <app-empty-state tone="error" heading="No se puede mostrar ese mes"
+      description="Solo hay cálculos desde noviembre 2025 hasta el mes en curso.">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M10 14l4 4M14 14l-4 4" /></svg>
+      <button appButton type="button" (click)="showCurrentMonth()">Ver el mes en curso</button>
+    </app-empty-state>
+  </section>
+} @else if (view() === 'error') {
+  <section class="card">
+    <app-empty-state tone="error" heading="No se pudo cargar el cálculo" [description]="errorMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+      <button appButton type="button" (click)="retry()">Reintentar</button>
+    </app-empty-state>
+  </section>
+} @else if (view() === 'empty') {
+  <section class="card">
+    <app-empty-state
+      [heading]="isCurrentMonth() ? 'Todavía no hay ventas de aditivos en ' + monthName() : 'No hubo ventas de aditivos en ' + monthName()"
+      [description]="isCurrentMonth()
+        ? 'Cuando se cierren jornadas con aditivos vendidos, los incentivos aparecen aquí.'
+        : 'Ninguna de las jornadas cerradas de ese mes tuvo aditivos vendidos.'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round"><path d="M3 3v18h18" /><path d="M7 14h2M12 10h2M17 6h2" /></svg>
+    </app-empty-state>
+  </section>
+} @else {
+  <app-month-summary [total]="total()" [vendorCount]="vendors().length" [monthName]="monthName()"
+    [loading]="view() === 'loading'" />
+
+  @if (unresolved().length > 0) {
+    <app-unresolved-units-panel [items]="unresolved()" [monthName]="monthName()" />
+  }
+
+  <app-vendor-incentives-table [vendors]="vendors()" [loading]="view() === 'loading'" [monthName]="monthName()"
+    [accumulatedFrom]="data()?.accumulatedFrom ?? null" />
+}

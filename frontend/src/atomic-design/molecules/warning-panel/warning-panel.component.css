@@ -1,0 +1,23 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px;
+  border: 1px solid #FDE68A;
+  border-radius: 14px;
+  background: #FFFDF5;
+  box-shadow: var(--shadow-card);
+  animation: warning-in var(--duration-normal) var(--spring) backwards;
+}
+
+.head { display: flex; align-items: flex-start; gap: 10px; }
+.icon { display: inline-flex; flex-shrink: 0; margin-top: 2px; color: var(--semantic-amber-strong); }
+.message { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; color: #92400E; }
+
+@keyframes warning-in {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host { animation: none; }
+}

@@ -22,8 +22,8 @@ class ShiftSaleHistoryMigrationTest {
     @Test
     void migratesAnEmptyDatabaseAndValidatesWithoutReapplyingAnything() {
         Flyway flyway = flyway("empty_statistics", null);
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(32);
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("33");
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(33);
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("34");
         assertThat(flyway.info().applied()).noneMatch(m -> m.getVersion() != null && "31".equals(m.getVersion().getVersion()));
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         flyway.validate();
@@ -50,7 +50,7 @@ class ShiftSaleHistoryMigrationTest {
         }
 
         Flyway upgrade = flyway("upgrade_statistics", null);
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);
         Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null)
                 .filter(m -> oldChecksums.containsKey(m.getVersion().getVersion()))
                 .forEach(m -> assertThat(m.getChecksum()).isEqualTo(oldChecksums.get(m.getVersion().getVersion())));
