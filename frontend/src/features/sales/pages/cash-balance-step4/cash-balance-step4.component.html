@@ -1,449 +1,302 @@
-<div class="jr-p4" [class.jr-solo-lectura]="isClosed()">
-  <!-- Cabecera del Paso 4 -->
-  <div class="jr-p4-cabecera">
-    <div class="jr-paso-cabecera">
+<section class="cb">
+  <header class="cb-head">
+    <div>
       <h1>Consolidado y saldo en caja</h1>
-      <p>Cuadra el consolidado de Dominus, revisa el fondo y cierra con el PDF.</p>
+      <p>Cuadra el saldo contra Dominus, revisa el fondo y los gastos, y descarga el consolidado final.</p>
     </div>
-    <div id="jr-p4-indicadores">
-      <div class="jr-indicadores">
-        <div class="jr-indicador" [ngClass]="'jr-indicador--' + consolidadoIndicatorState()">
-          <span>Consolidado Dominus</span>
-          <b>{{ consolidadoIndicatorLabel() }}</b>
-        </div>
-        <div class="jr-indicador">
-          <span>Total en caja</span>
-          <b>{{ calc.totalEnCaja === null ? '—' : formatCOP(calc.totalEnCaja) }}</b>
-        </div>
-        <div class="jr-indicador">
-          <span>Fondo arriendo</span>
-          <b>{{ formatCOP(calc.fondo.acumulado) }}</b>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cuadre con el consolidado de Dominus -->
-  <div class="jr-p4-cuadre">
-    <label class="jr-p4-cuadre-campo" for="jr-p4-consolidado">
-      Total consolidado de Dominus
-      <span class="jr-cell jr-cell--dominus" [class.jr-cell--invalido]="consolidadoInvalid">
-        <input
-          class="jr-input"
-          id="jr-p4-consolidado"
-          type="text"
-          inputmode="decimal"
-          autocomplete="off"
-          placeholder="Pega el total"
-          [value]="consolidadoInputText"
-          [readOnly]="isClosed()"
-          [tabIndex]="isClosed() ? -1 : 0"
-          (input)="onConsolidadoInput($event)"
-          (blur)="onConsolidadoBlur()" />
-      </span>
-    </label>
-    <span class="jr-p4-igual">=</span>
-    <div class="jr-p4-cuadre-campo">
-      Total de la estación (paso 2)
-      <span class="jr-cell jr-cell--calc" id="jr-p4-total-estacion">
-        {{ calc.totalEstacion === null ? 'Sin cierre en el paso 2' : formatNumber(calc.totalEstacion, 2) }}
-      </span>
-    </div>
-    <div id="jr-p4-cuadre-resultado" class="jr-p4-cuadre-resultado">
-      @if (calc.cuadre === 'cuadra') {
-        <span class="jr-chip jr-chip--cuadra">
-          <span class="jr-chip-punto"></span>Cuadra · puedes exportar el PDF desde Dominus y adjuntarlo en 4d
-        </span>
-      } @else if (calc.cuadre === 'difiere') {
-        <span class="jr-chip jr-chip--falta">
-          <span class="jr-chip-punto"></span>Diferencia {{ formatCOP(abs((calc.consolidado ?? 0) - (calc.totalEstacion ?? 0))) }} · revísala antes de exportar
-        </span>
-      } @else {
-        <span class="jr-p4-tenue">Pega el total después de consolidar los turnos en Dominus</span>
+    <div class="cb-head-chips">
+      @if (dateLabel()) {
+        <span class="cb-chip">Jornada {{ dateLabel() }}</span>
+      }
+      @if (completed()) {
+        <span class="cb-chip cb-chip--ok">Paso completado</span>
       }
     </div>
-  </div>
+  </header>
 
-  <!-- Cuerpo: 4c Tabla de saldo en caja (izquierda) + 4a Fondo y 4b Gastos (derecha) -->
-  <div class="jr-p4-cuerpo">
-    <section class="jr-p4-caja">
-      <div class="jr-p4-caja-cab">
-        <b>Saldo en caja</b>
-        <span class="jr-chip jr-chip--pendiente" id="jr-p4-planilla">Planilla No. {{ calc.planilla }}</span>
-      </div>
-      <table class="jr-p4-tabla">
-        <tbody id="jr-p4-tabla-saldo">
-          <!-- Fila 1: Dinero -->
-          <tr>
-            <td>Dinero <small>{{ calc.origenDinero }}</small></td>
-            <td class="num">{{ formatNumber(calc.dinero, 0) }}</td>
-          </tr>
+  @if (notice(); as message) {
+    <p class="cb-banner cb-banner--ok" role="status">{{ message }}</p>
+  }
+  @if (actionError(); as message) {
+    <p class="cb-banner cb-banner--error" role="alert">{{ message }}</p>
+  }
 
-          <!-- Fila 2: Ahorro arriendo -->
-          <tr>
-            <td>
-              Ahorro arriendo
-              <small>{{ calc.fondo.dias }} {{ calc.fondo.dias === 1 ? 'día acumulado' : 'días acumulados' }} · 4a</small>
-            </td>
-            <td class="num">{{ formatNumber(calc.fondo.acumulado, 0) }}</td>
-          </tr>
-
-          <!-- Fila 3: Recibos, vales y otros -->
-          <tr>
-            <td>
-              Recibos, vales y otros
-              <small>{{ calc.semilla ? 'planilla histórica' : 'gastos del día · 4b' }}</small>
-            </td>
-            <td class="num">{{ formatNumber(calc.recibos, 0) }}</td>
-          </tr>
-
-          <!-- Fila 4: Saldo anterior -->
-          <tr class="jr-p4-fila-sec">
-            <td>
-              Saldo anterior
-              <small>planilla {{ calc.planilla - 1 }}{{ calc.origenAnterior === 'digitar' ? ' · digítalo una vez' : ' · ' + calc.origenAnterior }}</small>
-            </td>
-            <td class="num">
-              @if (calc.origenAnterior === 'digitar') {
-                <span class="jr-cell jr-cell--edit jr-p4-celda" [class.jr-cell--invalido]="saldoAnteriorInvalid">
-                  <input
-                    class="jr-input"
-                    id="jr-p4-saldo-anterior"
-                    type="text"
-                    inputmode="decimal"
-                    autocomplete="off"
-                    placeholder="Digítalo"
-                    [value]="saldoAnteriorInputText"
-                    [readOnly]="isClosed()"
-                    [tabIndex]="isClosed() ? -1 : 0"
-                    (input)="onSaldoAnteriorInput($event)"
-                    (blur)="onSaldoAnteriorBlur()" />
-                </span>
-              } @else {
-                {{ formatNumber(calc.saldoAnterior, 0) }}
-              }
-            </td>
-          </tr>
-
-          <!-- Fila 5: Consignaciones del día (si existen) -->
-          @if (calc.consignaciones > 0) {
-            <tr class="jr-p4-fila-sec">
-              <td>Consignaciones del día <small>se restan</small></td>
-              <td class="num">{{ formatNumber(calc.consignaciones, 0) }}</td>
-            </tr>
+  @if (!journal()) {
+    <p class="cb-muted" role="status">Abre una jornada para consultar el consolidado y el saldo en caja.</p>
+  } @else if (loading() && !table()) {
+    <p class="cb-muted" role="status">Cargando el saldo en caja…</p>
+  } @else if (loadError(); as message) {
+    <div class="cb-banner cb-banner--error" role="alert">
+      <span>{{ message }}</span>
+      <button type="button" class="cb-btn cb-btn--ghost" (click)="reload()">Reintentar</button>
+    </div>
+  } @else if (table(); as t) {
+    <section class="cb-card cb-cuadre" aria-labelledby="cb-cuadre-title">
+      <h2 id="cb-cuadre-title">Cuadre contra Dominus</h2>
+      <div class="cb-cuadre-grid">
+        <div class="cb-field">
+          <label for="cb-dominus">Saldo acumulado de Dominus</label>
+          <div class="cb-input-row">
+            <input
+              id="cb-dominus"
+              class="cb-input"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              placeholder="Pega el saldo de Dominus"
+              [value]="dominusText()"
+              [disabled]="!canEdit()"
+              (input)="onDominusInput($event)"
+              (blur)="onDominusBlur()"
+              (keydown.enter)="saveDominus()"
+            />
+            <button
+              type="button"
+              class="cb-btn"
+              [disabled]="!canEdit() || !dominusDirty() || savingDominus()"
+              (click)="saveDominus()"
+            >
+              {{ savingDominus() ? 'Guardando…' : 'Guardar saldo' }}
+            </button>
+          </div>
+          @if (dominusError(); as message) {
+            <span class="cb-error" role="alert">{{ message }}</span>
           }
+        </div>
 
-          <!-- Fila 6: Saldo de efectivo en planilla de ventas -->
-          <tr title="Saldo anterior + (dinero − ahorro de hoy) − consignaciones">
-            <td>Saldo de efectivo en planilla de ventas <small>calculado</small></td>
-            <td class="num">
-              @if (calc.saldoEfectivo === null) {
-                <em class="jr-p4-pendiente">falta el saldo anterior</em>
-              } @else {
-                {{ formatNumber(calc.saldoEfectivo, 0) }}
-              }
-            </td>
-          </tr>
+        <span class="cb-igual" aria-hidden="true">=</span>
 
-          <!-- Fila 7: Sobrante o faltante de dinero en caja (justificado) -->
-          <tr title="Saldo de efectivo + ahorro acumulado + recibos, vales y otros">
-            <td>Sobrante o faltante de dinero en caja (justificado) <small>calculado</small></td>
-            <td class="num">
-              @if (calc.saldoJustificado === null) {
-                <em class="jr-p4-pendiente">se calcula</em>
-              } @else {
-                {{ formatNumber(calc.saldoJustificado, 0) }}
-              }
-            </td>
-          </tr>
+        <div class="cb-field">
+          <span class="cb-label">Saldo de efectivo en planilla de ventas</span>
+          <span class="cb-value">{{ money(t.planillaCashBalance) }}</span>
+        </div>
 
-          <!-- Fila 8: Saldo acumulado Dominus -->
-          <tr class="jr-p4-fila-dominus">
-            <td>
-              Saldo acumulado Dominus
-              <small>{{ calc.saldoDominusPegado ? 'pegado de Dominus' : (calc.saldoDominus !== null ? 'de la planilla histórica' : 'pégalo de Dominus') }}</small>
-            </td>
-            <td class="num">
-              <span class="jr-cell jr-cell--dominus jr-p4-celda" [class.jr-cell--invalido]="saldoDominusInvalid">
-                <input
-                  class="jr-input"
-                  id="jr-p4-saldo-dominus"
-                  type="text"
-                  inputmode="decimal"
-                  autocomplete="off"
-                  placeholder="Pegar de Dominus"
-                  [value]="saldoDominusInputText"
-                  [readOnly]="isClosed()"
-                  [tabIndex]="isClosed() ? -1 : 0"
-                  (input)="onSaldoDominusInput($event)"
-                  (blur)="onSaldoDominusBlur()" />
-              </span>
-            </td>
-          </tr>
+        <div class="cb-result">
+          <span class="cb-chip cb-chip--{{ tone() }}">{{ statusLabel() }}</span>
+          <span class="cb-signed cb-signed--{{ tone() }}">{{ signedMoney(t.difference) }}</span>
+          <span class="cb-muted">{{ statusDetail() }}</span>
+        </div>
+      </div>
 
-          <!-- Fila 9: Diferencia -->
-          <tr class="jr-p4-fila-total">
-            <td>Diferencia <small>Dominus − justificado</small></td>
-            <td class="num">
-              @if (calc.diferencia === null) {
-                <em class="jr-p4-pendiente">{{ calc.saldoDominus === null ? 'al pegar el saldo' : 'falta el saldo anterior' }}</em>
-              } @else {
-                <span class="jr-chip" [ngClass]="abs(calc.diferencia) <= toleranciaSaldo ? 'jr-chip--cuadra' : 'jr-chip--falta'">
-                  {{ calc.diferencia > 0 ? '+' : (calc.diferencia < 0 ? '−' : '') }}{{ formatCOP(abs(calc.diferencia)) }}
-                </span>
-              }
-            </td>
-          </tr>
-
-          <!-- Fila 10: Total en caja -->
-          <tr class="jr-p4-fila-total">
-            <td>Total en caja <small>efectivo + fondo de arriendo</small></td>
-            <td class="num">
-              @if (calc.totalEnCaja === null) {
-                <em class="jr-p4-pendiente">falta el saldo anterior</em>
-              } @else {
-                <b>{{ formatNumber(calc.totalEnCaja, 0) }}</b>
-              }
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      @if (missing().length > 0) {
+        <div class="cb-missing" role="status">
+          <b>Para completar el paso falta:</b>
+          <ul>
+            @for (item of missing(); track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      }
     </section>
 
-    <div class="jr-p4-lateral">
-      <!-- 4a · Fondo de ahorro para arriendo -->
-      <section class="jr-p4-tarjeta">
-        <div class="jr-p4-tarjeta-cab">
-          <b>Fondo de ahorro para arriendo</b>
-          @if (!isClosed()) {
-            <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-accion" id="jr-p4-btn-pago-fondo" (click)="openPaymentDialog()">
-              Registrar pago desde el fondo
-            </button>
-          }
+    @if (loading()) {
+      <p class="cb-muted" role="status">Actualizando información…</p>
+    }
+
+    <div class="cb-body">
+      <section class="cb-card" aria-labelledby="cb-saldo-title">
+        <div class="cb-card-head">
+          <h2 id="cb-saldo-title">Saldo en caja</h2>
+          <span class="cb-chip">Planilla No. {{ t.journalConsecutive }}</span>
         </div>
-        <div id="jr-p4-fondo">
-          <div class="jr-p4-fondo-fila">
-            <span>Saldo al día anterior</span>
-            <b>{{ formatNumber(calc.fondo.saldoAnterior, 0) }}</b>
-          </div>
-          <div class="jr-p4-fondo-fila">
-            <span>+ Ahorro de hoy</span>
-            <b class="jr-p4-verde">{{ formatNumber(calc.fondo.ahorroHoy, 0) }}</b>
-          </div>
-          <div class="jr-p4-fondo-fila">
-            <span>− Pagos registrados hoy</span>
-            <b>{{ formatNumber(calc.fondo.totalPagosHoy, 0) }}</b>
-          </div>
-          @for (p of calc.fondo.pagosHoy; track p.id) {
-            <div class="jr-p4-fondo-pago">
-              <span>{{ p.concepto }} · {{ formatCOP(p.valor) }}</span>
-              @if (!isClosed()) {
-                <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm jr-accion" (click)="removePayment(p.id)">
-                  Quitar
-                </button>
-              }
-            </div>
-          }
-          <div class="jr-p4-fondo-fila jr-p4-fondo-total">
-            <span>Acumulado a la fecha</span>
-            <b>{{ formatNumber(calc.fondo.acumulado, 0) }}</b>
-          </div>
-          <p class="jr-p4-dias" [attr.title]="'Días que lleva acumulando: ' + calc.fondo.diasLista.join(' ')">
-            {{ calc.fondo.diasLista.length }} días acumulando · {{ formatDaysList(calc.fondo.diasLista) }}
-          </p>
-        </div>
+        <table class="cb-table">
+          <tbody>
+            <tr>
+              <th scope="row">Saldo de movimientos de caja</th>
+              <td class="num">{{ money(t.cashBalance) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Efectivo de la estación del día <small>paso 2</small></th>
+              <td class="num">{{ money(t.dailyCash) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Saldo de efectivo en planilla de ventas <small>calculado</small></th>
+              <td class="num">{{ money(t.planillaCashBalance) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Saldo acumulado Dominus</th>
+              <td class="num">{{ money(t.dominusAccumulatedBalance) }}</td>
+            </tr>
+            <tr class="cb-row-total">
+              <th scope="row">Diferencia <small>Dominus − planilla</small></th>
+              <td class="num">
+                <span class="cb-signed cb-signed--{{ tone() }}">{{ signedMoney(t.difference) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
-      <!-- 4b · Gastos del día -->
-      <section class="jr-p4-tarjeta">
-        <div class="jr-p4-tarjeta-cab">
-          <b>Gastos del día</b>
-          <a routerLink="/gastos" class="jr-accion">Registrar gasto</a>
-        </div>
-        <div id="jr-p4-gastos">
-          @if (calc.gastos.length > 0) {
-            <table class="jr-p4-gastos">
+      <div class="cb-side">
+        <section class="cb-card" aria-labelledby="cb-fondo-title">
+          <div class="cb-card-head">
+            <h2 id="cb-fondo-title">Fondo de ahorro para arriendo</h2>
+            <button type="button" class="cb-btn cb-btn--sec" [disabled]="!canEdit()" (click)="openPayment()">
+              Registrar pago
+            </button>
+          </div>
+          <dl class="cb-list">
+            <div><dt>Saldo al día anterior</dt><dd>{{ money(t.savingsFund.previousBalance) }}</dd></div>
+            <div><dt>+ Ahorro de hoy</dt><dd class="cb-pos">{{ money(t.savingsFund.contribution) }}</dd></div>
+            <div><dt>− Pagos registrados</dt><dd>{{ money(t.savingsFund.payments) }}</dd></div>
+            <div class="cb-list-total"><dt>Acumulado a la fecha</dt><dd>{{ money(t.savingsFund.accumulatedBalance) }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="cb-card" aria-labelledby="cb-gastos-title">
+          <div class="cb-card-head">
+            <h2 id="cb-gastos-title">Gastos del día</h2>
+            <a class="cb-link" [routerLink]="expensesRoute">Registrar gasto</a>
+          </div>
+          @if (t.expenses.items.length === 0) {
+            <p class="cb-muted">No hay gastos administrativos registrados para el {{ dateLabel() }}.</p>
+          } @else {
+            <table class="cb-table cb-table--compact">
               <tbody>
-                @for (g of calc.gastos; track g.id) {
+                @for (item of t.expenses.items; track $index) {
                   <tr>
-                    <td>{{ g.razonSocial }}<small>{{ g.concepto }}</small></td>
-                    <td class="num">{{ formatCOP(g.valor) }}</td>
+                    <th scope="row">{{ item.description }}<small>{{ shortDate(item.date) }}</small></th>
+                    <td class="num">{{ money(item.amount) }}</td>
                   </tr>
                 }
-                <tr class="jr-p4-gastos-total">
-                  <td>Total del día</td>
-                  <td class="num">{{ formatCOP(totalGastosDia()) }}</td>
+                <tr class="cb-row-total">
+                  <th scope="row">Total del día</th>
+                  <td class="num">{{ money(t.expenses.total) }}</td>
                 </tr>
               </tbody>
             </table>
-          } @else {
-            <p class="jr-p4-tenue">No hay gastos administrativos registrados para el {{ shortDayMonth() }}.</p>
           }
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
-  </div>
 
-  <!-- 4d · PDF del consolidado de Dominus -->
-  <section class="jr-p4-pdf">
-    <div id="jr-p4-pdf-zona">
-      <div
-        class="jr-archivo"
-        id="jr-p4-archivo-pdf"
-        data-acepta=".pdf"
-        [attr.data-estado]="loadedPdf ? 'cargado' : 'vacio'"
-        [class.is-arrastre]="isDraggingPdf"
+    <section class="cb-card" aria-labelledby="cb-pdf-title">
+      <h2 id="cb-pdf-title">PDF del consolidado de Dominus</h2>
+      <p class="cb-muted">Carga el PDF de Dominus; el archivo final incluirá la página de saldo en caja al final.</p>
+
+      <label
+        class="cb-drop"
+        [class.cb-drop--over]="dragOver()"
+        [class.cb-drop--loaded]="pdfName() !== null"
+        for="cb-pdf-file"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave()"
-        (drop)="onDropPdf($event)">
-        <div class="jr-archivo-vacio">
-          <span class="jr-archivo-icono">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <path d="M17 8l-5-5-5 5M12 3v12" />
-            </svg>
-          </span>
-          <span class="jr-archivo-textos">
-            <b>PDF del consolidado de Dominus</b>
-            <small>{{ pdfEmptyHelpText() }}</small>
-          </span>
-          @if (!isClosed()) {
-            <label class="jr-btn jr-btn--sec jr-btn--sm jr-accion">
-              Elegir archivo
-              <input type="file" accept=".pdf,application/pdf" hidden (change)="onFileSelected($event)" />
-            </label>
-          }
-        </div>
-        <div class="jr-archivo-cargado">
-          <span class="jr-archivo-icono jr-archivo-icono--ok">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-              <path d="M9 15l2 2 4-4" />
-            </svg>
-          </span>
-          <span class="jr-archivo-textos">
-            <b class="jr-archivo-nombre">{{ loadedPdf?.name }}</b>
-            <small class="jr-archivo-meta">Listo: al descargar se agrega la tabla de saldo en caja como última página</small>
-          </span>
-          @if (!isClosed()) {
-            <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm jr-accion" (click)="clearPdf()">
-              Quitar
-            </button>
-          }
-        </div>
-      </div>
-    </div>
-    <button
-      type="button"
-      class="jr-btn jr-btn--sec"
-      id="jr-p4-btn-pdf"
-      [class.is-bloqueado]="!loadedPdf"
-      [attr.aria-disabled]="!loadedPdf"
-      [attr.title]="loadedPdf ? 'PDF de Dominus con la tabla de saldo en caja como última página' : 'Primero adjunta el PDF del consolidado de Dominus'"
-      (click)="downloadFinalPdf()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <path d="M7 10l5 5 5-5M12 15V3" />
-      </svg>
-      Descargar PDF final
-    </button>
-  </section>
-
-  <!-- Pie de navegación y completado del paso -->
-  <footer class="jr-jornada-pie">
-    <a class="jr-btn jr-btn--ghost" routerLink="/jornada/electronicos" id="jr-btn-anterior">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M19 12H5M12 19l-7-7 7-7" />
-      </svg>
-      Anterior
-    </a>
-    <div class="jr-jornada-pie-acciones">
-      <span class="jr-jornada-pie-nota" id="jr-pie-nota">
-        @if (isClosed()) {
-          Jornada cerrada · solo lectura
-        } @else if (isStep4Completed()) {
-          Paso completo
+        (drop)="onDrop($event)"
+      >
+        @if (pdfName(); as name) {
+          <b>{{ name }}</b>
+          <small>{{ fileSize(pdfSize()) }} · listo para descargar con el saldo en caja</small>
+        } @else {
+          <b>Arrastra el PDF aquí o haz clic para elegirlo</b>
+          <small>Solo archivos .pdf de hasta 25 MB</small>
         }
-      </span>
-      @if (!isClosed()) {
+      </label>
+      <input
+        id="cb-pdf-file"
+        class="cb-file"
+        type="file"
+        accept="application/pdf,.pdf"
+        (change)="onFileSelected($event)"
+      />
+
+      @if (pdfError(); as message) {
+        <span class="cb-error" role="alert">{{ message }}</span>
+      }
+
+      <div class="cb-actions">
+        @if (pdfName()) {
+          <button type="button" class="cb-btn cb-btn--ghost" (click)="removePdf()">Quitar PDF</button>
+        }
         <button
           type="button"
-          class="jr-btn jr-btn--sec jr-accion"
-          id="jr-btn-completo"
-          [disabled]="isCompleting"
-          (click)="completeStep4()">
-          {{ isStep4Completed() ? 'Paso 4 completado' : (isCompleting ? 'Completando…' : 'Marcar paso como completo') }}
+          class="cb-btn cb-btn--sec"
+          [disabled]="!canDownload()"
+          [attr.title]="pdfName() ? null : 'Primero carga el PDF del consolidado de Dominus'"
+          (click)="downloadFinalPdf()"
+        >
+          {{ generating() ? 'Generando PDF…' : 'Descargar PDF final' }}
         </button>
-      }
-      <a class="jr-btn jr-btn--pri" routerLink="/jornada/inventario" id="jr-btn-siguiente">
-        Siguiente
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      </a>
-    </div>
-  </footer>
-</div>
+        <button
+          type="button"
+          class="cb-btn"
+          [disabled]="!canEdit() || !canComplete() || completing()"
+          [attr.title]="canComplete() ? null : 'Aún faltan datos para completar el paso'"
+          (click)="completeStep()"
+        >
+          {{ completing() ? 'Completando…' : completed() ? 'Paso completado' : 'Completar paso 4' }}
+        </button>
+      </div>
+    </section>
+  }
+</section>
 
-<!-- Diálogo: Registrar pago desde el fondo -->
-@if (isPaymentDialogOpen) {
-  <div class="apple-dialog-scrim open" id="jr-p4-dialogo-pago" (click)="onScrimClick($event)">
-    <div class="apple-dialog-card" role="dialog" aria-modal="true" aria-labelledby="jr-p4-dlg-title">
-      <div class="dialog-header">
-        <div class="dialog-titles">
-          <h3 id="jr-p4-dlg-title">Registrar pago desde el fondo</h3>
-          <p>El pago se descuenta del fondo; si queda saldo, pasa al siguiente periodo.</p>
+@if (paymentOpen()) {
+  <div class="cb-scrim" (click)="closePayment()" (keydown.escape)="closePayment()" role="presentation">
+    <div
+      class="cb-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cb-pay-title"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="closePayment()"
+    >
+      <h3 id="cb-pay-title">Registrar pago desde el fondo</h3>
+      <p class="cb-muted">El saldo disponible se valida para la fecha seleccionada antes de registrar el pago.</p>
+
+      <div class="cb-dialog-grid">
+        <div class="cb-field">
+          <label for="cb-pay-date">Fecha <span aria-hidden="true">*</span></label>
+          <input
+            id="cb-pay-date"
+            class="cb-input"
+            type="date"
+            [value]="paymentDate()"
+            [max]="date()"
+            (input)="onPaymentDate($event)"
+          />
         </div>
-        <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="closePaymentDialog()">✕</button>
+        <div class="cb-field">
+          <label for="cb-pay-amount">Valor <span aria-hidden="true">*</span></label>
+          <input
+            id="cb-pay-amount"
+            class="cb-input cb-input--num"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="Ej. 3.500.000"
+            [value]="paymentAmount()"
+            (input)="onPaymentAmount($event)"
+            (blur)="onPaymentAmountBlur()"
+            (keydown.enter)="submitPayment()"
+          />
+        </div>
       </div>
-      <div class="dialog-body jr-p4-dlg-cuerpo">
-        <div class="jr-p4-dlg-grid">
-          <div class="form-item">
-            <label class="item-label" for="jr-p4-pago-fecha">Fecha <span class="star">*</span></label>
-            <input
-              type="date"
-              class="flat-input"
-              id="jr-p4-pago-fecha"
-              [value]="paymentDate"
-              (input)="paymentDate = $any($event.target).value" />
-          </div>
-          <div class="form-item">
-            <label class="item-label" for="jr-p4-pago-valor">Valor <span class="star">*</span></label>
-            <input
-              type="text"
-              class="flat-input tnum"
-              id="jr-p4-pago-valor"
-              inputmode="decimal"
-              placeholder="Ej. 3.500.000"
-              autocomplete="off"
-              [value]="paymentAmountInput"
-              (input)="paymentAmountInput = $any($event.target).value" />
-          </div>
-        </div>
-        <div class="form-item">
-          <label class="item-label" for="jr-p4-pago-concepto">Concepto</label>
-          <select
-            class="flat-select"
-            id="jr-p4-pago-concepto"
-            [value]="paymentConcept"
-            (change)="paymentConcept = $any($event.target).value">
-            <option value="Arriendo">Arriendo</option>
-          </select>
-          <span class="jr-p4-dlg-ayuda">Por ahora solo el arriendo sale del fondo (pendiente de confirmar con el cliente).</span>
-        </div>
-        <p class="jr-p4-dlg-saldo" id="jr-p4-pago-saldo">
-          Saldo del fondo al {{ formattedPaymentDate() }}: {{ formatCOP(calc.fondo.acumulado) }}
-        </p>
-        @if (paymentError) {
-          <span class="jr-p1-error" id="jr-p4-pago-error" role="alert">{{ paymentError }}</span>
-        }
+
+      <div class="cb-field">
+        <label for="cb-pay-desc">Concepto</label>
+        <input
+          id="cb-pay-desc"
+          class="cb-input"
+          type="text"
+          autocomplete="off"
+          [attr.maxlength]="descriptionMax"
+          [value]="paymentDescription()"
+          (input)="onPaymentDescription($event)"
+        />
       </div>
-      <div class="dialog-footer">
-        <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="closePaymentDialog()">Cancelar</button>
-        <button type="button" class="btn-solid-primary" (click)="savePayment()">Registrar pago</button>
+
+      @if (paymentError(); as message) {
+        <span class="cb-error" role="alert">{{ message }}</span>
+      }
+
+      <div class="cb-actions">
+        <button type="button" class="cb-btn cb-btn--ghost" [disabled]="savingPayment()" (click)="closePayment()">Cancelar</button>
+        <button type="button" class="cb-btn" [disabled]="savingPayment()" (click)="submitPayment()">
+          {{ savingPayment() ? 'Registrando…' : 'Registrar pago' }}
+        </button>
       </div>
     </div>
   </div>
 }
-
