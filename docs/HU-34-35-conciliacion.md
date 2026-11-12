@@ -14,6 +14,7 @@ Migración: **V25** (`V25__create_card_reconciliation.sql`). Verifica con el equ
 | `GET /reconciliation/qr/{date}/summary/{workerId}` | HU-42 #4: texto para WhatsApp con fecha, vendedor, turno, total QR y estado de cuadre. La imagen la dibuja el cliente. |
 | `GET /reconciliation/qr/{date}` | QR del día: Redeban contra planillas, por día y por vendedor, con la lista de transacciones **sin asignar** y su motivo (ambigua, sin hora, sin turno). |
 | `PUT /reconciliation/points/{date}` · `GET` | Total de Puntos Colombia del día y su comparación con las redenciones de las planillas. |
+| `GET /reconciliation/monthly/{yyyy-MM}` | C-05: tabla mensual de Credibanco, QR y Puntos Colombia con la comisión. Solo lectura para usuarios autenticados. |
 | `GET/PUT /parameters/{daily-savings\|credibanco-commission-rate}` · `GET .../history` | Configuración propia de Ventas con fecha de vigencia. |
 
 ## Reglas (tomadas de los Excel del cliente)
@@ -97,3 +98,37 @@ Texto para WhatsApp de Carlos: `curl -H "$H" localhost:8080/api/v1/sales/reconci
 curl -X PUT localhost:8080/api/v1/sales/reconciliation/points/2026-08-05 -H "$H" -H 'Content-Type: application/json' -d '{"total":41380}'
 ```
 → `status: MATCH`. En un día donde ninguna planilla tenga redenciones, el `GET` devuelve `COMPLETED_ZERO` sin digitar nada.
+
+## C-05 · Conciliaciones del mes
+
+`GET /api/v1/sales/reconciliation/monthly/2026-08` devuelve la tabla mensual calculada a partir de las conciliaciones diarias existentes. Es de solo lectura y no requiere migración ni tablas adicionales.
+
+`days` contiene una fila por cada día calendario del mes; los días sin movimientos se incluyen con importes en cero y `hasData: false`. `totals` contiene la suma del mes y `commission` informa la tasa aplicada, su fecha de vigencia, la base y el valor calculado.
+
+| Campo | Regla |
+|---|---|
+| `mastercard`, `visa`, `amex` | Totales de comprobantes del día registrados en HU-34. |
+| `totalEds` | Mastercard + Visa; excluye Amex, QR y comprobantes de madrugada, según la fórmula del reporte diario. |
+| `qr`, `qrSource` | Total Redeban si hay transacciones importadas para el día; en caso contrario, suma de los QR declarados en planillas. El origen puede ser `REDEBAN`, `PLANILLA` o `NONE`. |
+| `totalWithQr` | `totalEds + qr`. |
+| `points` | Total diario de Puntos Colombia registrado en HU-35; cero si no se cargó. |
+| `commission` | Tasa vigente al último día del mes multiplicada por el `totalEds` del mes, redondeada HALF_UP a dos decimales. QR y Amex no hacen parte de la base. |
+
+Si el mes no tiene tasa de comisión vigente, el endpoint responde `404 SALES_PARAMETER_NOT_FOUND`. Un mes mal formado (distinto de `yyyy-MM`) responde `400 INVALID_RECONCILIATION_VALUE`, con `errors[0].field = "month"`.
+
+### Cifras de aceptación de agosto de 2026
+
+| Concepto | Total esperado |
+|---|---:|
+| Mastercard | $66.683.965 |
+| Visa | $32.184.828 |
+| Amex | $0 |
+| TOTAL EDS | $98.868.793 |
+| QR | $19.476.459 |
+| TOTAL con QR | $118.345.252 |
+| Puntos Colombia | $1.796.955 |
+| Comisión al 2,65 % | $2.620.023,01 |
+
+El cálculo exacto de comisión es $98.868.793 × 0,0265 = $2.620.023,0145; HALF_UP a dos decimales produce $2.620.023,01. Para el 05/08/2026 se esperan TOTAL EDS $5.691.312, QR $876.008, Puntos $41.380 y comisión $150.819,77.
+
+La prueba de aceptación mantiene los valores diarios reales disponibles del 1 al 5 de agosto. Como no se proporcionó el detalle de todos los días, el día 28 contiene el remanente necesario para verificar que los totales mensuales coinciden con el reporte del cliente; debe sustituirse cuando se disponga del desglose diario real.
