@@ -1,6 +1,9 @@
 package com.edu.unicauca.gasstation.backend.workers.api;
 
+import com.edu.unicauca.gasstation.backend.workers.exception.DayHoursNotRegisteredException;
+import com.edu.unicauca.gasstation.backend.workers.exception.DayHoursProcessingException;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidHoursRangeException;
 import com.edu.unicauca.gasstation.backend.workers.exception.RoleNotFoundException;
 import com.edu.unicauca.gasstation.backend.workers.exception.WorkerNotFoundException;
 import java.util.LinkedHashMap;
@@ -82,6 +85,24 @@ public class WorkersExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DuplicateDocumentException.class)
     public ProblemDetail handleDuplicateDocument(DuplicateDocumentException ex) {
         return problem(HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT", ex.getMessage());
+    }
+
+    /** The date has no processing state of worked hours (404). */
+    @ExceptionHandler(DayHoursNotRegisteredException.class)
+    public ProblemDetail handleDayHoursNotRegistered(DayHoursNotRegisteredException ex) {
+        return problem(HttpStatus.NOT_FOUND, "DAY_HOURS_NOT_REGISTERED", ex.getMessage());
+    }
+
+    /** The range of dates is reversed or too long (400). */
+    @ExceptionHandler(InvalidHoursRangeException.class)
+    public ProblemDetail handleInvalidHoursRange(InvalidHoursRangeException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_DATE_RANGE", ex.getMessage());
+    }
+
+    /** Keeping the hours of a date failed and the date was left pending (500). */
+    @ExceptionHandler(DayHoursProcessingException.class)
+    public ProblemDetail handleDayHoursProcessing(DayHoursProcessingException ex) {
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "DAY_HOURS_PROCESSING_FAILED", ex.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String detail) {
