@@ -25,7 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * bean validation lists all of them in {@code errors}; a value that is not a number reports the offending field too.
  */
 @RestControllerAdvice(assignableTypes = {CredibancoReconciliationController.class, QrPointsReconciliationController.class,
-        SalesParameterController.class})
+        MonthlyReconciliationController.class, SalesParameterController.class})
 public class CardReconciliationExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
