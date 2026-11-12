@@ -39,6 +39,8 @@ export class InfoTooltipComponent {
   readonly label = input('Más información');
   /** Shows the projected content instead of the "i" icon. */
   readonly inline = input(false);
+  /** With `inline`: the content is a term (a sigla) with a dotted underline and a help cursor. */
+  readonly term = input(false);
 
   readonly id = `info-tooltip-${nextId++}`;
   protected readonly hovered = signal(false);

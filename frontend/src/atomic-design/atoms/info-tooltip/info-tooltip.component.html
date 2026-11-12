@@ -1,4 +1,4 @@
-<button type="button" class="trigger" [class.trigger--inline]="inline()" [attr.aria-label]="inline() ? null : label()"
+<button type="button" class="trigger" [class.trigger--inline]="inline()" [class.trigger--term]="term()" [attr.aria-label]="inline() ? null : label()"
   [attr.aria-describedby]="id" [attr.aria-expanded]="open()" (click)="toggle()">
   <ng-content>
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"

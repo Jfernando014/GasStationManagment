@@ -12,3 +12,6 @@
 :host(.tag--green) { background: var(--semantic-green-subtle); color: var(--semantic-green-strong); }
 :host(.tag--blue) { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
 :host(.tag--gray) { background: var(--surface-subtle); color: var(--text-muted); }
+:host(.tag--amber) { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); }
+:host(.tag--red) { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); }
+:host(.tag--orange) { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
