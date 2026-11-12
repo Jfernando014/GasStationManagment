@@ -74,6 +74,21 @@ export const routes: Routes = [
         loadComponent: () => import('../features/shifts/pages/shifts-schedule-page/shifts-schedule-page.component').then(m => m.ShiftsSchedulePageComponent)
       },
       {
+        path: 'personal/horas-extra',
+        loadComponent: () => import('../features/overtime/pages/overtime-summary-page/overtime-summary-page.component')
+          .then(m => m.OvertimeSummaryPageComponent)
+      },
+      {
+        path: 'personal/horas-extra/trabajador/:workerId',
+        loadComponent: () => import('../features/overtime/pages/overtime-sheet-page/overtime-sheet-page.component')
+          .then(m => m.OvertimeSheetPageComponent)
+      },
+      {
+        path: 'personal/horas-extra/dia/:date',
+        loadComponent: () => import('../features/overtime/pages/overtime-day-page/overtime-day-page.component')
+          .then(m => m.OvertimeDayPageComponent)
+      },
+      {
         path: 'resultados/metas',
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
@@ -124,6 +139,19 @@ export const routes: Routes = [
       {
         path: 'configuracion/inspecciones',
         loadComponent: () => import('../features/configuration/pages/inspections-page/inspections-page.component').then(m => m.InspectionsPageComponent)
+      },
+      {
+        path: 'configuracion/parametros',
+        loadComponent: () => import('../features/configuration/pages/parameters-page/parameters-page.component')
+          .then(m => m.ParametersPageComponent),
+        children: [
+          {
+            path: 'horas-extra',
+            loadComponent: () => import('../features/overtime/pages/overtime-parameters-tab/overtime-parameters-tab.component')
+              .then(m => m.OvertimeParametersTabComponent)
+          },
+          { path: '', pathMatch: 'full', redirectTo: 'horas-extra' }
+        ]
       },
       {
         path: 'gastos',

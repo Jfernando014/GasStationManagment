@@ -120,6 +120,8 @@
             routerLinkActive="active">Vendedores</a>
           <a class="sub-item-link sub-nav-item" routerLink="/personal/turnos" routerLinkActive="active">Malla de
             turnos</a>
+          <a class="sub-item-link sub-nav-item" routerLink="/personal/horas-extra"
+            routerLinkActive="active" #overtimeNav="routerLinkActive">Horas extra</a>
         </div>
       </div>
 
@@ -198,6 +200,8 @@
             routerLinkActive="active">Inspecciones</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/productos"
             routerLinkActive="active">Productos</a>
+          <a class="sub-item-link sub-nav-item" routerLink="/configuracion/parametros"
+            routerLinkActive="active" #parametersNav="routerLinkActive">Parámetros</a>
         </div>
       </div>
 
@@ -229,7 +233,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : overtimeNav.isActive ? 'Personal / Horas extra' : parametersNav.isActive ? 'Configuración / Parámetros' : statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 
