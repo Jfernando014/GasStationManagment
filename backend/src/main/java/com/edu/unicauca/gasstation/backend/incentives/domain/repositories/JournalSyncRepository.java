@@ -13,6 +13,9 @@ public interface JournalSyncRepository {
 
     Optional<JournalSync> findByDate(LocalDate journalDate);
 
+    /** The latest date that has a state, whatever it is; empty if none has. */
+    Optional<LocalDate> findLastDate();
+
     /** Dates still pending, oldest first. */
     List<JournalSync> findPending();
 }
