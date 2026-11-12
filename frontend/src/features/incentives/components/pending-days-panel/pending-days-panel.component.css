@@ -9,12 +9,13 @@
   gap: 16px;
   min-height: 46px;
   padding-top: 6px;
-  border-top: 1px solid #F5EBC8;
+  border-top: 1px solid var(--surface-subtle);
   font-size: 13.5px;
   animation: day-in var(--duration-normal) var(--spring) backwards;
   animation-delay: calc(var(--i, 0) * 40ms);
 }
 
+.day:first-child { border-top: 0; padding-top: 0; }
 .day:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 6px; }
 
 @keyframes day-in {
@@ -29,7 +30,7 @@
 .done app-tag { gap: 5px; }
 .actions { display: flex; gap: 6px; justify-content: flex-end; }
 
-.read-only { padding-top: 8px; border-top: 1px solid #F5EBC8; font-size: 13.5px; color: #334155; font-variant-numeric: tabular-nums; }
+.read-only { padding-top: 4px; font-size: 13.5px; color: #334155; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 720px) {
   .day { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-bottom: 8px; }

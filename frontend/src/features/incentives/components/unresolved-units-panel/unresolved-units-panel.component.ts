@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { WarningPanelComponent } from '../../../../atomic-design/molecules/warning-panel/warning-panel.component';
@@ -43,8 +43,6 @@ export class UnresolvedUnitsPanelComponent {
   readonly items = input.required<UnresolvedUnits[]>();
   /** Name of the month in lower case: "agosto". */
   readonly monthName = input.required<string>();
-
-  protected readonly open = signal(true);
 
   protected readonly rows = computed<UnresolvedRowView[]>(() => {
     const grouped = new Map<string, UnresolvedRowView>();
