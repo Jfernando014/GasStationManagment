@@ -37,6 +37,14 @@ public class WorkerDayHoursRepositoryImpl implements WorkerDayHoursRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public List<WorkerDayHours> findBetween(LocalDate from, LocalDate to) {
+        return repository.findByWorkDateBetweenOrderByWorkDateAscWorkerNameAsc(from, to).stream()
+                .map(WorkerDayHoursRepositoryImpl::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<WorkerDayHours> findByWorkerBetween(UUID workerId, LocalDate from, LocalDate to) {
         return repository.findByWorkerIdAndWorkDateBetweenOrderByWorkDateAsc(workerId, from, to).stream()
                 .map(WorkerDayHoursRepositoryImpl::toDomain)

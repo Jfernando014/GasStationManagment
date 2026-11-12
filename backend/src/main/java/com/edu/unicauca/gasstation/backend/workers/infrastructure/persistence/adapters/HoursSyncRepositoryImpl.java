@@ -31,6 +31,18 @@ public class HoursSyncRepositoryImpl implements HoursSyncRepository {
     }
 
     @Override
+    public List<HoursSync> findBetween(LocalDate from, LocalDate to) {
+        return repository.findByWorkDateBetweenOrderByWorkDateAsc(from, to).stream()
+                .map(HoursSyncRepositoryImpl::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<LocalDate> findLastDate() {
+        return repository.findLastWorkDate();
+    }
+
+    @Override
     public List<HoursSync> findPending() {
         return repository.findByStatusOrderByWorkDateAsc(SyncStatus.PENDING).stream()
                 .map(HoursSyncRepositoryImpl::toDomain)

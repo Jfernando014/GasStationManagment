@@ -14,6 +14,8 @@ public interface JpaWorkerDayHoursRepository extends JpaRepository<WorkerDayHour
 
     List<WorkerDayHoursEntity> findByWorkDateOrderByWorkerNameAscWorkerIdAsc(LocalDate workDate);
 
+    List<WorkerDayHoursEntity> findByWorkDateBetweenOrderByWorkDateAscWorkerNameAsc(LocalDate from, LocalDate to);
+
     List<WorkerDayHoursEntity> findByWorkerIdAndWorkDateBetweenOrderByWorkDateAsc(UUID workerId, LocalDate from,
                                                                                   LocalDate to);
 

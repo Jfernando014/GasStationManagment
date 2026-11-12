@@ -14,6 +14,9 @@ public interface WorkerDayHoursRepository {
     /** Records of the date ordered by worker name. */
     List<WorkerDayHours> findByDate(LocalDate workDate);
 
+    /** Records of every worker from {@code from} to {@code to}, both included, ordered by date. */
+    List<WorkerDayHours> findBetween(LocalDate from, LocalDate to);
+
     /** Records of one worker from {@code from} to {@code to}, both included, ordered by date. */
     List<WorkerDayHours> findByWorkerBetween(UUID workerId, LocalDate from, LocalDate to);
 }

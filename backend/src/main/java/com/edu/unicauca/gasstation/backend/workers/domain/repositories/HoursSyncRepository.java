@@ -13,6 +13,12 @@ public interface HoursSyncRepository {
 
     Optional<HoursSync> findByDate(LocalDate workDate);
 
+    /** States of every date from {@code from} to {@code to}, both included, ordered by date. */
+    List<HoursSync> findBetween(LocalDate from, LocalDate to);
+
+    /** The latest date that has a state, whatever it is; empty if none has. */
+    Optional<LocalDate> findLastDate();
+
     /** Dates still pending, oldest first. */
     List<HoursSync> findPending();
 
