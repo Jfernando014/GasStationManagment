@@ -42,6 +42,6 @@ public class InventoryAdditiveCatalogAdapter implements AdditiveCatalogPort {
     }
 
     private static AdditiveInfo toInfo(ProductInfo product) {
-        return new AdditiveInfo(product.id(), product.name(), product.category(), product.active(), product.price());
+        return new AdditiveInfo(product.id(), product.name(), product.active(), product.price());
     }
 }

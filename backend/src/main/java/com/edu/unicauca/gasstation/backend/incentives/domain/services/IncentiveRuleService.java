@@ -13,7 +13,6 @@ import com.edu.unicauca.gasstation.backend.incentives.domain.repositories.Incent
 import com.edu.unicauca.gasstation.backend.incentives.exception.DuplicateRuleException;
 import com.edu.unicauca.gasstation.backend.incentives.exception.IncentiveError;
 import com.edu.unicauca.gasstation.backend.incentives.exception.IncentiveException;
-import com.edu.unicauca.gasstation.backend.inventory.ProductCategory;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -99,12 +98,8 @@ public class IncentiveRuleService {
     }
 
     private AdditiveInfo requireAdditive(Long productId) {
-        AdditiveInfo product = catalog.findById(productId)
+        return catalog.findById(productId)
                 .orElseThrow(() -> new IncentiveException(IncentiveError.PRODUCT_NOT_FOUND, productId));
-        if (product.category() != ProductCategory.ADITIVO) {
-            throw new IncentiveException(IncentiveError.PRODUCT_NOT_ADDITIVE, product.name());
-        }
-        return product;
     }
 
     private static int requireValidValue(BigDecimal valuePerUnit) {
