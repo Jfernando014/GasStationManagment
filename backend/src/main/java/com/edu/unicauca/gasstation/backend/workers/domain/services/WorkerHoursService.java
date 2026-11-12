@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.workers.domain.services;
 
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.DayHours;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.HoursSync;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.JournalClosure;
@@ -27,9 +28,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class WorkerHoursService {
 
-    /** Longest range of dates accepted for the hours of a worker, both ends included. */
-    public static final int MAX_RANGE_DAYS = 62;
-
     private final WorkerHoursRegistrationService registration;
     private final WorkerDayHoursRepository hoursRepository;
     private final HoursSyncRepository syncRepository;
@@ -52,8 +50,8 @@ public class WorkerHoursService {
         if (to.isBefore(from)) {
             throw new InvalidHoursRangeException("La fecha final no puede ser anterior a la fecha inicial");
         }
-        if (ChronoUnit.DAYS.between(from, to) + 1 > MAX_RANGE_DAYS) {
-            throw new InvalidHoursRangeException("El rango no puede superar " + MAX_RANGE_DAYS + " días");
+        if (ChronoUnit.DAYS.between(from, to) + 1 > DayStaffQuery.MAX_RANGE_DAYS) {
+            throw new InvalidHoursRangeException("El rango no puede superar " + DayStaffQuery.MAX_RANGE_DAYS + " días");
         }
         Worker worker = workerRepository.findById(workerId).orElseThrow(() -> new WorkerNotFoundException(workerId));
         List<WorkerDayHours> days = hoursRepository.findByWorkerBetween(workerId, from, to);

@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.workers.api;
 
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.WorkerHoursDtos.DayHoursResponse;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.WorkerHoursDtos.SyncResponse;
 import com.edu.unicauca.gasstation.backend.workers.api.dtos.WorkerHoursDtos.WorkerHoursRangeResponse;
@@ -44,9 +45,10 @@ public class WorkerHoursController {
             description = "Los días guardados del trabajador entre las dos fechas (ambas incluidas), en orden de "
                     + "fecha, con el total de horas. Un día en el que estaba en la malla y no trabajó aparece con 0 "
                     + "horas y su novedad. Las fechas del rango que están pendientes de procesar se listan aparte "
-                    + "porque no suman al total. El rango no puede superar 62 días.")
+                    + "porque no suman al total. El rango no puede superar " + DayStaffQuery.MAX_RANGE_DAYS + " días.")
     @ApiResponse(responseCode = "200", description = "Horas del trabajador en el rango")
-    @ApiResponse(responseCode = "400", description = "Fechas con formato inválido, rango invertido o de más de 62 días",
+    @ApiResponse(responseCode = "400", description = "Fechas con formato inválido, rango invertido o de más de "
+            + DayStaffQuery.MAX_RANGE_DAYS + " días",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "404", description = "No existe el trabajador",
