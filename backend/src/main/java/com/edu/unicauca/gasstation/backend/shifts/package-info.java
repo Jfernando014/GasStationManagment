@@ -13,12 +13,11 @@
  *       ({@link com.edu.unicauca.gasstation.backend.shifts.holidays.HolidayQuery}).</li>
  *   <li>{@code spi}: what other modules implement for this one, so it never depends on them. {@code workers}
  *       implements {@link com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory} and {@code sales}
- *       implements {@link com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort}; until {@code sales} does,
- *       a temporary in-memory implementation of {@code infrastructure.journal} is used.</li>
+ *       implements {@link com.edu.unicauca.gasstation.backend.shifts.spi.DayJournalPort}.</li>
  * </ul>
  *
  * <p>Layers: {@code api} (REST controllers and DTOs) and {@code infrastructure} (persistence, mappers, the catalog
- * seed and the temporary journal) depend on {@code domain} (pure models, repository interfaces and use cases);
+ * seed) depend on {@code domain} (pure models, repository interfaces and use cases);
  * {@code domain} depends on neither. Errors are {@code exception.ShiftException} with a {@code exception.ShiftError}.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Shifts")
