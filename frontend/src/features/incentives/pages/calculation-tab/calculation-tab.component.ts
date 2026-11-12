@@ -5,12 +5,9 @@ import { Subscription } from 'rxjs';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
-import {
-  SelectFieldComponent, SelectOption
-} from '../../../../atomic-design/molecules/select-field/select-field.component';
-import {
-  addMonths, capitalize, monthLabel, monthOf, stationToday
-} from '../../../../shared/helpers/shift-display.helpers';
+import { SelectFieldComponent } from '../../../../atomic-design/molecules/select-field/select-field.component';
+import { monthName, monthOptions } from '../../../../shared/helpers/month-options.helpers';
+import { monthOf, stationToday } from '../../../../shared/helpers/shift-display.helpers';
 import { MonthSummaryComponent } from '../../components/month-summary/month-summary.component';
 import { PendingDaysPanelComponent } from '../../components/pending-days-panel/pending-days-panel.component';
 import { UnresolvedUnitsPanelComponent } from '../../components/unresolved-units-panel/unresolved-units-panel.component';
@@ -22,26 +19,6 @@ import { AdditiveSalesService } from '../../services/additive-sales.service';
 import { IncentiveCalculationService } from '../../services/incentive-calculation.service';
 
 type CalculationView = 'loading' | 'invalid' | 'error' | 'empty' | 'ready';
-
-/** "agosto" from "2026-08". */
-function monthName(month: string): string {
-  return monthLabel(month).split(' ')[0];
-}
-
-/** "Agosto 2026", with "· hasta hoy" for the month in progress. */
-function optionLabel(month: string, current: string): string {
-  const [name, , year] = monthLabel(month).split(' ');
-  return `${capitalize(name)} ${year}${month === current ? ' · hasta hoy' : ''}`;
-}
-
-/** Every month from the start of the calculation to the current one, the newest first. */
-function monthOptions(current: string): SelectOption<string>[] {
-  const options: SelectOption<string>[] = [];
-  for (let month = current; month >= INCENTIVES_START_MONTH; month = addMonths(month, -1)) {
-    options.push({ value: month, label: optionLabel(month, current) });
-  }
-  return options;
-}
 
 /** "Cálculo del mes" tab: what each seller earns for the additives sold in a month. */
 @Component({
@@ -65,7 +42,7 @@ export class CalculationTabComponent {
 
   private readonly currentMonth = monthOf(stationToday());
   protected readonly monthControl = new FormControl<string | null>(this.currentMonth);
-  protected readonly monthOptions = monthOptions(this.currentMonth);
+  protected readonly monthOptions = monthOptions(INCENTIVES_START_MONTH, this.currentMonth);
 
   /** Month on screen, "yyyy-MM". */
   protected readonly month = signal(this.currentMonth);
