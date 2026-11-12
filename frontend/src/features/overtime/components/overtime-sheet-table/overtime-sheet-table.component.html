@@ -1,0 +1,71 @@
+<section class="card">
+  <div class="scroll">
+    <table>
+      <caption class="jr-sr">Horas de cada día de la quincena</caption>
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Día</th>
+          <th scope="col">Turno</th>
+          <th scope="col" class="num">Horas</th>
+          @if (mixed()) {
+            <th scope="col" class="version">
+              <app-info-tooltip [inline]="true" [term]="true" text="Versión de los parámetros con la que se calculó el día" label="Parám.">Parám.</app-info-tooltip>
+            </th>
+          }
+          @for (head of heads; track head.category) {
+            <th scope="col" class="num category">
+              <app-info-tooltip [inline]="true" [term]="true" [text]="head.tooltip" [label]="head.category">{{ head.category }}</app-info-tooltip>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (day of days(); track day.date) {
+          <tr [class.rest]="day.rest" [class.holiday]="day.holiday" [style.--i]="$index">
+            <th scope="row" class="date">{{ day.date }}</th>
+            <td [class.sunday]="day.sunday">
+              {{ day.day }}
+              @if (day.holidayTag) {
+                <app-tag variant="orange" class="holiday-tag">Festivo</app-tag>
+              }
+            </td>
+            <td>
+              @if (day.code) {
+                <app-shift-chip [code]="day.code" />
+              } @else {
+                <span aria-hidden="true">—</span>
+                <span class="jr-sr">Sin turno trabajado</span>
+              }
+            </td>
+            <td class="num" [class.zero]="day.hours === 0">{{ day.hours }}</td>
+            @if (mixed()) {
+              <td class="version">
+                <span class="ver" [class.is-new]="day.isNewVersion" [attr.title]="day.versionTitle">{{ day.version }}</span>
+              </td>
+            }
+            @for (cell of day.cells; track $index) {
+              <td class="num" [class.zero]="cell.zero">{{ cell.text }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        @for (line of footer(); track line.kind) {
+          <tr [class]="'foot foot--' + line.kind">
+            <th scope="row" colspan="3">{{ line.label }}</th>
+            <td class="num">{{ line.hours === null ? '' : line.hours }}</td>
+            @if (mixed()) {
+              <td></td>
+            }
+            @for (cell of line.cells; track $index) {
+              <td class="num" [class.zero]="cell.zero">
+                <span [class.negative]="cell.negative">{{ cell.text }}</span>
+              </td>
+            }
+          </tr>
+        }
+      </tfoot>
+    </table>
+  </div>
+</section>

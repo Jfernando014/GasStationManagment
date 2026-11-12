@@ -1,0 +1,69 @@
+<section class="card" aria-labelledby="adjustments-title">
+  <div class="head">
+    <h2 id="adjustments-title">Ajustes manuales</h2>
+    @if (canManage() && !formOpen()) {
+      <button appButton class="add-button" size="sm" type="button" (click)="openForm()">+ Agregar</button>
+    }
+  </div>
+
+  @if (formOpen()) {
+    <form class="form" novalidate (submit)="$event.preventDefault(); save()">
+      <app-segmented-control label="Tipo de ajuste" [options]="directionOptions" [value]="direction()"
+        (valueChange)="direction.set($event)" />
+      <div class="pair">
+        <app-select-field fieldId="adjustment-category" label="Categoría" [control]="form.controls.category"
+          [options]="categoryOptions" placeholder="Elige una categoría" [required]="true" />
+        <app-form-field fieldId="adjustment-hours" label="Horas" [control]="form.controls.hours" [required]="true"
+          [digitsOnly]="true" [maxLength]="3" inputMode="numeric" />
+      </div>
+      <app-form-field fieldId="adjustment-reason" label="Motivo" [control]="form.controls.reason" [required]="true"
+        [maxLength]="maxReasonLength" placeholder="Ej.: se quedó 1 hora más el 24 ago"
+        hint="Entre 3 y 255 caracteres." />
+      @if (formError()) {
+        <p class="error" role="alert">{{ formError() }}</p>
+      }
+      <div class="actions">
+        <button appButton size="sm" type="button" [disabled]="submitting()" (click)="closeForm()">Cancelar</button>
+        <button appButton variant="primary" size="sm" type="submit" [disabled]="submitting()"
+          [attr.aria-busy]="submitting()">Guardar ajuste</button>
+      </div>
+    </form>
+  }
+
+  @if (views().length === 0) {
+    <p class="empty">Sin ajustes en esta quincena.</p>
+  } @else {
+    <ul class="list">
+      @for (item of views(); track item.id) {
+        <li class="item" [attr.data-adjustment]="item.id" [style.--i]="$index">
+          <div class="line">
+            <span class="what">
+              <app-tag [variant]="item.tagVariant">{{ item.tag }}</app-tag>
+              <b>{{ item.hours }} de {{ item.category }}</b>
+            </span>
+            @if (canManage() && confirmingId() !== item.id) {
+              <button type="button" class="remove-button" (click)="askRemove(item.id)"
+                [attr.aria-label]="'Eliminar el ajuste de ' + item.hours + ' de ' + item.category">Eliminar</button>
+            }
+          </div>
+          <span class="reason">{{ item.reason }}</span>
+          <span class="who">{{ item.who }}</span>
+          @if (confirmingId() === item.id) {
+            <div class="confirm" role="alert">
+              <span>¿Eliminar este ajuste? El total se recalcula.</span>
+              <span class="confirm-actions">
+                <button appButton size="sm" type="button" [disabled]="removingId() === item.id"
+                  (click)="cancelRemove(item.id)">Cancelar</button>
+                <button appButton variant="danger" size="sm" type="button" [disabled]="removingId() === item.id"
+                  [attr.aria-busy]="removingId() === item.id" (click)="remove(item.id)">Eliminar</button>
+              </span>
+              @if (removeError()) {
+                <span class="error">{{ removeError() }}</span>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
