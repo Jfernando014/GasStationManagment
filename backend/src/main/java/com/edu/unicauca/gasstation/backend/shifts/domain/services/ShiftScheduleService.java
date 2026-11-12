@@ -1,6 +1,8 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.Role;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;
@@ -48,11 +50,6 @@ public class ShiftScheduleService {
     /** Time zone of the station. "Today" is always calculated with it; the server may run in UTC. */
     private static final ZoneId STATION_ZONE = ZoneId.of("America/Bogota");
 
-    /** Longest range assigned at once: two months, so a typo in a date cannot rewrite a whole year. */
-    private static final int MAX_RANGE_DAYS = 62;
-
-    private static final String REST = "DESCANSO";
-
     private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final ShiftCodeRepository shiftCodeRepository;
     private final ScheduleWorkerDirectory scheduleWorkerDirectory;
@@ -71,13 +68,7 @@ public class ShiftScheduleService {
     public ScheduleChange assign(UUID workerId, LocalDate date, String shiftCode, String note) {
         requireNotPast(date);
         ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
-        ShiftCode code = shiftCodeRepository.findByCode(shiftCode)
-                .filter(ShiftCode::isActive)
-                .orElseThrow(() -> new ShiftException(ShiftError.SHIFT_CODE_NOT_FOUND, shiftCode));
-        Role codeRole = code.getRole();
-        if (codeRole != null && !codeRole.getId().equals(worker.roleId())) {
-            throw new ShiftException(ShiftError.ROLE_MISMATCH, code.getCode(), codeRole.getName());
-        }
+        ShiftCode code = requireCodeForWorker(shiftCode, worker);
 
         ShiftAssignment assignment = shiftAssignmentRepository.findByWorkerIdAndWorkDate(workerId, date)
                 .orElse(null);
@@ -95,7 +86,8 @@ public class ShiftScheduleService {
      * the automatic rotation keeps it. With {@code leaveSundaysAsRest} the Sundays of the range get DESCANSO instead.
      *
      * @throws ShiftException {@code INVALID_DATE_RANGE} if {@code to} is before {@code from}
-     * @throws ShiftException {@code INVALID_RANGE} if the range is longer than 62 days
+     * @throws ShiftException {@code INVALID_RANGE} if the range is longer than {@link DayStaffQuery#MAX_RANGE_DAYS}
+     *                                         days, so a typo in a date cannot rewrite a whole year
      * @throws ShiftException {@code PAST_DATE} if {@code from} is before today
      * @throws ShiftException {@code WORKER_NOT_FOUND} if the worker does not exist
      * @throws ShiftException {@code WORKER_INACTIVE} if the worker is inactive
@@ -106,13 +98,13 @@ public class ShiftScheduleService {
     public ScheduleChange assignRange(UUID workerId, LocalDate from, LocalDate to, String shiftCode, String note,
                                       boolean leaveSundaysAsRest) {
         requireValidRange(from, to);
-        if (ChronoUnit.DAYS.between(from, to) + 1 > MAX_RANGE_DAYS) {
-            throw new ShiftException(ShiftError.INVALID_RANGE, "El rango no puede superar " + MAX_RANGE_DAYS + " días");
+        if (ChronoUnit.DAYS.between(from, to) + 1 > DayStaffQuery.MAX_RANGE_DAYS) {
+            throw new ShiftException(ShiftError.INVALID_RANGE, "El rango no puede superar " + DayStaffQuery.MAX_RANGE_DAYS + " días");
         }
         requireNotPast(from);
         ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
         ShiftCode code = requireCodeForWorker(shiftCode, worker);
-        ShiftCode rest = leaveSundaysAsRest ? requireCodeForWorker(REST, worker) : null;
+        ShiftCode rest = leaveSundaysAsRest ? requireCodeForWorker(DayLineup.REST_CODE, worker) : null;
 
         Map<LocalDate, ShiftAssignment> existing = shiftAssignmentRepository.findByWorkDateBetween(from, to).stream()
                 .filter(assignment -> assignment.getWorkerId().equals(workerId))
