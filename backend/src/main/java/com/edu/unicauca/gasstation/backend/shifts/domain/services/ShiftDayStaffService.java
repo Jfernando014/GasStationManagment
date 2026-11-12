@@ -322,14 +322,7 @@ public class ShiftDayStaffService {
     private DayContext load(LocalDate date, Set<UUID> extraWorkers) {
         List<ShiftAssignment> grid = shiftAssignmentRepository.findByWorkDateBetween(date, date);
         List<ShiftNovelty> novelties = shiftNoveltyRepository.findByWorkDateBetween(date, date);
-        Set<UUID> ids = new HashSet<>(extraWorkers);
-        grid.forEach(row -> ids.add(row.getWorkerId()));
-        novelties.forEach(novelty -> {
-            ids.add(novelty.getWorkerId());
-            if (novelty.getCounterpartWorkerId() != null) {
-                ids.add(novelty.getCounterpartWorkerId());
-            }
-        });
+        Set<UUID> ids = DayStaffAssembler.workerIds(grid, novelties, extraWorkers);
         return new DayContext(grid, novelties, DayLineup.of(grid, novelties), scheduleWorkerDirectory.getWorkersByIds(ids));
     }
 

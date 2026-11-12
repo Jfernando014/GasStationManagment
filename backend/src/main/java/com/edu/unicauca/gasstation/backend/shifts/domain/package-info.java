@@ -3,17 +3,22 @@
  * <ul>
  *   <li>{@code models}: {@code Role} (TITULAR or APOYO with its dispenser), {@code ShiftCode} (each of the 11 codes
  *       with up to two segments, its role, the pairing rule and the validation of its schedule),
- *       {@code ShiftSegment}, {@code ShiftPeriod} (DAY or NIGHT) and {@code ShiftAssignment} (the shift code of a
- *       worker on one day). Also the results of the schedule use cases: {@code ScheduleChange},
- *       {@code ScheduleView}, {@code WorkerShifts} and {@code DailyCoverage}.</li>
+ *       {@code ShiftSegment}, {@code ShiftPeriod} (DAY or NIGHT), {@code ShiftAssignment} (the shift code of a
+ *       worker on one day) and {@code ShiftNovelty} (a replacement, absence, shift change or swap of a day). Also
+ *       the results of the use cases: {@code ScheduleChange}, {@code ScheduleView}, {@code WorkerShifts},
+ *       {@code DailyCoverage}, {@code RotationPreview}, {@code DayLineup}, {@code DayStaffStep} and
+ *       {@code WorkerMonth}.</li>
  *   <li>{@code repositories}: interfaces the domain needs to store and read data, implemented by the
  *       {@code *RepositoryImpl} classes in {@code infrastructure.persistence.adapters}.</li>
  *   <li>{@code services}: use cases. {@code ShiftCatalogService} (catalog; also implements the public
- *       {@code ShiftExternalService}), {@code HolidayService} (Colombian holidays) and {@code ShiftScheduleService}
- *       (monthly schedule and its daily coverage).</li>
+ *       {@code ShiftExternalService}), {@code HolidayService} (Colombian holidays; also published through
+ *       {@code HolidayQueryService}), {@code ShiftScheduleService} (monthly schedule and its daily coverage),
+ *       {@code ShiftRotationService} (automatic rotation), {@code ShiftDayStaffService} (step 1 of the journal and
+ *       its novelties), {@code DayStaffQueryService} (the public day staff query) and
+ *       {@code ShiftWorkerMonthService} (the month of one worker).</li>
  * </ul>
  *
- * <p>Internal to the module: other modules read this data through
- * {@link com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService}, never through these classes.
+ * <p>Internal to the module: other modules read this data through the public interfaces of {@code catalog},
+ * {@code daystaff} and {@code holidays}, never through these classes.
  */
 package com.edu.unicauca.gasstation.backend.shifts.domain;

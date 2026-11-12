@@ -63,7 +63,7 @@ public class IncentiveExceptionHandler extends ResponseEntityExceptionHandler {
     private static HttpStatus statusOf(IncentiveError error) {
         return switch (error) {
             case PRODUCT_NOT_FOUND, ADDITIVE_SALES_NOT_REGISTERED -> HttpStatus.NOT_FOUND;
-            case PRODUCT_NOT_ADDITIVE, INVALID_VALUE_PER_UNIT, MONTH_IN_FUTURE, MONTH_BEFORE_START ->
+            case INVALID_VALUE_PER_UNIT, MONTH_IN_FUTURE, MONTH_BEFORE_START ->
                     HttpStatus.BAD_REQUEST;
             case PRODUCT_INACTIVE, VALID_FROM_NOT_AFTER_LAST_CLOSED, RULE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case ADDITIVE_SALES_PROCESSING_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;

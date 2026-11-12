@@ -20,6 +20,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class IncentiveRuleEntity {
 
+    /** Name of the unique index on {@code product_id} and {@code valid_from} (V27), used to recognize it. */
+    public static final String UNIQUE_PRODUCT_VALID_FROM_CONSTRAINT = "uq_incentive_rule_product_valid_from";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,6 +1,17 @@
 package com.edu.unicauca.gasstation.backend.workers.api;
 
+import com.edu.unicauca.gasstation.backend.workers.exception.AdjustmentNotFoundException;
+import com.edu.unicauca.gasstation.backend.workers.exception.DayHoursNotRegisteredException;
+import com.edu.unicauca.gasstation.backend.workers.exception.DayHoursProcessingException;
 import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidAdjustmentException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidFortnightException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidHoursRangeException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidParameterReasonException;
+import com.edu.unicauca.gasstation.backend.workers.exception.ParameterOutOfRangeException;
+import com.edu.unicauca.gasstation.backend.workers.exception.ParameterValidFromException;
+import com.edu.unicauca.gasstation.backend.workers.exception.ParameterVersionExistsException;
+import com.edu.unicauca.gasstation.backend.workers.exception.UnknownParameterRoleException;
 import com.edu.unicauca.gasstation.backend.workers.exception.RoleNotFoundException;
 import com.edu.unicauca.gasstation.backend.workers.exception.WorkerNotFoundException;
 import java.util.LinkedHashMap;
@@ -82,6 +93,72 @@ public class WorkersExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DuplicateDocumentException.class)
     public ProblemDetail handleDuplicateDocument(DuplicateDocumentException ex) {
         return problem(HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT", ex.getMessage());
+    }
+
+    /** The date has no processing state of worked hours (404). */
+    @ExceptionHandler(DayHoursNotRegisteredException.class)
+    public ProblemDetail handleDayHoursNotRegistered(DayHoursNotRegisteredException ex) {
+        return problem(HttpStatus.NOT_FOUND, "DAY_HOURS_NOT_REGISTERED", ex.getMessage());
+    }
+
+    /** The range of dates is reversed or too long (400). */
+    @ExceptionHandler(InvalidHoursRangeException.class)
+    public ProblemDetail handleInvalidHoursRange(InvalidHoursRangeException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_DATE_RANGE", ex.getMessage());
+    }
+
+    /** Keeping the hours of a date failed and the date was left pending (500). */
+    @ExceptionHandler(DayHoursProcessingException.class)
+    public ProblemDetail handleDayHoursProcessing(DayHoursProcessingException ex) {
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "DAY_HOURS_PROCESSING_FAILED", ex.getMessage());
+    }
+
+    /** The fortnight is not 1 or 2 of a month (400). */
+    @ExceptionHandler(InvalidFortnightException.class)
+    public ProblemDetail handleInvalidFortnight(InvalidFortnightException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_FORTNIGHT", ex.getMessage());
+    }
+
+    /** The manual adjustment is not valid (400). */
+    @ExceptionHandler(InvalidAdjustmentException.class)
+    public ProblemDetail handleInvalidAdjustment(InvalidAdjustmentException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_ADJUSTMENT", ex.getMessage());
+    }
+
+    /** The manual adjustment does not exist (404). */
+    @ExceptionHandler(AdjustmentNotFoundException.class)
+    public ProblemDetail handleAdjustmentNotFound(AdjustmentNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, "ADJUSTMENT_NOT_FOUND", ex.getMessage());
+    }
+
+    /** A parameter of the overtime sheet is out of its range (400). */
+    @ExceptionHandler(ParameterOutOfRangeException.class)
+    public ProblemDetail handleParameterOutOfRange(ParameterOutOfRangeException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "PARAMETER_OUT_OF_RANGE", ex.getMessage());
+    }
+
+    /** The reason of a new version of the parameters is too short or too long (400). */
+    @ExceptionHandler(InvalidParameterReasonException.class)
+    public ProblemDetail handleInvalidParameterReason(InvalidParameterReasonException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER_REASON", ex.getMessage());
+    }
+
+    /** A role of the overtime parameters is not in the shifts catalog (400). */
+    @ExceptionHandler(UnknownParameterRoleException.class)
+    public ProblemDetail handleUnknownParameterRole(UnknownParameterRoleException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "UNKNOWN_PARAMETER_ROLE", ex.getMessage());
+    }
+
+    /** Another version of the parameters starts the same day (409). */
+    @ExceptionHandler(ParameterVersionExistsException.class)
+    public ProblemDetail handleParameterVersionExists(ParameterVersionExistsException ex) {
+        return problem(HttpStatus.CONFLICT, "PARAMETER_VERSION_EXISTS", ex.getMessage());
+    }
+
+    /** The validity of a new version is not after the last day with hours kept (409). */
+    @ExceptionHandler(ParameterValidFromException.class)
+    public ProblemDetail handleParameterValidFrom(ParameterValidFromException ex) {
+        return problem(HttpStatus.CONFLICT, "PARAMETER_VALID_FROM_NOT_AFTER_LAST_REGISTERED", ex.getMessage());
     }
 
     private static ProblemDetail problem(HttpStatus status, String code, String detail) {

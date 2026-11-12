@@ -2,9 +2,12 @@ package com.edu.unicauca.gasstation.backend.statistics.infrastructure.persistenc
 
 import java.sql.DriverManager;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -22,8 +25,12 @@ class ShiftSaleHistoryMigrationTest {
     @Test
     void migratesAnEmptyDatabaseAndValidatesWithoutReapplyingAnything() {
         Flyway flyway = flyway("empty_statistics", null);
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(33);
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("34");
+        // Every script on the classpath is applied once; the count and the last version follow the scripts
+        var scripts = flyway.info().pending();
+        MigrationVersion lastVersion = Arrays.stream(scripts).map(MigrationInfo::getVersion).max(Comparator.naturalOrder())
+                .orElseThrow();
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(scripts.length);
+        assertThat(flyway.info().current().getVersion()).isEqualTo(lastVersion);
         assertThat(flyway.info().applied()).noneMatch(m -> m.getVersion() != null && "31".equals(m.getVersion().getVersion()));
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         flyway.validate();
@@ -50,7 +57,10 @@ class ShiftSaleHistoryMigrationTest {
         }
 
         Flyway upgrade = flyway("upgrade_statistics", null);
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(2);
+        // Every migration after version 32 is applied on top of the existing data
+        int pendingAfter32 = upgrade.info().pending().length;
+        assertThat(pendingAfter32).isPositive();
+        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(pendingAfter32);
         Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null)
                 .filter(m -> oldChecksums.containsKey(m.getVersion().getVersion()))
                 .forEach(m -> assertThat(m.getChecksum()).isEqualTo(oldChecksums.get(m.getVersion().getVersion())));

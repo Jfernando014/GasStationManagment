@@ -52,12 +52,6 @@ public class ShiftAssignmentRepositoryImpl implements ShiftAssignmentRepository 
         return repository.findByWorkerIdAndWorkDate(workerId, workDate).map(this::toDomain);
     }
 
-    @Override
-    @Transactional
-    public int deleteByWorkerInRange(UUID workerId, LocalDate from, LocalDate to) {
-        return repository.deleteByWorkerInRange(workerId, from, to);
-    }
-
     /** The shift code of the entity and its role must already be loaded (the JPA queries use an entity graph). */
     private ShiftAssignment toDomain(ShiftAssignmentEntity entity) {
         return ShiftAssignment.restore(entity.getId(), entity.getWorkerId(), entity.getWorkDate(),

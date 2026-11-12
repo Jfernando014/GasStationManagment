@@ -5,11 +5,15 @@ import static com.edu.unicauca.gasstation.backend.shifts.domain.services.Schedul
 
 import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftNovelty;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -79,6 +83,23 @@ final class DayStaffAssembler {
         ScheduleWorkerInfo otherWorker = other == null ? null : workers.get(other);
         return new DayStaff.Novelty(novelty.getType(), other, otherWorker == null ? null : otherWorker.fullName(),
                 novelty.getReason());
+    }
+
+    /**
+     * Ids of every worker of the grid and of the novelties (the one a novelty is about and its counterpart), plus
+     * {@code extra}, so the workers of a day or a range are read in one batch.
+     */
+    static Set<UUID> workerIds(Collection<ShiftAssignment> grid, Collection<ShiftNovelty> novelties,
+                               Collection<UUID> extra) {
+        Set<UUID> ids = new HashSet<>(extra);
+        grid.forEach(row -> ids.add(row.getWorkerId()));
+        novelties.forEach(novelty -> {
+            ids.add(novelty.getWorkerId());
+            if (novelty.getCounterpartWorkerId() != null) {
+                ids.add(novelty.getCounterpartWorkerId());
+            }
+        });
+        return ids;
     }
 
     private static int firstStartHour(DayStaff.Member member) {

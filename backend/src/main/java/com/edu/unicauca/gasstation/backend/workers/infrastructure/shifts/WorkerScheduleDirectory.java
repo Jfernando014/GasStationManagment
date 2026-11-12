@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.workers.domain.services;
+package com.edu.unicauca.gasstation.backend.workers.infrastructure.shifts;
 
 import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
 import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;

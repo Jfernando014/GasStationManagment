@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.domain.services;
 
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.DayLineup;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.RotationPreview.PhaseSource;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.RotationPreview.RowStatus;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.RotationPreview;
@@ -61,7 +62,6 @@ public class ShiftRotationService {
 
     private static final String DAY = "DIA";
     private static final String NIGHT = "NOCHE";
-    private static final String REST = "DESCANSO";
     private static final String DIA6 = "DIA6";
     private static final String NINE_TO_SIX = "9-6";
 
@@ -217,7 +217,7 @@ public class ShiftRotationService {
         Map<String, ShiftCode> catalog = shiftCodeRepository.findActive().stream()
                 .collect(Collectors.toMap(ShiftCode::getCode, Function.identity()));
         RotationPlanner.Codes codes = RotationPlanner.Codes.of(required(catalog, DAY), required(catalog, NIGHT),
-                required(catalog, REST), required(catalog, DIA6), required(catalog, NINE_TO_SIX),
+                required(catalog, DayLineup.REST_CODE), required(catalog, DIA6), required(catalog, NINE_TO_SIX),
                 List.copyOf(catalog.values()));
         Map<UUID, ScheduleWorkerInfo> active = scheduleWorkerDirectory.getActiveWorkers().stream()
                 .collect(Collectors.toMap(ScheduleWorkerInfo::id, Function.identity()));
@@ -417,7 +417,7 @@ public class ShiftRotationService {
             }
             boolean supportScheduled = days.stream()
                     .flatMap(day -> day.rows().stream())
-                    .anyMatch(row -> supportWorkers.contains(row.workerId()) && !REST.equals(row.shiftCode()));
+                    .anyMatch(row -> supportWorkers.contains(row.workerId()) && !DayLineup.REST_CODE.equals(row.shiftCode()));
             if (!supportScheduled) {
                 warnings.add(new RotationPreview.Warning("SUPPORT_NOT_SCHEDULED",
                         "El apoyo no tiene turnos asignados en el rango; los titulares de día quedan en DIA"));

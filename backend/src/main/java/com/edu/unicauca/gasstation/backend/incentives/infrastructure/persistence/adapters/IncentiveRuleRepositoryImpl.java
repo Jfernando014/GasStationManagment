@@ -26,7 +26,11 @@ public class IncentiveRuleRepositoryImpl implements IncentiveRuleRepository {
             // Flushed now so a concurrent duplicate surfaces here as a conflict
             return toDomain(repository.saveAndFlush(toEntity(rule)));
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateRuleException();
+            String cause = e.getMostSpecificCause().getMessage();
+            if (cause != null && cause.contains(IncentiveRuleEntity.UNIQUE_PRODUCT_VALID_FROM_CONSTRAINT)) {
+                throw new DuplicateRuleException();
+            }
+            throw e;
         }
     }
 

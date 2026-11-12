@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.api;
 
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.AssignRangeRequest;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.AssignShiftRequest;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.GenerateRotationRequest;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.RotationConfirmRequest;
@@ -130,13 +131,13 @@ public class ShiftScheduleController {
     @Operation(summary = "Assign a code to a worker in a range of days",
             description = "Saves the same code on every day of the range, replacing what each day had, with the "
                     + "optional note. With leaveSundaysAsRest the Sundays get DESCANSO. Every day is saved as manual, "
-                    + "so the automatic rotation keeps it. From today on, at most 62 days, active workers and codes of "
-                    + "their role (DESCANSO is valid for every role).")
+                    + "so the automatic rotation keeps it. From today on, at most " + DayStaffQuery.MAX_RANGE_DAYS
+                    + " days, active workers and codes of their role (DESCANSO is valid for every role).")
     @ApiResponse(responseCode = "200", description = "Days saved",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ScheduleUpdateResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid body, past start date, end date before start date or "
-            + "range longer than 62 days",
+            + "range longer than " + DayStaffQuery.MAX_RANGE_DAYS + " days",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "404", description = "Worker or active shift code not found",
