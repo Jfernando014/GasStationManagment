@@ -1,0 +1,63 @@
+:host { display: block; min-width: 0; }
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+}
+
+.scroll { overflow-x: auto; }
+
+table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+th, td { padding: 0 6px; text-align: left; vertical-align: middle; }
+th:first-child, td:first-child { padding-left: 22px; }
+th:last-child, td:last-child { padding-right: 18px; }
+
+.num { text-align: right; width: 58px; }
+
+thead th { height: 36px; border-bottom: 1px solid var(--border-main); font-size: 12px; font-weight: 600; color: var(--text-muted); }
+thead tr.group th { height: 26px; border-bottom: 0; }
+.group-label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-light); box-shadow: inset 0 -2px 0 var(--border-main); }
+.category { text-align: center; }
+
+.row { position: relative; height: 60px; border-bottom: 1px solid var(--surface-subtle); transition: background-color var(--duration-fast) var(--spring-fast); animation: row-in var(--duration-normal) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
+.row:hover,
+.row:focus-within { background: #FAFBFC; }
+
+.who { font-weight: normal; min-width: 200px; }
+.stretched { font-size: 15px; font-weight: 600; color: var(--text-heading); text-decoration: none; }
+/* The link covers the whole row so a click anywhere opens the sheet. */
+.stretched::after { content: ''; position: absolute; inset: 0; }
+.stretched:focus-visible { outline: none; }
+.stretched:focus-visible::after { outline: 2px solid var(--border-focus); outline-offset: -2px; border-radius: 6px; }
+.role { display: block; font-size: 12.5px; color: var(--text-muted); text-transform: capitalize; }
+
+.strong { font-weight: 600; color: var(--text-heading); }
+td { color: var(--text-heading); }
+.zero { color: #CBD5E1; }
+.negative { color: var(--semantic-red-strong); font-weight: 700; }
+.open { width: 28px; color: var(--text-light); text-align: right; }
+
+tfoot th, tfoot td { height: 50px; background: #F8FAFC; font-weight: 700; color: var(--text-heading); }
+
+.skeleton-row { height: 60px; border-bottom: 1px solid var(--surface-subtle); }
+.skeleton-row td { vertical-align: middle; }
+.skeleton-row app-skeleton + app-skeleton { margin-top: 6px; }
+.skeleton-row .end { margin-left: auto; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .row { animation: none; }
+  .row { transition: none; }
+}

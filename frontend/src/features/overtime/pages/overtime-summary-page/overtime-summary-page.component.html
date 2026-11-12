@@ -1,0 +1,55 @@
+<header class="title-row">
+  <div>
+    <h1>Horas extra y recargos</h1>
+    <p>Lo que se le paga a cada trabajador por quincena, calculado con las jornadas cerradas.</p>
+  </div>
+  <div class="controls">
+    <a class="params-link" routerLink="/configuracion/parametros/horas-extra">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>
+      Parámetros
+    </a>
+    <app-select-field class="month" fieldId="overtime-month" label="Mes" [labelHidden]="true"
+      [control]="monthControl" [options]="monthOptions" [required]="true" />
+    <app-segmented-control label="Quincena" [options]="fortnightOptions()" [value]="fortnight()"
+      (valueChange)="selectFortnight($event)" />
+  </div>
+</header>
+
+@if (summary(); as data) {
+  <app-overtime-notice [dates]="data.affectedDates" [month]="month()" [fortnight]="fortnight()" />
+}
+
+@switch (view()) {
+  @case ('error') {
+    <section class="card">
+      <app-empty-state tone="error" heading="No pudimos cargar las horas" [description]="errorMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76M12 20h.01" /></svg>
+        <button appButton type="button" (click)="retry()">Reintentar</button>
+      </app-empty-state>
+    </section>
+  }
+  @case ('empty') {
+    <section class="card">
+      @if (isFuture()) {
+        <app-empty-state heading="Todavía no hay horas en esta quincena"
+          [description]="'Las horas aparecen a medida que se cierran las jornadas ' + periodText() + '.'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+        </app-empty-state>
+      } @else {
+        <app-empty-state heading="No hay horas en esta quincena"
+          [description]="'Ninguna jornada cerrada ' + periodText() + ' dejó horas registradas.'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+        </app-empty-state>
+      }
+    </section>
+  }
+  @default {
+    <app-overtime-summary-table [rows]="summary()?.workers ?? []" [loading]="view() === 'loading'"
+      [month]="month()" [fortnight]="fortnight()" />
+    <p class="hint">Toca un trabajador para ver su sábana día por día. Pasa el mouse o enfoca una sigla para ver qué significa.</p>
+  }
+}

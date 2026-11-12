@@ -1,0 +1,21 @@
+@if (rows().length > 0) {
+  <app-warning-panel [collapsible]="true" [open]="open()" (openChange)="open.set($event)">
+    @if (rows().length === 1) {
+      <b>1 día con datos incompletos</b>
+    } @else {
+      <b>{{ rows().length }} días con datos incompletos</b>
+    }
+    · los totales pueden cambiar cuando se resuelvan
+
+    <ul panelDetails class="list">
+      @for (row of rows(); track row.date) {
+        <li class="row" [style.--i]="$index">
+          <span class="date">{{ row.label }}</span>
+          <span class="message">{{ row.message }}</span>
+          <a [routerLink]="['/personal/horas-extra/dia', row.date]" [queryParams]="queryParams()"
+            [attr.aria-label]="row.link + ' de ' + row.label">{{ row.link }}</a>
+        </li>
+      }
+    </ul>
+  </app-warning-panel>
+}
