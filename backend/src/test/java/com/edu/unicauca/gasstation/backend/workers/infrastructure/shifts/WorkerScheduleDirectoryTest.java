@@ -1,4 +1,4 @@
-package com.edu.unicauca.gasstation.backend.workers.domain.services;
+package com.edu.unicauca.gasstation.backend.workers.infrastructure.shifts;
 
 import static com.edu.unicauca.gasstation.backend.workers.WorkerTestData.SUPPORT_ROLE_ID;
 import static com.edu.unicauca.gasstation.backend.workers.WorkerTestData.TITULAR_ROLE_ID;
