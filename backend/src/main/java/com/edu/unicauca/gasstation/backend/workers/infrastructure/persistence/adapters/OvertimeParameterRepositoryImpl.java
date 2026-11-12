@@ -33,14 +33,18 @@ public class OvertimeParameterRepositoryImpl implements OvertimeParameterReposit
             // Flushed now so a concurrent duplicate surfaces here as a conflict
             return toDomain(repository.saveAndFlush(toEntity(parameters)));
         } catch (DataIntegrityViolationException e) {
-            throw new ParameterVersionExistsException(parameters.validFrom());
+            String cause = e.getMostSpecificCause().getMessage();
+            if (cause != null && cause.contains(OvertimeParameterEntity.UNIQUE_VALID_FROM_CONSTRAINT)) {
+                throw new ParameterVersionExistsException(parameters.validFrom());
+            }
+            throw e;
         }
     }
 
     private static OvertimeParameters toDomain(OvertimeParameterEntity entity) {
         return new OvertimeParameters(entity.getId(), entity.getValidFrom(), entity.getNightStartHour(),
                 entity.getRestHours(), entity.getRestMinShiftHours(), entity.getFixedHedoHours(),
-                entity.getFixedHedoRoles(), entity.getCreatedAt(), entity.getCreatedBy());
+                entity.getFixedHedoRoles(), entity.getReason(), entity.getCreatedAt(), entity.getCreatedBy());
     }
 
     private static OvertimeParameterEntity toEntity(OvertimeParameters parameters) {
@@ -51,6 +55,7 @@ public class OvertimeParameterRepositoryImpl implements OvertimeParameterReposit
         entity.setRestMinShiftHours(parameters.restMinShiftHours());
         entity.setFixedHedoHours(parameters.fixedHedoHours());
         entity.setFixedHedoRoles(new HashSet<>(parameters.fixedHedoRoles()));
+        entity.setReason(parameters.reason());
         entity.setCreatedAt(parameters.createdAt());
         entity.setCreatedBy(parameters.createdBy());
         return entity;

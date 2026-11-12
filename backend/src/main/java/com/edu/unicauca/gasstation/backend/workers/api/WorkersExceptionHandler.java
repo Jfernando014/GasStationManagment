@@ -7,6 +7,7 @@ import com.edu.unicauca.gasstation.backend.workers.exception.DuplicateDocumentEx
 import com.edu.unicauca.gasstation.backend.workers.exception.InvalidAdjustmentException;
 import com.edu.unicauca.gasstation.backend.workers.exception.InvalidFortnightException;
 import com.edu.unicauca.gasstation.backend.workers.exception.InvalidHoursRangeException;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidParameterReasonException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterOutOfRangeException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterValidFromException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterVersionExistsException;
@@ -134,6 +135,12 @@ public class WorkersExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ParameterOutOfRangeException.class)
     public ProblemDetail handleParameterOutOfRange(ParameterOutOfRangeException ex) {
         return problem(HttpStatus.BAD_REQUEST, "PARAMETER_OUT_OF_RANGE", ex.getMessage());
+    }
+
+    /** The reason of a new version of the parameters is too short or too long (400). */
+    @ExceptionHandler(InvalidParameterReasonException.class)
+    public ProblemDetail handleInvalidParameterReason(InvalidParameterReasonException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER_REASON", ex.getMessage());
     }
 
     /** A role of the overtime parameters is not in the shifts catalog (400). */

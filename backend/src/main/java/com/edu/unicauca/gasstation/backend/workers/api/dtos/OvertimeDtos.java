@@ -10,6 +10,7 @@ import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeAdjustm
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeCategory;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeDay;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameterOverview;
+import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameterVersion;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameters;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeSheet;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeSummary;
@@ -243,6 +244,37 @@ public final class OvertimeDtos {
         }
     }
 
+    @Schema(description = "Versión de los parámetros dentro del historial, con el último día en que aplica")
+    public record ParameterVersionResponse(
+            @Schema(example = "1") Long id,
+            @Schema(description = "Primer día en que aplica", example = "2025-01-01") LocalDate validFrom,
+            @Schema(description = "Último día en que aplica: el día anterior al inicio de la versión siguiente; nulo "
+                    + "si no hay una versión posterior", example = "2026-09-09", nullable = true) LocalDate validTo,
+            @Schema(description = "Verdadero si es la versión que aplica hoy (hora de Bogotá)", example = "true")
+            boolean current,
+            @Schema(description = "Hora en que empieza la noche; termina a las 06:00", example = "19")
+            int nightStartHour,
+            @Schema(description = "Horas de descanso no pagado de un turno largo", example = "1") int restHours,
+            @Schema(description = "Horas que debe tener el turno para descontar el descanso", example = "12")
+            int restMinShiftHours,
+            @Schema(description = "Horas de HEDO fijas de la quincena", example = "8") int fixedHedoHours,
+            @Schema(description = "Roles con el interruptor de HEDO fijas encendido; los demás lo tienen apagado",
+                    example = "[\"APOYO\"]") List<String> fixedHedoRoles,
+            @Schema(description = "Motivo de la versión; nulo si no se dio", example = "Cambio de descanso desde "
+                    + "septiembre", nullable = true) String reason,
+            @Schema(description = "Usuario que creó la versión", example = "admin", nullable = true) String createdBy,
+            @Schema(description = "Momento en que se creó", example = "2026-08-16T15:04:05Z") Instant createdAt) {
+
+        public static ParameterVersionResponse from(OvertimeParameterVersion version) {
+            OvertimeParameters parameters = version.parameters();
+            return new ParameterVersionResponse(parameters.id(), parameters.validFrom(), version.validTo(),
+                    version.current(), parameters.nightStartHour(), parameters.restHours(),
+                    parameters.restMinShiftHours(), parameters.fixedHedoHours(),
+                    parameters.fixedHedoRoles().stream().sorted().toList(), parameters.reason(),
+                    parameters.createdBy(), parameters.createdAt());
+        }
+    }
+
     @Schema(description = "Parámetros vigentes en una fecha, los ya programados y el historial")
     public record ParameterOverviewResponse(
             @Schema(description = "Versión vigente en la fecha consultada") ParametersResponse active,
@@ -273,7 +305,9 @@ public final class OvertimeDtos {
             @Schema(description = "Horas de HEDO fijas de la quincena, de 0 a 80", example = "8")
             @NotNull(message = "Las horas de HEDO fijas son obligatorias") Integer fixedHedoHours,
             @Schema(description = "Roles con el interruptor de HEDO fijas encendido; vacío o ausente: todos apagados",
-                    example = "[\"APOYO\"]") List<String> fixedHedoRoles) {
+                    example = "[\"APOYO\"]") List<String> fixedHedoRoles,
+            @Schema(description = "Motivo del cambio, de 3 a 255 caracteres; opcional", example = "Cambio de descanso "
+                    + "desde septiembre", nullable = true) String reason) {
     }
 
     @Schema(description = "Ajuste manual de la sábana de un trabajador. Las horas suman (ADD) o restan (SUBTRACT)")

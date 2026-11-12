@@ -4,9 +4,11 @@ import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftCodeInfo;
 import com.edu.unicauca.gasstation.backend.shifts.catalog.ShiftExternalService;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameterHistory;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameterOverview;
+import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameterVersion;
 import com.edu.unicauca.gasstation.backend.workers.domain.models.OvertimeParameters;
 import com.edu.unicauca.gasstation.backend.workers.domain.repositories.HoursSyncRepository;
 import com.edu.unicauca.gasstation.backend.workers.domain.repositories.OvertimeParameterRepository;
+import com.edu.unicauca.gasstation.backend.workers.exception.InvalidParameterReasonException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterOutOfRangeException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterValidFromException;
 import com.edu.unicauca.gasstation.backend.workers.exception.ParameterVersionExistsException;
@@ -16,6 +18,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,9 +51,11 @@ public class OvertimeParameterService {
      * Creates a new version from {@code validFrom}.
      *
      * @param fixedHedoRoles roles with the fixed overtime switch on; every other role has it off
+     * @param reason         why the version is created; optional, blank counts as none
      */
     public OvertimeParameters create(LocalDate validFrom, int nightStartHour, int restHours, int restMinShiftHours,
-                                     int fixedHedoHours, Collection<String> fixedHedoRoles, String createdBy) {
+                                     int fixedHedoHours, Collection<String> fixedHedoRoles, String reason,
+                                     String createdBy) {
         Objects.requireNonNull(validFrom, "validFrom");
         requireInRange("nightStartHour", nightStartHour, OvertimeParameters.MIN_NIGHT_START_HOUR,
                 OvertimeParameters.MAX_NIGHT_START_HOUR);
@@ -59,6 +64,7 @@ public class OvertimeParameterService {
                 OvertimeParameters.MAX_REST_MIN_SHIFT_HOURS);
         requireInRange("fixedHedoHours", fixedHedoHours, 0, OvertimeParameters.MAX_FIXED_HEDO_HOURS);
         Set<String> roles = knownRoles(fixedHedoRoles);
+        String cleanReason = cleanReason(reason);
         syncRepository.findLastDate().filter(last -> !validFrom.isAfter(last)).ifPresent(last -> {
             throw new ParameterValidFromException(last);
         });
@@ -66,7 +72,24 @@ public class OvertimeParameterService {
             throw new ParameterVersionExistsException(validFrom);
         }
         return repository.save(new OvertimeParameters(null, validFrom, nightStartHour, restHours,
-                restMinShiftHours, fixedHedoHours, roles, Instant.now(clock), createdBy));
+                restMinShiftHours, fixedHedoHours, roles, cleanReason, Instant.now(clock), createdBy));
+    }
+
+    /** Every version newest first, each with the day it stops applying and whether it is the one in force today. */
+    public List<OvertimeParameterVersion> history() {
+        return OvertimeParameterHistory.of(repository.findAll()).versionsNewestFirst(LocalDate.now(clock));
+    }
+
+    private static String cleanReason(String reason) {
+        if (reason == null || reason.isBlank()) {
+            return null;
+        }
+        String clean = reason.strip();
+        if (clean.length() < OvertimeParameters.MIN_REASON_LENGTH || clean.length() > OvertimeParameters.MAX_REASON_LENGTH) {
+            throw new InvalidParameterReasonException(OvertimeParameters.MIN_REASON_LENGTH,
+                    OvertimeParameters.MAX_REASON_LENGTH);
+        }
+        return clean;
     }
 
     private Set<String> knownRoles(Collection<String> requested) {

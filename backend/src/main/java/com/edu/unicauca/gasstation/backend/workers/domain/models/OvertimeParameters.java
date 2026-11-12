@@ -13,10 +13,11 @@ import java.util.Set;
  * @param restMinShiftHours  hours a shift needs for the rest to be taken
  * @param fixedHedoHours     fixed overtime hours of a fortnight, for the roles that have the switch on
  * @param fixedHedoRoles     names of the roles with the fixed overtime switch on; the others have it off
+ * @param reason             why the version was created; null when none was given
  */
 public record OvertimeParameters(Long id, LocalDate validFrom, int nightStartHour, int restHours,
                                  int restMinShiftHours, int fixedHedoHours, Set<String> fixedHedoRoles,
-                                 Instant createdAt, String createdBy) {
+                                 String reason, Instant createdAt, String createdBy) {
 
     /** First hour of the morning, when the night ends. */
     public static final int NIGHT_END_HOUR = 6;
@@ -27,6 +28,8 @@ public record OvertimeParameters(Long id, LocalDate validFrom, int nightStartHou
     public static final int MIN_REST_MIN_SHIFT_HOURS = 1;
     public static final int MAX_REST_MIN_SHIFT_HOURS = 24;
     public static final int MAX_FIXED_HEDO_HOURS = 80;
+    public static final int MIN_REASON_LENGTH = 3;
+    public static final int MAX_REASON_LENGTH = 255;
 
     public OvertimeParameters {
         fixedHedoRoles = Set.copyOf(fixedHedoRoles);

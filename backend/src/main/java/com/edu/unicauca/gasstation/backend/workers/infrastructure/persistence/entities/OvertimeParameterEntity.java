@@ -50,6 +50,9 @@ public class OvertimeParameterEntity {
     @Column(name = "fixed_hedo_hours", nullable = false)
     private int fixedHedoHours;
 
+    @Column(length = 255)
+    private String reason;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
