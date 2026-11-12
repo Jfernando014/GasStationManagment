@@ -1,0 +1,119 @@
+<header class="title-row">
+  <div>
+    <h1>Parámetros de las horas extra</h1>
+    <p>Los cambios se guardan como una versión nueva con fecha. Lo ya calculado no se modifica.</p>
+  </div>
+  @if (canManage()) {
+    <button appButton variant="primary" type="button" class="new-version" (click)="openDrawer()">+ Nueva versión</button>
+  } @else {
+    <app-tag variant="gray">Solo lectura</app-tag>
+  }
+</header>
+
+@switch (state()) {
+  @case ('error') {
+    <section class="card">
+      <app-empty-state tone="error" heading="No pudimos cargar los parámetros" [description]="errorMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+        <button appButton type="button" (click)="retry()">Reintentar</button>
+      </app-empty-state>
+    </section>
+  }
+  @default {
+    <div class="layout">
+      <section class="card versions" aria-labelledby="versions-title" [attr.aria-busy]="state() === 'loading'">
+        <h2 id="versions-title">Versiones</h2>
+        @if (state() === 'loading') {
+          @for (n of skeletonItems; track n) {
+            <div class="version skeleton"><app-skeleton width="60%" /><app-skeleton width="80%" height="12px" /></div>
+          }
+        } @else {
+          <ul class="list">
+            @for (version of views(); track version.id) {
+              <li [style.--i]="$index">
+                <button type="button" class="version" [class.is-selected]="version.selected"
+                  [attr.aria-pressed]="version.selected" (click)="select(version.id)">
+                  <span class="line">
+                    <b>{{ version.title }}</b>
+                    <app-tag [variant]="version.tag.variant">{{ version.tag.label }}</app-tag>
+                  </span>
+                  <span class="dates">{{ version.dates }}</span>
+                  @if (version.reason) {
+                    <span class="reason">{{ version.reason }}</span>
+                  } @else {
+                    <span class="reason is-empty">Sin motivo</span>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="card detail" aria-labelledby="detail-title" [attr.aria-busy]="state() === 'loading'">
+        @if (selected(); as version) {
+          <div class="detail-head">
+            <h2 id="detail-title">Versión {{ version.number }}</h2>
+            @if (selectedTag(); as tag) {
+              <app-tag [variant]="tag.variant">{{ tag.label }}</app-tag>
+            }
+            <span class="period">{{ selectedPeriod() }}</span>
+          </div>
+          <dl class="values">
+            @for (item of details(); track item.label) {
+              <div class="row">
+                <dt>{{ item.label }}</dt>
+                <dd>{{ item.value }}</dd>
+              </div>
+            }
+            <div class="row">
+              <dt>Roles que reciben las HEDO fijas</dt>
+              <dd>
+                @if (roles().length === 0) {
+                  <span class="muted">Ninguno</span>
+                } @else {
+                  @for (role of roles(); track role) {
+                    <app-tag variant="gray" class="role">{{ role }}</app-tag>
+                  }
+                }
+              </dd>
+            </div>
+          </dl>
+
+          <div class="changes" aria-live="polite">
+            @if (changes(); as list) {
+              @if (list.length === 0) {
+                <span>No cambió ningún valor frente a la versión anterior.</span>
+              } @else {
+                <span>Lo que cambió frente a la versión anterior:</span>
+                <ul>
+                  @for (change of list; track change.label) {
+                    <li><b>{{ change.label }} · {{ change.from }} → {{ change.to }}</b></li>
+                  }
+                </ul>
+              }
+            } @else {
+              <span>Es la primera versión: son los valores iniciales.</span>
+            }
+          </div>
+          <p class="who">{{ selectedWho() }}</p>
+        } @else if (state() === 'loading') {
+          <div class="loading">
+            <app-skeleton width="40%" height="20px" />
+            @for (n of [0, 1, 2, 3, 4]; track n) {
+              <app-skeleton height="16px" />
+            }
+          </div>
+        } @else {
+          <p class="muted empty">Todavía no hay versiones de los parámetros.</p>
+        }
+      </section>
+    </div>
+  }
+}
+
+@if (canManage()) {
+  <app-parameter-version-drawer [open]="drawerOpen()" [versions]="versions()" (created)="reload()"
+    (closed)="closeDrawer()" />
+}
