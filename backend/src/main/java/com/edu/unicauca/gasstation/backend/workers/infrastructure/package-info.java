@@ -8,6 +8,10 @@
  *   <li>{@code persistence.adapters}: {@code WorkerRepositoryImpl}, the implementation of the domain repository
  *       interface; builds the list filters ({@code WorkerSpecifications}) and translates a duplicate document
  *       rejected by the database into a domain exception.</li>
+ *   <li>{@code persistence} also holds the entities, repositories and adapters of the worked hours and of their
+ *       processing state.</li>
+ *   <li>{@code listeners}: the listener of closed journals that keeps the worked hours.</li>
+ *   <li>{@code shifts}: the reader of the day staff, through the public query of that module.</li>
  * </ul>
  *
  * <p>Internal to the module: other modules must not use these classes.
