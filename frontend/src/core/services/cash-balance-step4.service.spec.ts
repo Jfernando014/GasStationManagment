@@ -1,7 +1,32 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+
 import { CashBalanceStep4Service } from './cash-balance-step4.service';
+import { CashBalanceStepResponseDto } from '../../shared/models/dtos/cash-balance-step4.dto';
+
+const response: CashBalanceStepResponseDto = {
+  table: {
+    date: '2026-08-05',
+    journalConsecutive: 293,
+    journalStatus: 'OPEN',
+    savingsFund: {
+      previousBalance: 3_750_000,
+      contribution: 250_000,
+      payments: 0,
+      accumulatedBalance: 4_000_000
+    },
+    expenses: { items: [], total: 0 },
+    cashBalance: 9_000_000,
+    dailyCash: 2_500_000,
+    planillaCashBalance: 11_500_000,
+    dominusAccumulatedBalance: null,
+    difference: null
+  },
+  canComplete: false,
+  missing: ['Falta el saldo acumulado de Dominus.'],
+  differenceStatus: null
+};
 
 describe('CashBalanceStep4Service', () => {
   let service: CashBalanceStep4Service;
@@ -12,59 +37,51 @@ describe('CashBalanceStep4Service', () => {
       providers: [provideHttpClient(), provideHttpClientTesting(), CashBalanceStep4Service]
     });
     service = TestBed.inject(CashBalanceStep4Service);
-    service.clearAllStoredData();
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-    service.clearAllStoredData();
+  afterEach(() => httpMock.verify());
+
+  it('loads the cash-balance table from the backend', () => {
+    service.getCashBalance('2026-08-05').subscribe(result => expect(result).toEqual(response));
+
+    const request = httpMock.expectOne('http://localhost:8080/api/v1/sales/cash-balance/2026-08-05');
+    expect(request.request.method).toBe('GET');
+    request.flush(response);
   });
 
-  it('should calculate authentic August 1, 2026 seed data (Planilla 289) faithfully', () => {
-    const calc = service.calculateStep4('2026-08-01');
-    expect(calc.planilla).toBe(289);
-    expect(calc.fondo.dias).toBe(12);
-    expect(calc.fondo.acumulado).toBe(3000000);
-    expect(calc.saldoAnterior).toBe(9364000);
-    expect(calc.origenAnterior).toBe('planilla histórica');
-    expect(calc.dinero).toBe(12516000);
-    expect(calc.saldoEfectivo).toBe(9364000 + (12516000 - 250000) - 0);
-    expect(calc.saldoJustificado).toBe(21630000 + 3000000 + 0);
-    expect(calc.saldoDominus).toBe(24629469);
-    expect(calc.diferencia).toBe(-531);
-    expect(calc.totalEnCaja).toBe(21630000 + 3000000);
+  it('saves the Dominus amount and returns the recalculated table', () => {
+    service.saveDominusBalance('2026-08-05', 11_500_000).subscribe();
+
+    const request = httpMock.expectOne('http://localhost:8080/api/v1/sales/cash-balance/2026-08-05/dominus');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ accumulatedBalance: 11_500_000 });
+    request.flush(response);
   });
 
-  it('should compute savings fund on August 5, 2026 as 16 days ($4,000,000)', () => {
-    const fondo = service.fondoArriendoAl('2026-08-05');
-    expect(fondo.dias).toBe(16);
-    expect(fondo.acumulado).toBe(4000000);
-    expect(fondo.ahorroHoy).toBe(250000);
-  });
+  it('registers a savings-fund payment', () => {
+    service
+      .registerFundPayment({ date: '2026-08-05', amount: 500_000, description: 'Arriendo' })
+      .subscribe();
 
-  it('should update cuadre state when consolidadoDominus matches Step 2 tirilla', () => {
-    service.saveCapturedData('2026-08-05', { consolidadoDominus: 14136817.4 });
-    const calc = service.calculateStep4('2026-08-05');
-    expect(calc.cuadre).toBe('cuadra');
-    expect(calc.planilla).toBe(293);
-  });
-
-  it('should register and remove a fund payment', () => {
-    let registeredId = '';
-    service.registerFundPayment('2026-08-05', 1000000, 'Arriendo').subscribe(p => {
-      registeredId = p.id;
+    const request = httpMock.expectOne('http://localhost:8080/api/v1/sales/savings-fund/payments');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      date: '2026-08-05',
+      amount: 500_000,
+      description: 'Arriendo'
     });
+    request.flush({ id: 1, type: 'PAYMENT', date: '2026-08-05', amount: 500_000, description: 'Arriendo' });
+  });
 
-    const req = httpMock.expectOne('http://localhost:8080/api/v1/sales/savings-fund/payments');
-    expect(req.request.method).toBe('POST');
-    req.flush({ id: 99 });
+  it('loads the fund balance for the requested date', () => {
+    service.getFundBalance('2026-08-05').subscribe(result => expect(result.balance).toBe(4_000_000));
 
-    const fondoAfter = service.fondoArriendoAl('2026-08-05');
-    expect(fondoAfter.totalPagosHoy).toBe(1000000);
-    expect(fondoAfter.acumulado).toBe(3000000);
-
-    service.removeFundPayment(registeredId);
+    const request = httpMock.expectOne(
+      request => request.url === 'http://localhost:8080/api/v1/sales/savings-fund/balance'
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('date')).toBe('2026-08-05');
+    request.flush({ date: '2026-08-05', balance: 4_000_000 });
   });
 });
-

@@ -1,15 +1,19 @@
 package com.edu.unicauca.gasstation.backend.sales;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceQueryService;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.CashMovementType;
+import com.edu.unicauca.gasstation.backend.sales.domain.models.DominusCashBalance;
+import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DominusCashBalanceRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.AdministrativeExpenseService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.CashService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.SavingsFundService;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.AdministrativeExpenseServiceConfiguration;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.AdministrativeExpenseRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.CashMovementRepositoryAdapter;
+import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.DominusCashBalanceRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.JournalReadAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.persistence.adapters.SavingsFundMovementRepositoryAdapter;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.services.CashServiceImpl;
@@ -18,12 +22,15 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -52,7 +59,8 @@ class CashBalanceQueryIntegrationTest {
     @Import({CashBalanceQueryService.class, JournalReadAdapter.class,
             SavingsFundMovementRepositoryAdapter.class, SavingsFundServiceImpl.class,
             AdministrativeExpenseRepositoryAdapter.class, AdministrativeExpenseServiceConfiguration.class,
-            CashMovementRepositoryAdapter.class, CashServiceImpl.class})
+            CashMovementRepositoryAdapter.class, CashServiceImpl.class,
+            DominusCashBalanceRepositoryAdapter.class})
     static class Application {
     }
 
@@ -62,6 +70,11 @@ class CashBalanceQueryIntegrationTest {
 
     private static final LocalDate DAY = LocalDate.of(2026, 8, 5);
 
+    /** The real implementation reads the sellers' closes; this test only needs what it answers for a date. */
+    @MockBean
+    private SellerCloseQuery sellerCloseQuery;
+    @Autowired
+    private DominusCashBalanceRepository dominusRepository;
     @Autowired
     private CashBalanceQuery cashBalanceQuery;
     @Autowired
@@ -75,7 +88,8 @@ class CashBalanceQueryIntegrationTest {
 
     @BeforeEach
     void cleanTables() {
-        jdbc.execute("TRUNCATE TABLE journals, savings_fund_movement, cash_movement, administrative_expense CASCADE");
+        jdbc.execute("TRUNCATE TABLE journals, savings_fund_movement, cash_movement, administrative_expense, "
+                + "dominus_cash_balance CASCADE");
     }
 
     private void insertJournal(LocalDate date, long consecutive, String status) {
@@ -138,5 +152,62 @@ class CashBalanceQueryIntegrationTest {
         assertThat(table.expenses().total()).isEqualByComparingTo("0");
         assertThat(table.savingsFund().accumulatedBalance()).isEqualByComparingTo("0");
         assertThat(table.cashBalance()).isEqualByComparingTo("0");
+    }
+
+    private static SellerCloseQuery.DaySummary daySummary(LocalDate date, long totalCash) {
+        BigDecimal zero = BigDecimal.ZERO;
+        return new SellerCloseQuery.DaySummary(date, cop(totalCash), zero, zero, zero, zero, zero, zero, zero,
+                zero, zero, zero, zero, zero, zero, 0, List.of());
+    }
+
+    @Test
+    void theDominusBalanceIsPersistedAndReplacedByDate() {
+        LocalDate firstOfAugust = LocalDate.of(2026, 8, 1);
+
+        dominusRepository.save(new DominusCashBalance(firstOfAugust, cop(24_629_469)));
+        Optional<DominusCashBalance> stored = dominusRepository.findByDate(firstOfAugust);
+        assertThat(stored).isPresent();
+        assertThat(stored.get().accumulatedBalance()).isEqualByComparingTo("24629469");
+
+        dominusRepository.save(new DominusCashBalance(firstOfAugust, cop(200)));
+        assertThat(dominusRepository.findByDate(firstOfAugust).orElseThrow().accumulatedBalance())
+                .isEqualByComparingTo("200");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dominus_cash_balance", Integer.class)).isEqualTo(1);
+        assertThat(dominusRepository.findByDate(firstOfAugust.plusDays(1))).isEmpty();
+    }
+
+    @Test
+    void differenceOfAugustFirstIsMinus531WithTheRealTables() {
+        LocalDate firstOfAugust = LocalDate.of(2026, 8, 1);
+        insertJournal(firstOfAugust, 280L, "OPEN");
+        cash.register(CashMovementType.INITIAL_BALANCE, firstOfAugust, cop(12_114_000), "Saldo inicial");
+        when(sellerCloseQuery.findDaySummary(firstOfAugust))
+                .thenReturn(Optional.of(daySummary(firstOfAugust, 12_516_000)));
+        dominusRepository.save(new DominusCashBalance(firstOfAugust, cop(24_629_469)));
+
+        CashBalanceTableInfo table = cashBalanceQuery.findDailyCashBalance(firstOfAugust).orElseThrow();
+
+        assertThat(table.cashBalance()).isEqualByComparingTo("12114000");
+        assertThat(table.dailyCash()).isEqualByComparingTo("12516000");
+        assertThat(table.planillaCashBalance()).isEqualByComparingTo("24630000");
+        assertThat(table.dominusAccumulatedBalance()).isEqualByComparingTo("24629469");
+        assertThat(table.difference()).isEqualByComparingTo("-531");
+    }
+
+    @Test
+    void theSecondDayAddsTheCashOfTheFirstOneAndTheDeposit() {
+        LocalDate first = LocalDate.of(2026, 8, 1);
+        LocalDate second = LocalDate.of(2026, 8, 2);
+        insertJournal(second, 281L, "OPEN");
+        cash.register(CashMovementType.INITIAL_BALANCE, first, cop(12_114_000), "Saldo inicial");
+        cash.register(CashMovementType.DEPOSIT, second, cop(1_000_000), "Consignación");
+        when(sellerCloseQuery.findDaySummary(first)).thenReturn(Optional.of(daySummary(first, 12_516_000)));
+        when(sellerCloseQuery.findDaySummary(second)).thenReturn(Optional.of(daySummary(second, 3_000_000)));
+        dominusRepository.save(new DominusCashBalance(second, cop(26_630_000)));
+
+        CashBalanceTableInfo table = cashBalanceQuery.findDailyCashBalance(second).orElseThrow();
+
+        assertThat(table.planillaCashBalance()).isEqualByComparingTo("26630000");
+        assertThat(table.difference()).isEqualByComparingTo("0");
     }
 }

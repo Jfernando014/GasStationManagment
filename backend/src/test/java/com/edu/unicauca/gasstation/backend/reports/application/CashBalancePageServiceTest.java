@@ -61,7 +61,7 @@ class CashBalancePageServiceTest {
     void keepsNullTheValuesThatDoNotExistYet() {
         CashBalanceTableInfo objTable = new CashBalanceTableInfo(DATE, 15L, "OPEN",
                 new SavingsFundInfo(bd("100000"), bd("5000"), bd("0"), bd("105000")),
-                new ExpensesInfo(List.of(), bd("0")), bd("1500000"), null, null, null);
+                new ExpensesInfo(List.of(), bd("0")), bd("1500000"), null, null, null, null);
 
         CashBalancePage objPage = serviceWith(objTable).getPage(DATE);
 
@@ -105,7 +105,7 @@ class CashBalancePageServiceTest {
                 new ExpensesInfo(List.of(
                         new ExpenseItemInfo(DATE, "Papelería", bd("15000")),
                         new ExpenseItemInfo(DATE, "Aseo", bd("20000"))), bd("35000")),
-                bd("1500000"), bd("250000"), bd("1498000"), bd("2000"));
+                bd("1500000"), bd("250000"), bd("1496000"), bd("1498000"), bd("2000"));
     }
 
     private static BigDecimal bd(String prmValue) {

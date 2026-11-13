@@ -1,415 +1,397 @@
-import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { JournalService } from '../../../../core/services/journal.service';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { catchError, map, of, switchMap } from 'rxjs';
+
 import { CashBalanceStep4Service } from '../../../../core/services/cash-balance-step4.service';
-import { ToastService } from '../../../../core/services/toast.service';
-import { JournalResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
-import { DailyExpenseItem, Step4CalculationResult } from '../../../../shared/models/dtos/cash-balance-step4.dto';
-import { VendorCloseSummaryDto } from '../../../../shared/models/dtos/vendor-close.dto';
+import { JournalService } from '../../../../core/services/journal.service';
+import {
+  buildFinalCashBalancePdf,
+  downloadCashBalancePdf
+} from '../../../../shared/helpers/cash-balance-step4-pdf';
+import {
+  MAX_FUND_PAYMENT_DESCRIPTION_LENGTH,
+  cashBalanceTone,
+  cashDifferenceDetail,
+  cashDifferenceLabel,
+  hasPdfSignature,
+  validateCashBalancePdf,
+  validateFundPayment
+} from '../../../../shared/helpers/cash-balance-step4.helpers';
+import { formatAmount, formatSignedCop, parseAmount } from '../../../../shared/helpers/electronic-payments.helpers';
+import { formatCop, formatInputDate } from '../../../../shared/helpers/format.helpers';
+import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
+import { CashBalanceStepResponseDto } from '../../../../shared/models/dtos/cash-balance-step4.dto';
+import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
+
+const STEP_NUMBER = 4;
+const EXPENSES_ROUTE = '/gastos';
 
 @Component({
   selector: 'app-cash-balance-step4',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [RouterLink],
   templateUrl: './cash-balance-step4.component.html',
-  styleUrls: ['./cash-balance-step4.component.css']
+  styleUrl: './cash-balance-step4.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CashBalanceStep4Component implements OnInit {
+export class CashBalanceStep4Component {
+  private readonly service = inject(CashBalanceStep4Service);
   private readonly journalService = inject(JournalService);
-  private readonly step4Service = inject(CashBalanceStep4Service);
-  private readonly toastService = inject(ToastService);
-  private readonly cdr = inject(ChangeDetectorRef);
-  private readonly destroyRef = inject(DestroyRef);
+  private requestId = 0;
+  private readonly reloadVersion = signal(0);
 
-  journal: JournalResponse | null = null;
-  currentDate = '2026-08-05';
-  vendorCloses: VendorCloseSummaryDto[] = [];
-  backendExpenses: DailyExpenseItem[] | null = null;
+  readonly expensesRoute = EXPENSES_ROUTE;
+  readonly descriptionMax = MAX_FUND_PAYMENT_DESCRIPTION_LENGTH;
 
-  calc!: Step4CalculationResult;
-  readonly toleranciaSaldo = 0;
+  readonly journal = toSignal(this.journalService.currentJournal$, { initialValue: null });
+  readonly date = computed(() => this.journal()?.date ?? null);
+  readonly dateLabel = computed(() => {
+    const date = this.date();
+    return date ? formatInputDate(date) : '';
+  });
+  readonly step = computed(() => this.journal()?.steps.find(item => item.stepNumber === STEP_NUMBER) ?? null);
+  readonly completed = computed(() => this.step()?.status === StepStatus.COMPLETED);
+  readonly canEdit = computed(() => {
+    const journal = this.journal();
+    if (!journal || journal.status !== JournalStatus.OPEN || this.completed()) return false;
+    return journal.steps.find(item => item.stepNumber === 6)?.status !== StepStatus.COMPLETED;
+  });
 
-  consolidadoInputText = '';
-  saldoAnteriorInputText = '';
-  saldoDominusInputText = '';
+  readonly result = signal<CashBalanceStepResponseDto | null>(null);
+  readonly table = computed(() => this.result()?.table ?? null);
+  readonly differenceStatus = computed(() => this.result()?.differenceStatus ?? null);
+  readonly canComplete = computed(() => this.result()?.canComplete ?? false);
+  readonly missing = computed(() => this.result()?.missing ?? []);
+  readonly tone = computed(() => cashBalanceTone(this.differenceStatus()));
+  readonly statusLabel = computed(() => cashDifferenceLabel(this.differenceStatus()));
+  readonly statusDetail = computed(() => cashDifferenceDetail(this.differenceStatus()));
 
-  consolidadoInvalid = false;
-  saldoAnteriorInvalid = false;
-  saldoDominusInvalid = false;
+  readonly loading = signal(false);
+  readonly loadError = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
+  readonly notice = signal<string | null>(null);
 
-  loadedPdf: { name: string; bytes: Uint8Array; file: File } | null = null;
-  isDraggingPdf = false;
-  isCompleting = false;
+  readonly dominusText = signal('');
+  readonly dominusError = signal<string | null>(null);
+  readonly savingDominus = signal(false);
+  readonly dominusDirty = computed(() => {
+    const text = this.dominusText();
+    if (text.trim() === '') return false;
+    const stored = this.table()?.dominusAccumulatedBalance ?? null;
+    const parsed = parseAmount(text);
+    return stored === null || parsed === null || parsed !== stored;
+  });
 
-  isPaymentDialogOpen = false;
-  paymentDate = '';
-  paymentAmountInput = '';
-  paymentConcept = 'Arriendo';
-  paymentError = '';
+  readonly completing = signal(false);
+  readonly paymentOpen = signal(false);
+  readonly paymentDate = signal('');
+  readonly paymentAmount = signal('');
+  readonly paymentDescription = signal('Arriendo');
+  readonly paymentError = signal<string | null>(null);
+  readonly savingPayment = signal(false);
+
+  readonly pdfName = signal<string | null>(null);
+  readonly pdfSize = signal(0);
+  readonly pdfBytes = signal<Uint8Array | null>(null);
+  readonly pdfError = signal<string | null>(null);
+  readonly dragOver = signal(false);
+  readonly generating = signal(false);
+  readonly canDownload = computed(
+    () => this.pdfBytes() !== null && this.table() !== null && !this.generating()
+  );
 
   constructor() {
-    this.recalculate(true);
-  }
-
-  ngOnInit(): void {
-    this.journalService.currentJournal$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(journal => {
-        if (journal) {
-          this.journal = journal;
-          this.currentDate = journal.date;
-          this.loadDayData(journal.date);
-        } else {
-          const selected = this.journalService.getSelectedDate() || '2026-08-05';
-          this.currentDate = selected;
-          this.loadDayData(selected);
-        }
-      });
-  }
-
-  loadDayData(fecha: string): void {
-    this.loadedPdf = this.step4Service.getPdfInMemory(fecha);
-    this.recalculate(true);
-
-    this.step4Service
-      .fetchDayContext(fecha)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ vendorCloses, backendExpenses, backendStep4 }) => {
-        this.vendorCloses = vendorCloses;
-        this.backendExpenses = backendExpenses;
-        if (backendStep4?.table?.dominusAccumulatedBalance !== null && backendStep4?.table?.dominusAccumulatedBalance !== undefined) {
-          const existing = this.step4Service.getCapturedData(fecha);
-          if (existing.saldoDominus === undefined) {
-            this.step4Service.saveCapturedData(fecha, {
-              saldoDominus: Number(backendStep4.table.dominusAccumulatedBalance)
-            });
-          }
-        }
-        this.recalculate(true);
-        this.cdr.detectChanges();
-      });
-  }
-
-  recalculate(syncInputs = false): void {
-    this.calc = this.step4Service.calculateStep4(this.currentDate, {
-      journalConsecutive: this.journal?.consecutive,
-      vendorCloses: this.vendorCloses,
-      backendExpenses: this.backendExpenses
-    });
-
-    if (syncInputs) {
-      const captured = this.step4Service.getCapturedData(this.currentDate);
-      this.consolidadoInputText =
-        typeof captured.consolidadoDominus === 'number'
-          ? this.formatNumber(captured.consolidadoDominus, Number.isInteger(captured.consolidadoDominus) ? 0 : 2)
-          : '';
-      this.saldoAnteriorInputText =
-        typeof captured.saldoAnterior === 'number'
-          ? this.formatNumber(captured.saldoAnterior, 0)
-          : '';
-      this.saldoDominusInputText =
-        this.calc.saldoDominus === null
-          ? ''
-          : this.formatNumber(
-              this.calc.saldoDominus,
-              Number.isInteger(this.calc.saldoDominus) ? 0 : 2
-            );
-    }
-  }
-
-  isClosed(): boolean {
-    return this.journal?.status === JournalStatus.CLOSED;
-  }
-
-  isStep4Completed(): boolean {
-    const step4 = this.journal?.steps?.find(s => s.stepNumber === 4);
-    return step4?.status === StepStatus.COMPLETED;
-  }
-
-  consolidadoIndicatorLabel(): string {
-    const labels: Record<string, string> = {
-      cuadra: 'Cuadra',
-      difiere: 'Difiere',
-      pendiente: 'Por pegar'
-    };
-    return labels[this.calc.cuadre] || 'Por pegar';
-  }
-
-  consolidadoIndicatorState(): string {
-    const states: Record<string, string> = {
-      cuadra: 'cuadra',
-      difiere: 'falta',
-      pendiente: 'aviso'
-    };
-    return states[this.calc.cuadre] || 'aviso';
-  }
-
-  shortDayMonth(): string {
-    const parts = this.currentDate.split('-');
-    if (parts.length < 3) return this.currentDate;
-    return `${parts[2]}/${parts[1]}`;
-  }
-
-  totalGastosDia(): number {
-    return this.calc.gastos.reduce((sum, g) => sum + g.valor, 0);
-  }
-
-  formatDaysList(lista: number[]): string {
-    if (lista.length <= 12) return lista.join(' ');
-    return `${lista.slice(0, 5).join(' ')} … ${lista.slice(-5).join(' ')}`;
-  }
-
-  pdfEmptyHelpText(): string {
-    const captured = this.step4Service.getCapturedData(this.currentDate);
-    if (captured.pdf?.nombre && !this.loadedPdf) {
-      return `Se adjuntó "${captured.pdf.nombre}", pero no se conserva al recargar: vuelve a cargarlo`;
-    }
-    return 'Arrastra el archivo aquí · se le agrega la tabla de saldo en caja como última página';
-  }
-
-  parseNumero(raw: string): number | null {
-    const trimmed = (raw || '').replace(/\$/g, '').replace(/\s+/g, '').trim();
-    if (!trimmed) return null;
-    // Soporta formato es-CO (ej. 14.136.817,40 o 9.364.000) y decimal con punto
-    let normalized = trimmed;
-    if (normalized.includes(',')) {
-      normalized = normalized.replace(/\./g, '').replace(',', '.');
-    } else {
-      const dotParts = normalized.split('.');
-      if (dotParts.length > 2 || (dotParts.length === 2 && dotParts[1].length === 3)) {
-        normalized = normalized.replace(/\./g, '');
+    effect(() => {
+      const date = this.date();
+      this.reloadVersion();
+      if (date) {
+        untracked(() => this.load(date, true));
+      } else {
+        this.result.set(null);
+        this.loading.set(false);
       }
-    }
-    const num = Number(normalized);
-    return Number.isFinite(num) ? num : Number.NaN;
-  }
-
-  onConsolidadoInput(event: Event): void {
-    if (this.isClosed()) return;
-    const val = (event.target as HTMLInputElement).value;
-    this.consolidadoInputText = val;
-    const parsed = this.parseNumero(val);
-    this.consolidadoInvalid = Number.isNaN(parsed);
-    this.step4Service.saveCapturedData(this.currentDate, {
-      consolidadoDominus: this.consolidadoInvalid ? null : parsed
     });
-    this.recalculate(false);
   }
 
-  onConsolidadoBlur(): void {
-    const parsed = this.parseNumero(this.consolidadoInputText);
-    if (parsed !== null && !Number.isNaN(parsed)) {
-      this.consolidadoInputText = this.formatNumber(parsed, Number.isInteger(parsed) ? 0 : 2);
-    }
+  money(value: number | null): string {
+    return value === null ? '—' : formatCop(value);
   }
 
-  onSaldoAnteriorInput(event: Event): void {
-    if (this.isClosed()) return;
-    const val = (event.target as HTMLInputElement).value;
-    this.saldoAnteriorInputText = val;
-    const parsed = this.parseNumero(val);
-    this.saldoAnteriorInvalid = Number.isNaN(parsed);
-    this.step4Service.saveCapturedData(this.currentDate, {
-      saldoAnterior: this.saldoAnteriorInvalid ? null : parsed
-    });
-    this.recalculate(false);
+  signedMoney(value: number | null): string {
+    return value === null ? '—' : formatSignedCop(value);
   }
 
-  onSaldoAnteriorBlur(): void {
-    const parsed = this.parseNumero(this.saldoAnteriorInputText);
-    if (parsed !== null && !Number.isNaN(parsed)) {
-      this.saldoAnteriorInputText = this.formatNumber(parsed, 0);
-    }
+  shortDate(value: string): string {
+    return formatInputDate(value);
   }
 
-  onSaldoDominusInput(event: Event): void {
-    if (this.isClosed()) return;
-    const val = (event.target as HTMLInputElement).value;
-    this.saldoDominusInputText = val;
-    const parsed = this.parseNumero(val);
-    this.saldoDominusInvalid = Number.isNaN(parsed);
-    const validValue = this.saldoDominusInvalid ? null : parsed;
-    this.step4Service.saveCapturedData(this.currentDate, {
-      saldoDominus: validValue
-    });
-    this.recalculate(false);
+  fileSize(bytes: number): string {
+    return bytes >= 1024 * 1024
+      ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(bytes / 1024))} KB`;
   }
 
-  onSaldoDominusBlur(): void {
-    const parsed = this.parseNumero(this.saldoDominusInputText);
-    if (parsed !== null && !Number.isNaN(parsed)) {
-      this.saldoDominusInputText = this.formatNumber(parsed, Number.isInteger(parsed) ? 0 : 2);
-      this.step4Service
-        .saveDominusBalanceToBackend(this.currentDate, parsed)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe();
-    }
+  reload(): void {
+    this.reloadVersion.update(value => value + 1);
   }
 
-  openPaymentDialog(): void {
-    if (this.isClosed()) return;
-    this.paymentDate = this.currentDate;
-    this.paymentAmountInput = '';
-    this.paymentConcept = 'Arriendo';
-    this.paymentError = '';
-    this.isPaymentDialogOpen = true;
-  }
-
-  closePaymentDialog(): void {
-    this.isPaymentDialogOpen = false;
-    this.paymentError = '';
-  }
-
-  onScrimClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).id === 'jr-p4-dialogo-pago') {
-      this.closePaymentDialog();
-    }
-  }
-
-  formattedPaymentDate(): string {
-    const d = this.paymentDate || this.currentDate;
-    return d.split('-').reverse().join('/');
-  }
-
-  savePayment(): void {
-    if (!this.paymentDate) {
-      this.paymentError = 'Elige la fecha del pago.';
-      return;
-    }
-    const valor = this.parseNumero(this.paymentAmountInput);
-    if (valor === null || Number.isNaN(valor) || valor <= 0) {
-      this.paymentError = 'Escribe un valor mayor que cero.';
-      return;
-    }
-    const saldo = this.step4Service.fondoArriendoAl(this.paymentDate).acumulado;
-    if (valor > saldo) {
-      this.paymentError = `El pago supera el saldo del fondo (${this.formatCOP(saldo)}).`;
-      return;
-    }
-
-    this.step4Service
-      .registerFundPayment(this.paymentDate, valor, this.paymentConcept)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.closePaymentDialog();
-        this.toastService.show(`Pago de ${this.formatCOP(valor)} registrado desde el fondo`);
-        this.recalculate(false);
-        this.cdr.markForCheck();
+  private load(date: string, resetDraft: boolean): void {
+    const requestId = ++this.requestId;
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.service
+      .getCashBalance(date)
+      .pipe(
+        map(response => ({ response, error: null })),
+        catchError(error => of({ response: null, error }))
+      )
+      .subscribe(({ response, error }) => {
+        if (requestId !== this.requestId || this.date() !== date) return;
+        this.loading.set(false);
+        if (error !== null) {
+          this.loadError.set(getErrorMessage(error));
+          return;
+        }
+        if (response) this.applyResult(response, resetDraft);
       });
   }
 
-  removePayment(id: string): void {
-    if (this.isClosed()) return;
-    this.step4Service.removeFundPayment(id);
-    this.toastService.show('Pago quitado del fondo');
-    this.recalculate(false);
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    if (!this.isClosed()) {
-      this.isDraggingPdf = true;
+  private applyResult(response: CashBalanceStepResponseDto, resetDraft: boolean): void {
+    this.result.set(response);
+    if (resetDraft) {
+      const stored = response.table.dominusAccumulatedBalance;
+      this.dominusText.set(stored === null ? '' : stored === 0 ? '0' : formatAmount(stored));
+      this.dominusError.set(null);
     }
   }
 
-  onDragLeave(): void {
-    this.isDraggingPdf = false;
+  private clearMessages(): void {
+    this.actionError.set(null);
+    this.notice.set(null);
   }
 
-  onDropPdf(event: DragEvent): void {
-    event.preventDefault();
-    this.isDraggingPdf = false;
-    if (this.isClosed()) return;
-    const file = event.dataTransfer?.files?.[0];
-    if (file) {
-      this.loadPdfFile(file);
+  private refresh(): void {
+    const date = this.date();
+    if (date) this.load(date, !this.dominusDirty());
+  }
+
+  onDominusInput(event: Event): void {
+    this.dominusText.set((event.target as HTMLInputElement).value);
+    this.dominusError.set(null);
+  }
+
+  onDominusBlur(): void {
+    const text = this.dominusText();
+    const amount = parseAmount(text);
+    if (amount !== null && text.trim() !== '') {
+      this.dominusText.set(amount === 0 ? '0' : formatAmount(amount));
     }
+  }
+
+  saveDominus(): void {
+    const date = this.date();
+    if (!date || !this.canEdit() || this.savingDominus()) return;
+    const text = this.dominusText();
+    const amount = parseAmount(text);
+    if (text.trim() === '' || amount === null) {
+      this.dominusError.set('Escribe un saldo válido de Dominus, con máximo dos decimales.');
+      return;
+    }
+
+    this.clearMessages();
+    this.savingDominus.set(true);
+    this.service.saveDominusBalance(date, amount).subscribe({
+      next: response => {
+        this.applyResult(response, true);
+        this.savingDominus.set(false);
+        this.notice.set('Saldo de Dominus guardado.');
+      },
+      error: error => {
+        this.dominusError.set(getErrorMessage(error));
+        this.savingDominus.set(false);
+      }
+    });
+  }
+
+  openPayment(): void {
+    if (!this.canEdit()) return;
+    this.clearMessages();
+    this.paymentDate.set(this.date() ?? '');
+    this.paymentAmount.set('');
+    this.paymentDescription.set('Arriendo');
+    this.paymentError.set(null);
+    this.paymentOpen.set(true);
+    setTimeout(() => document.getElementById('cb-pay-amount')?.focus(), 0);
+  }
+
+  closePayment(): void {
+    if (!this.savingPayment()) this.paymentOpen.set(false);
+  }
+
+  onPaymentDate(event: Event): void {
+    this.paymentDate.set((event.target as HTMLInputElement).value);
+    this.paymentError.set(null);
+  }
+
+  onPaymentAmount(event: Event): void {
+    this.paymentAmount.set((event.target as HTMLInputElement).value);
+    this.paymentError.set(null);
+  }
+
+  onPaymentAmountBlur(): void {
+    const amount = parseAmount(this.paymentAmount());
+    if (amount !== null && this.paymentAmount().trim() !== '') {
+      this.paymentAmount.set(amount === 0 ? '0' : formatAmount(amount));
+    }
+  }
+
+  onPaymentDescription(event: Event): void {
+    this.paymentDescription.set((event.target as HTMLInputElement).value);
+  }
+
+  submitPayment(): void {
+    if (!this.canEdit() || this.savingPayment()) return;
+    const date = this.paymentDate();
+    const amountText = this.paymentAmount();
+    const firstCheck = validateFundPayment({ date, amountText, balance: null });
+    if (firstCheck.error || firstCheck.amount === null) {
+      this.paymentError.set(firstCheck.error);
+      return;
+    }
+
+    const table = this.table();
+    const balance$ =
+      table && date === this.date()
+        ? of(table.savingsFund.accumulatedBalance)
+        : this.service.getFundBalance(date).pipe(map(response => response.balance));
+    const description = this.paymentDescription().trim();
+
+    this.paymentError.set(null);
+    this.savingPayment.set(true);
+    balance$
+      .pipe(
+        switchMap(balance => {
+          const validation = validateFundPayment({ date, amountText, balance });
+          if (validation.error || validation.amount === null) return of(validation.error);
+          return this.service
+            .registerFundPayment({
+              date,
+              amount: validation.amount,
+              description: description || undefined
+            })
+            .pipe(map(() => null));
+        })
+      )
+      .subscribe({
+        next: error => {
+          this.savingPayment.set(false);
+          if (error) {
+            this.paymentError.set(error);
+            return;
+          }
+          this.paymentOpen.set(false);
+          this.notice.set('Pago registrado desde el fondo.');
+          this.refresh();
+        },
+        error: error => {
+          this.savingPayment.set(false);
+          this.paymentError.set(getErrorMessage(error));
+        }
+      });
+  }
+
+  completeStep(): void {
+    const journal = this.journal();
+    if (!journal || !this.canEdit() || !this.canComplete() || this.completing()) return;
+    this.clearMessages();
+    this.completing.set(true);
+    this.journalService.completeStep(journal.id, STEP_NUMBER).subscribe({
+      next: step => {
+        this.completing.set(false);
+        this.journalService.updateCurrentStep(step);
+        this.notice.set('Paso 4 completado.');
+        this.refresh();
+      },
+      error: error => {
+        this.completing.set(false);
+        this.actionError.set(getErrorMessage(error));
+      }
+    });
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (file) {
-      this.loadPdfFile(file);
-    }
     input.value = '';
+    if (file) void this.loadPdf(file);
   }
 
-  loadPdfFile(file: File): void {
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      this.toastService.show('Formato no admitido. Usa .pdf');
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(true);
+  }
+
+  onDragLeave(): void {
+    this.dragOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) void this.loadPdf(file);
+  }
+
+  private async loadPdf(file: File): Promise<void> {
+    const validationError = validateCashBalancePdf(file);
+    if (validationError) {
+      this.pdfError.set(validationError);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const bytes = new Uint8Array(reader.result as ArrayBuffer);
-      this.step4Service.setPdfInMemory(this.currentDate, file, bytes);
-      this.loadedPdf = this.step4Service.getPdfInMemory(this.currentDate);
-      this.cdr.detectChanges();
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  clearPdf(): void {
-    if (this.isClosed()) return;
-    this.step4Service.clearPdfInMemory(this.currentDate);
-    this.loadedPdf = null;
-  }
-
-  downloadFinalPdf(): void {
-    if (!this.loadedPdf) {
-      this.toastService.show('Primero adjunta el PDF del consolidado de Dominus');
-      return;
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (!hasPdfSignature(bytes)) {
+        this.pdfError.set('El archivo no contiene la firma de un PDF válido.');
+        return;
+      }
+      this.pdfBytes.set(bytes);
+      this.pdfName.set(file.name);
+      this.pdfSize.set(file.size);
+      this.pdfError.set(null);
+    } catch {
+      this.pdfError.set('No se pudo leer el archivo. Intenta de nuevo.');
     }
-    const blob = new Blob([this.loadedPdf.bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Consolidado-Dominus-${this.currentDate}-con-saldo-en-caja.pdf`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    this.toastService.show('PDF final listo (con saldo en caja)');
   }
 
-  completeStep4(): void {
-    if (!this.journal || this.isClosed() || this.isCompleting) return;
-    this.isCompleting = true;
-    this.journalService
-      .completeStep(this.journal.id, 4)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: step => {
-          this.isCompleting = false;
-          this.journalService.updateCurrentStep(step);
-          this.toastService.show('Paso 4 completo');
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.isCompleting = false;
-          this.toastService.show('Paso 4 guardado localmente');
-          this.cdr.detectChanges();
-        }
+  removePdf(): void {
+    this.pdfBytes.set(null);
+    this.pdfName.set(null);
+    this.pdfSize.set(0);
+    this.pdfError.set(null);
+  }
+
+  async downloadFinalPdf(): Promise<void> {
+    const table = this.table();
+    const bytes = this.pdfBytes();
+    if (!table || !bytes || this.generating()) return;
+
+    this.clearMessages();
+    this.pdfError.set(null);
+    this.generating.set(true);
+    try {
+      const result = await buildFinalCashBalancePdf(bytes, {
+        table,
+        differenceStatus: this.differenceStatus()
       });
-  }
-
-  abs(val: number): number {
-    return Math.abs(val);
-  }
-
-  formatNumber(value: number | null | undefined, decimals = 0): string {
-    if (value === null || value === undefined || Number.isNaN(value)) return '—';
-    return new Intl.NumberFormat('es-CO', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    }).format(value);
-  }
-
-  formatCOP(value: number | null | undefined): string {
-    if (value === null || value === undefined || Number.isNaN(value)) return '—';
-    return `$ ${this.formatNumber(Math.round(value), 0)}`;
+      downloadCashBalancePdf(result.bytes, `Consolidado-Dominus-${table.date}-con-saldo-en-caja.pdf`);
+      this.notice.set(`PDF final descargado: ${result.pageCount} páginas, con saldo en caja al final.`);
+    } catch {
+      this.pdfError.set(
+        'No se pudo procesar el PDF. Verifica que sea un archivo válido y que no esté dañado o protegido.'
+      );
+    } finally {
+      this.generating.set(false);
+    }
   }
 }
-
