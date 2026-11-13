@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -61,6 +63,18 @@ public class CashBalanceExceptionHandler extends ResponseEntityExceptionHandler 
     @ExceptionHandler(CashBalanceNotEditableException.class)
     public ProblemDetail handleNotEditable(CashBalanceNotEditableException ex) {
         return problem(HttpStatus.CONFLICT, "CASH_BALANCE_NOT_EDITABLE", ex.getMessage());
+    }
+
+    /** The authenticated user lacks ADMIN authority (403). */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        return problem(HttpStatus.FORBIDDEN, "ACCESS_DENIED", ex.getMessage());
+    }
+
+    /** The request has no authenticated principal (401). */
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ProblemDetail handleAuthenticationRequired(AuthenticationCredentialsNotFoundException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", ex.getMessage());
     }
 
     static ProblemDetail problem(HttpStatus status, String code, String detail) {

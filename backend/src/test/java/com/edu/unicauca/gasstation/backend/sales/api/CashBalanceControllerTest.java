@@ -1,6 +1,5 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -13,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpensesInfo;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.SavingsFundInfo;
-import com.edu.unicauca.gasstation.backend.sales.api.dto.DominusBalanceRequestDto;
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService.Evaluation;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.CashDifferenceStatus;
@@ -28,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -118,11 +115,25 @@ class CashBalanceControllerTest {
     }
 
     @Test
-    void putWithoutTheAdminAuthorityIsRefusedAndStoresNothing() {
-        DominusBalanceRequestDto request = new DominusBalanceRequestDto(cop(1));
+    void putWithoutTheAdminAuthorityIs403AndStoresNothing() throws Exception {
+        mockMvc.perform(put(URL + "/dominus")
+                        .principal(authenticated("READ_ONLY"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accumulatedBalance\":1}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
-        assertThrows(AccessDeniedException.class,
-                () -> controller.saveDominus(DAY, request, authenticated("READ_ONLY")));
+        verify(service, never()).saveDominusBalance(any(), any());
+    }
+
+    @Test
+    void putWithoutAuthenticationIs401AndStoresNothing() throws Exception {
+        mockMvc.perform(put(URL + "/dominus")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accumulatedBalance\":1}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+
         verify(service, never()).saveDominusBalance(any(), any());
     }
 
