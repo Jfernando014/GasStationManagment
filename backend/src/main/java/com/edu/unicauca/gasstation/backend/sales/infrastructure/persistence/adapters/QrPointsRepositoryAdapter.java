@@ -10,10 +10,13 @@ import java.sql.Time;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,10 +58,39 @@ public class QrPointsRepositoryAdapter implements QrPointsRepository {
     }
 
     @Override
+    public Map<LocalDate, BigDecimal> findRedebanTotals(LocalDate from, LocalDate to) {
+        Map<LocalDate, BigDecimal> result = new TreeMap<>();
+        if (from.isAfter(to)) {
+            return result;
+        }
+        jdbc.query("""
+                SELECT business_date, SUM(amount) AS total
+                FROM redeban_qr_transaction WHERE business_date BETWEEN ? AND ?
+                GROUP BY business_date
+                """, (RowCallbackHandler) rs -> result.put(rs.getDate("business_date").toLocalDate(),
+                rs.getBigDecimal("total")), Date.valueOf(from), Date.valueOf(to));
+        return result;
+    }
+
+    @Override
     public Optional<PointsDay> findPoints(LocalDate date) {
         return jdbc.query("SELECT points_total, source FROM points_colombia_day WHERE business_date = ?",
                 (rs, row) -> new PointsDay(date, rs.getBigDecimal("points_total"), rs.getString("source")),
                 Date.valueOf(date)).stream().findFirst();
+    }
+
+    @Override
+    public Map<LocalDate, BigDecimal> findPointsTotals(LocalDate from, LocalDate to) {
+        Map<LocalDate, BigDecimal> result = new TreeMap<>();
+        if (from.isAfter(to)) {
+            return result;
+        }
+        jdbc.query("""
+                SELECT business_date, points_total FROM points_colombia_day
+                WHERE business_date BETWEEN ? AND ?
+                """, (RowCallbackHandler) rs -> result.put(rs.getDate("business_date").toLocalDate(),
+                rs.getBigDecimal("points_total")), Date.valueOf(from), Date.valueOf(to));
+        return result;
     }
 
     @Override

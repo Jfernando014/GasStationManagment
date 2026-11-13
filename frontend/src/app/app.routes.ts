@@ -82,6 +82,11 @@ export const routes: Routes = [
         loadComponent: () => import('../features/statistics/pages/statistics-page.component').then(m => m.StatisticsPageComponent)
       },
       {
+        path: 'resultados/conciliaciones',
+        loadComponent: () => import('../features/sales/pages/monthly-reconciliation/monthly-reconciliation-page.component')
+          .then(m => m.MonthlyReconciliationPageComponent)
+      },
+      {
         path: 'resultados/incentivos',
         loadComponent: () => import('../features/incentives/pages/incentives-page/incentives-page.component')
           .then(m => m.IncentivesPageComponent),

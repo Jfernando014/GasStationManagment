@@ -153,7 +153,8 @@
         </button>
         <div class="collapsible-sub-menu">
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/conciliaciones"
-            routerLinkActive="active">Conciliaciones</a>
+            routerLinkActive="active" #reconciliationNav="routerLinkActive"
+            [attr.aria-current]="reconciliationNav.isActive ? 'page' : null">Conciliaciones</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/metas" routerLinkActive="active">Metas y
             cumplimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/estadisticas"
@@ -229,7 +230,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 
