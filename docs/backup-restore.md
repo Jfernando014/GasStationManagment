@@ -33,7 +33,7 @@ curl -X POST http://localhost:8080/api/v1/backups/import \
 
 1. El servicio toma un lock para impedir otra operación simultánea.
 2. Ejecuta `pg_dump` con `--format=custom --compress=9`, sin dueños ni privilegios.
-3. Excluye la tabla `backup_audit` para que el historial no se pierda al restaurar.
+3. Excluye la tabla `backup_audit` y su secuencia `backup_audit_id_seq` para que el historial no se pierda al restaurar.
 4. Valida la cabecera `PGDMP` y registra la operación en `backup_audit`.
 5. El controller transmite el archivo y lo elimina del servidor al terminar.
 
@@ -42,14 +42,15 @@ curl -X POST http://localhost:8080/api/v1/backups/import \
 1. Verifica que la restauración esté habilitada, la frase de confirmación y el tamaño máximo.
 2. Toma el lock y activa el modo mantenimiento: las peticiones normales reciben `503` con código `BACKUP_RESTORE_IN_PROGRESS`.
 3. Guarda un respaldo de seguridad automático antes de tocar la base.
-4. Termina las sesiones activas, vacía las conexiones de Hikari y ejecuta `pg_restore` con `--clean --if-exists --no-owner --no-privileges --single-transaction --exit-on-error`.
-5. Ejecuta Flyway para aplicar las migraciones que falten. Si falla, restaura el respaldo de seguridad y reporta `MIGRATION_FAILED`.
-6. Registra el resultado, desactiva el mantenimiento y reinicia:
+4. Termina las sesiones activas y vacía las conexiones de Hikari.
+5. Genera un TOC filtrado con `pg_restore --list` y ejecuta `pg_restore` con `--clean --if-exists --no-owner --no-privileges --single-transaction --exit-on-error --use-list`, omitiendo las entradas de `backup_audit` y `backup_audit_id_seq`. Esto conserva el historial local y permite importar dumps antiguos que todavía incluyen la secuencia.
+6. Ejecuta Flyway para aplicar las migraciones que falten. Si falla, restaura el respaldo de seguridad y reporta `MIGRATION_FAILED`.
+7. Registra el resultado, desactiva el mantenimiento y reinicia:
    - Desarrollo: DevTools Restarter.
    - Producción: la aplicación termina y `restart: always` la inicia de nuevo.
    - CI: `BACKUP_RESTART_AFTER_RESTORE=false`.
 
-La restauración solo reemplaza las tablas presentes en el archivo. Las tablas que no estén en el dump se conservan.
+La restauración solo reemplaza las tablas presentes en el archivo. Las tablas que no estén en el dump se conservan. El historial de `backup_audit` siempre se conserva porque la tabla y su secuencia se excluyen del dump y del TOC de restauración.
 
 ## Variables de entorno
 
@@ -75,7 +76,7 @@ La pantalla está en **Configuración › Respaldos** (`/configuracion/backup`).
 
 ```bash
 cd backend
-mvn -B -ntp -Dtest=BackupServiceTest test
+mvn -B -ntp -Dtest=BackupServiceTest,PostgresBackupExecutorTest test
 
 cd ../frontend
 npx ng test --watch=false --include=src/core/services/backup.service.spec.ts
@@ -84,6 +85,7 @@ npx ng test --watch=false --include=src/core/services/backup.service.spec.ts
 ## Diagnóstico
 
 - **`pg_dump: not found`**: la imagen no tiene `postgresql16-client`; reconstruye el contenedor.
+- **`pg_restore failed: cannot drop sequence backup_audit_id_seq because other objects depend on it`**: el dump se generó antes del fix que excluye la secuencia. La restauración actual filtra esa entrada del TOC; si el error persiste, vuelve a exportar el respaldo con la versión corregida.
 - **`409 BUSY`**: hay otra exportación o restauración en curso.
 - **`403 RESTORE_DISABLED`**: `BACKUP_RESTORE_ENABLED=false`.
 - **`400 CONFIRMATION_REQUIRED`**: falta la cabecera o el texto no es exactamente `RESTAURAR`.

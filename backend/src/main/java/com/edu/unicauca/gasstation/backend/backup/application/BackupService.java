@@ -157,6 +157,7 @@ public class BackupService {
                     : "Restore completed.";
             return new RestoreResult(prmFileName, varSize, atrProperties.isRestartAfterRestore(), objMessage);
         } catch (BackupException prmException) {
+            log.error("Database restore failed: {}", prmException.getMessage(), prmException);
             finishAudit(objAudit, BackupStatus.FAILED, prmException.getMessage(), prmFileName, varSize);
             throw prmException;
         } catch (IOException prmException) {

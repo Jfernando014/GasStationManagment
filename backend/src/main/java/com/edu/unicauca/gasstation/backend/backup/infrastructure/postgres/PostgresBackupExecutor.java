@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +23,12 @@ import org.springframework.stereotype.Component;
  *
  * @author javiersolanop777
  */
+@Slf4j
 @Component
 public class PostgresBackupExecutor implements BackupExecutor {
 
     private static final int MAX_OUTPUT_BYTES = 32_768;
+    private static final int MAX_TOC_BYTES = 64 * 1024 * 1024;
 
     private final BackupProperties atrProperties;
     private final String atrHost;
@@ -52,6 +56,10 @@ public class PostgresBackupExecutor implements BackupExecutor {
 
     @Override
     public void dump(Path prmTarget) {
+        run(buildDumpCommand(prmTarget), "dump");
+    }
+
+    List<String> buildDumpCommand(Path prmTarget) {
         List<String> objCommand = new ArrayList<>();
         objCommand.add(atrProperties.getDumpCommand());
         objCommand.add("--format=custom");
@@ -60,16 +68,27 @@ public class PostgresBackupExecutor implements BackupExecutor {
         objCommand.add("--no-privileges");
         objCommand.add("--encoding=UTF8");
         objCommand.add("--exclude-table=backup_audit");
+        objCommand.add("--exclude-table=backup_audit_id_seq");
         objCommand.add("--host=" + atrHost);
         objCommand.add("--port=" + atrPort);
         objCommand.add("--username=" + atrUser);
         objCommand.add("--dbname=" + atrDatabase);
         objCommand.add("--file=" + prmTarget.toAbsolutePath());
-        run(objCommand, "dump");
+        return objCommand;
     }
 
     @Override
     public void restore(Path prmSource) {
+        Path objList = null;
+        try {
+            objList = createFilteredToc(prmSource);
+            run(buildRestoreCommand(prmSource, objList), "restore");
+        } finally {
+            deleteQuietly(objList);
+        }
+    }
+
+    List<String> buildRestoreCommand(Path prmSource, Path prmList) {
         List<String> objCommand = new ArrayList<>();
         objCommand.add(atrProperties.getRestoreCommand());
         objCommand.add("--clean");
@@ -78,17 +97,71 @@ public class PostgresBackupExecutor implements BackupExecutor {
         objCommand.add("--no-privileges");
         objCommand.add("--single-transaction");
         objCommand.add("--exit-on-error");
+        objCommand.add("--use-list=" + prmList.toAbsolutePath());
         objCommand.add("--host=" + atrHost);
         objCommand.add("--port=" + atrPort);
         objCommand.add("--username=" + atrUser);
         objCommand.add("--dbname=" + atrDatabase);
         objCommand.add(prmSource.toAbsolutePath().toString());
-        run(objCommand, "restore");
+        return objCommand;
     }
 
-    private void run(List<String> prmCommand, String prmOperation) {
+    private Path createFilteredToc(Path prmSource) {
+        String objToc = run(List.of(atrProperties.getRestoreCommand(), "--list",
+                prmSource.toAbsolutePath().toString()), "list", MAX_TOC_BYTES, true);
+        String objFiltered = filterAuditToc(objToc);
+        Path objList = null;
+        try {
+            Path objDir = Path.of(atrProperties.getDir());
+            Files.createDirectories(objDir);
+            objList = Files.createTempFile(objDir, "gas-station-", ".restore.list");
+            Files.writeString(objList, objFiltered, StandardCharsets.UTF_8);
+            return objList;
+        } catch (IOException prmException) {
+            deleteQuietly(objList);
+            throw new BackupException(BackupException.Reason.IO_ERROR,
+                    "Could not create the restore list: " + prmException.getMessage(), prmException);
+        }
+    }
+
+    static String filterAuditToc(String prmToc) {
+        StringBuilder objFiltered = new StringBuilder();
+        for (String objLine : prmToc.split("\\R")) {
+            if (objLine.startsWith(";") || !isAuditEntry(objLine)) {
+                objFiltered.append(objLine).append('\n');
+            }
+        }
+        return objFiltered.toString();
+    }
+
+    private static boolean isAuditEntry(String prmLine) {
+        for (String objToken : prmLine.trim().split("\\s+")) {
+            if ("backup_audit".equals(objToken) || "backup_audit_id_seq".equals(objToken)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void deleteQuietly(Path prmPath) {
+        if (prmPath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(prmPath);
+        } catch (IOException prmException) {
+            log.warn("Could not delete the temporary restore list {}", prmPath, prmException);
+        }
+    }
+
+    private String run(List<String> prmCommand, String prmOperation) {
+        return run(prmCommand, prmOperation, MAX_OUTPUT_BYTES, false);
+    }
+
+    private String run(List<String> prmCommand, String prmOperation, int prmMaxOutputBytes,
+            boolean prmCompleteOutputRequired) {
         ProcessBuilder objBuilder = new ProcessBuilder(prmCommand);
-        objBuilder.redirectErrorStream(true);
+        objBuilder.redirectErrorStream(false);
         objBuilder.environment().put("PGPASSWORD", atrPassword);
         objBuilder.environment().putIfAbsent("PGCONNECT_TIMEOUT", "10");
 
@@ -101,7 +174,11 @@ public class PostgresBackupExecutor implements BackupExecutor {
         }
 
         ByteArrayOutputStream objOutput = new ByteArrayOutputStream();
-        Thread objReader = Thread.ofVirtual().start(() -> readOutput(objProcess.getInputStream(), objOutput));
+        ByteArrayOutputStream objError = new ByteArrayOutputStream();
+        Thread objReader = Thread.ofVirtual().start(
+                () -> readOutput(objProcess.getInputStream(), objOutput, prmMaxOutputBytes));
+        Thread objErrorReader = Thread.ofVirtual().start(
+                () -> readOutput(objProcess.getErrorStream(), objError, MAX_OUTPUT_BYTES));
 
         boolean objFinished;
         try {
@@ -121,26 +198,39 @@ public class PostgresBackupExecutor implements BackupExecutor {
 
         try {
             objReader.join(5_000);
+            objErrorReader.join(5_000);
         } catch (InterruptedException prmException) {
             Thread.currentThread().interrupt();
         }
 
-        String objMessage = objOutput.toString(StandardCharsets.UTF_8).trim();
+        String objStdout = objOutput.toString(StandardCharsets.UTF_8).trim();
+        String objStderr = objError.toString(StandardCharsets.UTF_8).trim();
         if (objProcess.exitValue() != 0) {
             BackupException.Reason objReason = "dump".equals(prmOperation)
                     ? BackupException.Reason.DUMP_FAILED
                     : BackupException.Reason.RESTORE_FAILED;
-            String objDetail = objMessage.isEmpty() ? "unknown error" : objMessage;
-            throw new BackupException(objReason, "pg_" + prmOperation + " failed: " + objDetail);
+            String objCommand = switch (prmOperation) {
+                case "dump" -> "pg_dump";
+                case "list" -> "pg_restore --list";
+                default -> "pg_restore";
+            };
+            String objDetail = !objStderr.isEmpty() ? objStderr
+                    : objStdout.isEmpty() ? "unknown error" : objStdout;
+            throw new BackupException(objReason, objCommand + " failed: " + objDetail);
         }
+        if (prmCompleteOutputRequired && objOutput.size() >= prmMaxOutputBytes) {
+            throw new BackupException(BackupException.Reason.IO_ERROR,
+                    "The " + prmOperation + " output is too large");
+        }
+        return objStdout;
     }
 
-    private void readOutput(InputStream prmInput, ByteArrayOutputStream prmOutput) {
+    private void readOutput(InputStream prmInput, ByteArrayOutputStream prmOutput, int prmMaxOutputBytes) {
         try (InputStream objInput = prmInput) {
             byte[] arrChunk = new byte[4_096];
             int varRead;
             while ((varRead = objInput.read(arrChunk)) != -1) {
-                int varFree = MAX_OUTPUT_BYTES - prmOutput.size();
+                int varFree = prmMaxOutputBytes - prmOutput.size();
                 if (varFree > 0) {
                     prmOutput.write(arrChunk, 0, Math.min(varRead, varFree));
                 }
