@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | **Backend** | Java 21 LTS, Spring Boot 3.2.4, Spring Modulith 1.1.3, Spring Security (JWT), Spring Data JPA, MapStruct, Flyway, OpenAPI 3 / Swagger | **Modular Monolith + In-Process Event Bus** |
 | **Frontend** | Angular 21, TypeScript, RxJS, Service Worker (PWA), ExcelJS, PptxGenJS, Vitest | **Feature-Driven Modules + Atomic Design** |
-| **Database** | PostgreSQL 16 (`postgres:16-alpine`), Flyway Versioned Migrations (`V1`–`V34`) | **Relational Schema with Strictly Scoped Domain Tables** |
+| **Database** | PostgreSQL 16 (`postgres:16-alpine`), Flyway Versioned Migrations (`V1`–`V39`) | **Relational Schema with Strictly Scoped Domain Tables** |
 | **DevOps & QA** | Docker, Docker Compose (`dev`, `ci`, `prod`), Nginx, Testcontainers, JUnit 5, GitHub Actions | **Containerized Multi-Environment CI/CD** |
 
 ---
@@ -186,6 +186,7 @@ Detailed architectural artifacts, functional inventories, and sprint planning do
 - 📄 [**Functional Inventory & Prototypes Map** (`docs/inventario-funcionalidades.md`)](./docs/inventario-funcionalidades.md) — Traceability matrix of all screens (`C-01`–`C-19`) and user stories (`HU-1`–`HU-39`).
 - 🗓️ [**Sprint Roadmap & Milestones** (`docs/plan-trabajo-sprints.md`)](./docs/plan-trabajo-sprints.md) — 3-Sprint execution plan, August baseline verification criteria, and acceptance gates.
 - 👥 [**Team Workload Distribution** (`docs/reparto-tareas-por-persona.md`)](./docs/reparto-tareas-por-persona.md) — Task allocation (`S1`–`S3`), module ownership, and cross-module integration contracts.
+- 💾 [**Database Backups & Restore** (`docs/backup-restore.md`)](./docs/backup-restore.md) — Administrator export/import, PostgreSQL dump format, safety restore, environment variables, and troubleshooting.
 
 ---
 
@@ -197,7 +198,7 @@ Detailed architectural artifacts, functional inventories, and sprint planning do
   - `lowerCamelCase` for variables, properties, methods, and functions.
   - `PascalCase` for classes, interfaces, records, DTOs, and Angular components.
   - `SCREAMING_SNAKE_CASE` for constants and enum keys.
-- **Database Migrations**: Managed strictly via Flyway (`backend/src/main/resources/db/migration/V1__*.sql` through `V34__*.sql`) with `spring.jpa.hibernate.ddl-auto=validate` and `spring.flyway.out-of-order=true`.
+- **Database Migrations**: Managed strictly via Flyway (`backend/src/main/resources/db/migration/V1__*.sql` through `V39__*.sql`) with `spring.jpa.hibernate.ddl-auto=validate` and `spring.flyway.out-of-order=true`.
 
 ### Git Flow & Branching Strategy
 - **`main`**: Protected, production-ready branch. Direct commits to `main` are prohibited.
