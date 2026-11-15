@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/change-password").authenticated()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/test/ping").permitAll()
+                .requestMatchers("/api/v1/backups/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

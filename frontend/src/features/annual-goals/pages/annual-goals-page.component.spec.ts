@@ -5,6 +5,10 @@ import { AnnualGoalsPageComponent } from './annual-goals-page.component';
 import { SalesTargetsService } from '../../../core/services/sales-targets.service';
 import { SalesTargetResponse } from '../../../shared/models/dtos/sales-target.dto';
 import { ApiError } from '../../../shared/models/api-error.model';
+import { SellerPerformanceService } from '../../../core/services/seller-performance.service';
+import { PerformanceQuery } from '../../../shared/models/dtos/seller-performance.dto';
+import { parseSellerPerformance } from '../../../shared/helpers/seller-performance.helpers';
+import { emptyPerformanceFixture } from '../../../shared/helpers/seller-performance.test-data';
 
 describe('C-14 annual goals page', () => {
   let fixture: ComponentFixture<AnnualGoalsPageComponent>;
@@ -27,7 +31,8 @@ describe('C-14 annual goals page', () => {
     service.list.mockReset().mockReturnValue(of([]));
     service.create.mockReset();
     TestBed.configureTestingModule({ imports: [AnnualGoalsPageComponent],
-      providers: [{ provide: SalesTargetsService, useValue: service }] });
+      providers: [{ provide: SalesTargetsService, useValue: service },
+        { provide: SellerPerformanceService, useValue: { read: (query: PerformanceQuery) => of(parseSellerPerformance(JSON.stringify(emptyPerformanceFixture(query)), query)) } }] });
   });
 
   it('starts without default amounts or invented sales, and opens the Metas tab with a closed accordion', () => {

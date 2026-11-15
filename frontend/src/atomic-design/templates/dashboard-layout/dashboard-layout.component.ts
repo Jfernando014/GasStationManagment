@@ -22,7 +22,7 @@ function storedCollapsed(): boolean {
 }
 
 /** Pantallas que ya se adaptan al celular: en ellas la barra lateral pasa a ser un menú desplegable. */
-const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/resultados/conciliaciones', '/personal/turnos', '/jornada/personal'];
+const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/resultados/rendimiento', '/resultados/conciliaciones', '/personal/turnos', '/jornada/personal'];
 
 function usesMobileLayout(url: string): boolean {
   return MOBILE_READY_ROUTES.includes(url.split(/[?#]/)[0]);
@@ -37,6 +37,7 @@ function usesMobileLayout(url: string): boolean {
   host: {
     '(document:keydown.escape)': 'closeMenu()',
     '[class.statistics-mobile-layout]': 'statisticsActive()',
+    '[class.performance-layout]': 'performanceActive()',
     '[class.sidebar-collapsed]': 'sidebarCollapsed()'
   }
 })
@@ -52,6 +53,7 @@ export class DashboardLayoutComponent {
   /** Alerts the administrator has not attended yet; it feeds the bell and the sidebar badge. */
   readonly pendingAlerts = signal(0);
   readonly statisticsActive = signal(usesMobileLayout(this.router.url));
+  readonly performanceActive = signal(this.router.url.split(/[?#]/)[0] === '/resultados/rendimiento');
   /** Preferencia del usuario; en pantallas angostas no se aplica porque ahí la barra es un cajón. */
   private readonly collapsePreference = signal(storedCollapsed());
   private readonly narrow = signal(false);
@@ -78,6 +80,7 @@ export class DashboardLayoutComponent {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(event => {
         this.statisticsActive.set(usesMobileLayout(event.urlAfterRedirects));
+        this.performanceActive.set(event.urlAfterRedirects.split(/[?#]/)[0] === '/resultados/rendimiento');
         this.alertsService.refreshPending();
         this.closeMenu(false);
       });
