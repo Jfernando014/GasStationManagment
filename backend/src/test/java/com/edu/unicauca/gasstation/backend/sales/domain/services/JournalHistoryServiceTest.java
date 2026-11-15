@@ -1,5 +1,9 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.services;
 
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceQuery;
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpensesInfo;
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.SavingsFundInfo;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery;
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalRepository;
@@ -39,6 +43,9 @@ class JournalHistoryServiceTest {
 
     @Mock
     private InventoryClosingReadPort inventoryClosingReadPort;
+
+    @Mock
+    private CashBalanceQuery cashBalanceQuery;
 
     @InjectMocks
     private JournalHistoryService journalHistoryService;
@@ -102,6 +109,7 @@ class JournalHistoryServiceTest {
         when(sellerCloseQuery.findVendorClosesByDate(aug1)).thenReturn(List.of());
         when(sellerCloseQuery.findDaySummary(aug1)).thenReturn(Optional.empty());
         when(inventoryClosingReadPort.findClosingSnapshot(aug1)).thenReturn(ClosingInventorySnapshot.empty());
+        when(cashBalanceQuery.findDailyCashBalance(aug1)).thenReturn(Optional.empty());
 
         JournalHistoryDayDetail detail = journalHistoryService.getDayDetail(aug1);
 
@@ -114,5 +122,78 @@ class JournalHistoryServiceTest {
         assertThat(detail.variations()).isNotEmpty();
         assertThat(detail.cashBalance()).isNotNull();
         assertThat(detail.cashBalance().planilla()).isEqualTo(289L);
+    }
+
+    @Test
+    @DisplayName("getDayDetail returns the real cash balance of a system journal")
+    void returnsRealCashBalanceForJournalDay() {
+        LocalDate aug5 = LocalDate.of(2026, 8, 5);
+        Journal journal = Journal.builder()
+                .id(5L)
+                .date(aug5)
+                .consecutive(293L)
+                .status(JournalStatus.CLOSED)
+                .build();
+        CashBalanceTableInfo table = new CashBalanceTableInfo(
+                aug5,
+                293L,
+                "CLOSED",
+                new SavingsFundInfo(new BigDecimal("5000000.00"), new BigDecimal("250000.00"),
+                        BigDecimal.ZERO, new BigDecimal("5250000.00")),
+                new ExpensesInfo(List.of(), BigDecimal.ZERO),
+                new BigDecimal("11113600.00"),
+                new BigDecimal("8350000.00"),
+                new BigDecimal("18643600.00"),
+                new BigDecimal("18643000.00"),
+                new BigDecimal("-600.00"));
+
+        when(journalRepository.findByDate(aug5)).thenReturn(Optional.of(journal));
+        when(sellerCloseQuery.findVendorClosesByDate(aug5)).thenReturn(List.of());
+        when(sellerCloseQuery.findDaySummary(aug5)).thenReturn(Optional.empty());
+        when(inventoryClosingReadPort.findClosingSnapshot(aug5)).thenReturn(ClosingInventorySnapshot.empty());
+        when(cashBalanceQuery.findDailyCashBalance(aug5)).thenReturn(Optional.of(table));
+
+        JournalHistoryDayDetail detail = journalHistoryService.getDayDetail(aug5);
+
+        assertThat(detail.type()).isEqualTo("JOURNAL");
+        assertThat(detail.cashBalance()).isNotNull();
+        assertThat(detail.cashBalance().planilla()).isEqualTo(293L);
+        assertThat(detail.cashBalance().previousCash()).isEqualByComparingTo("18643600.00");
+        assertThat(detail.cashBalance().accumulatedSavings()).isEqualByComparingTo("5250000.00");
+        assertThat(detail.cashBalance().dominusBalance()).isEqualByComparingTo("18643000.00");
+    }
+
+    @Test
+    @DisplayName("getDayDetail falls back to the cash movements balance when the planilla balance is missing")
+    void fallsBackToCashBalanceWhenPlanillaBalanceIsMissing() {
+        LocalDate aug5 = LocalDate.of(2026, 8, 5);
+        Journal journal = Journal.builder()
+                .id(5L)
+                .date(aug5)
+                .consecutive(293L)
+                .status(JournalStatus.CLOSED)
+                .build();
+        CashBalanceTableInfo table = new CashBalanceTableInfo(
+                aug5,
+                293L,
+                "CLOSED",
+                new SavingsFundInfo(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
+                new ExpensesInfo(List.of(), BigDecimal.ZERO),
+                new BigDecimal("11113600.00"),
+                null,
+                null,
+                null,
+                null);
+
+        when(journalRepository.findByDate(aug5)).thenReturn(Optional.of(journal));
+        when(sellerCloseQuery.findVendorClosesByDate(aug5)).thenReturn(List.of());
+        when(sellerCloseQuery.findDaySummary(aug5)).thenReturn(Optional.empty());
+        when(inventoryClosingReadPort.findClosingSnapshot(aug5)).thenReturn(ClosingInventorySnapshot.empty());
+        when(cashBalanceQuery.findDailyCashBalance(aug5)).thenReturn(Optional.of(table));
+
+        JournalHistoryDayDetail detail = journalHistoryService.getDayDetail(aug5);
+
+        assertThat(detail.cashBalance().previousCash()).isEqualByComparingTo("11113600.00");
+        assertThat(detail.cashBalance().dominusBalance()).isNull();
     }
 }

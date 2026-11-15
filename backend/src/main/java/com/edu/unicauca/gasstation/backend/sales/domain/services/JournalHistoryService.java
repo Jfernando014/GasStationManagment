@@ -1,5 +1,7 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.services;
 
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceQuery;
+import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 
 /**
  * Domain service for the monthly journal history calendar and migrated day detail (C-10, S3-06).
+ *
+ * @author javiersolanop777
  */
 @Service
 @RequiredArgsConstructor
@@ -43,6 +47,7 @@ public class JournalHistoryService {
     private final JournalRepository journalRepository;
     private final SellerCloseQuery sellerCloseQuery;
     private final InventoryClosingReadPort inventoryClosingReadPort;
+    private final CashBalanceQuery cashBalanceQuery;
 
     @Transactional(readOnly = true)
     public JournalHistoryCalendar getMonthCalendar(YearMonth yearMonth) {
@@ -97,6 +102,9 @@ public class JournalHistoryService {
         List<VendorCloseSummary> dbVendorCloses = sellerCloseQuery.findVendorClosesByDate(date);
         Optional<DaySummary> dbDaySummary = sellerCloseQuery.findDaySummary(date);
         ClosingInventorySnapshot invSnapshot = inventoryClosingReadPort.findClosingSnapshot(date);
+        HistoryCashBalanceSummary cashBalance = cashBalanceQuery.findDailyCashBalance(date)
+                .map(this::mapCashBalance)
+                .orElse(null);
 
         if (journalOpt.isPresent()) {
             Journal journal = journalOpt.get();
@@ -128,7 +136,7 @@ public class JournalHistoryService {
                     vendorSales,
                     mapElectronicSummary(dbDaySummary.orElse(null)),
                     invSnapshot.variations(),
-                    null,
+                    cashBalance,
                     invSnapshot.newAlerts()
             );
         }
@@ -151,7 +159,7 @@ public class JournalHistoryService {
                     vendorSales,
                     mapElectronicSummary(dbDaySummary.orElse(null)),
                     invSnapshot.variations(),
-                    null,
+                    cashBalance,
                     invSnapshot.newAlerts()
             );
         }
@@ -176,7 +184,7 @@ public class JournalHistoryService {
                     seed.vendorSales(),
                     seed.electronicSummary(),
                     variations,
-                    seed.cashBalance(),
+                    cashBalance != null ? cashBalance : seed.cashBalance(),
                     invSnapshot.newAlerts()
             );
         }
@@ -303,6 +311,18 @@ public class JournalHistoryService {
                     );
                 })
                 .toList();
+    }
+
+    private HistoryCashBalanceSummary mapCashBalance(CashBalanceTableInfo table) {
+        BigDecimal previousCash = table.planillaCashBalance() != null
+                ? table.planillaCashBalance()
+                : table.cashBalance();
+        return new HistoryCashBalanceSummary(
+                table.journalConsecutive(),
+                previousCash,
+                table.savingsFund().accumulatedBalance(),
+                table.dominusAccumulatedBalance()
+        );
     }
 
     private HistoryElectronicSummary mapElectronicSummary(DaySummary daySummary) {
