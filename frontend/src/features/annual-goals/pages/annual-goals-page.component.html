@@ -6,9 +6,9 @@
     </div>
     <div class="rs-cabecera-der">
       <div class="jr-indicadores" aria-label="Indicadores del período">
-        <div class="jr-indicador"><span>Galones del periodo</span><b>Sin datos</b></div>
+        <div class="jr-indicador"><span>Galones del periodo</span><b>{{ formatCompliance(complianceSales()) }}{{ complianceSales() !== null ? ' gal' : '' }}</b></div>
         <div class="jr-indicador"><span>Meta global</span><b>{{ format(complianceGoal()) }}{{ complianceGoal() !== null ? ' gal' : '' }}</b></div>
-        <div class="jr-indicador"><span>Cumplimiento estación</span><b>Sin datos</b></div>
+        <div class="jr-indicador" title="El reporte de vendedores no proporciona el cumplimiento global de la estación."><span>Cumplimiento estación</span><b>Sin datos</b></div>
       </div>
     </div>
   </div>
@@ -26,28 +26,73 @@
 
   <section class="jr-tabpanel" id="panel-cumplimiento" role="tabpanel" aria-labelledby="tab-cumplimiento" [hidden]="tab() !== 'cumplimiento'">
     <div class="rs-seccion">
-      <div class="rs-barra">
+      <form class="rs-barra compliance-toolbar" [formGroup]="complianceForm" (ngSubmit)="consultCompliance()">
         <div class="ps-segmento" role="group" aria-label="Periodo">
-          <button type="button" [class.is-activo]="periodMode() === 'dia'" [attr.aria-pressed]="periodMode() === 'dia'" (click)="periodMode.set('dia')">Día</button>
-          <button type="button" [class.is-activo]="periodMode() === 'semana'" [attr.aria-pressed]="periodMode() === 'semana'" (click)="periodMode.set('semana')">Semana</button>
-          <button type="button" [class.is-activo]="periodMode() === 'mes'" [attr.aria-pressed]="periodMode() === 'mes'" (click)="periodMode.set('mes')">Mes</button>
+          <button type="button" [class.is-activo]="periodMode() === 'dia'" [attr.aria-pressed]="periodMode() === 'dia'" (click)="setComplianceMode('dia')">Día</button>
+          <button type="button" [class.is-activo]="periodMode() === 'semana'" [attr.aria-pressed]="periodMode() === 'semana'" (click)="setComplianceMode('semana')">Semana</button>
+          <button type="button" [class.is-activo]="periodMode() === 'mes'" [attr.aria-pressed]="periodMode() === 'mes'" (click)="setComplianceMode('mes')">Mes</button>
         </div>
         <label class="ps-campo" [hidden]="periodMode() !== 'mes'">Mes<input type="month" class="flat-input tnum" [formControl]="complianceMonth"></label>
-        <label class="ps-campo" [hidden]="periodMode() === 'mes'">Fecha<input type="date" class="flat-input tnum" [formControl]="complianceDate"></label>
+        <label class="ps-campo" [hidden]="periodMode() === 'mes'">{{ periodMode() === 'semana' ? 'Desde' : 'Fecha' }}<input type="date" class="flat-input tnum" [formControl]="complianceDate"></label>
+        <label class="ps-campo" [hidden]="periodMode() !== 'semana'">Hasta<input type="date" class="flat-input tnum" [formControl]="complianceTo"></label>
         <div class="ps-campo"><span aria-hidden="true">Vendedor</span>
           <app-search-field fieldId="goals-seller-search" label="Vendedor" placeholder="Buscar" (searchChange)="sellerSearch.set($event)" />
         </div>
-        <p class="rs-nota">Sin datos de jornadas cerradas</p>
-      </div>
-      <div class="rs-tabla-wrap">
+        <button type="submit" class="jr-btn jr-btn--sec" [disabled]="complianceLoading() || !!complianceRangeError()">CONSULTAR</button>
+      </form>
+      @if (periodMode() === 'semana') {
+        <p class="ps-nota">Selecciona el inicio y el fin de la semana. Se consultan exactamente esas fechas; la definición de semana y de semanas parciales está pendiente.</p>
+      }
+      @if (complianceRangeError()) { <p class="goals-notice goals-error" role="alert">{{ complianceRangeError() }}</p> }
+      @if (complianceError()) {
+        <div class="goals-notice goals-error" role="alert"><span>{{ complianceError() }}</span>
+          <button type="button" class="jr-btn jr-btn--sec" (click)="consultCompliance()">Reintentar consulta</button>
+        </div>
+      }
+      @if (compliance(); as response) {
+        <p class="rs-nota compliance-period" role="status">Período consultado · {{ response.compliance.window.from }} a {{ response.compliance.window.to }}@if (response.compliance.sellers.length) { · {{ response.compliance.sellers.length }} vendedores }</p>
+        @if (response.compliance.availability !== 'AVAILABLE') {
+          <p class="goals-notice" role="status"><b>{{ response.compliance.availability === 'PARTIAL' ? 'Disponibilidad parcial.' : response.compliance.availability === 'NO_DATA' ? 'Sin datos de ventas.' : 'Cálculo no disponible.' }}</b> {{ reasonText(response.compliance.reason) }}</p>
+        }
+        @if (pendingCoverage().length) {
+          <details class="compliance-coverage"><summary>{{ pendingCoverage().length }} fechas pendientes de confirmación</summary>
+            <ul>@for (day of pendingCoverage(); track day.date) { <li>{{ day.date }}: {{ day.status === 'PENDING' ? 'Procesamiento pendiente' : 'Sin historial confirmado' }}</li> }</ul>
+          </details>
+        }
+      }
+      <div class="rs-tabla-wrap" [attr.aria-busy]="complianceLoading()">
         <table class="inv-table" aria-label="Cumplimiento de vendedores">
           <thead><tr><th class="rank">#</th><th>Vendedor</th><th class="right">Galones vendidos</th>
             <th class="right">Meta del periodo</th><th class="compliance-column">Cumplimiento</th><th>Estado</th></tr></thead>
-          <tbody><tr><td colspan="6">
-            <app-empty-state heading="Sin datos de ventas" description="El cumplimiento estará disponible cuando se integren las ventas consolidadas y las metas de cada vendedor.">
+          <tbody>
+          @for (seller of complianceRows(); track seller.workerId) {
+            <tr class="compliance-seller">
+              <td class="rank">{{ seller.rank ?? '—' }}</td>
+              <td><div class="compliance-person"><app-avatar [name]="seller.recordedName" /><b>{{ seller.recordedName }}</b></div></td>
+              <td class="right tnum">{{ formatCompliance(seller.sales) }} gal</td>
+              <td class="right tnum">{{ formatCompliance(seller.applicableTarget) }}{{ seller.applicableTarget !== null ? ' gal' : '' }}</td>
+              <td>
+                <div class="compliance-progress">
+                  @if (seller.barValue !== null) { <app-percent-bar [value]="seller.barValue" /> }
+                  <span class="tnum">{{ formatCompliance(seller.percent) }}{{ seller.percent !== null ? ' %' : '' }}</span>
+                </div>
+              </td>
+              <td><span class="state-pill-tag" [class.optimal]="seller.availability === 'AVAILABLE' && seller.reached" [class.warning]="seller.availability !== 'AVAILABLE' || !seller.reached">
+                {{ seller.availability === 'AVAILABLE' ? (seller.reached ? 'Meta alcanzada' : 'Por debajo de la meta') : 'No calculable' }}
+              </span>@if (seller.reason) { <small class="compliance-reason">{{ reasonText(seller.reason) }}</small> }</td>
+            </tr>
+          } @empty {
+          <tr><td colspan="6">
+            @if (complianceLoading()) { <p class="goals-notice" role="status">Consultando cumplimiento de jornadas cerradas…</p> }
+            @else {
+            <app-empty-state
+              [heading]="complianceEmpty().heading" [description]="complianceEmpty().description">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19h16M7 15V9m5 6V5m5 10v-4" /></svg>
             </app-empty-state>
-          </td></tr></tbody>
+            }
+          </td></tr>
+          }
+          </tbody>
         </table>
       </div>
     </div>

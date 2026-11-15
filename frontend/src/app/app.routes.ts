@@ -78,6 +78,10 @@ export const routes: Routes = [
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
       {
+        path: 'resultados/rendimiento',
+        loadComponent: () => import('../features/performance/pages/performance-page.component').then(m => m.PerformancePageComponent)
+      },
+      {
         path: 'resultados/estadisticas',
         loadComponent: () => import('../features/statistics/pages/statistics-page.component').then(m => m.StatisticsPageComponent)
       },

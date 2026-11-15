@@ -1,0 +1,98 @@
+<div class="inv-subview rs-vista performance-page">
+  <div class="rs-cabecera">
+    <div class="jr-paso-cabecera"><h1>Rendimiento</h1><p>Venta de cada vendedor frente al promedio de la estación, en bruto y ajustada por turno.</p></div>
+    <div class="performance-actions">
+      @if (fromJournal()) { <a class="jr-btn jr-btn--ghost" routerLink="/jornada/cerrada" [queryParams]="{ date: journalDate() }">← Volver a Jornada cerrada</a> }
+      <button class="jr-btn jr-btn--sec" type="button" (click)="openDownloads()">Balance y descargas</button>
+    </div>
+  </div>
+  <div class="rs-tabs">
+    <div class="jr-tabs" role="tablist" aria-label="Rendimiento">
+      <button type="button" class="jr-tab" id="performance-station-tab" role="tab" [class.is-activa]="tab() === 'estacion'" [attr.aria-selected]="tab() === 'estacion'" [attr.tabindex]="tab() === 'estacion' ? 0 : -1" aria-controls="performance-station" (click)="selectTab('estacion')" (keydown)="tabKey($event)">Frente a la estación</button>
+      <button type="button" class="jr-tab" id="performance-normalized-tab" role="tab" [class.is-activa]="tab() === 'ajustado'" [attr.aria-selected]="tab() === 'ajustado'" [attr.tabindex]="tab() === 'ajustado' ? 0 : -1" aria-controls="performance-normalized" (click)="selectTab('ajustado')" (keydown)="tabKey($event)">Ajustado por turno</button>
+    </div>
+    <button class="jr-btn jr-btn--ghost jr-btn--sm" type="button" [disabled]="!chartSeries().length" (click)="dialog.set('chart')">Ver gráfica</button>
+  </div>
+  <form class="inv-filter-toolbar performance-filters" [formGroup]="form" (ngSubmit)="consult()">
+    <label class="ps-campo">Período<select class="flat-select" formControlName="mode"><option value="mes">Mes</option><option value="dia">Día</option><option value="rango">Rango de fechas</option></select></label>
+    @if (filters().mode === 'mes') { <label class="ps-campo">Mes<input type="month" class="flat-input" formControlName="month"></label> }
+    @else {
+      <label class="ps-campo">{{ filters().mode === 'dia' ? 'Fecha operativa' : 'Desde' }}<input type="date" class="flat-input" formControlName="from"></label>
+      @if (filters().mode === 'rango') { <label class="ps-campo">Hasta<input type="date" class="flat-input" formControlName="to"></label> }
+    }
+    <label class="ps-campo">Ventas<select class="flat-select" formControlName="measure"><option value="FUEL_GALLONS">Combustibles · galones</option><option value="BASKET_COP">Lubricantes y otros · COP</option></select></label>
+    <button type="submit" class="btn-action-primary" [disabled]="loading() || !!rangeError()">{{ tab() === 'estacion' ? 'CONSULTAR' : 'GENERAR COMPARACIÓN' }}</button>
+  </form>
+  @if (rangeError()) { <p class="performance-notice is-error" role="alert">{{ rangeError() }}</p> }
+  @if (error()) { <p class="performance-notice is-error" role="alert">{{ error() }} <button type="button" class="jr-btn jr-btn--sec" (click)="consult()">Reintentar</button></p> }
+  @if (loading()) { <p class="performance-notice" role="status">Consultando rendimiento de jornadas cerradas…</p> }
+  @if (data(); as response) {
+    <p class="performance-period">Período consultado: {{ response.compliance.window.from }} a {{ response.compliance.window.to }} · {{ unit() }}</p>
+    <div class="performance-selection">
+      @if (tab() === 'estacion') {
+        <label class="ps-campo">Vendedor<select class="flat-select" [value]="selectedWorker()" (change)="selectWorker($any($event.target).value)"><option value="">Todos los vendedores</option>@for (person of people(); track person.workerId) { <option [value]="person.workerId">{{ person.recordedName }}</option> }</select></label>
+        <label class="ps-campo">Escenario<select class="flat-select" [value]="selectedScenario()" (change)="selectScenario($any($event.target).value)"><option value="">Todos los escenarios</option>@for (scenario of scenarios(); track scenario.id) { <option [value]="scenario.id">{{ scenario.label }}</option> }</select></label>
+      }
+      <div class="ps-campo"><span>Buscar vendedor o escenario</span><app-search-field fieldId="performance-search" label="Buscar vendedor o escenario" placeholder="Buscar" (searchChange)="setSearch($event)" /></div>
+    </div>
+    @if (tab() === 'ajustado') {
+      <div class="readonly-config-callout"><b>Factores por turno · Solo lectura</b><p>Se muestran únicamente los multiplicadores aplicables y su procedencia. Los turnos y escenarios permanecen separados.</p></div>
+      @if (people().length) { <div class="vendor-chips-selector" role="group" aria-label="Vendedores a comparar">@for (person of people(); track person.workerId) {
+        <button type="button" class="vendor-chip-btn" [class.selected]="!excludedWorkers().includes(person.workerId)" [attr.aria-pressed]="!excludedWorkers().includes(person.workerId)" (click)="toggleWorker(person.workerId)">{{ person.recordedName }}</button>
+      }</div> }
+    }
+    @if (activeReport(); as report) {
+      @if (report.availability !== 'AVAILABLE') { <p class="performance-notice" role="status"><b>{{ report.availability === 'PARTIAL' ? 'Disponibilidad parcial.' : report.availability === 'NO_DATA' ? 'Sin datos.' : 'Cálculo no disponible.' }}</b> {{ reasonText(report.reason) }}</p> }
+      @if (pending().length) { <details class="performance-coverage"><summary>{{ pending().length }} fechas pendientes de confirmación</summary><ul>@for (day of pending(); track day.date) { <li>{{ day.date }} · {{ day.status === 'PENDING' ? 'Procesamiento pendiente' : 'Sin historial confirmado' }}</li> }</ul></details> }
+    }
+  }
+  @if (tab() === 'estacion') {
+    <section id="performance-station" role="tabpanel" aria-labelledby="performance-station-tab">
+      <div class="sales-kpi-grid cols-3">
+        <div class="sales-kpi-card vendor-kpi"><div class="sales-kpi-label">PROMEDIO DEL VENDEDOR</div><div class="sales-kpi-val">{{ format(focus()?.sellerAverage ?? null) }}{{ focus() ? ' ' + chartUnit() : '' }}</div><small>{{ focus()?.recordedName ?? 'Selecciona vendedor y escenario' }}</small></div>
+        <div class="sales-kpi-card station-kpi"><div class="sales-kpi-label">PROMEDIO DE LA ESTACIÓN</div><div class="sales-kpi-val">{{ format(focus()?.stationAverage ?? null) }}{{ focus() ? ' ' + chartUnit() : '' }}</div><small>Incluye al vendedor · mismo escenario</small></div>
+        <div class="sales-kpi-card"><div class="sales-kpi-label">ÍNDICE FRENTE A LA ESTACIÓN</div><div class="sales-kpi-val">{{ format(focus()?.relativePercent ?? null) }}{{ focus()?.relativePercent !== null && focus() ? ' %' : '' }}</div><small>100 % equivale al promedio de la estación</small></div>
+      </div>
+      <p class="ps-nota">Promedios por cierre observado dentro del período, para el mismo día de semana, tipo de día, turno, código y rol efectivos. No representa una media de todos los trabajadores activos.</p>
+      <div class="rs-tabla-wrap" [attr.aria-busy]="loading()"><table class="inv-table"><caption class="jr-sr">Rendimiento frente a la estación por escenario equivalente</caption>
+        <thead><tr><th>Vendedor</th><th>Escenario</th><th class="right">Observaciones</th><th class="right">Ventas registradas</th><th class="right">Promedio vendedor</th><th class="right">Promedio estación</th><th class="right">Índice</th><th>Estado</th></tr></thead>
+        <tbody>@for (sale of comparisonRows(); track key(sale)) { <tr>
+          <td><div class="performance-person"><app-avatar [name]="sale.recordedName" /><b>{{ sale.recordedName }}</b></div>
+            @if (dailyCompliance().get(sale.workerId); as compliance) { <small class="daily-target">Meta del día · vendedor: {{ format(target(compliance)) }}{{ target(compliance) !== null ? ' ' + unit() : '' }} · Cumplimiento: {{ format(compliance.percent) }}{{ compliance.percent !== null ? ' %' : '' }}@if (compliance.reason) { · {{ reasonText(compliance.reason) }} }</small> }
+          </td><td class="scenario-cell"><app-shift-chip [code]="sale.scenario.workedCode" [toneOverride]="sale.scenario.period === 'DAY' ? 'dia' : 'noche'" /><div>{{ label(sale.scenario) }}</div></td>
+          <td class="right">{{ sale.observations }} / {{ sale.stationObservations }} estación</td><td class="right tnum">{{ format(sale.sales) }} {{ unit() }}</td><td class="right tnum">{{ format(sale.sellerAverage) }} {{ unit() }}</td><td class="right tnum">{{ format(sale.stationAverage) }} {{ unit() }}</td><td class="right tnum">{{ format(sale.relativePercent) }}{{ sale.relativePercent !== null ? ' %' : '' }}</td><td>{{ sale.availability === 'AVAILABLE' ? 'Disponible' : reasonText(sale.reason) }}</td>
+        </tr> } @empty { <tr><td colspan="8"><app-empty-state [heading]="data()?.comparison?.sellers?.length ? 'Sin coincidencias' : 'Sin resultados de comparación'" description="Consulta un período con historial y clasificación disponibles. Los datos faltantes no se sustituyen por ceros." /></td></tr> }</tbody>
+      </table></div>
+    </section>
+  } @else {
+    <section id="performance-normalized" role="tabpanel" aria-labelledby="performance-normalized-tab">
+      <div class="rs-tabla-wrap" [attr.aria-busy]="loading()"><table class="inv-table"><caption class="jr-sr">Ventas reales y normalizadas por turno, con procedencia del multiplicador</caption>
+        <thead><tr><th>Vendedor</th><th>Turno y escenario</th><th class="right">Ventas reales</th><th class="right">Factor de ajuste</th><th class="right">Ventas normalizadas</th><th>Procedencia</th><th>Estado</th></tr></thead>
+        <tbody>@for (sale of normalizationRows(); track key(sale)) { <tr>
+          <td><div class="performance-person"><app-avatar [name]="sale.recordedName" /><b>{{ sale.recordedName }}</b></div></td><td class="scenario-cell"><app-shift-chip [code]="sale.scenario.workedCode" [toneOverride]="sale.scenario.period === 'DAY' ? 'dia' : 'noche'" /><div>{{ label(sale.scenario) }}</div></td><td class="right tnum">{{ format(sale.sales) }} {{ unit() }}</td>
+          <td class="right tnum">{{ format(sale.availability === 'AVAILABLE' ? sale.multiplier : null) }}{{ sale.availability === 'AVAILABLE' ? '×' : '' }}</td><td class="right tnum">{{ format(sale.normalizedSales) }}{{ sale.normalizedSales !== null ? ' ' + unit() : '' }}</td><td class="scenario-cell">{{ sale.multiplierSource ?? '—' }}</td><td>{{ sale.availability === 'AVAILABLE' ? 'Disponible' : reasonText(sale.reason) }}</td>
+        </tr> } @empty { <tr><td colspan="7"><app-empty-state [heading]="data()?.normalization?.sellers?.length ? 'Sin coincidencias' : 'Sin resultados normalizados'" description="Se requieren clasificación histórica y factores aprobados. No se aplica un factor predeterminado." /></td></tr> }</tbody>
+      </table></div>
+      <p class="ps-nota">No hay ranking combinado entre turnos: el reporte devuelve resultados por escenario, sin una regla de clasificación global.</p>
+    </section>
+  }
+  <section class="chart-container-card performance-chart"><div class="chart-top-bar"><div class="chart-title-block"><h2>{{ chartTitle() }}</h2><p>{{ chartUnit() }} · Solo valores calculables</p></div><button class="jr-btn jr-btn--ghost" type="button" [disabled]="!chartSeries().length" (click)="dialog.set('chart')">Ampliar gráfica</button></div>
+    @if (dialog() !== 'chart') { <app-statistics-chart [series]="chartSeries()" kind="bars" [unit]="chartUnit()" sourceLabel="Cierres confirmados · Escenarios equivalentes" [showIndicators]="false" [description]="chartTitle()" /> }
+  </section>
+</div>
+@if (dialog() === 'chart') {
+  <app-statistics-dialog [heading]="chartTitle()" subtitle="Cierres confirmados · Solo los escenarios seleccionados" [showBack]="true" (closed)="dialog.set(null)">
+    <app-statistics-chart #chart [series]="chartSeries()" kind="bars" [unit]="chartUnit()" sourceLabel="Cierres confirmados · Escenarios equivalentes" [showIndicators]="false" [description]="chartTitle()" />
+    <button class="jr-btn jr-btn--sec" type="button" [disabled]="!chartSeries().length" (click)="chart.download()">Descargar gráfica (PNG)</button>
+  </app-statistics-dialog>
+}
+@if (dialog() === 'downloads') {
+  <app-statistics-dialog heading="Balance y descargas" subtitle="Archivos de una jornada operativa" (closed)="dialog.set(null)">
+    <p class="ps-nota">La fecha de las descargas es independiente del período de rendimiento. Cada archivo corresponde a una sola jornada, no al balance del período.</p>
+    <label class="ps-campo">Fecha operativa de los archivos diarios<input type="date" class="flat-input" [formControl]="downloadDate"></label>
+    @if (downloadError()) { <p class="performance-notice" role="status">{{ downloadError() }}</p> }
+    @else { @for (date of [downloadDateValue()]; track date) { <app-daily-downloads [atrDate]="date" /> } }
+    <p class="ps-nota">Los botones habilitados permiten solicitar los archivos integrados. Si la fecha no tiene datos de cierre, el servidor informa que no hay archivo disponible.</p>
+    <p class="ps-nota">El balance PPTX de estadísticas se genera en <a routerLink="/resultados/estadisticas">Resultados › Estadísticas</a>. La exportación específica de este reporte de rendimiento aún no tiene contrato.</p>
+  </app-statistics-dialog>
+}

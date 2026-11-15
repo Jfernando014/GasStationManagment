@@ -10,6 +10,8 @@ export class StatisticsChartComponent {
   readonly kind = input<'bars' | 'lines'>('bars');
   readonly unit = input('Gal');
   readonly sourceLabel = input('Observaciones proporcionadas por el cliente');
+  readonly showIndicators = input(true);
+  readonly description = input<string | null>(null);
   readonly format = formatStatistics;
   readonly error = signal('');
   private readonly svg = viewChild<ElementRef<SVGSVGElement>>('svg');

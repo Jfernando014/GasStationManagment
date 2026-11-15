@@ -5,12 +5,17 @@ import { of } from 'rxjs';
 import { routes } from '../../../app/app.routes';
 import { AuthService } from '../../../core/services/auth.service';
 import { SalesTargetsService } from '../../../core/services/sales-targets.service';
+import { SellerPerformanceService } from '../../../core/services/seller-performance.service';
+import { PerformanceQuery } from '../../../shared/models/dtos/seller-performance.dto';
+import { parseSellerPerformance } from '../../../shared/helpers/seller-performance.helpers';
+import { emptyPerformanceFixture } from '../../../shared/helpers/seller-performance.test-data';
 
 describe('C-14 dashboard route', () => {
   it('uses the existing protected layout and marks the new navigation link active', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes),
       { provide: AuthService, useValue: { hasToken: () => true, logout: () => undefined } },
-      { provide: SalesTargetsService, useValue: { list: () => of([]) } }
+      { provide: SalesTargetsService, useValue: { list: () => of([]) } },
+      { provide: SellerPerformanceService, useValue: { read: (query: PerformanceQuery) => of(parseSellerPerformance(JSON.stringify(emptyPerformanceFixture(query)), query)) } }
     ] });
     const harness = await RouterTestingHarness.create('/resultados/metas');
     await harness.fixture.whenStable();
