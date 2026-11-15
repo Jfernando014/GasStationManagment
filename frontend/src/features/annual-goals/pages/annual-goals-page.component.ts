@@ -1,11 +1,17 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subject, catchError, of, startWith, switchMap, tap } from 'rxjs';
+import { Subject, catchError, merge, of, startWith, switchMap, tap } from 'rxjs';
+import { AvatarComponent } from '../../../atomic-design/atoms/avatar/avatar.component';
+import { PercentBarComponent } from '../../../atomic-design/atoms/percent-bar/percent-bar.component';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
 import { SelectFieldComponent, SelectOption } from '../../../atomic-design/molecules/select-field/select-field.component';
 import { SearchFieldComponent } from '../../../atomic-design/atoms/search-field/search-field.component';
 import { SalesTargetsService } from '../../../core/services/sales-targets.service';
+import { SellerPerformanceService } from '../../../core/services/seller-performance.service';
+import { PerformanceQuery, SellerPerformanceResponse } from '../../../shared/models/dtos/seller-performance.dto';
+import { addExact, difference, formatStatistics, monthRange } from '../../../shared/helpers/sales-statistics.helpers';
+import { applicableTarget, complianceBarValue, performanceRangeError, performanceReason } from '../../../shared/helpers/seller-performance.helpers';
 import { applyFieldErrors, getErrorMessage, isApiError } from '../../../shared/helpers/problem-details.helpers';
 import { formatDecimal, monthlyDailyPreview, targetDecimalValidator, targetMargin } from '../../../shared/helpers/sales-target.helpers';
 import { SalesTargetResponse } from '../../../shared/models/dtos/sales-target.dto';
@@ -19,12 +25,14 @@ function localToday(): string {
 @Component({
   selector: 'app-annual-goals-page',
   standalone: true,
-  imports: [ReactiveFormsModule, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent],
+  imports: [ReactiveFormsModule, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent, AvatarComponent, PercentBarComponent],
   templateUrl: './annual-goals-page.component.html',
   styleUrl: './annual-goals-page.component.css'
 })
 export class AnnualGoalsPageComponent {
   private readonly service = inject(SalesTargetsService);
+  private readonly performanceService = inject(SellerPerformanceService);
+  private readonly complianceRequests$ = new Subject<PerformanceQuery | null>();
   private readonly destroyRef = inject(DestroyRef);
   private readonly reload$ = new Subject<void>();
   readonly today = localToday();
@@ -43,8 +51,50 @@ export class AnnualGoalsPageComponent {
   readonly periodMode = signal<'dia' | 'semana' | 'mes'>('mes');
   readonly complianceMonth = new FormControl(this.today.slice(0, 7), { nonNullable: true });
   readonly complianceDate = new FormControl(this.today, { nonNullable: true });
+  readonly complianceTo = new FormControl(this.today, { nonNullable: true });
+  readonly complianceForm = new FormGroup({ month: this.complianceMonth, date: this.complianceDate, to: this.complianceTo });
   private readonly complianceMonthValue = toSignal(this.complianceMonth.valueChanges, { initialValue: this.complianceMonth.value });
+  private readonly complianceDateValue = toSignal(this.complianceDate.valueChanges, { initialValue: this.complianceDate.value });
+  private readonly complianceToValue = toSignal(this.complianceTo.valueChanges, { initialValue: this.complianceTo.value });
   readonly sellerSearch = signal('');
+  readonly compliance = signal<SellerPerformanceResponse | null>(null);
+  readonly complianceLoading = signal(false);
+  readonly complianceError = signal('');
+  readonly complianceRange = computed(() => {
+    if (this.periodMode() === 'mes') {
+      try { return monthRange(this.complianceMonthValue()); } catch { return null; }
+    }
+    return { from: this.complianceDateValue(), to: this.periodMode() === 'dia' ? this.complianceDateValue() : this.complianceToValue() };
+  });
+  readonly complianceRangeError = computed(() => {
+    const range = this.complianceRange();
+    return range ? performanceRangeError(range.from, range.to) : 'Selecciona un mes válido.';
+  });
+  readonly complianceRows = computed(() => {
+    const search = this.normalizeSearch(this.sellerSearch());
+    return (this.compliance()?.compliance.sellers ?? []).map((seller, index) => ({
+      ...seller, rank: seller.availability === 'AVAILABLE' ? index + 1 : null,
+      applicableTarget: applicableTarget(seller), barValue: complianceBarValue(seller.percent),
+      reached: seller.ratio !== null && !difference(seller.ratio.numerator, seller.ratio.denominator).startsWith('-')
+    })).filter(seller => !search || this.normalizeSearch(`${seller.recordedName} ${seller.workerId}`).includes(search));
+  });
+  readonly complianceSales = computed(() => {
+    const sellers = this.compliance()?.compliance.sellers;
+    return sellers?.length ? sellers.reduce((sum, seller) => addExact(sum, seller.sales), '0') : null;
+  });
+  readonly pendingCoverage = computed(() => this.compliance()?.compliance.coverage.filter(day => day.status === 'PENDING' || day.status === 'ABSENT') ?? []);
+  readonly complianceEmpty = computed(() => {
+    const response = this.compliance();
+    if (this.complianceError()) return { heading: 'No se pudo consultar el cumplimiento', description: 'Reintenta la consulta para obtener datos confirmados.' };
+    if (response?.compliance.sellers.length) return { heading: 'Sin coincidencias', description: 'Cambia la búsqueda para ver los vendedores del período.' };
+    if (response) return {
+      heading: response.compliance.availability === 'NO_DATA' ? 'Sin datos de ventas' : 'Cumplimiento no disponible',
+      description: 'Las jornadas cerradas se incluyen automáticamente, sin cargar datos adicionales.'
+    };
+    return { heading: 'Selecciona el período y consulta', description: 'Pulsa CONSULTAR para obtener las ventas y metas del período seleccionado.' };
+  });
+  readonly formatCompliance = formatStatistics;
+  readonly reasonText = performanceReason;
   readonly targets = signal<SalesTargetResponse[]>([]);
   readonly annualTarget = computed(() => this.targets().find(target => target.year === this.year() && target.month === null && target.category === 'FUEL_AGGREGATE') ?? null);
   readonly monthlyFuel = computed(() => this.targets().find(target => target.year === this.year() && target.month === this.month() && target.category === 'FUEL_AGGREGATE') ?? null);
@@ -82,6 +132,19 @@ export class AnnualGoalsPageComponent {
   readonly format = formatDecimal;
 
   constructor() {
+    this.complianceRequests$.pipe(
+      switchMap(query => query ? this.performanceService.read(query).pipe(catchError((error: unknown) => {
+        this.complianceError.set(this.performanceErrorMessage(error));
+        return of(null);
+      })) : of(null)),
+      takeUntilDestroyed()
+    ).subscribe(report => {
+      this.compliance.set(report);
+      this.complianceLoading.set(false);
+    });
+    merge(this.complianceMonth.valueChanges, this.complianceDate.valueChanges, this.complianceTo.valueChanges)
+      .pipe(takeUntilDestroyed()).subscribe(() => this.invalidateCompliance());
+    this.consultCompliance();
     this.reload$.pipe(
       tap(() => {
         this.loading.set(true);
@@ -118,6 +181,39 @@ export class AnnualGoalsPageComponent {
       this.reload$.next();
     });
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.confirming.set(false));
+  }
+
+  setComplianceMode(mode: 'dia' | 'semana' | 'mes'): void {
+    if (mode === this.periodMode()) return;
+    this.invalidateCompliance();
+    this.periodMode.set(mode);
+  }
+
+  consultCompliance(): void {
+    this.invalidateCompliance();
+    const range = this.complianceRange();
+    if (!range || this.complianceRangeError()) return;
+    this.complianceLoading.set(true);
+    this.complianceRequests$.next({ ...range, measure: 'FUEL_GALLONS', outputScale: 2 });
+  }
+
+  private invalidateCompliance(): void {
+    this.complianceError.set('');
+    this.complianceRequests$.next(null);
+  }
+
+  private normalizeSearch(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('es-CO');
+  }
+
+  private performanceErrorMessage(error: unknown): string {
+    if (isApiError(error)) {
+      if (error.status === 401) return 'La sesión no permite consultar cumplimiento (HTTP 401). Inicia sesión nuevamente.';
+      if (error.status === 403) return 'Se requiere autorización de administrador para consultar cumplimiento (HTTP 403).';
+      if (error.status === 404) return 'La API de cumplimiento no está disponible en este servidor (HTTP 404).';
+      if (error.status === 502) return 'No se pudieron leer o validar las fuentes de cumplimiento (HTTP 502). Reintenta la consulta.';
+    }
+    return error instanceof Error ? error.message : getErrorMessage(error);
   }
 
   retry(): void { if (!this.saving()) this.reload$.next(); }

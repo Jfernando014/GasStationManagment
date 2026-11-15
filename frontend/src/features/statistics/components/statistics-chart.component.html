@@ -5,7 +5,7 @@
 @if (points().length) {
   <div class="stats-chart-canvas">
     <svg #svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320" font-family="Inter, Arial, sans-serif" role="img" aria-labelledby="statistics-chart-description">
-      <title id="statistics-chart-description">{{ kind() === 'bars' ? 'Comparación de promedios' : 'Totales por fecha observada' }} · {{ unit() }}</title>
+      <title id="statistics-chart-description">{{ description() ?? (kind() === 'bars' ? 'Comparación de promedios' : 'Totales por fecha observada') }} · {{ unit() }}</title>
       <rect width="900" height="320" fill="#F8FAFC" rx="12" />
       <text x="40" y="25" fill="#64748B" font-size="11">{{ sourceLabel() }} · {{ unit() }}</text>
       <path d="M40 260H870M40 160H870M40 60H870" stroke="#E2E8F0" fill="none" />
@@ -33,10 +33,10 @@
 } @else {
   <app-empty-state heading="Sin datos para representar" description="Consulta un análisis con observaciones disponibles. No se dibujan barras ni líneas con valores supuestos." />
 }
-<div class="stats-chart-kpis">
+@if (showIndicators()) { <div class="stats-chart-kpis">
   <div><span>PICO MÁXIMO</span><b class="stats-orange">{{ format(points().length ? maximum() : null) }} {{ points().length ? unit() : '' }}</b></div>
   <div><span>PROMEDIO DE LA GRÁFICA</span><b>{{ format(mean()) }} {{ mean() !== null ? unit() : '' }}</b></div>
   <div><span>MÍNIMO DEL PERÍODO MOSTRADO</span><b>{{ format(minimum()) }} {{ minimum() !== null ? unit() : '' }}</b></div>
   <div><span>EFICIENCIA DE DESPACHO</span><b>—</b><small>Sin datos verificados</small></div>
-</div>
+</div> }
 @if (error()) { <p class="stats-error" role="alert">{{ error() }}</p> }

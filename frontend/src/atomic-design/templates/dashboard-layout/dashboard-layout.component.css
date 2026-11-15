@@ -13,6 +13,8 @@
   :host(.statistics-mobile-layout) .header-action-tray { gap: 0; }
   :host(.statistics-mobile-layout) .status-capsule-badge { display: none; }
   :host(.statistics-mobile-layout) .dashboard-scroll-viewport { padding-right: 0; }
+  :host(.performance-layout) .app-floating-header { flex-wrap: wrap; }
+  :host(.performance-layout) .header-action-tray { flex-basis: 100%; justify-content: flex-end; gap: 6px; }
 }
 
 /* ==========================================================================

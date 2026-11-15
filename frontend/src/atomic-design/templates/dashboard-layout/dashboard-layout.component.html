@@ -161,7 +161,8 @@
             routerLinkActive="active" #statisticsNav="routerLinkActive"
             [attr.aria-current]="statisticsNav.isActive ? 'page' : null">Estadísticas</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/rendimiento"
-            routerLinkActive="active">Rendimiento</a>
+            routerLinkActive="active" #performanceNav="routerLinkActive"
+            [attr.aria-current]="performanceNav.isActive ? 'page' : null">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
             routerLinkActive="active" #incentivesNav="routerLinkActive">Incentivos</a>
         </div>
@@ -232,7 +233,7 @@
           onmouseover="this.style.textDecorationColor='inherit'"
           onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : statisticsNav.isActive ? 'Resultados / Estadísticas' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : statisticsNav.isActive ? 'Resultados / Estadísticas' : performanceNav.isActive ? 'Resultados / Rendimiento' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 
