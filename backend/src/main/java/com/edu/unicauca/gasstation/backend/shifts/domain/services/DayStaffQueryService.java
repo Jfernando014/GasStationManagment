@@ -15,7 +15,6 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftNovel
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -119,14 +118,7 @@ public class DayStaffQueryService implements DayStaffQuery {
 
     /** One batch read of every worker of the grid and of the novelties; only the active ones are kept. */
     private Map<UUID, ScheduleWorkerInfo> activeWorkers(List<ShiftAssignment> assignments, List<ShiftNovelty> novelties) {
-        Set<UUID> ids = new HashSet<>();
-        assignments.forEach(assignment -> ids.add(assignment.getWorkerId()));
-        novelties.forEach(novelty -> {
-            ids.add(novelty.getWorkerId());
-            if (novelty.getCounterpartWorkerId() != null) {
-                ids.add(novelty.getCounterpartWorkerId());
-            }
-        });
+        Set<UUID> ids = DayStaffAssembler.workerIds(assignments, novelties, Set.of());
         return scheduleWorkerDirectory.getWorkersByIds(ids).values().stream()
                 .filter(ScheduleWorkerInfo::active)
                 .collect(Collectors.toMap(ScheduleWorkerInfo::id, Function.identity()));

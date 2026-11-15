@@ -323,7 +323,6 @@ class ShiftScheduleServiceTest {
         ScheduleChange change = shiftRotationService.generateForWorker(ANA_ID, start, end, 0);
 
         InOrder order = inOrder(shiftAssignmentRepository);
-        verify(shiftAssignmentRepository, never()).deleteByWorkerInRange(any(), any(), any());
         List<ShiftAssignment> rows = savedRotation(order);
         assertThat(change.saved()).isEqualTo(14);
         assertThat(rows).extracting(row -> row.getShiftCode().getCode()).containsExactly(

@@ -4,6 +4,7 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalClosingSummaryRe
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalStepResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.Step3ReconciliationResponse;
+import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService;
@@ -14,8 +15,8 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepServ
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,24 +34,19 @@ public class JournalController {
     private final JournalStepService journalStepService;
     private final JournalStep3ValidationService journalStep3ValidationService;
     private final JournalClosingSummaryService journalClosingSummaryService;
+    private final CashBalanceStepService cashBalanceStepService;
 
-    public JournalController(
-            JournalService journalService,
-            JournalStepService journalStepService,
-            JournalStep3ValidationService journalStep3ValidationService) {
-        this(journalService, journalStepService, journalStep3ValidationService, null);
-    }
-
-    @Autowired
     public JournalController(
             JournalService journalService,
             JournalStepService journalStepService,
             JournalStep3ValidationService journalStep3ValidationService,
-            @Autowired(required = false) JournalClosingSummaryService journalClosingSummaryService) {
+            JournalClosingSummaryService journalClosingSummaryService,
+            CashBalanceStepService cashBalanceStepService) {
         this.journalService = journalService;
         this.journalStepService = journalStepService;
         this.journalStep3ValidationService = journalStep3ValidationService;
         this.journalClosingSummaryService = journalClosingSummaryService;
+        this.cashBalanceStepService = cashBalanceStepService;
     }
 
     @Operation(summary = "Open or retrieve an operational daily journal by date")
@@ -68,8 +64,15 @@ public class JournalController {
     @PostMapping("/{journalId}/steps/{stepNumber}/complete")
     public ResponseEntity<JournalStepResponse> completeStep(
             @PathVariable Long journalId,
-            @PathVariable Integer stepNumber) {
-        JournalStep step = journalStepService.markStepAsCompleted(journalId, stepNumber);
+            @PathVariable Integer stepNumber,
+            Authentication authentication) {
+        JournalStep step;
+        if (stepNumber == 4) {
+            SalesAdminAuthorization.requireAdmin(authentication);
+            step = cashBalanceStepService.complete(journalId);
+        } else {
+            step = journalStepService.markStepAsCompleted(journalId, stepNumber);
+        }
         return ResponseEntity.ok(JournalStepResponse.builder()
                 .id(step.getId())
                 .stepNumber(step.getStepNumber())

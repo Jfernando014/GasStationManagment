@@ -10,6 +10,8 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingS
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepService;
+import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
+import com.edu.unicauca.gasstation.backend.sales.exception.CashBalanceNotReadyException;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.config.SecurityConfig;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtService;
@@ -31,6 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,15 +65,22 @@ class JournalControllerTest {
     private JournalClosingSummaryService journalClosingSummaryService;
 
     @MockBean
+    private CashBalanceStepService cashBalanceStepService;
+
+    @MockBean
     private UserDetailsService userDetailsService;
 
     @MockBean
     private AuthenticationProvider authenticationProvider;
 
     private String getBearerToken() {
+        return getBearerToken("ADMIN");
+    }
+
+    private String getBearerToken(String authority) {
         var user = User.withUsername("admin")
                 .password("unused")
-                .authorities("ADMIN")
+                .authorities(authority)
                 .build();
         when(userDetailsService.loadUserByUsername("admin")).thenReturn(user);
         return "Bearer " + jwtService.generateToken(user);
@@ -139,6 +150,51 @@ class JournalControllerTest {
                 .andExpect(jsonPath("$.name").value("Asignación de turnos"))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.completedAt").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("Completing step 4 validates the cash balance before marking it complete")
+    void completesCashBalanceStepForAnAdmin() throws Exception {
+        JournalStep step = JournalStep.builder()
+                .id(40L)
+                .stepNumber(4)
+                .name("Saldo en caja")
+                .status(StepStatus.COMPLETED)
+                .completedAt(LocalDateTime.now())
+                .build();
+        when(cashBalanceStepService.complete(1L)).thenReturn(step);
+
+        mockMvc.perform(post("/api/v1/journals/{journalId}/steps/{stepNumber}/complete", 1L, 4)
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stepNumber").value(4))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        verify(cashBalanceStepService).complete(1L);
+        verify(journalStepService, never()).markStepAsCompleted(1L, 4);
+    }
+
+    @Test
+    @DisplayName("Step 4 returns its missing figures when the cash balance is incomplete")
+    void reportsMissingCashBalanceFigures() throws Exception {
+        when(cashBalanceStepService.complete(1L))
+                .thenThrow(new CashBalanceNotReadyException(List.of("Falta digitar el saldo acumulado de Dominus.")));
+
+        mockMvc.perform(post("/api/v1/journals/{journalId}/steps/{stepNumber}/complete", 1L, 4)
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CASH_BALANCE_NOT_READY"))
+                .andExpect(jsonPath("$.missing[0]").value("Falta digitar el saldo acumulado de Dominus."));
+    }
+
+    @Test
+    @DisplayName("Step 4 completion is restricted to administrators")
+    void refusesCashBalanceCompletionForNonAdmin() throws Exception {
+        mockMvc.perform(post("/api/v1/journals/{journalId}/steps/{stepNumber}/complete", 1L, 4)
+                        .header("Authorization", getBearerToken("USER")))
+                .andExpect(status().isForbidden());
+
+        verify(cashBalanceStepService, never()).complete(1L);
     }
 
     @Test

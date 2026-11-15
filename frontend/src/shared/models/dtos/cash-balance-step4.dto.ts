@@ -1,90 +1,58 @@
-export interface SavingsFundPaymentItem {
-  id: string;
-  fecha: string;
-  valor: number;
-  concepto: string;
+export type CashDifferenceStatus = 'CUADRA' | 'PLANILLA_MAYOR' | 'PLANILLA_MENOR';
+
+export interface SavingsFundInfoDto {
+  previousBalance: number;
+  contribution: number;
+  payments: number;
+  accumulatedBalance: number;
 }
 
-export interface SavingsFundState {
-  ahorroDiario: number;
-  dias: number;
-  acumulado: number;
-  saldoAnterior: number;
-  ahorroHoy: number;
-  pagosHoy: SavingsFundPaymentItem[];
-  totalPagosHoy: number;
-  diasLista: number[];
-}
-
-export interface DailyExpenseItem {
-  id: number;
+export interface ExpenseItemDto {
   date: string;
-  razonSocial: string;
-  concepto: string;
-  valor: number;
+  description: string;
+  amount: number;
 }
 
-export interface Step4CapturedData {
-  consolidadoDominus?: number | null;
-  saldoDominus?: number | null;
-  saldoAnterior?: number | null;
-  pdf?: {
-    nombre: string;
-    tamano?: number;
-    cargadoEn?: string;
-    finalGeneradoEn?: string;
-    paginas?: number;
-  } | null;
+export interface ExpensesInfoDto {
+  items: ExpenseItemDto[];
+  total: number;
 }
 
-export type ConsolidadoCuadreState = 'cuadra' | 'difiere' | 'pendiente';
-
-export interface Step4CalculationResult {
-  planilla: number;
-  dinero: number;
-  origenDinero: string;
-  fondo: SavingsFundState;
-  gastos: DailyExpenseItem[];
-  recibos: number;
-  semilla: boolean;
-  saldoAnterior: number | null;
-  origenAnterior: 'planilla histórica' | 'saldo del día anterior' | 'digitar';
-  consignaciones: number;
-  saldoEfectivo: number | null;
-  saldoJustificado: number | null;
-  saldoDominus: number | null;
-  saldoDominusPegado: boolean;
-  diferencia: number | null;
-  totalEnCaja: number | null;
-  totalEstacion: number | null;
-  consolidado: number | null;
-  cuadre: ConsolidadoCuadreState;
-}
-
-export interface BackendCashBalanceTableDto {
+export interface CashBalanceTableDto {
   date: string;
   journalConsecutive: number;
   journalStatus: string;
-  savingsFund: {
-    previousBalance: number;
-    contribution: number;
-    payments: number;
-    accumulatedBalance: number;
-  };
-  expenses: {
-    items: { date: string; description: string; amount: number }[];
-    total: number;
-  };
+  savingsFund: SavingsFundInfoDto;
+  expenses: ExpensesInfoDto;
   cashBalance: number;
   dailyCash: number | null;
+  planillaCashBalance: number | null;
   dominusAccumulatedBalance: number | null;
   difference: number | null;
 }
 
-export interface BackendCashBalanceStepResponseDto {
-  table: BackendCashBalanceTableDto;
+export interface CashBalanceStepResponseDto {
+  table: CashBalanceTableDto;
   canComplete: boolean;
   missing: string[];
-  differenceStatus: 'CUADRA' | 'PLANILLA_MAYOR' | 'PLANILLA_MENOR' | null;
+  differenceStatus: CashDifferenceStatus | null;
 }
 
+export interface SavingsFundMovementRequestDto {
+  date: string;
+  amount: number;
+  description?: string;
+}
+
+export interface SavingsFundMovementResponseDto {
+  id: number;
+  type: 'CONTRIBUTION' | 'PAYMENT';
+  date: string;
+  amount: number;
+  description: string | null;
+}
+
+export interface BalanceResponseDto {
+  date: string;
+  balance: number;
+}

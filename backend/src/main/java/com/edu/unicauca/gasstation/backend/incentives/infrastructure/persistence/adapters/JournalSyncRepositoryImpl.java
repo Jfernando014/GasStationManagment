@@ -31,6 +31,11 @@ public class JournalSyncRepositoryImpl implements JournalSyncRepository {
     }
 
     @Override
+    public Optional<LocalDate> findLastDate() {
+        return repository.findLastJournalDate();
+    }
+
+    @Override
     public List<JournalSync> findPending() {
         return repository.findByStatusOrderByJournalDateAsc(SyncStatus.PENDING).stream()
                 .map(JournalSyncRepositoryImpl::toDomain)

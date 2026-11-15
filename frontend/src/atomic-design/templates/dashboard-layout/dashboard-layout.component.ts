@@ -22,7 +22,7 @@ function storedCollapsed(): boolean {
 }
 
 /** Pantallas que ya se adaptan al celular: en ellas la barra lateral pasa a ser un menú desplegable. */
-const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/personal/turnos', '/jornada/personal'];
+const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/resultados/conciliaciones', '/personal/turnos', '/jornada/personal'];
 
 function usesMobileLayout(url: string): boolean {
   return MOBILE_READY_ROUTES.includes(url.split(/[?#]/)[0]);

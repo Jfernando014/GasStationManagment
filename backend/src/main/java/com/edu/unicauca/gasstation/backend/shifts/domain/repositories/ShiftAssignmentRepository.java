@@ -22,12 +22,4 @@ public interface ShiftAssignmentRepository {
     List<ShiftAssignment> findByWorkDateBetween(LocalDate from, LocalDate to);
 
     Optional<ShiftAssignment> findByWorkerIdAndWorkDate(UUID workerId, LocalDate workDate);
-
-    /**
-     * Deletes the assignments of a worker between both dates (inclusive), immediately, so new assignments for
-     * the same days can be saved right after without breaking the one-shift-per-day rule.
-     *
-     * @return number of deleted assignments
-     */
-    int deleteByWorkerInRange(UUID workerId, LocalDate from, LocalDate to);
 }

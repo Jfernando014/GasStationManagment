@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Use cases for workers (HU-9): create, edit, activate/deactivate, get one and list with filters.
+ * Use cases for workers: create, edit, activate/deactivate, get one and list with filters.
  *
  * <p>Business rules applied here:
  * <ul>

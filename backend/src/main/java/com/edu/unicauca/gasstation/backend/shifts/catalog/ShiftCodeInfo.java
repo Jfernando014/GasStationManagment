@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /**
  * Read-only view of a shift code for other modules.
- * Lives in the module root so it is part of the public API of {@code shifts}.
+ * Lives in the {@code catalog} package, a named interface, so it is part of the public API of {@code shifts}.
  *
  * @param id              shift code identifier
  * @param code            code (DIA, DIA6, NOCHE, 12-7...)

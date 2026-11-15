@@ -39,7 +39,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class ShiftAssignmentRepositoryTest {
 
     private static final UUID ANA_ID = UUID.fromString("00000000-0000-0000-0000-00000000000a");
-    private static final UUID BRUNO_ID = UUID.fromString("00000000-0000-0000-0000-00000000000b");
     private static final LocalDate DAY_1 = LocalDate.of(2026, 11, 2);
     private static final LocalDate DAY_2 = DAY_1.plusDays(1);
     private static final LocalDate DAY_3 = DAY_1.plusDays(2);
@@ -121,45 +120,6 @@ class ShiftAssignmentRepositoryTest {
         ShiftAssignment night = rows.stream().filter(row -> row.getWorkDate().equals(DAY_2)).findFirst().orElseThrow();
         assertThat(night.getShiftCode().getRole().getName()).isEqualTo("TITULAR");
         assertThat(night.getShiftCode().totalHours()).isEqualTo(12);
-    }
-
-    @Test
-    void deleteByWorkerInRangeDeletesOnlyThatWorkerInsideTheRange() {
-        saveDays(ANA_ID, DAY_1, DAY_2, DAY_3, DAY_4);
-        saveDays(BRUNO_ID, DAY_2, DAY_3);
-        clearContext();
-
-        int deleted = assignmentRepository.deleteByWorkerInRange(ANA_ID, DAY_2, DAY_3);
-        clearContext();
-
-        assertThat(deleted).isEqualTo(2);
-        assertThat(assignmentRepository.deleteByWorkerInRange(ANA_ID, DAY_2, DAY_3)).as("nothing left to delete").isZero();
-        List<ShiftAssignment> left = assignmentRepository.findByWorkDateBetween(DAY_1, DAY_4);
-        assertThat(left).filteredOn(row -> row.getWorkerId().equals(ANA_ID))
-                .extracting(ShiftAssignment::getWorkDate).containsExactlyInAnyOrder(DAY_1, DAY_4);
-        assertThat(left).filteredOn(row -> row.getWorkerId().equals(BRUNO_ID)).hasSize(2);
-    }
-
-    @Test
-    void rowsCanBeSavedAgainForTheDeletedDaysInTheSameTransaction() {
-        saveDays(ANA_ID, DAY_1, DAY_2);
-        clearContext();
-
-        assignmentRepository.deleteByWorkerInRange(ANA_ID, DAY_1, DAY_2);
-        assignmentRepository.saveAll(List.of(
-                new ShiftAssignment(ANA_ID, DAY_1, noche, null),
-                new ShiftAssignment(ANA_ID, DAY_2, descanso, null)));
-
-        // The query flushes the new INSERTs: the unique (worker, date) constraint is not broken
-        assertThat(assignmentRepository.findByWorkDateBetween(DAY_1, DAY_2))
-                .extracting(row -> row.getShiftCode().getCode())
-                .containsExactlyInAnyOrder("NOCHE", "DESCANSO");
-    }
-
-    private void saveDays(UUID workerId, LocalDate... days) {
-        for (LocalDate day : days) {
-            assignmentRepository.save(new ShiftAssignment(workerId, day, dia, null));
-        }
     }
 
     private void clearContext() {

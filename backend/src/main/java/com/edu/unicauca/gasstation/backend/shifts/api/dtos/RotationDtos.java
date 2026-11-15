@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.shifts.api.dtos;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -193,7 +194,8 @@ public final class RotationDtos {
             @NotNull(message = "La fecha inicial es obligatoria")
             LocalDate from,
 
-            @Schema(description = "Last day of the range (inclusive); at most 62 days in total", example = "2026-11-30")
+            @Schema(description = "Last day of the range (inclusive); at most " + DayStaffQuery.MAX_RANGE_DAYS
+                    + " days in total", example = "2026-11-30")
             @NotNull(message = "La fecha final es obligatoria")
             LocalDate to,
 
