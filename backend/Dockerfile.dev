@@ -1,6 +1,7 @@
 FROM maven:3.9.6-eclipse-temurin-21-alpine
 
-RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apk add --no-cache fontconfig ttf-dejavu postgresql16-client \
+    && mkdir -p /app/backups
 ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
 
 WORKDIR /app
