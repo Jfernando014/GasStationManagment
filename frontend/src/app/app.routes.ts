@@ -131,6 +131,10 @@ export const routes: Routes = [
         loadComponent: () => import('../features/configuration/pages/inspections-page/inspections-page.component').then(m => m.InspectionsPageComponent)
       },
       {
+        path: 'configuracion/backup',
+        loadComponent: () => import('../features/configuration/pages/backup-page/backup-page.component').then(m => m.BackupPageComponent)
+      },
+      {
         path: 'gastos',
         loadComponent: () => import('../atomic-design/pages/administrative-expenses/administrative-expenses-page.component')
           .then(m => m.AdministrativeExpensesPageComponent)
