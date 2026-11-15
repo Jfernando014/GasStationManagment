@@ -36,6 +36,8 @@ services:
       - JPA_SHOW_SQL=false
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
+      - BACKUP_DIR=/app/backups
+      - BACKUP_RESTART_AFTER_RESTORE=true
     depends_on:
       db:
         condition: service_healthy

@@ -17,7 +17,11 @@ ARG DOCKER_GROUP
 ENV APP_USER=${DOCKER_USER:-springuser}
 ENV APP_GROUP=${DOCKER_GROUP:-springgroup}
 
-RUN addgroup -S $APP_GROUP && adduser -S $APP_USER -G $APP_GROUP
+RUN apk add --no-cache postgresql16-client \
+    && addgroup -S $APP_GROUP \
+    && adduser -S $APP_USER -G $APP_GROUP \
+    && mkdir -p /app/backups \
+    && chown -R $APP_USER:$APP_GROUP /app/backups
 
 COPY --from=build /app/target/gas-station-backend-0.0.1-SNAPSHOT.jar app.jar
 RUN chown $APP_USER:$APP_GROUP app.jar
