@@ -1,0 +1,194 @@
+<div class="backup-page">
+  <header class="backup-header">
+    <div>
+      <div class="backup-breadcrumb">Configuración <span>/</span> Respaldos</div>
+      <h1>Respaldos de la base de datos</h1>
+      <p>Descarga una copia comprimida o restaura la información desde un archivo generado por el sistema.</p>
+    </div>
+  </header>
+
+  <div class="backup-grid">
+    <section class="backup-card" aria-labelledby="backup-export-title">
+      <div class="backup-card-head">
+        <span class="backup-icon backup-icon--export" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+        </span>
+        <div>
+          <h2 id="backup-export-title">Exportar base de datos</h2>
+          <p>Genera un archivo <strong>.dump</strong> con toda la información operativa. La descarga puede tardar según el tamaño de la base.</p>
+        </div>
+      </div>
+
+      <div class="backup-note">
+        El archivo se comprime en el servidor. Guárdalo en un lugar seguro; contiene la información de la estación.
+      </div>
+
+      <button class="jr-btn jr-btn--pri backup-action" type="button" [disabled]="exporting()" (click)="exportBackup()">
+        @if (exporting()) {
+          <span class="backup-spinner" aria-hidden="true"></span>
+          Generando respaldo...
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+          Descargar respaldo
+        }
+      </button>
+
+      @if (exportError()) {
+        <p class="backup-message backup-message--error" role="alert">{{ exportError() }}</p>
+      }
+    </section>
+
+    <section class="backup-card backup-card--restore" aria-labelledby="backup-restore-title">
+      <div class="backup-card-head">
+        <span class="backup-icon backup-icon--restore" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 21V9" />
+            <path d="m7 14 5-5 5 5" />
+            <path d="M5 3h14" />
+          </svg>
+        </span>
+        <div>
+          <h2 id="backup-restore-title">Restaurar base de datos</h2>
+          <p>Reemplaza la información actual con el contenido del archivo. La estación queda en mantenimiento durante el proceso.</p>
+        </div>
+      </div>
+
+      <div class="backup-warning" role="note">
+        <strong>Esta acción no se puede deshacer.</strong> Antes de restaurar, el sistema guarda una copia de seguridad automática.
+      </div>
+
+      <div class="backup-file">
+        <label for="backup-dump-input">Archivo de respaldo (.dump)</label>
+        <input #dumpInput id="backup-dump-input" class="jr-sr" type="file" accept=".dump,application/octet-stream"
+          [disabled]="restoring()" (change)="onFileSelected($event)">
+        <button appButton type="button" variant="secondary" size="sm" [block]="true" [disabled]="restoring()"
+          (click)="dumpInput.click()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M12 16V4" />
+            <path d="m7 9 5-5 5 5" />
+            <path d="M5 21h14" />
+          </svg>
+          Seleccionar archivo .dump
+        </button>
+      </div>
+
+      @if (selectedFile(); as file) {
+        <div class="backup-file-info">
+          <span>{{ file.name }}</span>
+          <span>{{ formatSize(file.size) }}</span>
+        </div>
+      }
+
+      <label class="backup-confirm">
+        <span>Escribe <strong>{{ phrase }}</strong> para confirmar</span>
+        <input
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="RESTAURAR"
+          [disabled]="restoring()"
+          [ngModel]="confirmation()"
+          (ngModelChange)="confirmation.set($event)">
+      </label>
+
+      <button class="jr-btn jr-btn--pri backup-action backup-action--restore" type="button"
+        [disabled]="!isRestoreReady()" (click)="restore()">
+        @if (restoring()) {
+          <span class="backup-spinner" aria-hidden="true"></span>
+          Restaurando...
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M12 21V9" />
+            <path d="m7 14 5-5 5 5" />
+            <path d="M5 3h14" />
+          </svg>
+          Restaurar base de datos
+        }
+      </button>
+
+      @if (restoring()) {
+        <div class="backup-progress" role="progressbar" [attr.aria-valuenow]="uploadProgress()" aria-valuemin="0" aria-valuemax="100">
+          <div class="backup-progress-bar" [style.width.%]="uploadProgress()"></div>
+        </div>
+        <p class="backup-progress-text">
+          @if (uploadProgress() < 100) {
+            Subiendo archivo: {{ uploadProgress() }}%
+          } @else {
+            Aplicando el respaldo. No cierres esta ventana.
+          }
+        </p>
+      }
+
+      @if (restoreError()) {
+        <p class="backup-message backup-message--error" role="alert">{{ restoreError() }}</p>
+      }
+
+      @if (restoreSuccess()) {
+        <p class="backup-message backup-message--success" role="status">{{ restoreSuccess() }} La sesión se cerrará en unos segundos.</p>
+      }
+    </section>
+  </div>
+
+  <section class="backup-card backup-audit" aria-labelledby="backup-audit-title">
+    <div class="backup-card-head backup-card-head--table">
+      <div>
+        <h2 id="backup-audit-title">Historial reciente</h2>
+        <p>Últimas exportaciones y restauraciones registradas en el sistema.</p>
+      </div>
+      <button class="jr-btn jr-btn--ghost jr-btn--sm" type="button" [disabled]="auditLoading()" (click)="loadAudit()">Actualizar</button>
+    </div>
+
+    @if (auditLoading()) {
+      <p class="backup-empty">Cargando historial...</p>
+    } @else if (auditError()) {
+      <p class="backup-message backup-message--error" role="alert">{{ auditError() }}</p>
+    } @else if (audit().length === 0) {
+      <p class="backup-empty">Todavía no hay operaciones de respaldo registradas.</p>
+    } @else {
+      <div class="backup-table-scroll">
+        <table class="backup-table">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Operación</th>
+              <th scope="col">Archivo</th>
+              <th scope="col">Tamaño</th>
+              <th scope="col">Usuario</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of audit(); track entry.id) {
+              <tr>
+                <td>{{ formatDate(entry.startedAt) }}</td>
+                <td>{{ actionLabel(entry.action) }}</td>
+                <td class="backup-file-cell" [attr.title]="entry.fileName ?? 'Sin archivo'">{{ entry.fileName ?? '—' }}</td>
+                <td>{{ formatSize(entry.sizeBytes) }}</td>
+                <td>{{ entry.username }}</td>
+                <td>
+                  <span class="backup-status"
+                    [class.backup-status--succeeded]="entry.status === 'SUCCEEDED'"
+                    [class.backup-status--failed]="entry.status === 'FAILED'"
+                    [class.backup-status--started]="entry.status === 'STARTED'">
+                    {{ statusLabel(entry.status) }}
+                  </span>
+                  @if (entry.status === 'FAILED') {
+                    <span class="backup-status-detail">{{ failedAuditMessage }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
