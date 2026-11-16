@@ -16,7 +16,7 @@ import {
   VendorShiftCloseItemRequestDto
 } from '../../../../shared/models/dtos/vendor-close.dto';
 
-export const DENOMINATIONS: Array<[keyof DenominationsBreakdown, number]> = [
+export const DENOMINATIONS: [keyof DenominationsBreakdown, number][] = [
   ['b100k', 100000],
   ['b50k', 50000],
   ['b20k', 20000],
@@ -72,7 +72,7 @@ export class VendorCloseStep2Component implements OnInit {
   errorMessage = '';
   toastMessage = '';
   toastVisible = false;
-  private toastTimer: any = null;
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     if (this.journalService) {
@@ -443,7 +443,7 @@ export class VendorCloseStep2Component implements OnInit {
   }
 
   onPaste(event: ClipboardEvent, startFila: string, colDoc: string): void {
-    const clipboardData = event.clipboardData || (window as any).clipboardData;
+    const clipboardData = event.clipboardData || (window as Window & { clipboardData?: DataTransfer }).clipboardData;
     if (!clipboardData) return;
 
     const pastedText = clipboardData.getData('text');
@@ -472,7 +472,7 @@ export class VendorCloseStep2Component implements OnInit {
 
   parseNumber(str: string): number | null {
     if (!str) return null;
-    let s = String(str).replace(/[\s\$\.]/g, '').replace(',', '.');
+    const s = String(str).replace(/[\s$.]/g, '').replace(',', '.');
     const n = parseFloat(s);
     return isNaN(n) ? null : n;
   }
@@ -586,7 +586,7 @@ export class VendorCloseStep2Component implements OnInit {
     const closesDto: VendorShiftCloseItemRequestDto[] = this.assignedVendors.map(v => {
       const cap = this.captures[v.document];
       const productsDto = Object.entries(cap.productos)
-        .filter(([_, units]) => units > 0)
+        .filter(([, units]) => units > 0)
         .map(([sku, units]) => {
           const price = this.getProductPrice(sku);
           return {
@@ -626,13 +626,13 @@ export class VendorCloseStep2Component implements OnInit {
     };
 
     this.salesService.saveVendorCloses(batchRequest).subscribe({
-      next: (res) => {
+      next: () => {
         this.isSaving = false;
         this.saveSuccessMessage = 'Cierres de turno guardados y conciliados exitosamente en el servidor.';
         this.showToast('Cierres de vendedores conciliados y guardados');
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: () => {
         this.isSaving = false;
         this.errorMessage = 'No se pudo conectar con el servidor para persistir los cierres. Los datos permanecen en pantalla.';
         this.showToast('Error al guardar cierres en servidor');

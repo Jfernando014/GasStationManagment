@@ -42,7 +42,10 @@
         @let open = openDocument() === row.document;
         @let canOpen = row.lines.length > 0;
         <li class="item" [class.is-open]="open" [style.--i]="$index">
-          <div class="grid row" [class.is-clickable]="canOpen" (click)="canOpen && toggle(row.document)">
+          <div class="grid row" [class.is-clickable]="canOpen" [attr.role]="canOpen ? 'button' : null"
+            [attr.tabindex]="canOpen ? 0 : null" (click)="canOpen && toggle(row.document)"
+            (keydown.enter)="canOpen && toggle(row.document)"
+            (keydown.space)="$event.preventDefault(); canOpen && toggle(row.document)">
             <div class="who">
               <b [attr.title]="row.name">{{ row.name }}</b>
               <span><span class="jr-sr">Documento </span>{{ row.document }}</span>

@@ -42,7 +42,6 @@ const ERROR_FIELD: Record<string, FieldName> = {
   PRODUCT_INACTIVE: 'additive'
 };
 
-const FIELD_ORDER: FieldName[] = ['additive', 'value', 'date'];
 const FIELD_IDS: Record<FieldName, string> = { additive: 'rule-additive', value: 'rule-value', date: 'rule-date' };
 
 function thousands(digits: string): string {
