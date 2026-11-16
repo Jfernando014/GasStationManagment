@@ -32,5 +32,7 @@ public interface ShiftSaleHistoryRepository {
 
     List<ShiftSaleHistory> findByDate(LocalDate journalDate);
 
+    List<ShiftSaleHistory> findAllProcessed();
+
     Optional<ShiftSaleHistory> findByIdentity(ShiftSaleIdentity identity);
 }
