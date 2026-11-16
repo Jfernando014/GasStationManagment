@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource(properties = "server.port=0")
+@TestPropertySource(properties = {"server.port=0", "spring.jpa.hibernate.ddl-auto=create-drop"})
 @Import({FuelReceptionRepositoryAdapter.class, FuelReceptionPersistenceMapper.class,
         TankRepositoryAdapter.class, TankPersistenceMapper.class})
 @Testcontainers
