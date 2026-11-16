@@ -1,0 +1,92 @@
+:host { display: block; min-width: 0; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  animation: rise-in var(--duration-normal) var(--spring) 80ms backwards;
+}
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-main);
+  border-radius: 10px;
+  background: #F8FAFC;
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+}
+
+.form app-segmented-control { align-self: flex-start; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 8px; align-items: start; }
+.actions { display: flex; justify-content: flex-end; gap: 6px; }
+.error { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--semantic-red-strong); }
+
+.empty { padding: 6px 0; font-size: 13px; color: var(--text-muted); }
+
+.list { list-style: none; }
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--surface-subtle);
+  font-size: 13px;
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.what { display: flex; align-items: center; gap: 6px; }
+.what b { color: var(--text-heading); font-variant-numeric: tabular-nums; }
+.reason { color: var(--text-body); overflow-wrap: anywhere; }
+.who { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.remove-button {
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--semantic-red-strong);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remove-button:hover { text-decoration: underline; }
+.remove-button:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--semantic-red-subtle);
+  color: #991B1B;
+  font-size: 12.5px;
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+}
+
+.confirm-actions { display: flex; gap: 6px; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .form, .item, .confirm { animation: none; }
+}
