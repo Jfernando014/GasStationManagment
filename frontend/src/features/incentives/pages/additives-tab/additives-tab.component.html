@@ -66,7 +66,8 @@
         @let open = openId() === row.id;
         @let history = histories()[row.id];
         <li class="item" [class.is-open]="open" [attr.data-additive-id]="row.id" [style.--i]="$index">
-          <div class="grid row" (click)="toggle(row.id)">
+          <div class="grid row" role="button" tabindex="0" (click)="toggle(row.id)"
+            (keydown.enter)="toggle(row.id)" (keydown.space)="$event.preventDefault(); toggle(row.id)">
             <span class="name" [attr.title]="row.name">{{ row.name }}</span>
             <span class="swap value">
               @for (text of [row.value]; track text) {

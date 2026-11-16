@@ -34,8 +34,8 @@ describe('JournalStepperComponent (C-02, S1-15)', () => {
   });
 
   it('should return correct CSS classes depending on step status', () => {
-    expect(component.getStepClass(StepStatus.COMPLETED, 1)).toBe('stepper-completed');
-    expect(component.getStepClass(StepStatus.PENDING, 3)).toBe('stepper-pending');
+    expect(component.getStepClass(StepStatus.COMPLETED)).toBe('stepper-completed');
+    expect(component.getStepClass(StepStatus.PENDING)).toBe('stepper-pending');
   });
 
   it('should return correct display names for each step number', () => {

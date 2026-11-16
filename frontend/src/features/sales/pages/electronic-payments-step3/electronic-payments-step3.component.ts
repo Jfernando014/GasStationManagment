@@ -556,14 +556,13 @@ export class ElectronicPaymentsStep3Component {
     area.style.opacity = '0';
     document.body.appendChild(area);
     area.select();
-    let copied = false;
     try {
-      copied = document.execCommand('copy');
+      return document.execCommand('copy');
     } catch {
-      copied = false;
+      return false;
+    } finally {
+      document.body.removeChild(area);
     }
-    document.body.removeChild(area);
-    return copied;
   }
 
   private showToast(text: string): void {
