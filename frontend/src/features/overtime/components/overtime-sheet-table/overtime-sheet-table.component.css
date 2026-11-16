@@ -1,0 +1,70 @@
+:host { display: block; min-width: 0; }
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+}
+
+.scroll { overflow-x: auto; }
+
+table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+
+th, td { padding: 0 5px; text-align: left; vertical-align: middle; }
+th:first-child, td:first-child { padding-left: 16px; }
+th:last-child, td:last-child { padding-right: 16px; }
+
+.num { text-align: right; width: 44px; }
+.category { text-align: right; }
+
+thead th { height: 38px; border-bottom: 1px solid var(--border-main); font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+
+tbody tr {
+  height: 30px;
+  border-bottom: 1px solid #F5F7FA;
+  animation: row-in var(--duration-normal) var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 18ms);
+}
+
+tbody th.date { font-weight: 600; color: var(--text-heading); white-space: nowrap; }
+tbody td { color: var(--text-heading); }
+tr.rest td, tr.rest th { color: var(--text-light); }
+tr.holiday { background: #FFF8F1; }
+.sunday { color: var(--brand-primary-strong); font-weight: 600; }
+.holiday-tag { margin-left: 4px; padding: 1px 7px; font-size: 11px; }
+.zero { color: #CBD5E1; }
+
+.version { text-align: center; white-space: nowrap; }
+.ver { padding: 1px 6px; border-radius: 5px; background: var(--surface-subtle); color: var(--text-muted); font-size: 11px; font-weight: 700; }
+.ver.is-new { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
+
+tfoot tr { height: 34px; border-top: 1px solid var(--border-main); font-weight: 600; }
+tfoot th, tfoot td { color: var(--text-heading); }
+tfoot th { text-align: left; }
+tfoot tr.foot--total { height: 42px; background: #F8FAFC; font-weight: 800; font-size: 14.5px; }
+.negative {
+  display: inline-block;
+  min-width: 34px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--semantic-red-subtle);
+  box-shadow: inset 0 0 0 1.5px #FCA5A5;
+  color: var(--semantic-red-strong);
+  font-weight: 800;
+  text-align: right;
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, tbody tr { animation: none; }
+}

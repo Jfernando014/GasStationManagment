@@ -77,7 +77,7 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
     expect(text).toContain('Ver la jornada completa');
   });
 
-  it('should switch subviews for performance and inventory and navigate to Step 1 in read-only mode', () => {
+  it('opens C-09 for the operational date and preserves inventory and full journal navigation', () => {
     const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     fixture = TestBed.createComponent(JournalClosedPageComponent);
@@ -86,7 +86,8 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
 
     component.setViewMode('rendimiento');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Rendimiento de los vendedores del día');
+    expect(navSpy).toHaveBeenCalledWith(['/resultados/rendimiento'], { queryParams: { date: '2026-08-05', returnTo: 'jornada' } });
+    expect(component.viewMode).toBe('inicio');
 
     component.setViewMode('inventario');
     fixture.detectChanges();

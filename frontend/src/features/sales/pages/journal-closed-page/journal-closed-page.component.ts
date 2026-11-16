@@ -12,6 +12,7 @@ import {
   JournalStatus
 } from '../../../../shared/models/journal.model';
 import { VendorCloseSummaryDto } from '../../../../shared/models/dtos/vendor-close.dto';
+import { validDate } from '../../../../shared/helpers/sales-statistics.helpers';
 
 export type ClosedJournalSubView = 'inicio' | 'rendimiento' | 'inventario';
 
@@ -74,6 +75,13 @@ export class JournalClosedPageComponent implements OnInit {
   }
 
   setViewMode(mode: ClosedJournalSubView): void {
+    if (mode === 'rendimiento') {
+      const date = this.journal?.date ?? this.summary?.journalDate;
+      if (this.isClosed() && date && validDate(date)) {
+        this.router.navigate(['/resultados/rendimiento'], { queryParams: { date, returnTo: 'jornada' } });
+      }
+      return;
+    }
     this.viewMode = mode;
     this.cdr.detectChanges();
   }
