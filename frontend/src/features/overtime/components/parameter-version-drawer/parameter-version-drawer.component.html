@@ -1,0 +1,61 @@
+<app-side-panel [open]="open()" [heading]="heading()" [width]="560" (closed)="closed.emit()">
+  <form id="parameter-version-form" class="form" novalidate (submit)="$event.preventDefault(); submit()">
+    <app-form-field fieldId="parameter-valid-from" label="Aplica desde" type="date" [control]="form.controls.validFrom"
+      [required]="true" hint="Debe ser posterior a la última jornada que ya tiene horas calculadas." />
+
+    <div class="pair">
+      <app-form-field fieldId="parameter-night" label="La noche empieza a las (12 a 23)" [control]="form.controls.nightStartHour"
+        [required]="true" [digitsOnly]="true" [maxLength]="2" inputMode="numeric" hint="Termina siempre a las 06:00." />
+      <app-form-field fieldId="parameter-rest" label="Horas de descanso (0 a 4)" [control]="form.controls.restHours"
+        [required]="true" [digitsOnly]="true" [maxLength]="1" inputMode="numeric" hint="Descanso no pagado de un turno largo." />
+    </div>
+    <div class="pair">
+      <app-form-field fieldId="parameter-rest-min" label="Mínimo de horas del turno (1 a 24)" [control]="form.controls.restMinShiftHours"
+        [required]="true" [digitsOnly]="true" [maxLength]="2" inputMode="numeric" hint="Desde ahí se descuenta el descanso." />
+      <app-form-field fieldId="parameter-fixed" label="HEDO fijas por quincena (0 a 80)" [control]="form.controls.fixedHedoHours"
+        [required]="true" [digitsOnly]="true" [maxLength]="2" inputMode="numeric" />
+    </div>
+
+    <fieldset class="roles">
+      <legend>Roles que reciben las HEDO fijas</legend>
+      @if (roleOptions().length === 0) {
+        <p class="note">No hay roles para elegir.</p>
+      }
+      @for (role of roleOptions(); track role) {
+        <label class="role">
+          <input type="checkbox" [checked]="selectedRoles().includes(role)"
+            (change)="toggleRole(role, $any($event.target).checked)">
+          {{ roleLabel(role) }}
+        </label>
+      }
+      <p class="note">Los roles sin marcar no reciben la línea de HEDO fijas.</p>
+    </fieldset>
+
+    <app-form-field fieldId="parameter-reason" label="Motivo" [control]="form.controls.reason" [maxLength]="maxReasonLength"
+      placeholder="Ej.: el descanso pasa a 2 horas desde noviembre" hint="Opcional. Entre 3 y 255 caracteres." />
+
+    <div class="summary" aria-live="polite">
+      @if (changes().length === 0) {
+        <span>Esta versión no cambia ningún valor.</span>
+      } @else {
+        <span>Cambia {{ changes().length === 1 ? '1 valor' : changes().length + ' valores' }}:</span>
+        <ul>
+          @for (change of changes(); track change.label) {
+            <li><b>{{ change.label }} · {{ change.from }} → {{ change.to }}</b></li>
+          }
+        </ul>
+      }
+      <span>Las quincenas ya calculadas siguen igual.</span>
+    </div>
+
+    @if (generalError()) {
+      <p class="error" role="alert">{{ generalError() }}</p>
+    }
+  </form>
+
+  <div slot="footer" class="footer">
+    <button appButton type="button" [disabled]="submitting()" (click)="closed.emit()">Cancelar</button>
+    <button appButton variant="primary" type="submit" form="parameter-version-form" [disabled]="submitting()"
+      [attr.aria-busy]="submitting()">Crear versión</button>
+  </div>
+</app-side-panel>

@@ -1,0 +1,75 @@
+<section class="card" [attr.aria-busy]="loading()">
+  <div class="scroll">
+    <table>
+      <caption class="jr-sr">Horas a pagar por trabajador en la quincena</caption>
+      <thead>
+        <tr class="group">
+          <th colspan="2"></th>
+          <th colspan="3" class="group-label">Recargos</th>
+          <th colspan="4" class="group-label">Horas extra</th>
+          <th colspan="2"></th>
+        </tr>
+        <tr>
+          <th scope="col">Trabajador</th>
+          <th scope="col" class="num">Horas</th>
+          @for (head of heads; track head.category) {
+            <th scope="col" class="num category">
+              <app-info-tooltip [inline]="true" [term]="true" [text]="head.tooltip" [label]="head.category">{{ head.category }}</app-info-tooltip>
+            </th>
+          }
+          <th scope="col">Estado</th>
+          <th scope="col"><span class="jr-sr">Abrir la sábana</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (n of skeletonRows; track n) {
+            <tr class="skeleton-row">
+              <td>
+                <app-skeleton width="220px" />
+                <app-skeleton width="90px" height="10px" />
+              </td>
+              <td class="num"><app-skeleton class="end" width="36px" /></td>
+              <td colspan="7"><app-skeleton /></td>
+              <td><app-skeleton width="90px" /></td>
+              <td></td>
+            </tr>
+          }
+        } @else {
+          @for (row of views(); track row.id) {
+            <tr class="row" [style.--i]="$index">
+              <th scope="row" class="who">
+                <a class="stretched" [routerLink]="['/personal/horas-extra/trabajador', row.id]" [queryParams]="queryParams()"
+                  [attr.aria-label]="'Ver la sábana de ' + row.name">{{ row.name }}</a>
+                @if (row.role) {
+                  <span class="role">{{ row.role }}</span>
+                }
+              </th>
+              <td class="num strong">{{ row.hours }}</td>
+              @for (cell of row.cells; track $index) {
+                <td class="num" [class.zero]="cell.zero" [class.negative]="cell.negative">{{ cell.text }}</td>
+              }
+              <td><app-tag [variant]="row.status.variant">{{ row.status.label }}</app-tag></td>
+              <td class="open" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+      @if (!loading()) {
+        <tfoot>
+          <tr>
+            <th scope="row">Total de la quincena</th>
+            <td class="num">{{ totalHours() }}</td>
+            @for (cell of totalCells(); track $index) {
+              <td class="num" [class.zero]="cell.zero" [class.negative]="cell.negative">{{ cell.text }}</td>
+            }
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      }
+    </table>
+  </div>
+</section>

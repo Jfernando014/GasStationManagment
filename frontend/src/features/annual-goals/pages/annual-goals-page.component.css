@@ -12,6 +12,15 @@ table { min-width: 680px; }
 .rs-tabla-wrap td[colspan] { white-space: normal; }
 .rank { width: 50px; text-align: center; }
 .compliance-column { width: 240px; }
+.compliance-toolbar { flex-wrap: wrap; align-items: flex-end; }
+.compliance-period { margin: 10px 0; }
+.compliance-person, .compliance-progress { display: flex; align-items: center; gap: 10px; }
+.compliance-person b { white-space: normal; }
+.compliance-person app-avatar { background: var(--brand-primary-subtle); color: var(--brand-primary); width: 30px; height: 30px; }
+.compliance-progress app-percent-bar { flex: 1; min-width: 64px; }
+.compliance-reason { display: block; max-width: 260px; white-space: normal; color: var(--text-muted); margin-top: 6px; }
+.compliance-coverage { font-size: 12px; padding: 10px 0; }
+.compliance-coverage ul { max-height: 180px; overflow: auto; padding-left: 24px; }
 .annual-card { max-width: 820px; margin: 0 auto; }
 .annual-header { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .annual-heading { display: flex; align-items: center; gap: 8px; }

@@ -22,6 +22,10 @@
 .trigger--inline:hover,
 .trigger--inline:focus-visible { color: inherit; }
 
+.trigger--term { height: auto; border-radius: 0; border-bottom: 1px dotted var(--text-light); cursor: help; }
+.trigger--term:hover,
+.trigger--term:focus-visible { color: var(--brand-primary-strong); border-bottom-color: var(--brand-primary); }
+
 .bubble {
   position: fixed;
   z-index: 3000;
