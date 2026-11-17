@@ -50,14 +50,6 @@ export class DailyDownloadService {
     );
   }
 
-  /** Executive PowerPoint balance of the inclusive period from..to (yyyy-MM-dd). */
-  downloadBalance(prmFrom: string, prmTo: string): Observable<DownloadedFile> {
-    return this.fetchReportFile(
-      `/balance?from=${encodeURIComponent(prmFrom)}&to=${encodeURIComponent(prmTo)}`,
-      `balance-operativo-${prmFrom}_${prmTo}.pptx`
-    );
-  }
-
   private fetchBackendFile(prmDate: string, prmPath: string): Observable<Blob> {
     return this.atrHttp.get(`${this.atrBaseUrl}/${encodeURIComponent(prmDate)}/${prmPath}`, { responseType: 'blob' });
   }

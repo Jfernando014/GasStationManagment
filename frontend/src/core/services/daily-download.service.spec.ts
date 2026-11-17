@@ -86,17 +86,6 @@ describe('DailyDownloadService', () => {
     expect((await objResult).fileName).toBe('complemento-dominus-2026-08-01.xlsx');
   });
 
-  it('requests the balance for the inclusive period and names the PowerPoint file', async () => {
-    const objResult = firstValueFrom(atrService.downloadBalance('2026-08-01', '2026-08-31'));
-
-    const objRequest = atrHttp.expectOne(`${reportsBase}/balance?from=2026-08-01&to=2026-08-31`);
-    expect(objRequest.request.method).toBe('GET');
-    expect(objRequest.request.responseType).toBe('blob');
-    objRequest.flush(new Blob(['pptx']));
-
-    expect((await objResult).fileName).toBe('balance-operativo-2026-08-01_2026-08-31.pptx');
-  });
-
   it('fails with ReportAdaptationError when the backend file is not an Excel file', async () => {
     const objResult = firstValueFrom(atrService.downloadSalesSheet('2026-10-24'));
     atrHttp.expectOne(`${varBase}/2026-10-24/sales-sheet`).flush(new Blob(['not an excel']));
