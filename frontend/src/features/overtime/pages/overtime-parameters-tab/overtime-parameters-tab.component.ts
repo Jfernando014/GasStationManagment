@@ -16,7 +16,7 @@ import { hourOfDay, hoursText, ParameterChange, parameterChanges } from '../../h
 import { LoadResult, ParameterVersion } from '../../models/overtime.model';
 import { OvertimeParametersService } from '../../services/overtime-parameters.service';
 
-type VersionTag = { label: string; variant: 'green' | 'blue' | 'gray' };
+interface VersionTag { label: string; variant: 'green' | 'blue' | 'gray'; }
 
 interface VersionView {
   id: number;

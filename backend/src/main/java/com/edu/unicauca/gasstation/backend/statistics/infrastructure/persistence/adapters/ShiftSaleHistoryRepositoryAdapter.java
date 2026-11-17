@@ -129,6 +129,12 @@ public class ShiftSaleHistoryRepositoryAdapter implements ShiftSaleHistoryReposi
     }
 
     @Override
+    public List<ShiftSaleHistory> findAllProcessed() {
+        return jdbc.query(SALES_SELECT + " ORDER BY s.journal_date, s.vendor_document, s.shift_name",
+                ShiftSaleHistoryRowMapper::sale);
+    }
+
+    @Override
     public Optional<ShiftSaleHistory> findByIdentity(ShiftSaleIdentity identity) {
         Objects.requireNonNull(identity, "identity");
         return jdbc.query(SALES_SELECT + " AND s.journal_date = ? AND s.vendor_document = ? AND s.shift_name = ?",

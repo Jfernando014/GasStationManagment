@@ -15,5 +15,5 @@ export interface GaugeTableResponse {
   minHeightCm: number;
   maxHeightCm: number;
   maxVolumeGallons: number;
-  tanks: Array<{ id: number; code: string; name: string }>;
+  tanks: { id: number; code: string; name: string }[];
 }

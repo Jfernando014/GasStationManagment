@@ -1,13 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { VendorCloseStep2Component } from './vendor-close-step2.component';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
-import { of } from 'rxjs';
+import { VendorShiftCloseBatchRequestDto } from '../../../../shared/models/dtos/vendor-close.dto';
+import { Observable, of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+
+interface SalesServiceStub {
+  getAssignedStaff(): Observable<unknown>;
+  getVendorCloses(): Observable<unknown>;
+  getDaySummary(): Observable<unknown>;
+  getEffectiveTolerance(): Observable<unknown>;
+  getCatalogProducts(): unknown[];
+  getCalibrationDemo0805(): unknown;
+  saveVendorCloses(req: VendorShiftCloseBatchRequestDto): Observable<unknown>;
+  getLastSavedRequest(): VendorShiftCloseBatchRequestDto | null;
+}
 
 describe('VendorCloseStep2Component', () => {
   let component: VendorCloseStep2Component;
   let fixture: ComponentFixture<VendorCloseStep2Component>;
-  let salesServiceMock: any;
+  let salesServiceMock: SalesServiceStub;
 
   const mockStaff = [
     {
@@ -37,7 +49,7 @@ describe('VendorCloseStep2Component', () => {
   ];
 
   beforeEach(async () => {
-    let savedRequest: any = null;
+    let savedRequest: VendorShiftCloseBatchRequestDto | null = null;
 
     salesServiceMock = {
       getAssignedStaff: () => of(mockStaff),
@@ -82,7 +94,7 @@ describe('VendorCloseStep2Component', () => {
           '76102': { '52875796': 2, '1061696674': 3, '76326816': 1 }
         }
       }),
-      saveVendorCloses: (req: any) => {
+      saveVendorCloses: (req: VendorShiftCloseBatchRequestDto) => {
         savedRequest = req;
         return of([]);
       },
@@ -231,7 +243,7 @@ describe('VendorCloseStep2Component', () => {
     component.saveCloses();
 
     expect(salesServiceMock.getLastSavedRequest()).toBeTruthy();
-    expect(salesServiceMock.getLastSavedRequest().closes.length).toBe(3);
+    expect(salesServiceMock.getLastSavedRequest()?.closes.length).toBe(3);
     expect(component.isSaving).toBe(false);
     expect(component.saveSuccessMessage).toContain('guardados');
   });

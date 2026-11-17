@@ -7,7 +7,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-@RestControllerAdvice(assignableTypes = SellerPerformanceController.class)
+@RestControllerAdvice(assignableTypes = {SellerPerformanceController.class, WorkerPerformanceController.class})
 public class SellerPerformanceExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail invalid(IllegalArgumentException ex) {

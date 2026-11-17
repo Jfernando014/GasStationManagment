@@ -433,10 +433,10 @@
                 </span>
               </label>
               <span class="jr-p3-vs" aria-hidden="true">vs</span>
-              <label>
-                Redenciones de las planillas
+              <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted);">
+                <span>Redenciones de las planillas</span>
                 <span class="jr-cell jr-cell--calc">{{ money(p.declared) }}</span>
-              </label>
+              </div>
             </div>
 
             @switch (p.status) {
