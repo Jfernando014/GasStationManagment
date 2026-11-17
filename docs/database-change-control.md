@@ -9,17 +9,22 @@
 - Los datos operativos reales de agosto de 2026 viven en una migración repetible:
   - `db/seed/R__seed_august_2026_operational_data.sql`
 - El seed no crea ni altera tablas; solo inserta datos sobre el esquema existente.
-- El seed no se ejecuta en producción ni en el perfil por defecto. Solo se carga con el perfil `dev`.
+- El seed se carga con los perfiles `dev` y `prod`. En `prod` se aplica al crear un volumen de base de datos nuevo; en arranques posteriores Flyway no lo repite mientras su checksum no cambie.
+- Sin los perfiles `dev`/`prod` (perfil por defecto), Flyway solo lee `db/migration` y el seed no se ejecuta.
 
 ## 2. Activación
 
-`application-dev.properties`:
+`application-dev.properties` y `application-prod.properties`:
 
 ```properties
 spring.flyway.locations=classpath:db/migration,classpath:db/seed
 ```
 
-Sin ese perfil, Flyway solo lee `db/migration` y el seed no se ejecuta.
+Sin esos perfiles, Flyway solo lee `db/migration` y el seed no se ejecuta.
+
+En producción (`SPRING_PROFILES_ACTIVE=prod` en `docker-compose.prod.yml`), el seed se aplica durante el primer arranque sobre el volumen `postgres_prod_data`: primero se ejecutan las migraciones versionadas `V1..V39` y luego la migración repetible. Si el volumen ya existe pero no tiene registrado el seed, Flyway lo ejecutará en el siguiente arranque; en ese caso se debe validar y respaldar antes, porque el seed borra y reinserta el rango 01–28/08/2026.
+
+`BackupService` ejecuta `Flyway.migrate()` después de restaurar. Si el backup restaurado no incluye el seed en `flyway_schema_history`, el seed se aplicará y reseteará agosto de 2026; los backups tomados después de este cambio sí lo incluyen.
 
 ## 3. Idempotencia
 
@@ -42,7 +47,7 @@ Se debe poder ejecutar dos veces sin duplicar jornadas, cierres, lecturas, asign
   - `SIN-ASIGNAR-ANA`
   - `SIN-ASIGNAR-CARLOS`
   - `SIN-ASIGNAR-WILTOM`
-- Antes de usar el seed fuera de desarrollo, reemplazar los marcadores por documentos reales y revisar el tratamiento de datos personales.
+- Antes de desplegar en producción, reemplazar los marcadores por documentos reales y revisar el tratamiento de datos personales.
 
 ## 5. Qué no hace el seed
 
@@ -101,5 +106,6 @@ No forma parte del runtime. Se ejecuta solo para regenerar el SQL a partir de lo
 
 - `mvn test` verde en un entorno con Docker.
 - El seed se aplica sobre una base vacía y sobre una base que ya lo contiene.
+- En producción, el seed se aplica en el primer arranque de un volumen nuevo (`postgres_prod_data`).
 - Las cifras del día 01 y del cierre mensual coinciden con los documentos fuente.
 - Las decisiones estimadas quedan documentadas en `docs/august-2026-seed.md`.

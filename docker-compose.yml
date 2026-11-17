@@ -16,6 +16,9 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - API_PROTOCOL=${API_PROTOCOL}
+      - API_HOST=${API_HOST}
+      - API_PORT=${SERVER_PORT}
     depends_on:
       backend:
         condition: service_healthy
@@ -45,6 +48,11 @@ services:
       - JPA_SHOW_SQL=${JPA_SHOW_SQL}
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
+      - APP_CORS_ALLOWED_ORIGINS=${APP_CORS_ALLOWED_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - MAVEN_OPTS=-Dmaven.compiler.parameters=true
       - DOCKER_HOST=unix:///var/run/docker.sock
       - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal

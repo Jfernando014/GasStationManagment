@@ -6,6 +6,7 @@ import { stationToday } from '../../../shared/helpers/shift-display.helpers';
 import { CreateParametersRequestDto, ParameterVersionDto } from '../models/overtime.dto';
 import { ActionResult, LoadResult, NewParameterVersion, ParameterVersion } from '../models/overtime.model';
 import { toActionError, toLoadError } from './overtime-errors';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 const FORBIDDEN_MESSAGE = 'No tienes permiso para crear versiones';
 
@@ -20,7 +21,7 @@ const FIELD_BY_CODE: Record<string, string> = {
 @Injectable({ providedIn: 'root' })
 export class OvertimeParametersService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/workers/overtime-parameters';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/workers/overtime-parameters`;
 
   /** Every version, the newest first. */
   getHistory(): Observable<LoadResult<ParameterVersion[]>> {

@@ -1,0 +1,47 @@
+<main class="inv-subview rs-vista balance-report-page" aria-labelledby="balance-report-title">
+  <header class="rs-cabecera">
+    <div class="jr-paso-cabecera">
+      <p class="balance-eyebrow">RESULTADOS <span aria-hidden="true">/</span> REPORTES</p>
+      <h1 id="balance-report-title">Generar balance</h1>
+      <p>Presentación ejecutiva del período con ventas, inventario, caja y Dominus.</p>
+    </div>
+  </header>
+
+  <section class="balance-card" aria-label="Período del balance">
+    <div class="balance-copy">
+      <h2>Balance operativo en PowerPoint</h2>
+      <p>Elige el primer y el último día del período. Ambos días se incluyen en el reporte.</p>
+    </div>
+
+    <div class="balance-form">
+      <label class="balance-field">
+        <span>Desde</span>
+        <input type="date" class="flat-input tnum" [ngModel]="atrFrom()" (ngModelChange)="atrFrom.set($event)"
+          [max]="atrTo()" [disabled]="atrBusy()" aria-label="Primer día del período">
+      </label>
+      <label class="balance-field">
+        <span>Hasta</span>
+        <input type="date" class="flat-input tnum" [ngModel]="atrTo()" (ngModelChange)="atrTo.set($event)"
+          [min]="atrFrom()" [disabled]="atrBusy()" aria-label="Último día del período">
+      </label>
+      <button type="button" class="btn-action-primary balance-download" [disabled]="atrBusy()" (click)="download()">
+        @if (atrBusy()) {
+          <span class="balance-spinner" aria-hidden="true"></span>
+          Generando…
+        } @else {
+          Descargar balance (.pptx)
+        }
+      </button>
+    </div>
+
+    <p class="balance-note">
+      Se usan los datos del sistema y, cuando no existen, el histórico migrado de agosto. Los días sin
+      información se omiten y se informan en la presentación.
+    </p>
+
+    @if (atrMessage(); as message) {
+      <p class="balance-message" [class.balance-message--error]="message.isError"
+        [attr.role]="message.isError ? 'alert' : 'status'">{{ message.text }}</p>
+    }
+  </section>
+</main>

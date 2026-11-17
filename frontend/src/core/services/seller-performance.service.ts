@@ -4,11 +4,12 @@ import { map, Observable } from 'rxjs';
 import { FullSellerPerformanceResponse, PerformanceQuery, SellerPerformanceResponse } from '../../shared/models/dtos/seller-performance.dto';
 import { parseSellerPerformance, validatePerformanceQuery } from '../../shared/helpers/seller-performance.helpers';
 import { parsePerformanceReport } from '../../shared/helpers/seller-performance-reports.helpers';
+import { getApiBaseUrl } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class SellerPerformanceService {
   private readonly http = inject(HttpClient);
-  private readonly url = 'http://localhost:8080/api/v1/statistics/seller-performance';
+  private readonly url = `${getApiBaseUrl()}/api/v1/statistics/seller-performance`;
 
   read(query: PerformanceQuery): Observable<SellerPerformanceResponse> {
     return this.request(query, parseSellerPerformance);

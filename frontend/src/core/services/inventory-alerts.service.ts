@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, take } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   AlertCountResponse,
@@ -16,7 +17,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class InventoryAlertsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/alerts';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/alerts`;
 
   private readonly pendingSubject = new BehaviorSubject<number>(0);
   /** Last known number of pending alerts (ACTIVE or READ). */

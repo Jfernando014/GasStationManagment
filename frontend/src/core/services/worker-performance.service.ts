@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, delay, of } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   RolePerformance,
@@ -26,7 +27,7 @@ const PLACEHOLDER_DELAY_MS = 450;
 })
 export class WorkerPerformanceService {
   private readonly http = inject(HttpClient);
-  private readonly statisticsUrl = 'http://localhost:8080/api/v1/statistics/workers';
+  private readonly statisticsUrl = `${getApiBaseUrl()}/api/v1/statistics/workers`;
 
   getPerformance(workerId: string): Observable<WorkerPerformance> {
     if (usePlaceholderData) {

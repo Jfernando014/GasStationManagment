@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prestart": "node scripts/generate-config.mjs",
     "build": "ng build",
+    "prebuild": "node scripts/generate-config.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:pwa": "node --test scripts/pwa.spec.mjs",

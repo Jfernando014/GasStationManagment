@@ -12,6 +12,10 @@ services:
       restart: always
       ports:
         - "${FRONTEND_PROD_PORT}:${FRONTEND_PROD_PORT}" 
+      environment:
+        - API_PROTOCOL=${API_PROTOCOL}
+        - API_HOST=${API_HOST}
+        - API_PORT=${SERVER_PORT}
       depends_on:
         - backend
 
@@ -36,6 +40,11 @@ services:
       - JPA_SHOW_SQL=false
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
+      - APP_CORS_ALLOWED_ORIGINS=${APP_CORS_ALLOWED_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - BACKUP_DIR=/app/backups
       - BACKUP_RESTART_AFTER_RESTORE=true
     depends_on:

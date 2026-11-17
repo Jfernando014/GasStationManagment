@@ -5,6 +5,7 @@ import { Observable, map } from 'rxjs';
 import { RoleOption, ShiftCode } from '../../shared/models/dtos/shift-catalog.dto';
 import { Worker, WorkerRequest, WorkerStatusRequest } from '../../shared/models/dtos/worker.dto';
 import { WorkerFilters } from '../../shared/models/worker.model';
+import { getApiBaseUrl } from '../config/api-base';
 
 /**
  * Calls the workers API. Errors arrive already converted to ApiError by the error interceptor.
@@ -14,8 +15,8 @@ import { WorkerFilters } from '../../shared/models/worker.model';
 })
 export class WorkersService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/workers';
-  private readonly catalogUrl = 'http://localhost:8080/api/shifts/catalog';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/workers`;
+  private readonly catalogUrl = `${getApiBaseUrl()}/api/shifts/catalog`;
 
   /** Workers ordered by name. Only the filters with a value are sent. */
   list(filters: WorkerFilters = {}): Observable<Worker[]> {

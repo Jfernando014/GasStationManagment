@@ -4,6 +4,7 @@ import { catchError, map, Observable, of, Subscription } from 'rxjs';
 
 import { getErrorMessage, getFieldErrors, isApiError } from '../../../shared/helpers/problem-details.helpers';
 import { stationToday } from '../../../shared/helpers/shift-display.helpers';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 import {
   AdditiveIncentiveRow, CreateIncentiveRuleRequest, CreateIncentiveRuleResult, IncentiveRuleHistoryItem,
   IncentiveRuleStatus
@@ -36,7 +37,7 @@ const STATUS_BY_DTO: Record<RuleStatusDto, IncentiveRuleStatus> = {
 @Injectable({ providedIn: 'root' })
 export class AdditiveIncentivesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/incentives/rules';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/incentives/rules`;
   private loadSubscription: Subscription | null = null;
 
   /** Day the values are shown for. */

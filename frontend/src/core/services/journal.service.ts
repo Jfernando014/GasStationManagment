@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   JournalClosingSummaryResponse,
@@ -15,7 +16,7 @@ import {
 })
 export class JournalService {
   private readonly http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/v1/journals';
+  private apiUrl = `${getApiBaseUrl()}/api/v1/journals`;
 
   // Jornada que journal-page.component.ts acaba de abrir, para que un paso hijo (p. ej. personal del día)
   // lea su fecha operativa sin recalcularla en el cliente.

@@ -4,11 +4,12 @@ import { map, Observable } from 'rxjs';
 import { Competitor, CompetitorRequest, PriceComparison, PriceObservation, PriceObservationRequest, PriceSimulation, PriceSimulationRequest } from '../../shared/models/dtos/competition.dto';
 import { parseComparison, parseCompetitor, parseCompetitors, parsePriceObservation, parseSimulation } from '../../shared/helpers/statistics-contracts.helpers';
 import { decimalText } from '../../shared/helpers/sales-target.helpers';
+import { getApiBaseUrl } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class CompetitionService {
   private readonly http = inject(HttpClient);
-  private readonly url = 'http://localhost:8080/api/v1/competition';
+  private readonly url = `${getApiBaseUrl()}/api/v1/competition`;
   private readonly options = { responseType: 'text' as const, headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
   list(): Observable<Competitor[]> { return this.http.get(`${this.url}/competitors`, { responseType: 'text' }).pipe(map(parseCompetitors)); }
   register(body: CompetitorRequest): Observable<Competitor> { return this.http.post(`${this.url}/competitors`, body, this.options).pipe(map(parseCompetitor)); }

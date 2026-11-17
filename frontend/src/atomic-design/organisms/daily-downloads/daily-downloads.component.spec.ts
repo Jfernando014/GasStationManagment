@@ -12,14 +12,24 @@ import { DownloadedFile } from '../../../shared/models/daily-download.model';
 describe('DailyDownloadsComponent', () => {
   const objFile: DownloadedFile = { fileName: 'planilla-ventas-2026-10-24.xlsx', content: new Blob(['x']) };
   let atrFixture: ComponentFixture<DailyDownloadsComponent>;
-  let atrService: { downloadSalesSheet: ReturnType<typeof vi.fn>; downloadLubricantsAndMisc: ReturnType<typeof vi.fn> };
+  let atrService: {
+    downloadSalesSheet: ReturnType<typeof vi.fn>;
+    downloadLubricantsAndMisc: ReturnType<typeof vi.fn>;
+    downloadVariation: ReturnType<typeof vi.fn>;
+    downloadDominusComplement: ReturnType<typeof vi.fn>;
+  };
 
   const rows = (): HTMLElement[] => Array.from(atrFixture.nativeElement.querySelectorAll('.jr-p6-descarga'));
   const button = (prmIndex: number): HTMLButtonElement => rows()[prmIndex].querySelector('button') as HTMLButtonElement;
   const text = (): string => atrFixture.nativeElement.textContent as string;
 
   beforeEach(async () => {
-    atrService = { downloadSalesSheet: vi.fn(), downloadLubricantsAndMisc: vi.fn() };
+    atrService = {
+      downloadSalesSheet: vi.fn(),
+      downloadLubricantsAndMisc: vi.fn(),
+      downloadVariation: vi.fn(),
+      downloadDominusComplement: vi.fn()
+    };
     URL.createObjectURL = vi.fn(() => 'blob:test');
     URL.revokeObjectURL = vi.fn();
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -49,7 +59,7 @@ describe('DailyDownloadsComponent', () => {
 
   it('enables only the files that the backend offers', () => {
     const arrDisabled = rows().map((_prmRow, prmIndex) => button(prmIndex).disabled);
-    expect(arrDisabled).toEqual([true, false, false, true, true]);
+    expect(arrDisabled).toEqual([true, false, false, false, false]);
   });
 
   it('downloads the PLANILLA VENTAS and shows the result', () => {
@@ -73,6 +83,26 @@ describe('DailyDownloadsComponent', () => {
     expect(atrService.downloadLubricantsAndMisc).toHaveBeenCalledWith('2026-10-24');
     expect(atrService.downloadSalesSheet).not.toHaveBeenCalled();
     expect(text()).toContain('LUBRICANTES Y VARIOS descargado');
+  });
+
+  it('downloads VARIACIÓN from the reports endpoint', () => {
+    atrService.downloadVariation.mockReturnValue(of(objFile));
+
+    button(3).click();
+    atrFixture.detectChanges();
+
+    expect(atrService.downloadVariation).toHaveBeenCalledWith('2026-10-24');
+    expect(text()).toContain('VARIACIÓN descargado');
+  });
+
+  it('downloads COMPLEMENTO DOMINUS from the reports endpoint', () => {
+    atrService.downloadDominusComplement.mockReturnValue(of(objFile));
+
+    button(4).click();
+    atrFixture.detectChanges();
+
+    expect(atrService.downloadDominusComplement).toHaveBeenCalledWith('2026-10-24');
+    expect(text()).toContain('COMPLEMENTO DOMINUS descargado');
   });
 
   it('shows the generating state while the file is being built', () => {
@@ -104,12 +134,12 @@ describe('DailyDownloadsComponent', () => {
     expect(button(1).disabled).toBe(false);
   });
 
-  it('does not call the backend for files that are not available yet', () => {
+  it('does not call the backend for the PDF that is not available yet', () => {
     button(0).click();
-    button(3).click();
-    button(4).click();
     expect(atrService.downloadSalesSheet).not.toHaveBeenCalled();
     expect(atrService.downloadLubricantsAndMisc).not.toHaveBeenCalled();
+    expect(atrService.downloadVariation).not.toHaveBeenCalled();
+    expect(atrService.downloadDominusComplement).not.toHaveBeenCalled();
   });
 
   it('disables every button when there is no journal date', () => {

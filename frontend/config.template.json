@@ -1,0 +1,5 @@
+{
+  "apiProtocol": "${API_PROTOCOL}",
+  "apiHost": "${API_HOST}",
+  "apiPort": "${API_PORT}"
+}

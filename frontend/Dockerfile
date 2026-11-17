@@ -18,6 +18,10 @@ RUN sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
 COPY --from=build /app/dist/frontend-tmp/browser /usr/share/nginx/html
 
+COPY config.template.json /etc/nginx/templates/config.template.json
+COPY docker-entrypoint.d/40-generate-config.sh /docker-entrypoint.d/40-generate-config.sh
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
+
 EXPOSE $PORT
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   InspectionFilters,
@@ -12,7 +13,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class InspectionsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/inspections';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/inspections`;
 
   /** Only the filters with a value are sent. */
   list(filters: InspectionFilters = {}): Observable<InspectionResponse[]> {

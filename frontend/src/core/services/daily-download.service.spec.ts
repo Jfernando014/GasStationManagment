@@ -21,6 +21,7 @@ import {
  */
 describe('DailyDownloadService', () => {
   const varBase = 'http://localhost:8080/api/v1/sales/downloads';
+  const reportsBase = 'http://localhost:8080/api/v1/reports';
   let atrService: DailyDownloadService;
   let atrHttp: HttpTestingController;
 
@@ -60,6 +61,40 @@ describe('DailyDownloadService', () => {
     objRequest.flush(await buildBackendLubricantsSheet());
 
     expect((await objResult).fileName).toBe('LUBRICANTES-Y-VARIOS-2026-10-24.xlsx');
+  });
+
+  it('requests VARIACIÓN from the reports endpoint and names the file', async () => {
+    const objResult = firstValueFrom(atrService.downloadVariation('2026-08-01'));
+
+    const objRequest = atrHttp.expectOne(`${reportsBase}/variation/2026-08-01`);
+    expect(objRequest.request.method).toBe('GET');
+    expect(objRequest.request.responseType).toBe('blob');
+    expect(objRequest.request.headers.get('Authorization')).toBe('Bearer test-token');
+    objRequest.flush(new Blob(['xlsx']));
+
+    const objFile = await objResult;
+    expect(objFile.fileName).toBe('variacion-2026-08-01.xlsx');
+    expect(objFile.content.size).toBeGreaterThan(0);
+  });
+
+  it('requests COMPLEMENTO DOMINUS from the reports endpoint and names the file', async () => {
+    const objResult = firstValueFrom(atrService.downloadDominusComplement('2026-08-01'));
+
+    const objRequest = atrHttp.expectOne(`${reportsBase}/dominus-complement/2026-08-01`);
+    objRequest.flush(new Blob(['xlsx']));
+
+    expect((await objResult).fileName).toBe('complemento-dominus-2026-08-01.xlsx');
+  });
+
+  it('requests the balance for the inclusive period and names the PowerPoint file', async () => {
+    const objResult = firstValueFrom(atrService.downloadBalance('2026-08-01', '2026-08-31'));
+
+    const objRequest = atrHttp.expectOne(`${reportsBase}/balance?from=2026-08-01&to=2026-08-31`);
+    expect(objRequest.request.method).toBe('GET');
+    expect(objRequest.request.responseType).toBe('blob');
+    objRequest.flush(new Blob(['pptx']));
+
+    expect((await objResult).fileName).toBe('balance-operativo-2026-08-01_2026-08-31.pptx');
   });
 
   it('fails with ReportAdaptationError when the backend file is not an Excel file', async () => {

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 import {
   AssignedVendorDto,
   CatalogProductItem,
@@ -15,8 +16,8 @@ import {
 })
 export class SalesVendorCloseService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8080/api/v1/sales/vendor-closes';
-  private readonly toleranceUrl = 'http://localhost:8080/api/v1/sales/discrepancy-tolerances/effective';
+  private readonly baseUrl = `${getApiBaseUrl()}/api/v1/sales/vendor-closes`;
+  private readonly toleranceUrl = `${getApiBaseUrl()}/api/v1/sales/discrepancy-tolerances/effective`;
 
   getAssignedStaff(date: string): Observable<AssignedVendorDto[]> {
     const params = new HttpParams().set('date', date);

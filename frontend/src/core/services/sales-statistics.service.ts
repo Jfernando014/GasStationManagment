@@ -5,12 +5,13 @@ import { CompareStatisticsRequest, ExplicitStatisticsRequest, SalesStatisticsRes
 import { dateRangeError, parseStatistics, serializeObservations } from '../../shared/helpers/sales-statistics.helpers';
 import { BasketStatisticsResponse } from '../../shared/models/dtos/basket-statistics.dto';
 import { parseBasketStatistics } from '../../shared/helpers/statistics-contracts.helpers';
+import { getApiBaseUrl } from '../config/api-base';
 
 /** SCRUM-40 explicit calculations and the SCRUM-83 basket contract; never manufactures sales. */
 @Injectable({ providedIn: 'root' })
 export class SalesStatisticsService {
   private readonly http = inject(HttpClient);
-  private readonly url = 'http://localhost:8080/api/v1/sales';
+  private readonly url = `${getApiBaseUrl()}/api/v1/sales`;
   private readonly options = { responseType: 'text' as const, headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
   averages(request: ExplicitStatisticsRequest): Observable<SalesStatisticsResponse> {
     return this.http.post(`${this.url}/averages/explicit`, serializeObservations(request), this.options).pipe(map(text => parseStatistics(text, request)));

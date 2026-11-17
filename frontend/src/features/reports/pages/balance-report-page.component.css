@@ -1,0 +1,20 @@
+:host { display: block; min-width: 0; }
+.balance-report-page { display: flex; flex-direction: column; gap: 16px; }
+.balance-eyebrow { margin: 0 0 5px; color: var(--brand-primary); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.balance-eyebrow span { padding: 0 4px; color: var(--text-muted); }
+.balance-card { display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--border-main); border-radius: var(--radius-md); background: var(--surface-main); box-shadow: var(--shadow-card); }
+.balance-copy h2 { margin: 0; color: var(--text-heading); font-size: 16px; }
+.balance-copy p { margin: 5px 0 0; color: var(--text-muted); font-size: 12px; }
+.balance-form { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.balance-field { display: flex; flex-direction: column; gap: 5px; min-width: 190px; color: var(--text-muted); font-size: 10px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.balance-field input { min-height: 40px; font-size: 14px; letter-spacing: normal; }
+.balance-download { min-height: 40px; }
+.balance-note { margin: 0; color: var(--text-muted); font-size: 11px; }
+.balance-message { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--semantic-green-subtle); color: var(--semantic-green-strong); font-size: 12px; font-weight: 650; }
+.balance-message--error { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); }
+.balance-spinner { display: inline-block; width: 14px; height: 14px; margin-right: 4px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: balance-spin .7s linear infinite; }
+@keyframes balance-spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  .balance-form { flex-direction: column; align-items: stretch; }
+  .balance-field { min-width: 0; }
+}

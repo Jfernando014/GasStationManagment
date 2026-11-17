@@ -1,6 +1,7 @@
 import { HttpClient, HttpEvent } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 /** One row of the backup audit. */
 export interface BackupAuditEntry {
@@ -39,7 +40,7 @@ export interface BackupDownload {
 @Injectable({ providedIn: 'root' })
 export class BackupService {
   private readonly atrHttp = inject(HttpClient);
-  private readonly atrBaseUrl = 'http://localhost:8080/api/v1/backups';
+  private readonly atrBaseUrl = `${getApiBaseUrl()}/api/v1/backups`;
 
   /** Downloads a compressed custom dump. */
   exportBackup(): Observable<BackupDownload> {
