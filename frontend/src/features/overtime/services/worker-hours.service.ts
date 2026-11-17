@@ -6,6 +6,7 @@ import { getErrorMessage, isApiError } from '../../../shared/helpers/problem-det
 import { DayHours, DayWorker, LoadResult, ReprocessResult } from '../models/overtime.model';
 import { DayHoursDto } from '../models/worker-hours.dto';
 import { toLoadError } from './overtime-errors';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 /** Messages the screen shows as they are, by the stable `code` of the backend error. */
 const ERROR_MESSAGES: Record<string, string> = {
@@ -23,7 +24,7 @@ const NOVELTY_TEXT: Record<string, string> = {
 @Injectable({ providedIn: 'root' })
 export class WorkerHoursService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/workers/hours';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/workers/hours`;
 
   /** A day without a record of hours comes back as `NOT_FOUND`: its journal was not closed or saved no hours. */
   getDay(date: string): Observable<LoadResult<DayHours>> {

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   ConfirmDayStaffRequest,
@@ -17,7 +18,7 @@ import {
 })
 export class DayStaffService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/shifts/day-staff';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/shifts/day-staff`;
 
   /** Step 1 of the given operational day, with its active novelties already applied. */
   getStep(date: string): Observable<DayStaffStepResponse> {

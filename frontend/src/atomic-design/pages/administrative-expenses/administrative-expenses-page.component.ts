@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 interface AdministrativeExpense {
   id: number;
@@ -25,7 +26,7 @@ interface ExpenseListResponse {
 })
 export class AdministrativeExpensesPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/sales/administrative-expenses';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/sales/administrative-expenses`;
 
   expenseDate = this.today();
   amount: number | null = null;

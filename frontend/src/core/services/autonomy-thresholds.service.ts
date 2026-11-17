@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   AutonomyThresholdRequest,
@@ -11,7 +12,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AutonomyThresholdsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/autonomy-thresholds';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/autonomy-thresholds`;
 
   list(): Observable<AutonomyThresholdResponse[]> {
     return this.http.get<AutonomyThresholdResponse[]>(this.apiUrl);

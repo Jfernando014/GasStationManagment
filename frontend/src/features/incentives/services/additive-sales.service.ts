@@ -5,6 +5,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { getErrorMessage, isApiError } from '../../../shared/helpers/problem-details.helpers';
 import { SyncDto } from '../models/additive-sales.dto';
 import { PendingDay, ReprocessResult } from '../models/incentive-calculation.model';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 /** Messages the screen shows as they are, by the stable `code` of the backend error. */
 const ERROR_MESSAGES: Record<string, string> = {
@@ -18,7 +19,7 @@ const FORBIDDEN_MESSAGE = 'No tienes permiso para reprocesar';
 @Injectable({ providedIn: 'root' })
 export class AdditiveSalesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/incentives/additive-sales';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/incentives/additive-sales`;
 
   listPending(): Observable<PendingDay[]> {
     return this.http.get<SyncDto[]>(`${this.apiUrl}/pending`).pipe(

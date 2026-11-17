@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ShiftCode } from '../../shared/models/dtos/shift-catalog.dto';
+import { getApiBaseUrl } from '../config/api-base';
 import {
   AssignRangeRequest,
   AssignShiftRequest,
@@ -26,8 +27,8 @@ import {
 })
 export class ShiftsScheduleService {
   private readonly http = inject(HttpClient);
-  private readonly catalogUrl = 'http://localhost:8080/api/shifts/catalog';
-  private readonly scheduleUrl = 'http://localhost:8080/api/shifts/schedule';
+  private readonly catalogUrl = `${getApiBaseUrl()}/api/shifts/catalog`;
+  private readonly scheduleUrl = `${getApiBaseUrl()}/api/shifts/schedule`;
 
   /** Full catalog, including inactive codes. */
   getCatalog(): Observable<ShiftCode[]> {

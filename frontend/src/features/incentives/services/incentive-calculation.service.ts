@@ -5,6 +5,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { getErrorMessage, isApiError } from '../../../shared/helpers/problem-details.helpers';
 import { MonthlyIncentivesDto, VendorIncentiveDto } from '../models/incentive-calculation.dto';
 import { MonthlyIncentives, MonthResult, VendorIncentive } from '../models/incentive-calculation.model';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 /** Backend codes of a month that cannot be calculated (400). */
 const INVALID_MONTH_CODES = new Set(['MONTH_IN_FUTURE', 'MONTH_BEFORE_START', 'INVALID_PARAMETER']);
@@ -15,7 +16,7 @@ const SESSION_MESSAGE = 'Tu sesión ya no es válida. Inicia sesión de nuevo';
 @Injectable({ providedIn: 'root' })
 export class IncentiveCalculationService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/incentives/monthly';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/incentives/monthly`;
 
   /** Never errors: every outcome, including a failed request, comes back as a result. */
   getMonth(month: string): Observable<MonthResult> {

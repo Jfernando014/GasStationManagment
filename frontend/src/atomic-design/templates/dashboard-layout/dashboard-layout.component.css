@@ -17,6 +17,18 @@
   :host(.performance-layout) .header-action-tray { flex-basis: 100%; justify-content: flex-end; gap: 6px; }
 }
 
+.trail-root {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.3s;
+}
+
+.trail-root:hover,
+.trail-root:focus-visible {
+  text-decoration-color: currentColor;
+}
+
 /* ==========================================================================
    BARRA LATERAL CONTRAÍBLE · el logo la abre y la cierra, el contenido
    de la derecha toma el ancho que suelta (es flex: 1).

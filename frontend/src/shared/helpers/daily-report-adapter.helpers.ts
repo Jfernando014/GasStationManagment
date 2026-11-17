@@ -1,4 +1,4 @@
-import type { CellValue, Worksheet } from 'exceljs';
+import type { Cell, CellValue, RichText, Worksheet } from 'exceljs';
 import { DownloadedFile } from '../models/daily-download.model';
 
 /**
@@ -150,7 +150,7 @@ function readRecords(prmSheet: Worksheet, prmSheetName: string, prmFirstHeader: 
     throw new ReportAdaptationError(`The header row of "${prmSheetName}" was not found`);
   }
   const objColumns = new Map<string, number>();
-  prmSheet.getRow(varHeaderRow).eachCell((prmCell: any, prmColumn: number) => {
+  prmSheet.getRow(varHeaderRow).eachCell((prmCell: Cell, prmColumn: number) => {
     objColumns.set(text(prmCell.value), prmColumn);
   });
   const arrMissing = prmRequired.filter((prmName) => !objColumns.has(prmName));
@@ -234,7 +234,7 @@ function plain(prmValue: CellValue): CellOut {
     return plain(prmValue.result as CellValue);
   }
   if ('richText' in prmValue) {
-    return prmValue.richText.map((prmPart: any) => prmPart.text).join('');
+    return prmValue.richText.map((prmPart: RichText) => prmPart.text).join('');
   }
   return String(prmValue);
 }

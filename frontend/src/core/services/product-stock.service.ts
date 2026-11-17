@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ProductCategory } from '../../shared/models/dtos/product.dto';
+import { getApiBaseUrl } from '../config/api-base';
 import {
   InitialStockRequest,
   ProductStockResponse,
@@ -20,7 +21,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ProductStockService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/product-stock';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/product-stock`;
 
   listByJournalDate(journalDate: string, category?: ProductCategory | null): Observable<ProductStockResponse[]> {
     let params = new HttpParams().set('journalDate', journalDate);

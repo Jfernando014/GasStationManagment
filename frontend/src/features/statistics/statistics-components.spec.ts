@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { routes } from '../../app/app.routes';
 import { AuthService } from '../../core/services/auth.service';
 import { CompetitionService } from '../../core/services/competition.service';
+import { InventoryAlertsService } from '../../core/services/inventory-alerts.service';
 import { SalesStatisticsService } from '../../core/services/sales-statistics.service';
 import { WorkersService } from '../../core/services/workers.service';
 import { ApiError } from '../../shared/models/api-error.model';
@@ -25,7 +26,8 @@ function mocks() {
   };
 }
 function providers(mock: ReturnType<typeof mocks>) {
-  return [{ provide: SalesStatisticsService, useValue: mock.sales }, { provide: CompetitionService, useValue: mock.competition }, { provide: WorkersService, useValue: mock.workers }];
+  return [{ provide: SalesStatisticsService, useValue: mock.sales }, { provide: CompetitionService, useValue: mock.competition }, { provide: WorkersService, useValue: mock.workers },
+    { provide: InventoryAlertsService, useValue: { pending$: of(0), refreshPending: () => undefined } }];
 }
 
 describe('SCRUM-84 navigation and dialogs', () => {

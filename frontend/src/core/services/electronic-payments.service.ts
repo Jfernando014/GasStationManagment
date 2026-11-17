@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   ElectronicPaymentsStatus,
@@ -16,7 +17,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ElectronicPaymentsService {
   private readonly http = inject(HttpClient);
-  private readonly salesUrl = 'http://localhost:8080/api/v1/sales';
+  private readonly salesUrl = `${getApiBaseUrl()}/api/v1/sales`;
   private readonly paymentsUrl = `${this.salesUrl}/electronic-payments`;
   private readonly reconciliationUrl = `${this.salesUrl}/reconciliation`;
 

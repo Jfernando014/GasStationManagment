@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   BalanceResponseDto,
@@ -12,7 +13,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class CashBalanceStep4Service {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/sales';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/sales`;
 
   getCashBalance(date: string): Observable<CashBalanceStepResponseDto> {
     return this.http.get<CashBalanceStepResponseDto>(`${this.apiUrl}/cash-balance/${date}`);

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, from, switchMap } from 'rxjs';
 import { DownloadedFile } from '../../shared/models/daily-download.model';
 import { adaptLubricantsFile, adaptSalesSheet } from '../../shared/helpers/daily-report-adapter.helpers';
+import { getApiBaseUrl } from '../config/api-base';
 
 /**
  * Downloads the daily Excel files of one journal (end-of-day step).
@@ -16,7 +17,7 @@ import { adaptLubricantsFile, adaptSalesSheet } from '../../shared/helpers/daily
 })
 export class DailyDownloadService {
   private readonly atrHttp = inject(HttpClient);
-  private readonly atrBaseUrl = 'http://localhost:8080/api/v1/sales/downloads';
+  private readonly atrBaseUrl = `${getApiBaseUrl()}/api/v1/sales/downloads`;
 
   /** PLANILLA VENTAS of the journal of a date (yyyy-MM-dd), in the layout of the prototype. */
   downloadSalesSheet(prmDate: string): Observable<DownloadedFile> {

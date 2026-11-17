@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-base';
 
 import {
   GaugeVolumeResponse,
@@ -12,8 +13,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class TankMeasurementsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/measurements';
-  private readonly tanksUrl = 'http://localhost:8080/api/v1/inventory/tanks';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/measurements`;
+  private readonly tanksUrl = `${getApiBaseUrl()}/api/v1/inventory/tanks`;
 
   findByJournalDate(journalDate: string): Observable<TankMeasurementResponse> {
     return this.http.get<TankMeasurementResponse>(`${this.apiUrl}/${journalDate}`);

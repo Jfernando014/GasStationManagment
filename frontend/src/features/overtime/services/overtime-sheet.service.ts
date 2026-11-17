@@ -6,6 +6,7 @@ import { AdjustmentDto, CreateAdjustmentRequestDto, SheetDto, SummaryDto } from 
 import { ActionResult, LoadResult, NewAdjustment, OvertimeSheet, OvertimeSummary } from '../models/overtime.model';
 import { toActionError, toLoadError } from './overtime-errors';
 import { toSheet, toSummary } from './overtime-mappers';
+import { getApiBaseUrl } from '../../../core/config/api-base';
 
 const FORBIDDEN_MESSAGE = 'No tienes permiso para registrar ni eliminar ajustes';
 
@@ -20,7 +21,7 @@ function adjustmentField(message: string): string | null {
 @Injectable({ providedIn: 'root' })
 export class OvertimeSheetService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/workers';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/workers`;
 
   /** Never errors: every outcome, including a failed request, comes back as a result. */
   getSummary(month: string, fortnight: number): Observable<LoadResult<OvertimeSummary>> {

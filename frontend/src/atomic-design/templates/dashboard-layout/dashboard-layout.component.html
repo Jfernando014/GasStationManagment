@@ -36,8 +36,8 @@
     </button>
 
     <!-- Scroll de Módulos y Submódulos -->
-    <div class="sidebar-nav-scroll" (mouseover)="onNavPointer($event)" (focusin)="onNavPointer($event)"
-      (mouseleave)="hideNavTip()" (focusout)="hideNavTip()">
+    <div class="sidebar-nav-scroll" (mouseover)="onNavPointer($event)" (focus)="onNavPointer($event)"
+      (focusin)="onNavPointer($event)" (mouseleave)="hideNavTip()" (focusout)="hideNavTip()">
       <div class="nav-label-pill">General</div>
       <button class="sidebar-action-btn" routerLink="/" routerLinkActive="active"
         [routerLinkActiveOptions]="{exact: true}">
@@ -232,10 +232,7 @@
         aria-controls="dashboard-sidebar" [attr.aria-expanded]="mobileMenuOpen()" (click)="toggleMenu()">☰</button>
 
       <div class="header-trail">
-        <span class="trail-root" routerLink="/"
-          style="cursor: pointer; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.3s;"
-          onmouseover="this.style.textDecorationColor='inherit'"
-          onmouseout="this.style.textDecorationColor='transparent'">Inicio</span>
+        <a class="trail-root" routerLink="/">Inicio</a>
         <span class="trail-sep">/</span>
         <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : overtimeNav.isActive ? 'Personal / Horas extra' : parametersNav.isActive ? 'Configuración / Parámetros' : statisticsNav.isActive ? 'Resultados / Estadísticas' : performanceNav.isActive ? 'Resultados / Rendimiento' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>

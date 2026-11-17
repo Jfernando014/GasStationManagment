@@ -3,11 +3,12 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { CreateSalesTargetRequest, SalesTargetCategory, SalesTargetResponse } from '../../shared/models/dtos/sales-target.dto';
 import { decimalText, parseSalesTarget, parseSalesTargets } from '../../shared/helpers/sales-target.helpers';
+import { getApiBaseUrl } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class SalesTargetsService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/sales/targets';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/sales/targets`;
 
   list(year: number): Observable<SalesTargetResponse[]> {
     return this.http.get(this.apiUrl, { params: new HttpParams().set('year', year), responseType: 'text' })

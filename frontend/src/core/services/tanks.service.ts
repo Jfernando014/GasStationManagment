@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { TankRequest, TankResponse } from '../../shared/models/dtos/tank.dto';
+import { getApiBaseUrl } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class TanksService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/v1/inventory/tanks';
+  private readonly apiUrl = `${getApiBaseUrl()}/api/v1/inventory/tanks`;
 
   list(): Observable<TankResponse[]> {
     return this.http.get<TankResponse[]>(this.apiUrl);
