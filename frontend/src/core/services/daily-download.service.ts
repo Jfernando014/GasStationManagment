@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, map, switchMap } from 'rxjs';
+import { Observable, from, switchMap } from 'rxjs';
 import { DownloadedFile } from '../../shared/models/daily-download.model';
 import { adaptLubricantsFile, adaptSalesSheet } from '../../shared/helpers/daily-report-adapter.helpers';
 import { getApiBaseUrl } from '../config/api-base';
@@ -18,7 +18,6 @@ import { getApiBaseUrl } from '../config/api-base';
 export class DailyDownloadService {
   private readonly atrHttp = inject(HttpClient);
   private readonly atrBaseUrl = `${getApiBaseUrl()}/api/v1/sales/downloads`;
-  private readonly atrReportsBaseUrl = `${getApiBaseUrl()}/api/v1/reports`;
 
   /** PLANILLA VENTAS of the journal of a date (yyyy-MM-dd), in the layout of the prototype. */
   downloadSalesSheet(prmDate: string): Observable<DownloadedFile> {
@@ -34,29 +33,7 @@ export class DailyDownloadService {
     );
   }
 
-  /** VARIACIÓN of one day (yyyy-MM-dd). */
-  downloadVariation(prmDate: string): Observable<DownloadedFile> {
-    return this.fetchReportFile(
-      `/variation/${encodeURIComponent(prmDate)}`,
-      `variacion-${prmDate}.xlsx`
-    );
-  }
-
-  /** COMPLEMENTO DOMINUS of one day (yyyy-MM-dd). */
-  downloadDominusComplement(prmDate: string): Observable<DownloadedFile> {
-    return this.fetchReportFile(
-      `/dominus-complement/${encodeURIComponent(prmDate)}`,
-      `complemento-dominus-${prmDate}.xlsx`
-    );
-  }
-
   private fetchBackendFile(prmDate: string, prmPath: string): Observable<Blob> {
     return this.atrHttp.get(`${this.atrBaseUrl}/${encodeURIComponent(prmDate)}/${prmPath}`, { responseType: 'blob' });
-  }
-
-  private fetchReportFile(prmPath: string, prmFileName: string): Observable<DownloadedFile> {
-    return this.atrHttp
-      .get(`${this.atrReportsBaseUrl}${prmPath}`, { responseType: 'blob' })
-      .pipe(map((prmContent) => ({ fileName: prmFileName, content: prmContent })));
   }
 }

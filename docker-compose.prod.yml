@@ -6,12 +6,10 @@ services:
       build:
         context: ./frontend
         dockerfile: Dockerfile  
-        args:
-          - FRONTEND_PROD_PORT=${FRONTEND_PROD_PORT}
       container_name: gas-station-frontend-prod
       restart: always
       ports:
-        - "${FRONTEND_PROD_PORT}:${FRONTEND_PROD_PORT}" 
+        - "${FRONTEND_PROD_PORT:-80}:80"
       environment:
         - API_PROTOCOL=${API_PROTOCOL}
         - API_HOST=${API_HOST}
@@ -47,6 +45,14 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - BACKUP_DIR=/app/backups
       - BACKUP_RESTART_AFTER_RESTORE=true
+    volumes:
+      - backend_backups:/app/backups
+    healthcheck:
+      test: ["CMD-SHELL", "wget -S --spider -T 3 http://localhost:${SERVER_PORT}${API_DOCS_PATH} 2>&1 | grep -q 'HTTP/'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 300s
     depends_on:
       db:
         condition: service_healthy
@@ -69,3 +75,4 @@ services:
 
 volumes:
   postgres_prod_data:
+  backend_backups:

@@ -8,9 +8,11 @@ const here = dirname(fileURLToPath(import.meta.url));
 const rootEnv = resolve(here, '../../.env');
 if (existsSync(rootEnv)) {
   for (const line of readFileSync(rootEnv, 'utf8').split('\n')) {
-    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
     if (match && process.env[match[1]] === undefined) {
-      process.env[match[1]] = match[2];
+      const raw = match[2].replace(/\s+#.*$/, '').trim();
+      const value = raw.replace(/^(['"])(.*)\1$/, '$2');
+      process.env[match[1]] = value;
     }
   }
 }

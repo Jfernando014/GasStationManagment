@@ -9,12 +9,7 @@ RUN npm run build -- --configuration=production
 
 FROM nginx:alpine
 
-ARG FRONTEND_PROD_PORT=80
-ENV PORT=$FRONTEND_PROD_PORT
-
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-RUN sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/conf.d/default.conf
 
 COPY --from=build /app/dist/frontend-tmp/browser /usr/share/nginx/html
 
@@ -22,6 +17,6 @@ COPY config.template.json /etc/nginx/templates/config.template.json
 COPY docker-entrypoint.d/40-generate-config.sh /docker-entrypoint.d/40-generate-config.sh
 RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
 
-EXPOSE $PORT
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

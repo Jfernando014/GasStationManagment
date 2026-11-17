@@ -116,7 +116,7 @@ describe('SCRUM-108 C-09 page', () => {
     page.openDownloads(); fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(DailyDownloadsComponent)).componentInstance.atrDate).toBe('2026-08-03');
     const buttons = fixture.nativeElement.querySelectorAll('app-daily-downloads button') as NodeListOf<HTMLButtonElement>;
-    expect([...buttons].filter(b => b.disabled)).toHaveLength(1);
+    expect([...buttons].filter(b => b.disabled)).toHaveLength(3);
     fixture.nativeElement.querySelector('button[aria-label="Descargar PLANILLA VENTAS"]').click();
     expect(downloads.downloadSalesSheet).toHaveBeenCalledWith('2026-08-03');
     page.form.patchValue({ mode: 'mes', month: '2026-08' }); page.openDownloads(); fixture.detectChanges();
