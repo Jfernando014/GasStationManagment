@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,9 @@ public class JournalController {
             @PathVariable Integer stepNumber,
             Authentication authentication) {
         JournalStep step;
-        if (stepNumber == 4) {
+        if (stepNumber == 3) {
+            step = journalStep3ValidationService.validateAndCompleteStep3(journalId);
+        } else if (stepNumber == 4) {
             SalesAdminAuthorization.requireAdmin(authentication);
             step = cashBalanceStepService.complete(journalId);
         } else {
@@ -94,21 +97,6 @@ public class JournalController {
             @PathVariable Long journalId) {
         Step3ReconciliationResult result = journalStep3ValidationService.previewReconciliation(journalId);
         return ResponseEntity.ok(toStep3Response(result, false));
-    }
-
-    /**
-     * POST /api/v1/journals/{journalId}/steps/3/complete
-     *
-     * <p>Validates Step 3 (Credibanco commission reconciliation against declared vendor closes)
-     * and marks it as COMPLETED when everything reconciles.
-     */
-    @Operation(summary = "Validate and complete Step 3 commission reconciliation")
-    @PostMapping("/{journalId}/steps/3/complete")
-    public ResponseEntity<Step3ReconciliationResponse> completeStep3(
-            @PathVariable Long journalId) {
-        JournalStep completedStep = journalStep3ValidationService.validateAndCompleteStep3(journalId);
-        Step3ReconciliationResult preview = journalStep3ValidationService.previewReconciliation(journalId);
-        return ResponseEntity.ok(toStep3Response(preview, completedStep != null));
     }
 
     /**
@@ -170,6 +158,7 @@ public class JournalController {
                 .status(journal.getStatus())
                 .closedAt(closedAt)
                 .steps(steps.stream()
+                        .sorted(Comparator.comparing(JournalStep::getStepNumber, Comparator.nullsLast(Comparator.naturalOrder())))
                         .map(step -> JournalStepResponse.builder()
                                 .id(step.getId())
                                 .stepNumber(step.getStepNumber())

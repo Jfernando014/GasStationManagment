@@ -175,6 +175,29 @@ class JournalControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/journals/{id}/steps/3/complete validates step 3 and returns JournalStepResponse")
+    void completesStep3AndReturnsJournalStepResponse() throws Exception {
+        JournalStep step = JournalStep.builder()
+                .id(30L)
+                .stepNumber(3)
+                .name("Medios electrónicos")
+                .status(StepStatus.COMPLETED)
+                .completedAt(LocalDateTime.now())
+                .build();
+        when(journalStep3ValidationService.validateAndCompleteStep3(1L)).thenReturn(step);
+
+        mockMvc.perform(post("/api/v1/journals/{journalId}/steps/{stepNumber}/complete", 1L, 3)
+                        .header("Authorization", getBearerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(30))
+                .andExpect(jsonPath("$.stepNumber").value(3))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        verify(journalStep3ValidationService).validateAndCompleteStep3(1L);
+        verify(journalStepService, never()).markStepAsCompleted(1L, 3);
+    }
+
+    @Test
     @DisplayName("Step 4 returns its missing figures when the cash balance is incomplete")
     void reportsMissingCashBalanceFigures() throws Exception {
         when(cashBalanceStepService.complete(1L))

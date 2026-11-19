@@ -24,6 +24,8 @@ public interface WorkerRepository {
 
     Optional<Worker> findById(UUID id);
 
+    Optional<Worker> findByDocument(String document);
+
     /** Workers whose id is in {@code ids}; ids that do not exist are simply not returned. */
     List<Worker> findAllByIds(Collection<UUID> ids);
 

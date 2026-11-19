@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.repositories;
 
 import com.edu.unicauca.gasstation.backend.workers.infrastructure.persistence.entities.WorkerEntity;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  * {@link JpaSpecificationExecutor} builds the list with optional filters without one query per combination.
  */
 public interface JpaWorkerRepository extends JpaRepository<WorkerEntity, UUID>, JpaSpecificationExecutor<WorkerEntity> {
+
+    Optional<WorkerEntity> findByDocument(String document);
 
     boolean existsByDocument(String document);
 

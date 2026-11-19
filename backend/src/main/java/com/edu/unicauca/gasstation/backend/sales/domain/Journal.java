@@ -31,6 +31,7 @@ public class Journal {
     private JournalStatus status;
 
     @OneToMany(mappedBy = "journal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("stepNumber ASC")
     @Builder.Default
     private List<JournalStep> steps = new ArrayList<>();
 

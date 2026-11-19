@@ -17,39 +17,73 @@ import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.QrReconci
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.ReconciliationValidationException;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.VendorDeclaration;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.CardReconciliationRepository;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class ElectronicPaymentsService {
     private final CredibancoReconciliationService credibancoService;
     private final QrPointsReconciliationService qrPointsService;
     private final CardReconciliationRepository cards;
     private final SellerCloseQuery sellerCloseQuery;
     private final JournalRepository journals;
+    private final ScheduleWorkerDirectory workers;
+
+    public ElectronicPaymentsService(
+            CredibancoReconciliationService credibancoService,
+            QrPointsReconciliationService qrPointsService,
+            CardReconciliationRepository cards,
+            SellerCloseQuery sellerCloseQuery,
+            JournalRepository journals) {
+        this(credibancoService, qrPointsService, cards, sellerCloseQuery, journals, null);
+    }
+
+    @Autowired
+    public ElectronicPaymentsService(
+            CredibancoReconciliationService credibancoService,
+            QrPointsReconciliationService qrPointsService,
+            CardReconciliationRepository cards,
+            SellerCloseQuery sellerCloseQuery,
+            JournalRepository journals,
+            ScheduleWorkerDirectory workers) {
+        this.credibancoService = credibancoService;
+        this.qrPointsService = qrPointsService;
+        this.cards = cards;
+        this.sellerCloseQuery = sellerCloseQuery;
+        this.journals = journals;
+        this.workers = workers;
+    }
 
     @Transactional
     public ElectronicPaymentsStatus getStatus(LocalDate date) {
         Journal journal = journals.findByDate(date).orElse(null);
         List<VendorCloseSummary> closes = sellerCloseQuery.findVendorClosesByDate(date);
+        WorkerResolver resolver = new WorkerResolver();
         if (isStepCompleted(journal, 2)) {
-            synchronizePlanillas(date, closes);
+            synchronizePlanillas(date, closes, resolver);
         }
 
         List<VendorDeclaration> declarations = cards.findByDate(date);
         Map<UUID, VendorDeclaration> declarationsByWorker = new HashMap<>();
         declarations.forEach(declaration -> declarationsByWorker.put(declaration.workerId(), declaration));
         List<ElectronicVendorRow> vendors = closes.stream()
-                .map(close -> toRow(close, declarationsByWorker.get(workerId(close))))
+                .map(close -> {
+                    UUID resolvedId = resolver.resolve(close);
+                    return toRow(close, resolvedId, declarationsByWorker.get(resolvedId));
+                })
                 .toList();
 
         CredibancoDayResult credibanco = credibancoService.get(date);
@@ -66,8 +100,9 @@ public class ElectronicPaymentsService {
             throw new IllegalStateException("La jornada del " + date + " ya está cerrada y no permite modificaciones.");
         }
         List<VendorCloseSummary> closes = sellerCloseQuery.findVendorClosesByDate(date);
+        WorkerResolver resolver = new WorkerResolver();
         VendorCloseSummary close = closes.stream()
-                .filter(item -> workerId(item).equals(workerId))
+                .filter(item -> resolver.resolve(item).equals(workerId))
                 .findFirst()
                 .orElseThrow(() -> new ReconciliationValidationException(
                         "workerId", "El vendedor no tiene cierre en el paso 2 para " + date));
@@ -89,13 +124,13 @@ public class ElectronicPaymentsService {
         return getStatus(date);
     }
 
-    private void synchronizePlanillas(LocalDate date, List<VendorCloseSummary> closes) {
+    private void synchronizePlanillas(LocalDate date, List<VendorCloseSummary> closes, WorkerResolver resolver) {
         // The existing QR and Credibanco calculators read planillas from card declarations.
         // Seed/synchronize those rows from step 2 while preserving already-entered vouchers.
         Map<UUID, VendorDeclaration> existing = new HashMap<>();
         cards.findByDate(date).forEach(declaration -> existing.put(declaration.workerId(), declaration));
         for (VendorCloseSummary close : closes) {
-            UUID workerId = workerId(close);
+            UUID workerId = resolver.resolve(close);
             VendorDeclaration previous = existing.get(workerId);
             VendorDeclaration synchronizedDeclaration = new VendorDeclaration(
                     workerId,
@@ -115,9 +150,9 @@ public class ElectronicPaymentsService {
         }
     }
 
-    private ElectronicVendorRow toRow(VendorCloseSummary close, VendorDeclaration declaration) {
+    private ElectronicVendorRow toRow(VendorCloseSummary close, UUID workerId, VendorDeclaration declaration) {
         return new ElectronicVendorRow(
-                workerId(close),
+                workerId,
                 close.vendorName(),
                 close.shiftName(),
                 amount(declaration, VendorDeclaration::mastercard),
@@ -166,16 +201,54 @@ public class ElectronicPaymentsService {
         return blockers;
     }
 
-    private UUID workerId(VendorCloseSummary close) {
-        try {
-            if (close.vendorDocument() == null || close.vendorDocument().isBlank()) {
-                throw new IllegalArgumentException("El identificador está vacío");
+    private final class WorkerResolver {
+        private List<ScheduleWorkerInfo> activeWorkersCache;
+
+        UUID resolve(VendorCloseSummary close) {
+            String doc = close.vendorDocument() == null ? "" : close.vendorDocument().strip();
+            if (!doc.isEmpty()) {
+                try {
+                    return UUID.fromString(doc);
+                } catch (IllegalArgumentException ignored) {
+                    // Not a UUID: fall back to document / name lookup for legacy cédulas and calibration sheets.
+                }
+                if (workers != null) {
+                    Optional<UUID> byDocument = workers.findWorkerIdByDocument(doc);
+                    if (byDocument.isPresent()) {
+                        return byDocument.get();
+                    }
+                }
             }
-            return UUID.fromString(close.vendorDocument());
-        } catch (IllegalArgumentException exception) {
+            if (workers != null && close.vendorName() != null && !close.vendorName().isBlank()) {
+                String targetName = normalizeName(close.vendorName());
+                if (activeWorkersCache == null) {
+                    activeWorkersCache = workers.getActiveWorkers();
+                }
+                List<UUID> matches = activeWorkersCache.stream()
+                        .filter(worker -> targetName.equals(normalizeName(worker.fullName())))
+                        .map(ScheduleWorkerInfo::id)
+                        .distinct()
+                        .toList();
+                if (matches.size() == 1) {
+                    return matches.get(0);
+                }
+            }
+            String label = close.vendorName() != null && !close.vendorName().isBlank()
+                    ? close.vendorName() + " (" + doc + ")"
+                    : doc;
             throw new ReconciliationValidationException(
-                    "vendorDocument", "El identificador del vendedor en el paso 2 no es un UUID válido.");
+                    "vendorDocument",
+                    "No se pudo asociar el vendedor '" + label + "' del paso 2 con un trabajador registrado.");
         }
+    }
+
+    private static String normalizeName(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        String decomposed = Normalizer.normalize(value.strip(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "");
+        return decomposed.replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     private BigDecimal amount(VendorDeclaration declaration,

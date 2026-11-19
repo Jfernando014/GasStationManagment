@@ -8,6 +8,7 @@ import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRep
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,15 @@ public class WorkerScheduleDirectory implements ScheduleWorkerDirectory {
         return workerRepository.findAll(new WorkerFilter(true, null, null)).stream()
                 .map(WorkerScheduleDirectory::toInfo)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findWorkerIdByDocument(String document) {
+        if (document == null || document.isBlank()) {
+            return Optional.empty();
+        }
+        return workerRepository.findByDocument(document.strip()).map(Worker::getId);
     }
 
     private static ScheduleWorkerInfo toInfo(Worker worker) {
