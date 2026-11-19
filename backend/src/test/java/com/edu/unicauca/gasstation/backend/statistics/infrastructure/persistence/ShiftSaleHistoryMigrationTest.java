@@ -87,7 +87,8 @@ class ShiftSaleHistoryMigrationTest {
                         AND column_name = 'vendor_document'
                     """)) {
                 assertThat(rows.next()).isTrue();
-                assertThat(rows.getInt(1)).isEqualTo(30);
+                // V40 widened vendor_document from VARCHAR(30) to VARCHAR(64) so 36-char worker UUIDs fit.
+                assertThat(rows.getInt(1)).isEqualTo(64);
             }
             try (var rows = statement.executeQuery("SELECT count(*) FROM upgrade_statistics.statistics_journal_sales")) {
                 assertThat(rows.next()).isTrue();
