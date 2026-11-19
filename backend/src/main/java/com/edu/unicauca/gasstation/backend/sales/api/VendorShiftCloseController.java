@@ -11,8 +11,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +65,16 @@ public class VendorShiftCloseController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate journalDate = date != null ? date : LocalDate.now();
         return sellerCloseQueryService.getAssignedStaffForDate(journalDate);
+    }
+
+    @Operation(summary = "Get effective fuel prices per gallon for an operational journal date")
+    @ApiResponse(responseCode = "200", description = "Effective fuel prices map returned")
+    @GetMapping("/fuel-prices")
+    public Map<String, BigDecimal> getEffectiveFuelPrices(
+            @Parameter(description = "Operational journal date (defaults to today)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate journalDate = date != null ? date : LocalDate.now();
+        return sellerCloseQueryService.getEffectiveFuelPrices(journalDate);
     }
 
     @Operation(summary = "Register and reconcile vendor shift closes for a journal date")
