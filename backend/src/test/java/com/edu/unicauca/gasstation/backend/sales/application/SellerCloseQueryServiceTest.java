@@ -17,6 +17,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.VendorCloseCalc
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -177,5 +178,23 @@ class SellerCloseQueryServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("cerrada");
         verify(repository, never()).deleteByJournalDate(date);
+    }
+
+    @Test
+    @DisplayName("getEffectiveFuelPrices delegates to fuelPriceReadPort for requested date")
+    void getEffectiveFuelPrices_delegatesToPort() {
+        LocalDate date = LocalDate.of(2026, 11, 19);
+        Map<String, BigDecimal> expectedPrices = Map.of(
+                "MOTOR", new BigDecimal("15826.00"),
+                "DIESEL", new BigDecimal("11484.00"),
+                "EXTRA", new BigDecimal("18500.00"),
+                "MAX_PRO", new BigDecimal("17100.00")
+        );
+        when(fuelPriceReadPort.findEffectivePrices(date)).thenReturn(expectedPrices);
+
+        Map<String, BigDecimal> result = service.getEffectiveFuelPrices(date);
+
+        assertThat(result).containsExactlyInAnyOrderEntriesOf(expectedPrices);
+        verify(fuelPriceReadPort).findEffectivePrices(date);
     }
 }

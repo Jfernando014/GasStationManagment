@@ -39,6 +39,11 @@ export class SalesVendorCloseService {
     return this.http.get<EffectiveDiscrepancyToleranceDto>(this.toleranceUrl, { params });
   }
 
+  getEffectiveFuelPrices(date: string): Observable<Record<string, number>> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<Record<string, number>>(`${this.baseUrl}/fuel-prices`, { params });
+  }
+
   saveVendorCloses(request: VendorShiftCloseBatchRequestDto): Observable<VendorCloseSummaryDto[]> {
     const params = new HttpParams().set('date', request.journalDate);
     return this.http.post<VendorCloseSummaryDto[]>(this.baseUrl, request, { params });
@@ -50,29 +55,29 @@ export class SalesVendorCloseService {
   }
 
   /**
-   * Catalog of authentic EDS Bellavista products for basket and additives
+   * Fallback catalog of EDS Bellavista products using canonical inventory ProductCategory keys.
    */
   getCatalogProducts(): CatalogProductItem[] {
     return [
-      { sku: '76102', name: 'Aditivo Gasolina Ruta 75 40ml', category: 'Aditivos', price: 6800.0 },
-      { sku: '75089', name: 'Super Concentrado 4x1 Plus 40ml', category: 'Aditivos', price: 7200.0 },
-      { sku: '76101', name: 'Elevador de Octanaje Ruta 75 237ml', category: 'Aditivos', price: 17300.0 },
-      { sku: '74063', name: 'Refrigerante Corriente Petrocom Cuarto', category: 'Refrigerantes', price: 6000.0 },
-      { sku: '74039', name: 'Agua para Batería Petrocom', category: 'Refrigerantes', price: 2500.0 },
-      { sku: '74066', name: 'Líquido de Frenos DOT 3 Petrocom', category: 'Varios', price: 8000.0 },
-      { sku: '80216', name: 'Terpel Celerity Bio Antihumo Cuarto', category: 'Lubricantes', price: 28500.0 },
-      { sku: '80262', name: 'Terpel Celerity Bio Antihumo 2T Pinta', category: 'Lubricantes', price: 15500.0 },
-      { sku: '80266', name: 'Mobil Súper Moto 4T Cuarto', category: 'Lubricantes', price: 34000.0 },
-      { sku: '80271', name: 'Mobil Súper Moto 4T Pinta', category: 'Lubricantes', price: 19000.0 },
-      { sku: '80200', name: 'Terpel Celerity 4T Cuarto', category: 'Lubricantes', price: 28000.0 },
-      { sku: '80204', name: 'Terpel Celerity 4T Pinta', category: 'Lubricantes', price: 15000.0 },
-      { sku: '80210', name: 'Terpel Oiltec 20W50 Cuarto Multigrado', category: 'Lubricantes', price: 29000.0 },
-      { sku: '80070', name: 'Mobil Special HD50 Cuarto', category: 'Lubricantes', price: 30000.0 },
-      { sku: '80171', name: 'Mobil Súper 1000 20W50 Cuarto', category: 'Lubricantes', price: 42000.0 },
-      { sku: '80258', name: 'Mobil Hidráulico AW68 Cuarto', category: 'Lubricantes', price: 22000.0 },
-      { sku: '76001', name: 'Bolsas para Combustible', category: 'Lubricantes', price: 5000.0 },
-      { sku: '80190', name: 'Aditivo para acpm (474 tarro negro)', category: 'Aditivos', price: 6500.0 },
-      { sku: '75005', name: 'Aditivo Diesel Ruta 75 118ml', category: 'Aditivos', price: 13400.0 }
+      { sku: '76102', name: 'Aditivo Gasolina Ruta 75 40ml', category: 'ADITIVO', price: 6800.0 },
+      { sku: '75089', name: 'Super Concentrado 4x1 Plus 40ml', category: 'ADITIVO', price: 7200.0 },
+      { sku: '76101', name: 'Elevador de Octanaje Ruta 75 237ml', category: 'ADITIVO', price: 17300.0 },
+      { sku: '74063', name: 'Refrigerante Corriente Petrocom Cuarto', category: 'REFRIGERANTE', price: 6000.0 },
+      { sku: '74039', name: 'Agua para Batería Petrocom', category: 'REFRIGERANTE', price: 2500.0 },
+      { sku: '74066', name: 'Líquido de Frenos DOT 3 Petrocom', category: 'OTRO', price: 8000.0 },
+      { sku: '80216', name: 'Terpel Celerity Bio Antihumo Cuarto', category: 'LUBRICANTE', price: 28500.0 },
+      { sku: '80262', name: 'Terpel Celerity Bio Antihumo 2T Pinta', category: 'LUBRICANTE', price: 15500.0 },
+      { sku: '80266', name: 'Mobil Súper Moto 4T Cuarto', category: 'LUBRICANTE', price: 34000.0 },
+      { sku: '80271', name: 'Mobil Súper Moto 4T Pinta', category: 'LUBRICANTE', price: 19000.0 },
+      { sku: '80200', name: 'Terpel Celerity 4T Cuarto', category: 'LUBRICANTE', price: 28000.0 },
+      { sku: '80204', name: 'Terpel Celerity 4T Pinta', category: 'LUBRICANTE', price: 15000.0 },
+      { sku: '80210', name: 'Terpel Oiltec 20W50 Cuarto Multigrado', category: 'LUBRICANTE', price: 29000.0 },
+      { sku: '80070', name: 'Mobil Special HD50 Cuarto', category: 'LUBRICANTE', price: 30000.0 },
+      { sku: '80171', name: 'Mobil Súper 1000 20W50 Cuarto', category: 'LUBRICANTE', price: 42000.0 },
+      { sku: '80258', name: 'Mobil Hidráulico AW68 Cuarto', category: 'LUBRICANTE', price: 22000.0 },
+      { sku: '76001', name: 'Bolsas para Combustible', category: 'OTRO', price: 5000.0 },
+      { sku: '80190', name: 'Aditivo para acpm (474 tarro negro)', category: 'ADITIVO', price: 6500.0 },
+      { sku: '75005', name: 'Aditivo Diesel Ruta 75 118ml', category: 'ADITIVO', price: 13400.0 }
     ];
   }
 

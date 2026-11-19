@@ -15,6 +15,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.VendorCloseCalc
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import lombok.Getter;
@@ -174,6 +175,10 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
 
     public Optional<BigDecimal> getEffectiveFuelPrice(String fuelType, LocalDate date) {
         return fuelPriceReadPort.findEffectivePrice(fuelType, date);
+    }
+
+    public Map<String, BigDecimal> getEffectiveFuelPrices(LocalDate date) {
+        return fuelPriceReadPort.findEffectivePrices(date);
     }
 
     private boolean isClosed(Journal journal) {

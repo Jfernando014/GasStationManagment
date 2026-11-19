@@ -68,7 +68,10 @@ jobs:
 
       - name: Ejecutar pruebas del Frontend (Angular)
         run: |
+          docker exec -e CI=true gas-station-frontend-dev npm run lint
           docker exec -e CI=true gas-station-frontend-dev npx ng test --no-watch
+          docker exec -e CI=true gas-station-frontend-dev npm run build -- --configuration=production
+          docker exec -e CI=true gas-station-frontend-dev npm run test:pwa
 
       - name: Apagar contenedores y limpiar volúmenes residuales
         if: always()

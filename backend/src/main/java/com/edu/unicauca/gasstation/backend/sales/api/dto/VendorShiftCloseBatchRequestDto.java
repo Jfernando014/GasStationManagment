@@ -2,8 +2,10 @@ package com.edu.unicauca.gasstation.backend.sales.api.dto;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.models.VendorCloseProduct;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.VendorShiftClose;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -11,27 +13,27 @@ import java.util.UUID;
 
 public record VendorShiftCloseBatchRequestDto(
         LocalDate journalDate,
-        @NotEmpty List<VendorShiftCloseItemRequestDto> closes
+        @NotEmpty List<@Valid VendorShiftCloseItemRequestDto> closes
 ) {
     public record VendorShiftCloseItemRequestDto(
             UUID id,
             @NotBlank String vendorDocument,
             @NotBlank String vendorName,
             @NotBlank String shiftName,
-            Integer pumpNumber,
-            BigDecimal cash,
-            BigDecimal ga,
-            BigDecimal credibanco,
-            BigDecimal qr,
-            BigDecimal redemptions,
-            BigDecimal totalDelivered,
-            BigDecimal gallonsMotor,
-            BigDecimal gallonsDiesel,
-            BigDecimal gallonsExtra,
-            BigDecimal gallonsMaxpro,
-            BigDecimal basketDominusAmount,
-            BigDecimal dominusTirilla,
-            List<ProductItemDto> products
+            @PositiveOrZero Integer pumpNumber,
+            @PositiveOrZero BigDecimal cash,
+            @PositiveOrZero BigDecimal ga,
+            @PositiveOrZero BigDecimal credibanco,
+            @PositiveOrZero BigDecimal qr,
+            @PositiveOrZero BigDecimal redemptions,
+            @PositiveOrZero BigDecimal totalDelivered,
+            @PositiveOrZero BigDecimal gallonsMotor,
+            @PositiveOrZero BigDecimal gallonsDiesel,
+            @PositiveOrZero BigDecimal gallonsExtra,
+            @PositiveOrZero BigDecimal gallonsMaxpro,
+            @PositiveOrZero BigDecimal basketDominusAmount,
+            @PositiveOrZero BigDecimal dominusTirilla,
+            List<@Valid ProductItemDto> products
     ) {
         public VendorShiftClose toDomain(LocalDate journalDate) {
             List<VendorCloseProduct> domainProducts = products != null
@@ -75,11 +77,11 @@ public record VendorShiftCloseBatchRequestDto(
 
     public record ProductItemDto(
             UUID id,
-            String sku,
-            String productName,
+            @NotBlank String sku,
+            @NotBlank String productName,
             String category,
-            int unitsSold,
-            BigDecimal unitPrice,
-            BigDecimal totalAmount
+            @PositiveOrZero int unitsSold,
+            @PositiveOrZero BigDecimal unitPrice,
+            @PositiveOrZero BigDecimal totalAmount
     ) {}
 }

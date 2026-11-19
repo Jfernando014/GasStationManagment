@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { VendorCloseStep2Component } from './vendor-close-step2.component';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { ProductsService } from '../../../../core/services/products.service';
 import { ApiError } from '../../../../shared/models/api-error.model';
 import { JournalResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import { VendorShiftCloseBatchRequestDto } from '../../../../shared/models/dtos/vendor-close.dto';
@@ -453,5 +454,145 @@ describe('VendorCloseStep2Component', () => {
     expect(localComponent.totalDelivered()).toBe(0);
     expect(localComponent.vendorProductUnits('52875796')).toBe(0);
     expect(updatedStepStatus).toBe(StepStatus.PENDING);
+  });
+
+  it('should load active catalog from ProductsService and preserve real category in saveCloses()', async () => {
+    const productsServiceStub = {
+      list: () => of([
+        {
+          id: 'prod-1',
+          code: '76102',
+          name: 'Aditivo Gasolina Ruta 75 40ml',
+          category: 'ADITIVO',
+          price: 6800,
+          cost: 4200,
+          active: true,
+          marginPercent: 38.24
+        },
+        {
+          id: 'prod-2',
+          code: '99001',
+          name: 'Lubricante Sintético 1L',
+          category: 'LUBRICANTE',
+          price: 32000,
+          cost: 21000,
+          active: true,
+          marginPercent: 34.38
+        }
+      ])
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: salesServiceMock },
+        { provide: ProductsService, useValue: productsServiceStub },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-08-05' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    localComponent.captures['52875796'].parciales = 1;
+    localComponent.captures['52875796'].productos['76102'] = 2;
+    localComponent.saveCloses();
+
+    const sentRequest = salesServiceMock.getLastSavedRequest();
+    expect(sentRequest).toBeTruthy();
+    const sentProduct = sentRequest!.closes[0].products?.find(p => p.sku === '76102');
+    expect(sentProduct?.category).toBe('ADITIVO');
+    expect(sentProduct?.category).not.toBe('Canastilla');
+  });
+
+  it('should apply effective fuel prices from backend for tirilla mismatch validation', async () => {
+    const salesWithPricesMock = {
+      ...salesServiceMock,
+      getEffectiveFuelPrices: () => of({
+        MOTOR: 20000,
+        DIESEL: 12000,
+        EXTRA: 21000,
+        MAX_PRO: 18000
+      })
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: salesWithPricesMock },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-11-19' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.fuelPrices['motor']).toBe(20000);
+    expect(localComponent.fuelPrices['diesel']).toBe(12000);
+    expect(localComponent.fuelPrices['extra']).toBe(21000);
+    expect(localComponent.fuelPrices['maxpro']).toBe(18000);
+
+    // 10 galMotor at fallback 15826 = 158260, but backend effective price is 20000 -> 200000
+    localComponent.captures['52875796'].galMotor = 10;
+    localComponent.captures['52875796'].tirilla = 158260;
+    localComponent.onFieldChange('52875796');
+    expect(localComponent.captures['52875796'].avisoTirilla).toBeTruthy();
+
+    localComponent.captures['52875796'].tirilla = 200000;
+    localComponent.onFieldChange('52875796');
+    expect(localComponent.captures['52875796'].avisoTirilla).toBeNull();
+  });
+
+  it('should add product selected from datalist "Name · SKU" format via addProductFromSearch', async () => {
+    const productsServiceStub = {
+      list: () => of([
+        {
+          id: 'prod-1',
+          code: '76102',
+          name: 'Aditivo Gasolina Ruta 75 40ml',
+          category: 'ADITIVO',
+          price: 6800,
+          cost: 4200,
+          active: true,
+          marginPercent: 38.24
+        },
+        {
+          id: 'prod-2',
+          code: '99001',
+          name: 'Lubricante Sintético 1L',
+          category: 'LUBRICANTE',
+          price: 32000,
+          cost: 21000,
+          active: true,
+          marginPercent: 34.38
+        }
+      ])
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: salesServiceMock },
+        { provide: ProductsService, useValue: productsServiceStub },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-08-05' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.visibleProductSkus).not.toContain('99001');
+    localComponent.productSearchInput = 'Lubricante Sintético 1L · 99001';
+    localComponent.addProductFromSearch();
+
+    expect(localComponent.visibleProductSkus).toContain('99001');
+    expect(localComponent.folded.productos).toBe(false);
+    expect(localComponent.productSearchInput).toBe('');
   });
 });
