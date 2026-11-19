@@ -16,6 +16,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -78,5 +79,17 @@ public class VendorShiftCloseController {
 
         sellerCloseQueryService.registerVendorCloses(journalDate, domainCloses);
         return sellerCloseQueryService.findVendorClosesByDate(journalDate);
+    }
+
+    @Operation(summary = "Reset all vendor shift closes for an open journal date")
+    @ApiResponse(responseCode = "204", description = "Vendor closes cleared and step 2 returned to PENDING")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and cannot be modified")
+    @DeleteMapping
+    public ResponseEntity<Void> resetVendorCloses(
+            @Parameter(description = "Operational journal date (defaults to today)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate journalDate = date != null ? date : LocalDate.now();
+        sellerCloseQueryService.resetVendorCloses(journalDate);
+        return ResponseEntity.noContent().build();
     }
 }

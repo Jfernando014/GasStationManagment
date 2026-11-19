@@ -2,6 +2,11 @@ package com.edu.unicauca.gasstation.backend.sales.application;
 
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
+import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalRepository;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
+import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.DiscrepancyStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.models.VendorShiftClose;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort;
@@ -22,7 +27,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -133,5 +140,42 @@ class SellerCloseQueryServiceTest {
         assertThat(saved.get(0).resultStatus()).isEqualTo(DiscrepancyStatus.CUADRA);
         assertThat(saved.get(0).appliedTolerance()).isEqualByComparingTo("50.00");
         verify(repository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("resetVendorCloses deletes closes and reverts step 2 to PENDING for open journal")
+    void resetVendorCloses_deletesClosesAndReopensStep2() {
+        LocalDate date = LocalDate.of(2026, 11, 19);
+        JournalRepository journalRepo = org.mockito.Mockito.mock(JournalRepository.class);
+        JournalStep step2 = JournalStep.builder().stepNumber(2).status(StepStatus.COMPLETED).build();
+        Journal openJournal = Journal.builder().id(34L).date(date).status(JournalStatus.OPEN).steps(List.of(step2)).build();
+        when(journalRepo.findByDate(date)).thenReturn(Optional.of(openJournal));
+
+        SellerCloseQueryServiceImpl serviceWithJournal = new SellerCloseQueryServiceImpl(
+                repository, calculationEngine, toleranceService, dayStaffReadPort, fuelPriceReadPort, journalRepo);
+
+        serviceWithJournal.resetVendorCloses(date);
+
+        assertThat(step2.getStatus()).isEqualTo(StepStatus.PENDING);
+        assertThat(step2.getCompletedAt()).isNull();
+        verify(journalRepo).save(openJournal);
+        verify(repository).deleteByJournalDate(date);
+    }
+
+    @Test
+    @DisplayName("resetVendorCloses throws IllegalStateException when journal is already closed")
+    void resetVendorCloses_rejectsClosedJournal() {
+        LocalDate date = LocalDate.of(2026, 8, 5);
+        JournalRepository journalRepo = org.mockito.Mockito.mock(JournalRepository.class);
+        Journal closedJournal = Journal.builder().id(10L).date(date).status(JournalStatus.CLOSED).steps(List.of()).build();
+        when(journalRepo.findByDate(date)).thenReturn(Optional.of(closedJournal));
+
+        SellerCloseQueryServiceImpl serviceWithJournal = new SellerCloseQueryServiceImpl(
+                repository, calculationEngine, toleranceService, dayStaffReadPort, fuelPriceReadPort, journalRepo);
+
+        assertThatThrownBy(() -> serviceWithJournal.resetVendorCloses(date))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cerrada");
+        verify(repository, never()).deleteByJournalDate(date);
     }
 }
