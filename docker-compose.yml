@@ -16,9 +16,9 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - API_PROTOCOL=${API_PROTOCOL}
-      - API_HOST=${API_HOST}
-      - API_PORT=${SERVER_PORT}
+      - API_PROTOCOL=${API_PROTOCOL:-}
+      - API_HOST=${API_HOST:-}
+      - API_PORT=${SERVER_PORT:-8080}
     depends_on:
       backend:
         condition: service_healthy
@@ -28,7 +28,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: gas-station-backend-dev
-    command: ["mvn", "-B", "-ntp", "spring-boot:run"]
+    command: ["mvn", "-B", "-ntp", "-Dmaven.test.skip=true", "spring-boot:run"]
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
@@ -48,16 +48,16 @@ services:
       - JPA_SHOW_SQL=${JPA_SHOW_SQL}
       - SWAGGER_PATH=${SWAGGER_PATH}
       - API_DOCS_PATH=${API_DOCS_PATH}
-      - APP_CORS_ALLOWED_ORIGINS=${APP_CORS_ALLOWED_ORIGINS}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - APP_CORS_ALLOWED_ORIGINS=${APP_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://*:4200}
+      - JWT_SECRET=${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - MAVEN_OPTS=-Dmaven.compiler.parameters=true
       - DOCKER_HOST=unix:///var/run/docker.sock
       - TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
     healthcheck:
-      test: ["CMD-SHELL", "wget -S --spider -T 3 http://localhost:${SERVER_PORT}${API_DOCS_PATH} 2>&1 | grep -q 'HTTP/'"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null -T 3 http://localhost:${SERVER_PORT}${API_DOCS_PATH}"]
       interval: 10s
       timeout: 5s
       retries: 12

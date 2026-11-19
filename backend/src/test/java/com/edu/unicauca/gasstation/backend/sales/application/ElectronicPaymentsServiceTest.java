@@ -1,8 +1,10 @@
 package com.edu.unicauca.gasstation.backend.sales.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,9 +21,12 @@ import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.DayFranch
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.PointsResult;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.PointsStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.QrReconciliationResult;
+import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.ReconciliationValidationException;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.VendorCredibancoCheck;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.VendorDeclaration;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.CardReconciliationRepository;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -51,6 +56,8 @@ class ElectronicPaymentsServiceTest {
     private SellerCloseQuery sellerCloseQuery;
     @Mock
     private JournalRepository journals;
+    @Mock
+    private ScheduleWorkerDirectory workers;
     @InjectMocks
     private ElectronicPaymentsService service;
 
@@ -58,15 +65,17 @@ class ElectronicPaymentsServiceTest {
 
     @BeforeEach
     void setUp() {
+        service = new ElectronicPaymentsService(
+                credibancoService, qrPointsService, cards, sellerCloseQuery, journals, workers);
         stored = new VendorDeclaration(WORKER_ID, "DIA",
                 money(500), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 money(50), money(20), money(3));
         when(journals.findByDate(DATE)).thenReturn(Optional.of(openJournalWithStep2Complete()));
         when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of(vendorClose()));
-        when(cards.findByDate(DATE)).thenReturn(List.of(stored));
-        when(credibancoService.get(DATE)).thenReturn(credibancoResult());
-        when(qrPointsService.qr(DATE)).thenReturn(qrResult());
-        when(qrPointsService.points(DATE)).thenReturn(pointsResult());
+        lenient().when(cards.findByDate(DATE)).thenReturn(List.of(stored));
+        lenient().when(credibancoService.get(DATE)).thenReturn(credibancoResult());
+        lenient().when(qrPointsService.qr(DATE)).thenReturn(qrResult());
+        lenient().when(qrPointsService.points(DATE)).thenReturn(pointsResult());
     }
 
     @Test
@@ -103,6 +112,48 @@ class ElectronicPaymentsServiceTest {
         assertEquals(money(100), saved.getValue().planillaCredibanco());
         assertEquals(money(0), saved.getValue().planillaQr());
         assertEquals(money(0), saved.getValue().planillaRedemptions());
+    }
+
+    @Test
+    void resolvesWorkerIdFromDocumentWhenStep2StoredCedula() {
+        VendorCloseSummary cedulaClose = new VendorCloseSummary(DATE, "52875796", "Mónica Dorado", "12-7", 3,
+                money(0), money(0), money(100), money(0), money(0), money(100),
+                money(0), money(0), money(0), money(0), money(0), money(0), money(0), "CUADRA", List.of());
+        when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of(cedulaClose));
+        when(workers.findWorkerIdByDocument("52875796")).thenReturn(Optional.of(WORKER_ID));
+
+        var status = service.getStatus(DATE);
+
+        assertEquals(1, status.vendors().size());
+        assertEquals(WORKER_ID, status.vendors().get(0).workerId());
+    }
+
+    @Test
+    void resolvesWorkerIdFromFullNameWhenDocumentIsUnmatched() {
+        VendorCloseSummary demoClose = new VendorCloseSummary(DATE, "1061696674", "Carlos Andrés Paredes", "DIA6", 1,
+                money(0), money(0), money(100), money(0), money(0), money(100),
+                money(0), money(0), money(0), money(0), money(0), money(0), money(0), "CUADRA", List.of());
+        when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of(demoClose));
+        when(workers.findWorkerIdByDocument("1061696674")).thenReturn(Optional.empty());
+        when(workers.getActiveWorkers()).thenReturn(List.of(
+                new ScheduleWorkerInfo(WORKER_ID, "Carlos Andres Paredes", UUID.randomUUID(), true)));
+
+        var status = service.getStatus(DATE);
+
+        assertEquals(1, status.vendors().size());
+        assertEquals(WORKER_ID, status.vendors().get(0).workerId());
+    }
+
+    @Test
+    void throwsValidationExceptionWhenVendorCannotBeMatchedToRegisteredWorker() {
+        VendorCloseSummary unknownClose = new VendorCloseSummary(DATE, "999999", "Desconocido", "DIA", 1,
+                money(0), money(0), money(100), money(0), money(0), money(100),
+                money(0), money(0), money(0), money(0), money(0), money(0), money(0), "CUADRA", List.of());
+        when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of(unknownClose));
+        when(workers.findWorkerIdByDocument("999999")).thenReturn(Optional.empty());
+        when(workers.getActiveWorkers()).thenReturn(List.of());
+
+        assertThrows(ReconciliationValidationException.class, () -> service.getStatus(DATE));
     }
 
     private Journal openJournalWithStep2Complete() {

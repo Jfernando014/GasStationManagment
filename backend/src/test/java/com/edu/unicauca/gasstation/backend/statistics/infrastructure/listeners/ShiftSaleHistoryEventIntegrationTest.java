@@ -37,7 +37,6 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -377,13 +376,13 @@ class ShiftSaleHistoryEventIntegrationTest {
     }
 
     @Test
-    void theUnchangedUpstreamVarchar30StillBlocksARealUuidSellerClose() {
-        assertThatThrownBy(() -> jdbc.update("INSERT INTO vendor_shift_closes "
-                + "(journal_date, vendor_document, vendor_name, shift_name, result_status) VALUES (?, ?, ?, ?, ?)",
-                DATE, WORKER_A.toString(), "Seller", "DIA", "CUADRA"))
-                .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("character varying(30)");
-        assertThat(jdbc.queryForObject("SELECT count(*) FROM vendor_shift_closes", Integer.class)).isZero();
+    void widenedVendorDocumentAcceptsARealUuidSellerClose() {
+        int inserted = jdbc.update("INSERT INTO vendor_shift_closes "
+                        + "(journal_date, vendor_document, vendor_name, shift_name, result_status) VALUES (?, ?, ?, ?, ?)",
+                DATE, WORKER_A.toString(), "Seller", "DIA", "CUADRA");
+        assertThat(inserted).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT vendor_document FROM vendor_shift_closes", String.class))
+                .isEqualTo(WORKER_A.toString());
     }
 
     @Test

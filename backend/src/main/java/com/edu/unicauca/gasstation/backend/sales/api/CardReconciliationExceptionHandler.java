@@ -25,7 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * bean validation lists all of them in {@code errors}; a value that is not a number reports the offending field too.
  */
 @RestControllerAdvice(assignableTypes = {CredibancoReconciliationController.class, QrPointsReconciliationController.class,
-        MonthlyReconciliationController.class, SalesParameterController.class})
+        MonthlyReconciliationController.class, SalesParameterController.class, ElectronicPaymentsController.class})
 public class CardReconciliationExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
@@ -73,6 +73,11 @@ public class CardReconciliationExceptionHandler extends ResponseEntityExceptionH
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail invalid(IllegalArgumentException ex) {
         return problem(HttpStatus.BAD_REQUEST, "INVALID_RECONCILIATION", ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail conflict(IllegalStateException ex) {
+        return problem(HttpStatus.CONFLICT, "JOURNAL_STATE_CONFLICT", ex.getMessage());
     }
 
     @ExceptionHandler(SalesParameterNotFoundException.class)

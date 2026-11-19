@@ -10,6 +10,7 @@ import com.edu.unicauca.gasstation.backend.workers.WorkerTestData;
 import com.edu.unicauca.gasstation.backend.workers.domain.repositories.WorkerRepository;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,5 +51,14 @@ class WorkerScheduleDirectoryTest {
                 WorkerTestData.worker(ANA_ID, "Ana Villamil", "0012345678", TITULAR_ROLE_ID, true)));
 
         assertThat(workerScheduleDirectory.getWorkersByIds(List.of(ANA_ID, unknownId))).containsOnlyKeys(ANA_ID);
+    }
+
+    @Test
+    void findsWorkerIdByDocument() {
+        when(workerRepository.findByDocument("52875796")).thenReturn(Optional.of(
+                WorkerTestData.worker(ANA_ID, "Mónica Dorado", "52875796", SUPPORT_ROLE_ID, true)));
+
+        assertThat(workerScheduleDirectory.findWorkerIdByDocument(" 52875796 ")).contains(ANA_ID);
+        assertThat(workerScheduleDirectory.findWorkerIdByDocument("   ")).isEmpty();
     }
 }

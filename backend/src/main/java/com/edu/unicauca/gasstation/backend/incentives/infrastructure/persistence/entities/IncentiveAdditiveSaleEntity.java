@@ -27,7 +27,7 @@ public class IncentiveAdditiveSaleEntity {
     @Column(name = "journal_date", nullable = false)
     private LocalDate journalDate;
 
-    @Column(name = "vendor_document", nullable = false, length = 30)
+    @Column(name = "vendor_document", nullable = false, length = 64)
     private String vendorDocument;
 
     @Column(name = "vendor_name", nullable = false, length = 150)

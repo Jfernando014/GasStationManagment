@@ -16,4 +16,8 @@ public interface VendorShiftCloseRepository {
     Optional<VendorShiftClose> findByJournalDateAndVendorDocument(LocalDate journalDate, String vendorDocument);
 
     boolean existsByJournalDate(LocalDate journalDate);
+
+    default void deleteByJournalDate(LocalDate journalDate) {
+        // Optional for read-only test doubles; implemented by the JPA persistence adapter.
+    }
 }

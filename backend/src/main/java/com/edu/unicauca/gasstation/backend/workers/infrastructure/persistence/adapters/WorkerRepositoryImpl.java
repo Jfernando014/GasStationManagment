@@ -50,6 +50,14 @@ public class WorkerRepositoryImpl implements WorkerRepository {
     }
 
     @Override
+    public Optional<Worker> findByDocument(String document) {
+        if (document == null || document.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByDocument(document.strip()).map(mapper::toDomain);
+    }
+
+    @Override
     public List<Worker> findAllByIds(Collection<UUID> ids) {
         if (ids.isEmpty()) {
             return List.of();

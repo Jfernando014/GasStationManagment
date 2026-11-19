@@ -58,9 +58,17 @@
 .step-content-container {
   background: var(--surface-card, #ffffff);
   border-radius: var(--radius-md, 8px);
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
   min-height: 400px;
+}
+
+.jr-jornada-pie {
+  margin-top: 14px;
+}
+
+.jr-jornada-pie .jr-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .readonly-banner {

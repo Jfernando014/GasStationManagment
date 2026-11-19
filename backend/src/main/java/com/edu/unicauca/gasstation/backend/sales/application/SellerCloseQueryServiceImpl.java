@@ -139,6 +139,35 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
         return vendorShiftCloseRepository.saveAll(evaluated);
     }
 
+    /**
+     * Deletes all vendor shift closes for an open operational date and returns step 2 to PENDING.
+     */
+    @Transactional
+    public void resetVendorCloses(LocalDate journalDate) {
+        if (journalDate == null) {
+            return;
+        }
+        if (journalRepository != null) {
+            Journal journal = journalRepository.findByDate(journalDate).orElse(null);
+            if (journal != null) {
+                if (isClosed(journal)) {
+                    throw new IllegalStateException(
+                            "La jornada del " + journalDate + " ya está cerrada y no permite modificaciones.");
+                }
+                if (journal.getSteps() != null) {
+                    journal.getSteps().stream()
+                            .filter(s -> s.getStepNumber() != null && s.getStepNumber() == 2)
+                            .forEach(s -> {
+                                s.setStatus(StepStatus.PENDING);
+                                s.setCompletedAt(null);
+                            });
+                    journalRepository.save(journal);
+                }
+            }
+        }
+        vendorShiftCloseRepository.deleteByJournalDate(journalDate);
+    }
+
     public List<DayStaffReadPort.AssignedVendor> getAssignedStaffForDate(LocalDate date) {
         return dayStaffReadPort.findStaffForDate(date);
     }

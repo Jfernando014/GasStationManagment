@@ -1,6 +1,6 @@
 <div class="stepper-container">
   <ul class="stepper">
-    @for (step of steps; track step.stepNumber) {
+    @for (step of orderedSteps; track step.stepNumber) {
       <li
         [ngClass]="getStepClass(step.status)"
         [routerLink]="['./', getRouteForStep(step.stepNumber)]"

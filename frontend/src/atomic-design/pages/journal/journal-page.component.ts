@@ -1,10 +1,13 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs';
 import { JournalService } from '../../../core/services/journal.service';
 import { JournalResponse } from '../../../shared/models/journal.model';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
+
+const STEP_ROUTES = ['personal', 'vendedores', 'electronicos', 'caja', 'inventario', 'cierre'] as const;
 
 @Component({
   selector: 'app-journal-page',
@@ -16,13 +19,26 @@ import { JournalStepperComponent } from '../../organisms/journal-stepper/journal
 export class JournalPageComponent implements OnInit {
   private journalService = inject(JournalService);
   private route = inject(ActivatedRoute, { optional: true });
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
   journal: JournalResponse | null = null;
   errorMessage = '';
+  currentStepIndex = -1;
 
   ngOnInit(): void {
+    this.syncCurrentStepIndex();
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.syncCurrentStepIndex();
+        this.cdr.detectChanges();
+      });
+
     const queryDate = this.route?.snapshot?.queryParamMap?.get('date');
     const selectedDate = (this.journalService as { getSelectedDate?: () => string | null }).getSelectedDate?.();
     const targetDate = queryDate || selectedDate || new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
@@ -41,5 +57,40 @@ export class JournalPageComponent implements OnInit {
       this.journal = journal;
       this.cdr.detectChanges();
     });
+  }
+
+  get hasPreviousStep(): boolean {
+    return this.currentStepIndex > 0;
+  }
+
+  get hasNextStep(): boolean {
+    return this.currentStepIndex >= 0 && this.currentStepIndex < STEP_ROUTES.length - 1;
+  }
+
+  get showStepFooter(): boolean {
+    return this.currentStepIndex >= 0;
+  }
+
+  get currentStepNumber(): number {
+    return this.currentStepIndex + 1;
+  }
+
+  goToPreviousStep(): void {
+    if (!this.hasPreviousStep) return;
+    const prevSegment = STEP_ROUTES[this.currentStepIndex - 1];
+    void this.router.navigate(['/jornada', prevSegment]);
+  }
+
+  goToNextStep(): void {
+    if (!this.hasNextStep) return;
+    const nextSegment = STEP_ROUTES[this.currentStepIndex + 1];
+    void this.router.navigate(['/jornada', nextSegment]);
+  }
+
+  private syncCurrentStepIndex(): void {
+    const cleanUrl = this.router.url.split('?')[0].split('#')[0];
+    const segments = cleanUrl.split('/').filter(Boolean);
+    const last = segments[segments.length - 1] ?? '';
+    this.currentStepIndex = STEP_ROUTES.indexOf(last as (typeof STEP_ROUTES)[number]);
   }
 }

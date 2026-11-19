@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.shifts.spi;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -26,4 +27,11 @@ public interface ScheduleWorkerDirectory {
      * the grid yet.
      */
     List<ScheduleWorkerInfo> getActiveWorkers();
+
+    /**
+     * Looks up a worker's UUID by identity document (cédula or legacy placeholder).
+     */
+    default Optional<UUID> findWorkerIdByDocument(String document) {
+        return Optional.empty();
+    }
 }

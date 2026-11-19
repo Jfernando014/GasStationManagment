@@ -13,6 +13,10 @@ import { JournalStepResponse, StepStatus } from '../../../shared/models/journal.
 export class JournalStepperComponent {
   @Input() steps: JournalStepResponse[] = [];
 
+  get orderedSteps(): JournalStepResponse[] {
+    return [...this.steps].sort((a, b) => a.stepNumber - b.stepNumber);
+  }
+
   getStepClass(status: StepStatus): string {
     if (status === StepStatus.COMPLETED) {
       return 'stepper-completed';
