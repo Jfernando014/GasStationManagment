@@ -100,6 +100,11 @@
   opacity: 0.7;
 }
 
+.stepper li.stepper-completed.active-route .step-subtitle,
+.stepper li.stepper-completed.active-route .step-label {
+  opacity: 1;
+}
+
 /* Estado PENDIENTE (futuro) */
 .stepper li.stepper-pending .step-circle {
   background-color: white;
@@ -116,12 +121,13 @@
   position: relative;
 }
 
-.stepper li.stepper-completed::after {
+/* Solo mostrar la barra verde en pasos completados no activos; en el paso activo manda la barra naranja */
+.stepper li.stepper-completed:not(.active-route)::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -3px;
   height: 3px;
   background: var(--semantic-green);
   transform-origin: left center;

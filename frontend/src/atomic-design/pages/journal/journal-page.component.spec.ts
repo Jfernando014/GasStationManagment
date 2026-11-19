@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { JournalPageComponent } from './journal-page.component';
@@ -93,5 +93,47 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     const errorAlert = fixture.nativeElement.querySelector('.error-alert');
     expect(errorAlert).toBeTruthy();
     expect(errorAlert.textContent).toContain('No se pudo cargar la jornada de hoy.');
+  });
+
+  it('should show Anterior and Siguiente footer buttons on middle steps and navigate between them', () => {
+    journalService.openJournal.mockReturnValue(of(mockJournal));
+    const router = TestBed.inject(Router);
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/jornada/vendedores');
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fixture = TestBed.createComponent(JournalPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.showStepFooter).toBe(true);
+    expect(component.currentStepNumber).toBe(2);
+    expect(component.hasPreviousStep).toBe(true);
+    expect(component.hasNextStep).toBe(true);
+
+    const nextBtn = fixture.nativeElement.querySelector('#jr-btn-siguiente') as HTMLButtonElement;
+    const prevBtn = fixture.nativeElement.querySelector('#jr-btn-anterior') as HTMLButtonElement;
+    expect(nextBtn).toBeTruthy();
+    expect(prevBtn).toBeTruthy();
+
+    nextBtn.click();
+    expect(navigateSpy).toHaveBeenCalledWith(['/jornada', 'electronicos']);
+
+    prevBtn.click();
+    expect(navigateSpy).toHaveBeenCalledWith(['/jornada', 'personal']);
+  });
+
+  it('should hide Siguiente button on step 6 (cierre)', () => {
+    journalService.openJournal.mockReturnValue(of(mockJournal));
+    const router = TestBed.inject(Router);
+    vi.spyOn(router, 'url', 'get').mockReturnValue('/jornada/cierre');
+
+    fixture = TestBed.createComponent(JournalPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.showStepFooter).toBe(true);
+    expect(component.hasNextStep).toBe(false);
+    expect(fixture.nativeElement.querySelector('#jr-btn-siguiente')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#jr-btn-anterior')).toBeTruthy();
   });
 });

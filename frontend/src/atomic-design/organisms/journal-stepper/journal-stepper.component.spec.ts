@@ -62,4 +62,20 @@ describe('JournalStepperComponent (C-02, S1-15)', () => {
     const stepLinks = fixture.nativeElement.querySelectorAll('.stepper li');
     expect(stepLinks.length).toBe(6);
   });
+
+  it('should always render steps ordered by stepNumber even if backend returns them unsorted', () => {
+    component.steps = [
+      mockSteps[0],
+      mockSteps[2],
+      mockSteps[3],
+      mockSteps[4],
+      mockSteps[5],
+      mockSteps[1]
+    ];
+    fixture.detectChanges();
+
+    const subtitles = Array.from(fixture.nativeElement.querySelectorAll('.step-subtitle'))
+      .map(el => (el as HTMLElement).textContent?.trim());
+    expect(subtitles).toEqual(['PASO 1', 'PASO 2', 'PASO 3', 'PASO 4', 'PASO 5', 'PASO 6']);
+  });
 });

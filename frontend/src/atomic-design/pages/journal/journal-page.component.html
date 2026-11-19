@@ -44,5 +44,39 @@
     <div class="step-content-container" [class.jr-solo-lectura]="journal.status === 'CLOSED'">
       <router-outlet></router-outlet>
     </div>
+
+    @if (showStepFooter) {
+      <footer class="jr-jornada-pie" aria-label="Navegación entre pasos de la jornada">
+        <button
+          type="button"
+          class="jr-btn jr-btn--ghost"
+          id="jr-btn-anterior"
+          [disabled]="!hasPreviousStep"
+          (click)="goToPreviousStep()">
+          <span aria-hidden="true">&larr;</span>
+          Anterior
+        </button>
+
+        <div class="jr-jornada-pie-acciones">
+          <span class="jr-jornada-pie-nota">
+            @if (journal.status === 'CLOSED') {
+              Jornada cerrada &middot; solo lectura
+            } @else {
+              Paso {{ currentStepNumber }} de 6 &middot; Jornada abierta
+            }
+          </span>
+          @if (hasNextStep) {
+            <button
+              type="button"
+              class="jr-btn jr-btn--pri"
+              id="jr-btn-siguiente"
+              (click)="goToNextStep()">
+              Siguiente
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          }
+        </div>
+      </footer>
+    }
   }
 </div>
