@@ -44,6 +44,11 @@ export class SalesVendorCloseService {
     return this.http.post<VendorCloseSummaryDto[]>(this.baseUrl, request, { params });
   }
 
+  resetVendorCloses(date: string): Observable<void> {
+    const params = new HttpParams().set('date', date);
+    return this.http.delete<void>(this.baseUrl, { params });
+  }
+
   /**
    * Catalog of authentic EDS Bellavista products for basket and additives
    */

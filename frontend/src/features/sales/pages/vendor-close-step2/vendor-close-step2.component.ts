@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, catchError, of, switchMap, tap } from 'rxjs';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
 import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import {
   AssignedVendorDto,
@@ -56,7 +58,8 @@ export class VendorCloseStep2Component implements OnInit {
 
   tolerance = 0.5;
   catalogProducts: CatalogProductItem[] = [];
-  visibleProductSkus: string[] = ['76102', '75089', '74063', '80266'];
+  private readonly defaultProductSkus: readonly string[] = ['76102', '75089', '74063', '80266'];
+  visibleProductSkus: string[] = [...this.defaultProductSkus];
   productSearchInput = '';
 
   folded = {
@@ -68,6 +71,8 @@ export class VendorCloseStep2Component implements OnInit {
   isStep1Complete = true;
   isLoading = false;
   isSaving = false;
+  isResetting = false;
+  showResetConfirm = false;
   saveSuccessMessage = '';
   errorMessage = '';
   toastMessage = '';
@@ -80,6 +85,8 @@ export class VendorCloseStep2Component implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(journal => {
           if (!journal) return;
+          const step1 = journal.steps?.find(s => s.stepNumber === 1);
+          this.isStep1Complete = step1?.status === StepStatus.COMPLETED;
           const closingStep = journal.steps?.find(s => s.stepNumber === 6);
           this.isReadOnly = journal.status === JournalStatus.CLOSED || closingStep?.status === StepStatus.COMPLETED;
           if (journal.date && journal.date !== this.journalDate) {
@@ -217,7 +224,25 @@ export class VendorCloseStep2Component implements OnInit {
 
   private populateFromBackendCloses(closes: VendorCloseSummaryDto[]): void {
     for (const close of closes) {
-      const cap = this.captures[close.vendorDocument];
+      let cap = this.captures[close.vendorDocument];
+      if (!cap) {
+        const matchedVendor = this.findMatchingVendor(close.vendorName, close.shiftName);
+        if (matchedVendor) {
+          cap = this.captures[matchedVendor.document];
+        } else {
+          const fallbackVendor: AssignedVendorDto = {
+            document: close.vendorDocument,
+            name: close.vendorName,
+            role: 'ISLERO',
+            shiftName: close.shiftName,
+            pumpNumber: close.pumpNumber ?? 1,
+            workerCode: close.shiftName
+          };
+          this.assignedVendors.push(fallbackVendor);
+          cap = this.createEmptyCapture(fallbackVendor);
+          this.captures[fallbackVendor.document] = cap;
+        }
+      }
       if (!cap) continue;
       cap.conDatos = true;
       cap.efectivo = Number(close.cash || 0);
@@ -245,17 +270,48 @@ export class VendorCloseStep2Component implements OnInit {
     }
   }
 
+  private findMatchingVendor(name: string, shiftName?: string): AssignedVendorDto | undefined {
+    const targetName = this.normalizeName(name);
+    if (!targetName) return undefined;
+    const sameName = this.assignedVendors.filter(v => this.normalizeName(v.name) === targetName);
+    if (sameName.length === 0) return undefined;
+    if (shiftName) {
+      const sameShift = sameName.find(v => v.shiftName === shiftName);
+      if (sameShift) return sameShift;
+    }
+    return sameName[0];
+  }
+
+  private normalizeName(value: string | null | undefined): string {
+    if (!value) return '';
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
   loadDemoHoja05(notify = true): void {
     const demo = this.salesService.getCalibrationDemo0805();
+    const docTargetMap: Record<string, string> = {};
+
     for (const [doc, data] of Object.entries(demo.capturas)) {
-      if (!this.captures[doc]) {
+      let targetDoc = doc;
+      if (!this.captures[targetDoc]) {
         const foundStaff = demo.vendedores.find(v => v.document === doc);
-        if (foundStaff) {
+        const existingByName = foundStaff
+          ? this.findMatchingVendor(foundStaff.name, foundStaff.shiftName)
+          : undefined;
+        if (existingByName && this.captures[existingByName.document]) {
+          targetDoc = existingByName.document;
+        } else if (foundStaff) {
           this.assignedVendors.push(foundStaff);
           this.captures[doc] = this.createEmptyCapture(foundStaff);
         }
       }
-      const cap = this.captures[doc];
+      docTargetMap[doc] = targetDoc;
+      const cap = this.captures[targetDoc];
       if (cap) {
         cap.conDatos = true;
         cap.parciales = data.parciales;
@@ -286,8 +342,9 @@ export class VendorCloseStep2Component implements OnInit {
         this.visibleProductSkus.push(sku);
       }
       for (const [doc, units] of Object.entries(vendorUnits)) {
-        if (this.captures[doc]) {
-          this.captures[doc].productos[sku] = units;
+        const targetDoc = docTargetMap[doc] ?? doc;
+        if (this.captures[targetDoc]) {
+          this.captures[targetDoc].productos[sku] = units;
         }
       }
     }
@@ -296,6 +353,11 @@ export class VendorCloseStep2Component implements OnInit {
     if (notify) {
       this.showToast('Hoja 05 de calibración cargada exitosamente');
     }
+  }
+
+  onInputFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement | null;
+    input?.select();
   }
 
   onFieldChange(doc: string): void {
@@ -550,6 +612,12 @@ export class VendorCloseStep2Component implements OnInit {
     return Object.values(this.captures).reduce((sum, c) => sum + (Number(c.productos[sku]) || 0), 0);
   }
 
+  vendorProductUnits(doc: string): number {
+    const products = this.captures[doc]?.productos;
+    if (!products) return 0;
+    return Object.values(products).reduce((sum, units) => sum + (Number(units) || 0), 0);
+  }
+
   allProductUnits(): number {
     return this.visibleProductSkus.reduce((sum, sku) => sum + this.totalProductUnits(sku), 0);
   }
@@ -576,9 +644,63 @@ export class VendorCloseStep2Component implements OnInit {
     return { text: 'Todos cuadran', status: 'cuadra' };
   }
 
+  // --- Reset Fields & Persisted Closes ---
+  requestReset(): void {
+    if (this.isReadOnly || this.isSaving || this.isResetting) return;
+    this.showResetConfirm = true;
+    this.errorMessage = '';
+    this.saveSuccessMessage = '';
+    this.cdr.detectChanges();
+  }
+
+  cancelReset(): void {
+    this.showResetConfirm = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmReset(): void {
+    if (this.isReadOnly || this.isSaving || this.isResetting) return;
+    this.showResetConfirm = false;
+    this.isResetting = true;
+    this.errorMessage = '';
+    this.saveSuccessMessage = '';
+
+    this.salesService.resetVendorCloses(this.journalDate).subscribe({
+      next: () => {
+        this.isResetting = false;
+        this.visibleProductSkus = [...this.defaultProductSkus];
+        this.initGrid();
+        this.recalculateAll();
+        this.markStep2PendingLocally();
+        this.saveSuccessMessage = 'Los campos y cierres guardados de esta jornada fueron restablecidos.';
+        this.showToast('Campos y cierres restablecidos');
+        this.cdr.detectChanges();
+      },
+      error: (error: unknown) => {
+        this.isResetting = false;
+        this.errorMessage = getErrorMessage(error);
+        this.showToast('Error al restablecer los cierres');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private markStep2PendingLocally(): void {
+    if (!this.journalService) return;
+    const journal = this.journalService.getCurrentJournalSnapshot();
+    const step2 = journal?.steps?.find(s => s.stepNumber === 2);
+    if (!journal || !step2 || step2.status === StepStatus.PENDING) return;
+    this.journalService.updateCurrentStep({
+      ...step2,
+      status: StepStatus.PENDING,
+      completedAt: null
+    });
+  }
+
   // --- Save to Backend ---
   saveCloses(): void {
     if (this.isReadOnly) return;
+    this.showResetConfirm = false;
     this.isSaving = true;
     this.saveSuccessMessage = '';
     this.errorMessage = '';
@@ -625,20 +747,37 @@ export class VendorCloseStep2Component implements OnInit {
       closes: closesDto
     };
 
-    this.salesService.saveVendorCloses(batchRequest).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.saveSuccessMessage = 'Cierres de turno guardados y conciliados exitosamente en el servidor.';
-        this.showToast('Cierres de vendedores conciliados y guardados');
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.isSaving = false;
-        this.errorMessage = 'No se pudo conectar con el servidor para persistir los cierres. Los datos permanecen en pantalla.';
-        this.showToast('Error al guardar cierres en servidor');
-        this.cdr.detectChanges();
-      }
-    });
+    this.salesService
+      .saveVendorCloses(batchRequest)
+      .pipe(switchMap(() => this.markStep2Completed()))
+      .subscribe({
+        next: marked => {
+          this.isSaving = false;
+          this.saveSuccessMessage = marked
+            ? 'Cierres de turno guardados y paso 2 completado en el servidor.'
+            : 'Cierres de turno guardados en el servidor. El avance de la jornada se actualizará al recargar.';
+          this.showToast('Cierres de vendedores conciliados y guardados');
+          this.cdr.detectChanges();
+        },
+        error: (error: unknown) => {
+          this.isSaving = false;
+          this.errorMessage = `${getErrorMessage(error)} Los datos permanecen en pantalla.`;
+          this.showToast('Error al guardar cierres en servidor');
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  private markStep2Completed(): Observable<boolean> {
+    if (!this.journalService) return of(true);
+    const journal = this.journalService.getCurrentJournalSnapshot();
+    const step2 = journal?.steps?.find(s => s.stepNumber === 2);
+    if (!journal || !step2 || step2.status === StepStatus.COMPLETED) return of(true);
+    return this.journalService.completeStep(journal.id, 2).pipe(
+      tap(step => this.journalService?.updateCurrentStep(step)),
+      switchMap(() => of(true)),
+      catchError(() => of(false))
+    );
   }
 
   // --- Dominus Lateral Drawer ---

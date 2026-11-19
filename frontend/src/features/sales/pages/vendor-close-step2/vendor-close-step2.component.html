@@ -6,14 +6,22 @@
         <h1>Cierre por vendedor</h1>
         @if (!isStep1Complete) {
           <span class="jr-p2-aviso-paso1" title="El paso 1 no está completo: las columnas salen de la malla del día.">
-            Paso 1 sin completar · <a routerLink="/jornada/personal">Revisar</a>
+            Paso 1 sin completar &middot; <a routerLink="/jornada/personal">Revisar</a>
           </span>
         }
       </div>
       <div class="jr-p2-sub">
-        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--cuadra"></i> Cuadra (&le; {{ tolerance }} COP)</span>
-        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--sobra"></i> Sobra (&gt; {{ tolerance }} COP)</span>
-        <span class="jr-leyenda-item"><i class="jr-dot jr-dot--falta"></i> Falta (&lt; -{{ tolerance }} COP)</span>
+        <span class="jr-leyenda-grupo">
+          <span class="jr-leyenda-item"><i class="jr-muestra jr-muestra--planilla"></i> Digitar planilla</span>
+          <span class="jr-leyenda-item"><i class="jr-muestra jr-muestra--dominus"></i> Pegar de Dominus</span>
+          <span class="jr-leyenda-item"><i class="jr-muestra jr-muestra--calc"></i> Calculado</span>
+        </span>
+        <span class="jr-leyenda-sep" aria-hidden="true"></span>
+        <span class="jr-leyenda-grupo">
+          <span class="jr-leyenda-item"><i class="jr-dot jr-dot--cuadra"></i> Cuadra (&le; {{ tolerance }} COP)</span>
+          <span class="jr-leyenda-item"><i class="jr-dot jr-dot--sobra"></i> Sobra</span>
+          <span class="jr-leyenda-item"><i class="jr-dot jr-dot--falta"></i> Falta</span>
+        </span>
       </div>
     </div>
 
@@ -35,21 +43,39 @@
       </div>
 
       <!-- Botón Drawer Dominus -->
-      <button type="button" class="btn-secondary" id="btn-valores-dominus" (click)="openDominusDrawer()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" id="btn-valores-dominus" (click)="openDominusDrawer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="9" y="9" width="13" height="13" rx="2"></rect>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
         Valores para Dominus
       </button>
 
-      <!-- Botón Cargar Datos Demo Hoja 05 -->
-      <button type="button" class="btn-ghost" id="btn-cargar-hoja05" [disabled]="isReadOnly" (click)="loadDemoHoja05()">
-        Cargar hoja 05
+      <!-- Botón Restablecer campos y cierres -->
+      <button
+        type="button"
+        class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset"
+        id="btn-restablecer-cierres"
+        [disabled]="isReadOnly || isSaving || isResetting"
+        (click)="requestReset()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        @if (isResetting) {
+          <span>Restableciendo...</span>
+        } @else {
+          <span>Restablecer</span>
+        }
       </button>
 
       <!-- Botón Guardar Cierres -->
-      <button type="button" class="btn-primary" id="btn-guardar-cierres" [disabled]="isSaving || isReadOnly" (click)="saveCloses()">
+      <button
+        type="button"
+        class="jr-btn jr-btn--pri jr-btn--sm"
+        id="btn-guardar-cierres"
+        [disabled]="isSaving || isResetting || isReadOnly"
+        (click)="saveCloses()">
         @if (isSaving) {
           <span>Guardando...</span>
         } @else {
@@ -59,475 +85,528 @@
     </div>
   </div>
 
+  <!-- Confirmación en línea para restablecer cierres -->
+  @if (showResetConfirm) {
+    <div class="jr-p2-confirm" role="alertdialog" aria-label="Confirmar restablecimiento de cierres">
+      <div class="jr-p2-confirm-texto">
+        <strong>¿Restablecer los campos de esta jornada?</strong>
+        <span>Se dejarán en cero todos los campos en pantalla y se limpiarán los cierres guardados para {{ journalDate }}.</span>
+      </div>
+      <div class="jr-p2-confirm-acciones">
+        <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
+        <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer" (click)="confirmReset()">
+          Sí, restablecer
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- Alertas de estado -->
   @if (saveSuccessMessage) {
-    <div class="alert-success">
+    <div class="alert-success" role="status">
       {{ saveSuccessMessage }}
     </div>
   }
   @if (errorMessage) {
-    <div class="alert-error">
+    <div class="alert-error" role="alert">
       {{ errorMessage }}
     </div>
   }
 
-  <!-- Rejilla compacta de conciliación -->
-  <fieldset class="jr-p2-fieldset" [disabled]="isReadOnly">
-  <div class="jr-p2-rejilla-wrapper">
-    <div class="jr-grid-wrap">
-      <table class="jr-grid" id="jr-p2-rejilla">
-        <colgroup>
-          <col class="jr-grid-col-concepto">
-          @for (vendor of assignedVendors; track vendor.document) {
-            <col>
-          }
-          <col class="jr-grid-col-total">
-        </colgroup>
-
-        <thead>
-          <tr>
-            <th class="jr-grid-concepto">
-              Concepto
-              <small class="jr-p2-ayuda" title="Enter baja en la columna · Tab pasa al siguiente vendedor · Ctrl+V pega serie hacia abajo">
-                Enter &darr; &middot; Tab &rarr; &middot; Ctrl+V pega
-              </small>
-            </th>
+  <!-- Rejilla de conciliación -->
+  <fieldset class="jr-p2-fieldset" [disabled]="isReadOnly || isResetting">
+    <div class="jr-p2-rejilla-wrapper">
+      <div class="jr-grid-wrap">
+        <table class="jr-grid" id="jr-p2-rejilla">
+          <colgroup>
+            <col class="jr-grid-col-concepto">
             @for (vendor of assignedVendors; track vendor.document) {
-              <th>
-                <div class="th-vendor-title">{{ vendor.name }}</div>
-                <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ vendor.shiftName }}</small>
-              </th>
+              <col class="jr-grid-col-vendor">
             }
-            <th class="jr-grid-total">
-              <div class="th-vendor-title">Total del día</div>
-              <small>{{ assignedVendors.length }} vendedores</small>
-            </th>
-          </tr>
+            <col class="jr-grid-col-total">
+          </colgroup>
 
-          <!-- Fila de Descuadre Real Fija en Cabecera -->
-          <tr class="jr-grid-fila--resultado">
-            <td class="jr-grid-concepto">
-              <strong>Descuadre real</strong>
-              <small>entregado &minus; Dominus</small>
-            </td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                @if (captures[vendor.document]?.estadoResultado === 'vacio') {
-                  <span class="jr-chip jr-chip--pendiente">Sin datos</span>
-                }
-                @if (captures[vendor.document]?.estadoResultado === 'cuadra') {
+          <thead>
+            <tr>
+              <th class="jr-grid-concepto">
+                <span class="th-concepto-title">Concepto</span>
+                <small class="jr-p2-ayuda" title="Enter baja en la columna · Tab pasa al siguiente vendedor · Ctrl+V pega serie hacia abajo">
+                  Enter &darr; &middot; Tab &rarr; &middot; Ctrl+V pega
+                </small>
+              </th>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <th class="jr-grid-vendor-col">
+                  <div class="th-vendor-title">{{ vendor.name }}</div>
+                  <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ vendor.shiftName }}</small>
+                </th>
+              }
+              <th class="jr-grid-total">
+                <div class="th-vendor-title">Total del día</div>
+                <small>{{ assignedVendors.length }} {{ assignedVendors.length === 1 ? 'vendedor' : 'vendedores' }}</small>
+              </th>
+            </tr>
+
+            <!-- Fila de Descuadre Real Fija en Cabecera -->
+            <tr class="jr-grid-fila--resultado">
+              <td class="jr-grid-concepto">
+                <strong>Descuadre real</strong>
+                <small>Entregado &minus; Dominus</small>
+              </td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  @if (captures[vendor.document]?.estadoResultado === 'vacio') {
+                    <span class="jr-chip jr-chip--pendiente">Sin datos</span>
+                  }
+                  @if (captures[vendor.document]?.estadoResultado === 'cuadra') {
+                    <span class="jr-chip jr-chip--cuadra">
+                      <span class="jr-chip-punto"></span>Cuadra
+                    </span>
+                  }
+                  @if (captures[vendor.document]?.estadoResultado === 'sobra') {
+                    <span class="jr-chip jr-chip--sobra">
+                      <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(captures[vendor.document].descuadre) }}
+                    </span>
+                  }
+                  @if (captures[vendor.document]?.estadoResultado === 'falta') {
+                    <span class="jr-chip jr-chip--falta">
+                      <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-captures[vendor.document].descuadre) }}
+                    </span>
+                  }
+                </td>
+              }
+              <td class="jr-grid-total">
+                @if (!hasDiscrepancies() && totalDelivered() > 0) {
                   <span class="jr-chip jr-chip--cuadra">
                     <span class="jr-chip-punto"></span>Cuadra
                   </span>
                 }
-                @if (captures[vendor.document]?.estadoResultado === 'sobra') {
+                @if (totalDiscrepancy() > tolerance) {
                   <span class="jr-chip jr-chip--sobra">
-                    <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(captures[vendor.document].descuadre) }}
+                    <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(totalDiscrepancy()) }}
                   </span>
                 }
-                @if (captures[vendor.document]?.estadoResultado === 'falta') {
+                @if (totalDiscrepancy() < -tolerance) {
                   <span class="jr-chip jr-chip--falta">
-                    <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-captures[vendor.document].descuadre) }}
+                    <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-totalDiscrepancy()) }}
                   </span>
                 }
+                @if (totalDelivered() === 0) {
+                  <span class="jr-chip jr-chip--pendiente">Sin datos</span>
+                }
               </td>
-            }
-            <td class="jr-grid-total">
-              @if (!hasDiscrepancies() && totalDelivered() > 0) {
-                <span class="jr-chip jr-chip--cuadra">
-                  <span class="jr-chip-punto"></span>Cuadra
-                </span>
+            </tr>
+          </thead>
+
+          <tbody>
+            <!-- BLOQUE 1: PLANILLA FÍSICA -->
+            <tr class="jr-grid-bloque jr-grid-bloque--planilla" data-bloque="planilla">
+              <td [attr.colspan]="assignedVendors.length + 2">
+                <span class="jr-grid-bloque-titulo">Planilla física</span>
+              </td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">Parciales <small>sobres de $200.000</small></td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].parciales"
+                         type="number" min="0" step="1"
+                         data-fila="parciales" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].parciales"
+                         (focus)="onInputFocus($event)"
+                         (input)="onFieldChange(vendor.document)"
+                         (keydown)="onKeyDown($event, 'parciales', vendor.document)"
+                         (paste)="onPaste($event, 'parciales', vendor.document)">
+                </td>
               }
-              @if (totalDiscrepancy() > tolerance) {
-                <span class="jr-chip jr-chip--sobra">
-                  <span class="jr-chip-punto"></span>Sobra {{ formatCurrency(totalDiscrepancy()) }}
-                </span>
+              <td class="jr-grid-total">
+                {{ totalParciales() }} sobres &middot; {{ formatCurrency(totalParciales() * packetValue) }}
+              </td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">Pico</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].pico"
+                         type="number" min="0" step="1000"
+                         data-fila="pico" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].pico"
+                         (focus)="onInputFocus($event)"
+                         (input)="onFieldChange(vendor.document)"
+                         (keydown)="onKeyDown($event, 'pico', vendor.document)"
+                         (paste)="onPaste($event, 'pico', vendor.document)">
+                </td>
               }
-              @if (totalDiscrepancy() < -tolerance) {
-                <span class="jr-chip jr-chip--falta">
-                  <span class="jr-chip-punto"></span>Falta {{ formatCurrency(-totalDiscrepancy()) }}
-                </span>
+              <td class="jr-grid-total">
+                {{ formatCurrency(totalPico()) }}
+              </td>
+            </tr>
+
+            <tr class="jr-grid-fila jr-grid-fila--destacada">
+              <td class="jr-grid-concepto">Total efectivo</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <span class="jr-cell--calc" [class.is-zero]="!(captures[vendor.document]?.efectivo)">
+                    {{ formatCurrency(captures[vendor.document]?.efectivo || 0) }}
+                  </span>
+                </td>
               }
-              @if (totalDelivered() === 0) {
-                <span class="jr-chip jr-chip--pendiente">Sin datos</span>
+              <td class="jr-grid-total">
+                <span class="jr-cell--total">{{ formatCurrency(totalCash()) }}</span>
+              </td>
+            </tr>
+
+            <!-- BLOQUE 2: OTROS MEDIOS -->
+            <tr class="jr-grid-bloque jr-grid-bloque--otros" data-bloque="otros">
+              <td [attr.colspan]="assignedVendors.length + 2">
+                <span class="jr-grid-bloque-titulo">Otros medios</span>
+              </td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">G.A. <small>gastos administrativos</small></td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].ga"
+                         type="number" min="0" step="1000"
+                         data-fila="ga" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].ga"
+                         (focus)="onInputFocus($event)"
+                         (input)="onFieldChange(vendor.document)"
+                         (keydown)="onKeyDown($event, 'ga', vendor.document)"
+                         (paste)="onPaste($event, 'ga', vendor.document)">
+                </td>
               }
-            </td>
-          </tr>
-        </thead>
+              <td class="jr-grid-total">{{ formatCurrency(totalGa()) }}</td>
+            </tr>
 
-        <tbody>
-          <!-- BLOQUE 1: PLANILLA FÍSICA -->
-          <tr class="jr-grid-bloque" data-bloque="planilla">
-            <td [attr.colspan]="assignedVendors.length + 2">
-              <span class="jr-grid-bloque-titulo">Planilla física</span>
-            </td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">Parciales (sobres de $200.000)</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="1"
-                       data-fila="parciales" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].parciales"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'parciales', vendor.document)"
-                       (paste)="onPaste($event, 'parciales', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">
-              {{ totalParciales() }} sobres &middot; {{ formatCurrency(totalParciales() * packetValue) }}
-            </td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">Pico</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="1000"
-                       data-fila="pico" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].pico"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'pico', vendor.document)"
-                       (paste)="onPaste($event, 'pico', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">
-              {{ formatCurrency(totalPico()) }}
-            </td>
-          </tr>
-
-          <tr class="jr-grid-fila jr-grid-fila--destacada">
-            <td class="jr-grid-concepto">Total efectivo</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <span class="jr-cell--calc">{{ formatCurrency(captures[vendor.document]?.efectivo || 0) }}</span>
-              </td>
-            }
-            <td class="jr-grid-total">
-              <span class="jr-cell--total">{{ formatCurrency(totalCash()) }}</span>
-            </td>
-          </tr>
-
-          <!-- BLOQUE 2: OTROS MEDIOS -->
-          <tr class="jr-grid-bloque" data-bloque="otros">
-            <td [attr.colspan]="assignedVendors.length + 2">
-              <span class="jr-grid-bloque-titulo">Otros medios</span>
-            </td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">G.A. (gastos administrativos)</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="1000"
-                       data-fila="ga" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].ga"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'ga', vendor.document)"
-                       (paste)="onPaste($event, 'ga', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatCurrency(totalGa()) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">Credibanco</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="100"
-                       data-fila="credibanco" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].credibanco"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'credibanco', vendor.document)"
-                       (paste)="onPaste($event, 'credibanco', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatCurrency(totalCredibanco()) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">QR</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="100"
-                       data-fila="qr" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].qr"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'qr', vendor.document)"
-                       (paste)="onPaste($event, 'qr', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatCurrency(totalQr()) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">Redenciones Puntos Colombia</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <input class="jr-input" type="number" min="0" step="100"
-                       data-fila="redenciones" [attr.data-col]="vendor.document"
-                       [(ngModel)]="captures[vendor.document].redenciones"
-                       (input)="onFieldChange(vendor.document)"
-                       (keydown)="onKeyDown($event, 'redenciones', vendor.document)"
-                       (paste)="onPaste($event, 'redenciones', vendor.document)">
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatCurrency(totalRedenciones()) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila jr-grid-fila--destacada">
-            <td class="jr-grid-concepto">Total entregado</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <span class="jr-cell--calc">{{ formatCurrency(captures[vendor.document]?.totalEntregado || 0) }}</span>
-              </td>
-            }
-            <td class="jr-grid-total">
-              <span class="jr-cell--total">{{ formatCurrency(totalDelivered()) }}</span>
-            </td>
-          </tr>
-
-          <!-- BLOQUE 3: SEGÚN DOMINUS -->
-          <tr class="jr-grid-bloque" data-bloque="dominus">
-            <td [attr.colspan]="assignedVendors.length + 2">
-              <span class="jr-grid-bloque-titulo">Según Dominus</span>
-              <span class="jr-grid-bloque-nota">Pega la columna completa con Ctrl+V</span>
-            </td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">
-              <i class="jr-grid-color" style="background: #22c55e;"></i>
-              Galones Motor (corriente)
-            </td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus">
-                  <input class="jr-input" type="number" step="0.001" min="0"
-                         data-fila="galMotor" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].galMotor"
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">Credibanco</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].credibanco"
+                         type="number" min="0" step="100"
+                         data-fila="credibanco" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].credibanco"
+                         (focus)="onInputFocus($event)"
                          (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'galMotor', vendor.document)"
-                         (paste)="onPaste($event, 'galMotor', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatNumber(totalGalMotor(), 3) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">
-              <i class="jr-grid-color" style="background: #3b82f6;"></i>
-              Galones Diésel
-            </td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus">
-                  <input class="jr-input" type="number" step="0.001" min="0"
-                         data-fila="galDiesel" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].galDiesel"
-                         (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'galDiesel', vendor.document)"
-                         (paste)="onPaste($event, 'galDiesel', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatNumber(totalGalDiesel(), 3) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">
-              <i class="jr-grid-color" style="background: #f59e0b;"></i>
-              Galones Extra
-            </td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus">
-                  <input class="jr-input" type="number" step="0.001" min="0"
-                         data-fila="galExtra" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].galExtra"
-                         (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'galExtra', vendor.document)"
-                         (paste)="onPaste($event, 'galExtra', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatNumber(totalGalExtra(), 3) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">
-              <i class="jr-grid-color" style="background: #8b5cf6;"></i>
-              Galones Max Pro
-            </td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus">
-                  <input class="jr-input" type="number" step="0.001" min="0"
-                         data-fila="galMaxpro" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].galMaxpro"
-                         (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'galMaxpro', vendor.document)"
-                         (paste)="onPaste($event, 'galMaxpro', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatNumber(totalGalMaxpro(), 3) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila">
-            <td class="jr-grid-concepto">Canastilla</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus">
-                  <input class="jr-input" type="number" step="100" min="0"
-                         data-fila="canastilla" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].canastilla"
-                         (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'canastilla', vendor.document)"
-                         (paste)="onPaste($event, 'canastilla', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">{{ formatCurrency(totalCanastilla()) }}</td>
-          </tr>
-
-          <tr class="jr-grid-fila jr-grid-fila--destacada">
-            <td class="jr-grid-concepto">Total (tirilla)</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <div class="jr-cell jr-cell--dominus" [class.jr-cell--aviso]="captures[vendor.document]?.avisoTirilla"
-                     [attr.title]="captures[vendor.document]?.avisoTirilla">
-                  <input class="jr-input" type="number" step="0.01" min="0"
-                         data-fila="tirilla" [attr.data-col]="vendor.document"
-                         [(ngModel)]="captures[vendor.document].tirilla"
-                         (input)="onFieldChange(vendor.document)"
-                         (keydown)="onKeyDown($event, 'tirilla', vendor.document)"
-                         (paste)="onPaste($event, 'tirilla', vendor.document)">
-                </div>
-              </td>
-            }
-            <td class="jr-grid-total">
-              <span class="jr-cell--total">{{ formatCurrency(totalDominusTirilla()) }}</span>
-            </td>
-          </tr>
-
-          <!-- BLOQUE 4: ARQUEO POR DENOMINACIÓN (PLEGABLE) -->
-          <tr class="jr-grid-bloque" [class.is-plegado]="folded.arqueo" data-bloque="arqueo">
-            <td [attr.colspan]="assignedVendors.length + 2">
-              <button type="button" class="jr-grid-toggle" (click)="toggleFold('arqueo')">
-                <svg class="jr-chevron" [class.is-rotated]="!folded.arqueo" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="m9 18 6-6-6-6"></path>
-                </svg>
-                Arqueo por denominación
-              </button>
-              @if (folded.arqueo) {
-                <span class="jr-grid-bloque-nota">Plegado (clic para desplegar billetes)</span>
+                         (keydown)="onKeyDown($event, 'credibanco', vendor.document)"
+                         (paste)="onPaste($event, 'credibanco', vendor.document)">
+                </td>
               }
-            </td>
-          </tr>
+              <td class="jr-grid-total">{{ formatCurrency(totalCredibanco()) }}</td>
+            </tr>
 
-          @if (!folded.arqueo) {
-            @for (d of denominations; track d[0]) {
-              <tr class="jr-grid-fila">
-                <td class="jr-grid-concepto">Billetes de {{ formatCurrency(d[1]) }} <small>cantidad</small></td>
-                @for (vendor of assignedVendors; track vendor.document) {
-                  <td>
-                    <input class="jr-input" type="number" min="0" step="1"
-                           [attr.data-fila]="d[0]" [attr.data-col]="vendor.document"
-                           [(ngModel)]="captures[vendor.document].denominaciones[d[0]]"
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">QR</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].qr"
+                         type="number" min="0" step="100"
+                         data-fila="qr" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].qr"
+                         (focus)="onInputFocus($event)"
+                         (input)="onFieldChange(vendor.document)"
+                         (keydown)="onKeyDown($event, 'qr', vendor.document)"
+                         (paste)="onPaste($event, 'qr', vendor.document)">
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatCurrency(totalQr()) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">Redenciones Puntos Colombia</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <input class="jr-input" [class.is-zero]="!captures[vendor.document].redenciones"
+                         type="number" min="0" step="100"
+                         data-fila="redenciones" [attr.data-col]="vendor.document"
+                         [(ngModel)]="captures[vendor.document].redenciones"
+                         (focus)="onInputFocus($event)"
+                         (input)="onFieldChange(vendor.document)"
+                         (keydown)="onKeyDown($event, 'redenciones', vendor.document)"
+                         (paste)="onPaste($event, 'redenciones', vendor.document)">
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatCurrency(totalRedenciones()) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila jr-grid-fila--destacada">
+              <td class="jr-grid-concepto">Total entregado</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <span class="jr-cell--calc" [class.is-zero]="!(captures[vendor.document]?.totalEntregado)">
+                    {{ formatCurrency(captures[vendor.document]?.totalEntregado || 0) }}
+                  </span>
+                </td>
+              }
+              <td class="jr-grid-total">
+                <span class="jr-cell--total">{{ formatCurrency(totalDelivered()) }}</span>
+              </td>
+            </tr>
+
+            <!-- BLOQUE 3: SEGÚN DOMINUS -->
+            <tr class="jr-grid-bloque jr-grid-bloque--dominus" data-bloque="dominus">
+              <td [attr.colspan]="assignedVendors.length + 2">
+                <span class="jr-grid-bloque-titulo">Según Dominus</span>
+                <span class="jr-grid-bloque-nota">Pega la columna completa con Ctrl+V</span>
+              </td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">
+                <i class="jr-grid-color" style="background: #22c55e;"></i>
+                Galones Motor <small>corriente</small>
+              </td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].galMotor"
+                           type="number" step="0.001" min="0"
+                           data-fila="galMotor" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].galMotor"
+                           (focus)="onInputFocus($event)"
                            (input)="onFieldChange(vendor.document)"
-                           (keydown)="onKeyDown($event, d[0], vendor.document)">
-                  </td>
-                }
-                <td class="jr-grid-total">
-                  {{ totalDenomination(d[0]) }} uds &middot; {{ formatCurrency(totalDenomination(d[0]) * d[1]) }}
+                           (keydown)="onKeyDown($event, 'galMotor', vendor.document)"
+                           (paste)="onPaste($event, 'galMotor', vendor.document)">
+                  </div>
                 </td>
-              </tr>
-            }
-          }
+              }
+              <td class="jr-grid-total">{{ formatNumber(totalGalMotor(), 3) }}</td>
+            </tr>
 
-          <tr class="jr-grid-fila jr-grid-fila--destacada">
-            <td class="jr-grid-concepto">Total arqueo</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <span class="jr-cell--calc" [class.jr-cell--aviso]="captures[vendor.document]?.avisoArqueo"
-                      [attr.title]="captures[vendor.document]?.avisoArqueo ? 'No coincide con efectivo reportado: ' + formatCurrency(captures[vendor.document].efectivo) : ''">
-                  @if (captures[vendor.document]?.avisoArqueo) {
-                    <span class="jr-p2-esperado">&ne; {{ formatCurrency(captures[vendor.document].efectivo) }}</span>
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">
+                <i class="jr-grid-color" style="background: #3b82f6;"></i>
+                Galones Diésel
+              </td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].galDiesel"
+                           type="number" step="0.001" min="0"
+                           data-fila="galDiesel" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].galDiesel"
+                           (focus)="onInputFocus($event)"
+                           (input)="onFieldChange(vendor.document)"
+                           (keydown)="onKeyDown($event, 'galDiesel', vendor.document)"
+                           (paste)="onPaste($event, 'galDiesel', vendor.document)">
+                  </div>
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatNumber(totalGalDiesel(), 3) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">
+                <i class="jr-grid-color" style="background: #f59e0b;"></i>
+                Galones Extra
+              </td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].galExtra"
+                           type="number" step="0.001" min="0"
+                           data-fila="galExtra" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].galExtra"
+                           (focus)="onInputFocus($event)"
+                           (input)="onFieldChange(vendor.document)"
+                           (keydown)="onKeyDown($event, 'galExtra', vendor.document)"
+                           (paste)="onPaste($event, 'galExtra', vendor.document)">
+                  </div>
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatNumber(totalGalExtra(), 3) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">
+                <i class="jr-grid-color" style="background: #8b5cf6;"></i>
+                Galones Max Pro
+              </td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].galMaxpro"
+                           type="number" step="0.001" min="0"
+                           data-fila="galMaxpro" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].galMaxpro"
+                           (focus)="onInputFocus($event)"
+                           (input)="onFieldChange(vendor.document)"
+                           (keydown)="onKeyDown($event, 'galMaxpro', vendor.document)"
+                           (paste)="onPaste($event, 'galMaxpro', vendor.document)">
+                  </div>
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatNumber(totalGalMaxpro(), 3) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila">
+              <td class="jr-grid-concepto">Canastilla</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].canastilla"
+                           type="number" step="100" min="0"
+                           data-fila="canastilla" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].canastilla"
+                           (focus)="onInputFocus($event)"
+                           (input)="onFieldChange(vendor.document)"
+                           (keydown)="onKeyDown($event, 'canastilla', vendor.document)"
+                           (paste)="onPaste($event, 'canastilla', vendor.document)">
+                  </div>
+                </td>
+              }
+              <td class="jr-grid-total">{{ formatCurrency(totalCanastilla()) }}</td>
+            </tr>
+
+            <tr class="jr-grid-fila jr-grid-fila--destacada">
+              <td class="jr-grid-concepto">Total (tirilla)</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <div class="jr-cell jr-cell--dominus" [class.jr-cell--aviso]="captures[vendor.document]?.avisoTirilla"
+                       [attr.title]="captures[vendor.document]?.avisoTirilla">
+                    <input class="jr-input" [class.is-zero]="!captures[vendor.document].tirilla"
+                           type="number" step="0.01" min="0"
+                           data-fila="tirilla" [attr.data-col]="vendor.document"
+                           [(ngModel)]="captures[vendor.document].tirilla"
+                           (focus)="onInputFocus($event)"
+                           (input)="onFieldChange(vendor.document)"
+                           (keydown)="onKeyDown($event, 'tirilla', vendor.document)"
+                           (paste)="onPaste($event, 'tirilla', vendor.document)">
+                  </div>
+                </td>
+              }
+              <td class="jr-grid-total">
+                <span class="jr-cell--total">{{ formatCurrency(totalDominusTirilla()) }}</span>
+              </td>
+            </tr>
+
+            <!-- BLOQUE 4: ARQUEO POR DENOMINACIÓN (PLEGABLE) -->
+            <tr class="jr-grid-bloque" [class.is-plegado]="folded.arqueo" data-bloque="arqueo">
+              <td [attr.colspan]="assignedVendors.length + 2">
+                <button type="button" class="jr-grid-toggle" (click)="toggleFold('arqueo')">
+                  <svg class="jr-chevron" [class.is-rotated]="!folded.arqueo" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m9 18 6-6-6-6"></path>
+                  </svg>
+                  Arqueo por denominación
+                </button>
+                @if (folded.arqueo) {
+                  <span class="jr-grid-bloque-nota">Plegado (clic para desplegar billetes)</span>
+                }
+              </td>
+            </tr>
+
+            @if (!folded.arqueo) {
+              @for (d of denominations; track d[0]) {
+                <tr class="jr-grid-fila">
+                  <td class="jr-grid-concepto">Billetes de {{ formatCurrency(d[1]) }} <small>cantidad</small></td>
+                  @for (vendor of assignedVendors; track vendor.document) {
+                    <td class="jr-grid-vendor-col">
+                      <input class="jr-input" [class.is-zero]="!captures[vendor.document].denominaciones[d[0]]"
+                             type="number" min="0" step="1"
+                             [attr.data-fila]="d[0]" [attr.data-col]="vendor.document"
+                             [(ngModel)]="captures[vendor.document].denominaciones[d[0]]"
+                             (focus)="onInputFocus($event)"
+                             (input)="onFieldChange(vendor.document)"
+                             (keydown)="onKeyDown($event, d[0], vendor.document)">
+                    </td>
                   }
-                  {{ formatCurrency(captures[vendor.document]?.totalArqueo || 0) }}
-                </span>
-              </td>
-            }
-            <td class="jr-grid-total">
-              <span class="jr-cell--total">{{ formatCurrency(totalArqueo()) }}</span>
-            </td>
-          </tr>
-
-          <!-- BLOQUE 5: PRODUCTOS VENDIDOS (PLEGABLE) -->
-          <tr class="jr-grid-bloque" [class.is-plegado]="folded.productos" data-bloque="productos">
-            <td [attr.colspan]="assignedVendors.length + 2">
-              <button type="button" class="jr-grid-toggle" (click)="toggleFold('productos')">
-                <svg class="jr-chevron" [class.is-rotated]="!folded.productos" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="m9 18 6-6-6-6"></path>
-                </svg>
-                Productos vendidos (unidades)
-              </button>
-              <input type="text" class="jr-p2-buscar" list="jr-p2-lista-productos" placeholder="Agregar producto por SKU o nombre..."
-                     [(ngModel)]="productSearchInput" (change)="addProductFromSearch()" (keydown.enter)="addProductFromSearch()">
-              <datalist id="jr-p2-lista-productos">
-                @for (prod of catalogProducts; track prod.sku) {
-                  <option [value]="prod.name + ' · ' + prod.sku"></option>
-                }
-              </datalist>
-            </td>
-          </tr>
-
-          @if (!folded.productos) {
-            @for (sku of visibleProductSkus; track sku) {
-              <tr class="jr-grid-fila">
-                <td class="jr-grid-concepto" [attr.title]="getProductName(sku)">
-                  {{ getProductName(sku) }}
-                  <small>{{ formatCurrency(getProductPrice(sku)) }}</small>
-                </td>
-                @for (vendor of assignedVendors; track vendor.document) {
-                  <td>
-                    <input class="jr-input" type="number" min="0" step="1"
-                           [attr.data-fila]="'p_' + sku" [attr.data-col]="vendor.document"
-                           [(ngModel)]="captures[vendor.document].productos[sku]"
-                           (input)="onFieldChange(vendor.document)">
+                  <td class="jr-grid-total">
+                    {{ totalDenomination(d[0]) }} uds &middot; {{ formatCurrency(totalDenomination(d[0]) * d[1]) }}
                   </td>
-                }
-                <td class="jr-grid-total">
-                  {{ totalProductUnits(sku) }} uds
-                </td>
-              </tr>
+                </tr>
+              }
             }
-          }
 
-          <tr class="jr-grid-fila jr-grid-fila--destacada">
-            <td class="jr-grid-concepto">Unidades vendidas</td>
-            @for (vendor of assignedVendors; track vendor.document) {
-              <td>
-                <span class="jr-cell--calc">{{ captures[vendor.document]?.productos ? allProductUnits() : 0 }} uds</span>
+            <tr class="jr-grid-fila jr-grid-fila--destacada">
+              <td class="jr-grid-concepto">Total arqueo</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <span class="jr-cell--calc" [class.is-zero]="!(captures[vendor.document]?.totalArqueo)"
+                        [class.jr-cell--aviso]="captures[vendor.document]?.avisoArqueo"
+                        [attr.title]="captures[vendor.document]?.avisoArqueo ? 'No coincide con efectivo reportado: ' + formatCurrency(captures[vendor.document].efectivo) : ''">
+                    @if (captures[vendor.document]?.avisoArqueo) {
+                      <span class="jr-p2-esperado">&ne; {{ formatCurrency(captures[vendor.document].efectivo) }}</span>
+                    }
+                    {{ formatCurrency(captures[vendor.document]?.totalArqueo || 0) }}
+                  </span>
+                </td>
+              }
+              <td class="jr-grid-total">
+                <span class="jr-cell--total">{{ formatCurrency(totalArqueo()) }}</span>
               </td>
+            </tr>
+
+            <!-- BLOQUE 5: PRODUCTOS VENDIDOS (PLEGABLE) -->
+            <tr class="jr-grid-bloque" [class.is-plegado]="folded.productos" data-bloque="productos">
+              <td [attr.colspan]="assignedVendors.length + 2">
+                <div class="jr-bloque-flex">
+                  <button type="button" class="jr-grid-toggle" (click)="toggleFold('productos')">
+                    <svg class="jr-chevron" [class.is-rotated]="!folded.productos" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                    Productos vendidos (unidades)
+                  </button>
+                  <input type="text" class="jr-p2-buscar" list="jr-p2-lista-productos" placeholder="Agregar producto por SKU o nombre..."
+                         [(ngModel)]="productSearchInput" (change)="addProductFromSearch()" (keydown.enter)="addProductFromSearch()">
+                  <datalist id="jr-p2-lista-productos">
+                    @for (prod of catalogProducts; track prod.sku) {
+                      <option [value]="prod.name + ' · ' + prod.sku"></option>
+                    }
+                  </datalist>
+                </div>
+              </td>
+            </tr>
+
+            @if (!folded.productos) {
+              @for (sku of visibleProductSkus; track sku) {
+                <tr class="jr-grid-fila">
+                  <td class="jr-grid-concepto" [attr.title]="getProductName(sku)">
+                    {{ getProductName(sku) }}
+                    <small>{{ formatCurrency(getProductPrice(sku)) }}</small>
+                  </td>
+                  @for (vendor of assignedVendors; track vendor.document) {
+                    <td class="jr-grid-vendor-col">
+                      <input class="jr-input" [class.is-zero]="!captures[vendor.document].productos[sku]"
+                             type="number" min="0" step="1"
+                             [attr.data-fila]="'p_' + sku" [attr.data-col]="vendor.document"
+                             [(ngModel)]="captures[vendor.document].productos[sku]"
+                             (focus)="onInputFocus($event)"
+                             (input)="onFieldChange(vendor.document)">
+                    </td>
+                  }
+                  <td class="jr-grid-total">
+                    {{ totalProductUnits(sku) }} uds
+                  </td>
+                </tr>
+              }
             }
-            <td class="jr-grid-total">
-              <span class="jr-cell--total">{{ allProductUnits() }} uds</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+            <tr class="jr-grid-fila jr-grid-fila--destacada">
+              <td class="jr-grid-concepto">Unidades vendidas</td>
+              @for (vendor of assignedVendors; track vendor.document) {
+                <td class="jr-grid-vendor-col">
+                  <span class="jr-cell--calc" [class.is-zero]="vendorProductUnits(vendor.document) === 0">
+                    {{ vendorProductUnits(vendor.document) }} uds
+                  </span>
+                </td>
+              }
+              <td class="jr-grid-total">
+                <span class="jr-cell--total">{{ allProductUnits() }} uds</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
   </fieldset>
 
   <!-- Tarjeta de Consolidación Diaria (S2-10) -->
   <div class="jr-consolidado-card">
     <div class="jr-card-item jr-card-item--cash">
-      <div class="jr-card-label">Total Efectivo del Día (S2-10)</div>
+      <div class="jr-card-label">Total Efectivo del Día</div>
       <div class="jr-card-val" id="total-cash-display">{{ formatCurrency(totalCash()) }}</div>
       <div class="jr-card-sub">{{ totalParciales() }} sobres ($200.000 c/u) + {{ formatCurrency(totalPico()) }} pico</div>
     </div>
@@ -551,6 +630,16 @@
       <div class="jr-card-sub">{{ discrepanciesSummary().text }}</div>
     </div>
   </div>
+
+  <!-- Utilidad discreta de datos de calibración/prueba fuera de la barra principal -->
+  @if (!isReadOnly) {
+    <div class="jr-p2-demo-bar">
+      <span class="jr-p2-demo-nota">Herramienta de prueba y calibración (no afecta datos hasta guardar):</span>
+      <button type="button" class="jr-p2-demo-btn" id="btn-cargar-hoja05" [disabled]="isSaving || isResetting" (click)="loadDemoHoja05()">
+        Cargar hoja 05 (ejemplo 05/08)
+      </button>
+    </div>
+  }
 
   <!-- Drawer Lateral: Valores para Dominus -->
   @if (isDominusDrawerOpen) {
@@ -589,29 +678,29 @@
               </p>
             }
 
-        <div class="jr-p2-panel-fila">
-          <span>Credibanco</span>
-          <b>{{ formatCurrency(captures[vendor.document]?.credibanco || 0) }}</b>
-          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.credibanco || 0, 'Credibanco ' + vendor.name)">
-            Copiar
-          </button>
-        </div>
+            <div class="jr-p2-panel-fila">
+              <span>Credibanco</span>
+              <b>{{ formatCurrency(captures[vendor.document]?.credibanco || 0) }}</b>
+              <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.credibanco || 0, 'Credibanco ' + vendor.name)">
+                Copiar
+              </button>
+            </div>
 
-        <div class="jr-p2-panel-fila">
-          <span>QR</span>
-          <b>{{ formatCurrency(captures[vendor.document]?.qr || 0) }}</b>
-          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.qr || 0, 'QR ' + vendor.name)">
-            Copiar
-          </button>
-        </div>
+            <div class="jr-p2-panel-fila">
+              <span>QR</span>
+              <b>{{ formatCurrency(captures[vendor.document]?.qr || 0) }}</b>
+              <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.qr || 0, 'QR ' + vendor.name)">
+                Copiar
+              </button>
+            </div>
 
-        <div class="jr-p2-panel-fila">
-          <span>Redenciones</span>
-          <b>{{ formatCurrency(captures[vendor.document]?.redenciones || 0) }}</b>
-          <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.redenciones || 0, 'Redenciones ' + vendor.name)">
-            Copiar
-          </button>
-        </div>
+            <div class="jr-p2-panel-fila">
+              <span>Redenciones</span>
+              <b>{{ formatCurrency(captures[vendor.document]?.redenciones || 0) }}</b>
+              <button type="button" class="btn-copy" (click)="copyToClipboard(captures[vendor.document]?.redenciones || 0, 'Redenciones ' + vendor.name)">
+                Copiar
+              </button>
+            </div>
           </section>
         }
       </div>
@@ -619,7 +708,7 @@
   }
 
   <!-- Toast Notificaciones -->
-  <div class="global-toast" [class.visible]="toastVisible">
+  <div class="global-toast" [class.visible]="toastVisible" role="status" aria-live="polite">
     <span>{{ toastMessage }}</span>
   </div>
 </div>
