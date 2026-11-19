@@ -1,15 +1,34 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
 import com.edu.unicauca.gasstation.backend.sales.exception.JournalNotFoundException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-
 @RestControllerAdvice(assignableTypes = {JournalController.class, VendorShiftCloseController.class})
 public class JournalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                "VALIDATION_ERROR",
+                "La solicitud contiene datos de cierre no válidos."
+        );
+        List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> Map.of(
+                        "field", error.getField(),
+                        "message", String.valueOf(error.getDefaultMessage())
+                ))
+                .toList();
+        problem.setProperty("errors", errors);
+        return problem;
+    }
 
     @ExceptionHandler(JournalNotFoundException.class)
     public ProblemDetail handleJournalNotFound(JournalNotFoundException ex) {
