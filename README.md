@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | **Backend** | Java 21 LTS, Spring Boot 3.2.4, Spring Modulith 1.1.3, Spring Security (JWT), Spring Data JPA, MapStruct, Flyway, OpenAPI 3 / Swagger | **Modular Monolith + In-Process Event Bus** |
 | **Frontend** | Angular 21, TypeScript, RxJS, Service Worker (PWA), ExcelJS, PptxGenJS, Vitest | **Feature-Driven Modules + Atomic Design** |
-| **Database** | PostgreSQL 16 (`postgres:16-alpine`), Flyway Versioned Migrations (`V1`–`V39`) | **Relational Schema with Strictly Scoped Domain Tables** |
+| **Database** | PostgreSQL 16 (`postgres:16-alpine`), Flyway Versioned Migrations (`V1`–`V40`) | **Relational Schema with Strictly Scoped Domain Tables** |
 | **DevOps & QA** | Docker, Docker Compose (`dev`, `ci`, `prod`), Nginx, Testcontainers, JUnit 5, GitHub Actions | **Containerized Multi-Environment CI/CD** |
 
 ---
@@ -65,16 +65,16 @@ The backend is structured with **Spring Modulith** into 8 self-contained busines
 ### Core Business Workflow: The 6-Step Daily Journal Close (`sales`)
 
 ```text
-[Step 1: Day Staff] ➔ [Step 2: Seller Close] ➔ [Step 3: Sales Summary] ➔ [Step 4: Cash Balance] ➔ [Step 5: Advances & Changes] ➔ [Step 6: Journal Lock]
+[Step 1: Day Staff] ➔ [Step 2: Seller Close] ➔ [Step 3: Electronic Payments] ➔ [Step 4: Cash Balance] ➔ [Step 5: Inventory & Stock] ➔ [Step 6: Journal Lock]
 ```
 
 | Step | Screen / Feature | Functional Scope |
 | :---: | :--- | :--- |
 | **Step 1** | **Personal del día** | Confirms operators on duty (`Mañana`, `Tarde`, `Noche`) from `shifts` and records daily shift novelties or replacements. |
 | **Step 2** | **Cierre por vendedor** | Captures bills, coins, electronic cards (`Credibanco`, `G.A.`, `QR`), redemptions, Dominus fuel gallons, and lubricant/additive units per seller. |
-| **Step 3** | **Resumen de ventas** | Consolidates total fuel gallons and convenience products sold across all shifts, cross-checked against active fuel prices. |
+| **Step 3** | **Medios electrónicos** | Reconciles Credibanco dataphone vouchers, Redeban QR CSV imports, and Puntos Colombia redemptions against Step 2 declared totals and daily commission rules. |
 | **Step 4** | **Consolidado y saldo en caja** | Reconciles physical vault bills/coins, savings fund (`Fondo de ahorro`), bank deposits, and administrative expenses against expected cash. |
-| **Step 5** | **Avances y cambios** | Registers cash advances, operator loans, and change fund movements prior to final closing. |
+| **Step 5** | **Medición y existencias** | Records physical fuel tank measurements, gallonage stock reconciliation, and daily inventory verification prior to final closing. |
 | **Step 6** | **Cierre de jornada** | Validates completion of Steps 1–5, displays inventory variation alerts, transitions the journal to **Read-Only (`CLOSED`)**, and emits `JournalClosedEvent`. |
 
 <details>
@@ -198,7 +198,7 @@ Detailed architectural artifacts, functional inventories, and sprint planning do
   - `lowerCamelCase` for variables, properties, methods, and functions.
   - `PascalCase` for classes, interfaces, records, DTOs, and Angular components.
   - `SCREAMING_SNAKE_CASE` for constants and enum keys.
-- **Database Migrations**: Managed strictly via Flyway (`backend/src/main/resources/db/migration/V1__*.sql` through `V39__*.sql`) with `spring.jpa.hibernate.ddl-auto=validate` and `spring.flyway.out-of-order=true`.
+- **Database Migrations**: Managed strictly via Flyway (`backend/src/main/resources/db/migration/V1__*.sql` through `V40__*.sql`) with `spring.jpa.hibernate.ddl-auto=validate` and `spring.flyway.out-of-order=true`.
 
 ### Git Flow & Branching Strategy
 - **`main`**: Protected, production-ready branch. Direct commits to `main` are prohibited.
