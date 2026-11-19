@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, catchError, of, switchMap, tap } from 'rxjs';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { ProductsService } from '../../../../core/services/products.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
 import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import {
@@ -44,6 +45,7 @@ export const FUEL_PRICES: Record<string, number> = {
 export class VendorCloseStep2Component implements OnInit {
   private readonly salesService = inject(SalesVendorCloseService);
   private readonly journalService = inject(JournalService, { optional: true });
+  private readonly productsService = inject(ProductsService, { optional: true });
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -57,6 +59,7 @@ export class VendorCloseStep2Component implements OnInit {
   captures: Record<string, VendorGridCapture> = {};
 
   tolerance = 0.5;
+  fuelPrices: Record<string, number> = { ...FUEL_PRICES };
   catalogProducts: CatalogProductItem[] = [];
   private readonly defaultProductSkus: readonly string[] = ['76102', '75089', '74063', '80266'];
   visibleProductSkus: string[] = [...this.defaultProductSkus];
@@ -108,8 +111,66 @@ export class VendorCloseStep2Component implements OnInit {
 
   initData(): void {
     this.catalogProducts = this.salesService.getCatalogProducts();
+    this.loadProductCatalog();
+    this.loadFuelPrices();
     this.loadTolerance();
     this.loadStaffAndCloses();
+  }
+
+  loadProductCatalog(): void {
+    if (!this.productsService) return;
+    this.productsService.list({ active: true }).subscribe({
+      next: products => {
+        if (!products || products.length === 0) return;
+        this.catalogProducts = products.map(p => ({
+          sku: p.code,
+          name: p.name,
+          category: p.category,
+          price: Number(p.price) || 0
+        }));
+        const catalogSkus = new Set(this.catalogProducts.map(p => p.sku));
+        const matchingDefaults = this.defaultProductSkus.filter(sku => catalogSkus.has(sku));
+        if (matchingDefaults.length === 0 && Object.values(this.captures).every(c => !c.conDatos)) {
+          this.visibleProductSkus = this.catalogProducts.slice(0, 4).map(p => p.sku);
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Keep local fallback catalog when inventory service has not been populated yet.
+      }
+    });
+  }
+
+  loadFuelPrices(): void {
+    this.fuelPrices = { ...FUEL_PRICES };
+    const loader = (this.salesService as { getEffectiveFuelPrices?: (date: string) => ReturnType<SalesVendorCloseService['getEffectiveFuelPrices']> }).getEffectiveFuelPrices;
+    if (!loader) return;
+    loader.call(this.salesService, this.journalDate).subscribe({
+      next: prices => {
+        if (!prices) return;
+        this.applyEffectiveFuelPrices(prices);
+        this.recalculateAll();
+      },
+      error: () => {
+        this.recalculateAll();
+      }
+    });
+  }
+
+  private applyEffectiveFuelPrices(prices: Record<string, number>): void {
+    const keyMap: Record<string, string> = {
+      MOTOR: 'motor',
+      DIESEL: 'diesel',
+      EXTRA: 'extra',
+      MAX_PRO: 'maxpro'
+    };
+    for (const [rawKey, value] of Object.entries(prices)) {
+      const normalized = keyMap[rawKey.toUpperCase()] ?? rawKey.toLowerCase();
+      const numeric = Number(value);
+      if (normalized in this.fuelPrices && Number.isFinite(numeric) && numeric > 0) {
+        this.fuelPrices[normalized] = numeric;
+      }
+    }
   }
 
   loadTolerance(): void {
@@ -409,10 +470,10 @@ export class VendorCloseStep2Component implements OnInit {
 
     // Validación tirilla vs galones
     if (tirilla > 0) {
-      const fuelSales = (Number(cap.galMotor) || 0) * FUEL_PRICES['motor'] +
-        (Number(cap.galDiesel) || 0) * FUEL_PRICES['diesel'] +
-        (Number(cap.galExtra) || 0) * FUEL_PRICES['extra'] +
-        (Number(cap.galMaxpro) || 0) * FUEL_PRICES['maxpro'] +
+      const fuelSales = (Number(cap.galMotor) || 0) * this.fuelPrices['motor'] +
+        (Number(cap.galDiesel) || 0) * this.fuelPrices['diesel'] +
+        (Number(cap.galExtra) || 0) * this.fuelPrices['extra'] +
+        (Number(cap.galMaxpro) || 0) * this.fuelPrices['maxpro'] +
         (Number(cap.canastilla) || 0);
 
       if (Math.abs(fuelSales - tirilla) > 100) {
@@ -443,10 +504,10 @@ export class VendorCloseStep2Component implements OnInit {
     const query = this.productSearchInput.trim();
     if (!query) return;
 
-    let found = this.catalogProducts.find(p => p.sku === query);
-    if (!found) {
-      found = this.catalogProducts.find(p => p.name.toLowerCase().includes(query.toLowerCase()));
-    }
+    const skuPart = query.includes('·') ? query.split('·').pop()?.trim() ?? '' : query;
+    const found =
+      this.catalogProducts.find(p => p.sku === query || (skuPart !== '' && p.sku === skuPart)) ??
+      this.catalogProducts.find(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
     if (found) {
       if (!this.visibleProductSkus.includes(found.sku)) {
@@ -466,6 +527,11 @@ export class VendorCloseStep2Component implements OnInit {
   getProductName(sku: string): string {
     const found = this.catalogProducts.find(p => p.sku === sku);
     return found ? found.name : `Producto SKU ${sku}`;
+  }
+
+  getProductCategory(sku: string): string {
+    const found = this.catalogProducts.find(p => p.sku === sku);
+    return found?.category ? found.category : 'OTRO';
   }
 
   getProductPrice(sku: string): number {
@@ -714,7 +780,7 @@ export class VendorCloseStep2Component implements OnInit {
           return {
             sku,
             productName: this.getProductName(sku),
-            category: 'Canastilla',
+            category: this.getProductCategory(sku),
             unitsSold: units,
             unitPrice: price,
             totalAmount: units * price
