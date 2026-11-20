@@ -6,6 +6,14 @@ import { getApiBaseUrl } from '../config/api-base';
 
 const TOKEN_KEY = 'token';
 
+export interface UserProfileSummary {
+  username: string;
+  displayName: string;
+  email: string;
+  roleLabel: string;
+  initials: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -61,18 +69,43 @@ export class AuthService {
     this.isAuthenticatedSubject.next(false);
   }
 
+  /** Reads the user's profile info safely from the active JWT claims. */
+  getUserProfile(): UserProfileSummary {
+    const claims = this.readClaims();
+    const rawUser = typeof claims?.sub === 'string' && claims.sub.trim() ? claims.sub.trim() : 'admin';
+    const isAdmin = rawUser.toLowerCase() === 'admin';
+    const displayName = isAdmin ? 'Administrador' : rawUser;
+    const initials = displayName.slice(0, 2).toUpperCase();
+    return {
+      username: rawUser,
+      displayName,
+      email: isAdmin ? 'admin@edsbellavista.com' : `${rawUser}@edsbellavista.com`,
+      roleLabel: 'Administrador',
+      initials
+    };
+  }
+
   /** Reads the `exp` claim of the JWT payload without verifying the signature. */
   private isExpired(token: string): boolean {
+    const claims = this.decodePayload(token);
+    if (!claims || typeof claims.exp !== 'number') return true;
+    return claims.exp * 1000 <= Date.now();
+  }
+
+  private readClaims(): { sub?: string; exp?: number } | null {
+    const token = this.getToken();
+    return token ? this.decodePayload(token) : null;
+  }
+
+  private decodePayload(token: string): { sub?: string; exp?: number } | null {
     const payload = token.split('.')[1];
-    if (!payload) return true;
+    if (!payload) return null;
     try {
       const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-      const claims = JSON.parse(atob(padded)) as { exp?: number };
-      if (typeof claims.exp !== 'number') return true;
-      return claims.exp * 1000 <= Date.now();
+      return JSON.parse(atob(padded)) as { sub?: string; exp?: number };
     } catch {
-      return true;
+      return null;
     }
   }
 }
