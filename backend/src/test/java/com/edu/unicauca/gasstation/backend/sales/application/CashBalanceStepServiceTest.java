@@ -259,4 +259,108 @@ class CashBalanceStepServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("paso 3");
     }
+
+    // ----------------------------------------------------------- resetDominusBalance
+
+    private static JournalStep stepOf(int number, StepStatus status) {
+        return JournalStep.builder().stepNumber(number).name("Paso " + number).status(status)
+                .completedAt(status == StepStatus.COMPLETED ? LocalDateTime.of(2026, 8, 1, 20, 0) : null).build();
+    }
+
+    private static Journal journalWith(JournalStatus status, JournalStep... steps) {
+        return Journal.builder().id(JOURNAL_ID).date(DAY).consecutive(288L).status(status)
+                .steps(new java.util.ArrayList<>(List.of(steps))).build();
+    }
+
+    @Test
+    void resettingWithoutADateDoesNothing() {
+        service.resetDominusBalance(null);
+
+        org.mockito.Mockito.verifyNoInteractions(journalRepository, dominus);
+    }
+
+    @Test
+    void resettingAnOpenJournalDeletesTheDominusBalanceAndReturnsStepFourToPending() {
+        Journal journal = journalWith(JournalStatus.OPEN, stepOf(3, StepStatus.COMPLETED),
+                stepOf(4, StepStatus.COMPLETED));
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(journal));
+
+        service.resetDominusBalance(DAY);
+
+        ArgumentCaptor<Journal> saved = ArgumentCaptor.forClass(Journal.class);
+        verify(journalRepository).save(saved.capture());
+        JournalStep step4 = saved.getValue().getSteps().get(1);
+        assertThat(step4.getStatus()).isEqualTo(StepStatus.PENDING);
+        assertThat(step4.getCompletedAt()).isNull();
+        verify(dominus).deleteByDate(DAY);
+    }
+
+    @Test
+    void resettingStepFourLeavesTheOtherStepsAsTheyWere() {
+        Journal journal = journalWith(JournalStatus.OPEN, stepOf(2, StepStatus.COMPLETED),
+                stepOf(3, StepStatus.COMPLETED), stepOf(4, StepStatus.COMPLETED), stepOf(5, StepStatus.PENDING));
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(journal));
+
+        service.resetDominusBalance(DAY);
+
+        assertThat(journal.getSteps()).extracting(JournalStep::getStatus).containsExactly(
+                StepStatus.COMPLETED, StepStatus.COMPLETED, StepStatus.PENDING, StepStatus.PENDING);
+    }
+
+    @Test
+    void aStepFourThatWasAlreadyPendingStaysPendingAndTheBalanceIsStillDeleted() {
+        Journal journal = journalWith(JournalStatus.OPEN, stepOf(4, StepStatus.PENDING));
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(journal));
+
+        service.resetDominusBalance(DAY);
+
+        assertThat(journal.getSteps().get(0).getStatus()).isEqualTo(StepStatus.PENDING);
+        assertThat(journal.getSteps().get(0).getCompletedAt()).isNull();
+        verify(dominus).deleteByDate(DAY);
+    }
+
+    @Test
+    void aJournalWithoutStepFourIsNotSavedButTheBalanceIsDeleted() {
+        Journal journal = journalWith(JournalStatus.OPEN, stepOf(3, StepStatus.COMPLETED));
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(journal));
+
+        service.resetDominusBalance(DAY);
+
+        verify(journalRepository, never()).save(any());
+        verify(dominus).deleteByDate(DAY);
+    }
+
+    @Test
+    void aDateWithoutJournalOnlyDeletesTheBalance() {
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.empty());
+
+        service.resetDominusBalance(DAY);
+
+        verify(dominus).deleteByDate(DAY);
+        verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    void aClosedJournalCannotBeResetAndNothingIsDeleted() {
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(
+                journalWith(JournalStatus.CLOSED, stepOf(4, StepStatus.COMPLETED))));
+
+        assertThatThrownBy(() -> service.resetDominusBalance(DAY))
+                .isInstanceOf(CashBalanceNotEditableException.class)
+                .hasMessageContaining("cerrada");
+
+        verify(dominus, never()).deleteByDate(any());
+        verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    void anOpenJournalWhoseClosingStepIsCompletedCannotBeResetEither() {
+        when(journalRepository.findByDate(DAY)).thenReturn(Optional.of(
+                journalWith(JournalStatus.OPEN, stepOf(4, StepStatus.COMPLETED), stepOf(6, StepStatus.COMPLETED))));
+
+        assertThatThrownBy(() -> service.resetDominusBalance(DAY))
+                .isInstanceOf(CashBalanceNotEditableException.class);
+
+        verify(dominus, never()).deleteByDate(any());
+    }
 }

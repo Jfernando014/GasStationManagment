@@ -32,6 +32,9 @@ import static com.edu.unicauca.gasstation.backend.inventory.MeasurementTestData.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -149,6 +152,80 @@ class InventoryHomeServiceTest {
 
         assertThat(home.getMostCriticalAlert()).isNull();
         assertThat(home.getPendingAlerts()).isZero();
+    }
+
+    // ---- current stock: the last measurement plus what was received after it ----
+
+    private static final LocalDateTime T1_MEASURED_AT = LocalDateTime.of(2026, 8, 5, 9, 30);
+    private static final LocalDateTime T2_MEASURED_AT = LocalDateTime.of(2026, 8, 4, 9, 0);
+
+    private void givenReceivedAfterMeasurement(long tankId, LocalDate on, LocalDateTime at, String gallons) {
+        when(receptionRepository.sumGallonsAfterMeasurement(tankId, on, at)).thenReturn(new BigDecimal(gallons));
+    }
+
+    @Test
+    void currentStockIsTheLastMeasurementPlusTheGallonsReceivedAfterIt() {
+        givenReceivedAfterMeasurement(1L, DATE, T1_MEASURED_AT, "120");
+
+        TankSnapshot t1 = service.get().getTanks().get(0);
+
+        assertThat(t1.getGallons()).isEqualByComparingTo("620");
+        assertThat(t1.getPercentage()).isEqualByComparingTo("62.0");
+    }
+
+    @Test
+    void theReceptionsOfATankDoNotChangeTheOtherTanks() {
+        givenReceivedAfterMeasurement(1L, DATE, T1_MEASURED_AT, "120");
+
+        InventoryHome home = service.get();
+
+        assertThat(home.getTanks().get(1).getGallons()).isEqualByComparingTo("300");
+        assertThat(home.getTanks().get(2).getGallons()).isNull();
+    }
+
+    @Test
+    void theHeightAndTheMomentStillCameFromTheMeasurementNotFromTheReceptions() {
+        givenReceivedAfterMeasurement(1L, DATE, T1_MEASURED_AT, "120");
+
+        TankSnapshot t1 = service.get().getTanks().get(0);
+
+        assertThat(t1.getHeightCm()).isEqualByComparingTo("100");
+        assertThat(t1.getMeasuredOn()).isEqualTo(DATE);
+        assertThat(t1.getMeasuredAt()).isEqualTo(T1_MEASURED_AT);
+    }
+
+    @Test
+    void eachTankAsksForTheReceptionsAfterItsOwnMeasurement() {
+        service.get();
+
+        verify(receptionRepository).sumGallonsAfterMeasurement(1L, DATE, T1_MEASURED_AT);
+        verify(receptionRepository).sumGallonsAfterMeasurement(2L, DATE.minusDays(1), T2_MEASURED_AT);
+    }
+
+    @Test
+    void aTankThatWasNeverMeasuredHasNoBaseSoNoReceptionsAreRead() {
+        service.get();
+
+        verify(receptionRepository, never()).sumGallonsAfterMeasurement(eq(3L), any(), any());
+    }
+
+    @Test
+    void theStockOfEachFuelAddsUpTheTanksWithTheirReceptions() {
+        givenReceivedAfterMeasurement(1L, DATE, T1_MEASURED_AT, "120");
+        givenReceivedAfterMeasurement(2L, DATE.minusDays(1), T2_MEASURED_AT, "80");
+
+        FuelStockSummary motor = service.get().getFuels().get(0);
+
+        // (500 + 120) + (300 + 80) of 2,000 gallons of capacity
+        assertThat(motor.getCurrentGallons()).isEqualByComparingTo("1000");
+        assertThat(motor.getPercentage()).isEqualByComparingTo("50.0");
+    }
+
+    @Test
+    void withoutReceptionsTheStockIsExactlyTheMeasurement() {
+        TankSnapshot t1 = service.get().getTanks().get(0);
+
+        assertThat(t1.getGallons()).isEqualByComparingTo("500");
     }
 
     private Tank withCapacity(Tank tank, String capacity) {
