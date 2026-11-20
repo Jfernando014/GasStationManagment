@@ -1,173 +1,279 @@
-/* Estilos modernos: Glassmorphism y Dark Mode / Petrol theme */
-.login-container {
+:host {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  /* Fondo moderno con degradado dinámico y temática de estación (azul petróleo y verde) */
-  background: linear-gradient(135deg, #0d1b2a, #1b263b, #415a77, #1b263b);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  padding: 1rem;
-}
-
-@keyframes gradientBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 3rem 2.5rem;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  color: #fff;
-  transition: transform 0.3s ease;
+  height: 100%;
 }
 
-.brand-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
-.logo-circle {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #00b4d8, #0077b6);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 10px 20px rgba(0, 119, 182, 0.3);
-}
-
-.logo-circle .icon {
-  font-size: 2.5rem;
-}
-
-.brand-header h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.025em;
-}
-
-.brand-header p {
-  color: #a9bacd;
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  color: #e0e1dd;
-}
-
-.form-group input {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0.875rem 1rem;
-  color: #fff;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #00b4d8;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.1);
-}
-
-.form-group input.is-invalid {
-  border-color: #ef233c;
-}
-
-.error-text {
-  color: #ff4d6d;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-  animation: fadeIn 0.3s ease;
-}
-
-.error-alert {
-  background: rgba(239, 35, 60, 0.1);
-  border-left: 4px solid #ef233c;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
-  animation: fadeIn 0.3s ease;
-}
-
-.submit-btn {
-  width: 100%;
-  background: #0077b6;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* ---- Shell principal y transición Vista Dividida <-> Vista Simplificada ---- */
+#view-login.eds-login-shell {
   position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background-color: var(--surface-navy, #0B192C);
+  border-radius: var(--radius-floating, 24px);
   overflow: hidden;
+  border: 0;
+  box-shadow: 0 28px 70px rgba(11, 25, 44, 0.22), 0 10px 26px rgba(11, 25, 44, 0.09);
 }
 
-.submit-btn:hover:not([disabled]) {
-  background: #0096c7;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 150, 199, 0.4);
+.eds-login-light-pane {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background-color: var(--canvas-inner, #F4F7FA);
+  z-index: 2;
+  transition: transform 380ms var(--spring, cubic-bezier(0.16, 1, 0.3, 1)), opacity 260ms ease;
+  will-change: transform, opacity;
 }
 
-.submit-btn:active:not([disabled]) {
-  transform: translateY(0);
+#view-login.is-simplified .eds-login-light-pane {
+  transform: translate3d(100%, 0, 0);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.submit-btn[disabled] {
-  opacity: 0.7;
+/* ---- Siluetas sutiles de surtidor ---- */
+.eds-pump-watermark {
+  position: absolute;
+  bottom: -36px;
+  width: clamp(300px, 25vw, 430px);
+  color: rgba(255, 255, 255, 0.042);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 420ms var(--spring, cubic-bezier(0.16, 1, 0.3, 1)), opacity 300ms ease;
+  will-change: transform, opacity;
+}
+
+.eds-pump-watermark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.eds-pump-watermark--left {
+  left: 36px;
+  opacity: 0;
+  transform: translate3d(-32px, 0, 0) scale(0.96);
+}
+
+#view-login.is-simplified .eds-pump-watermark--left {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.eds-pump-watermark--right {
+  right: 36px;
+  opacity: 1;
+  transform: translate3d(calc(-50vw + 80px), 0, 0);
+}
+
+#view-login.is-simplified .eds-pump-watermark--right {
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---- Hero izquierdo (Vista Dividida) ---- */
+.eds-login-hero {
+  position: relative;
+  z-index: 3;
+  width: 50%;
+  height: 100%;
+  padding: 36px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #FFFFFF;
+  transition: transform 340ms var(--spring, cubic-bezier(0.16, 1, 0.3, 1)), opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+#view-login.is-simplified .eds-login-hero {
+  opacity: 0;
+  transform: translate3d(-24px, 0, 0);
+  pointer-events: none;
+}
+
+.eds-hero-copy {
+  max-width: 470px;
+}
+
+.eds-login-hero .login-hero-title {
+  font-size: clamp(38px, 3.8vw, 54px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: #FFFFFF;
+}
+
+.eds-login-hero .login-hero-footer {
+  color: var(--surface-navy-muted, #8FA2BA);
+  font-size: 12px;
+}
+
+/* ---- Botón interactivo EDS Bellavista ---- */
+.eds-brand-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 6px 10px 6px 6px;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 110ms var(--spring-fast, cubic-bezier(0.2, 0.9, 0.2, 1)),
+              background-color 140ms ease,
+              border-color 140ms ease,
+              opacity 240ms ease;
+}
+
+.eds-brand-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.eds-brand-trigger:active {
+  transform: scale(0.97);
+}
+
+.eds-brand-trigger--simplified {
+  align-self: center;
+  margin-bottom: 18px;
+  opacity: 0;
+  transform: translate3d(0, -10px, 0) scale(0.96);
+  pointer-events: none;
+}
+
+#view-login.is-simplified .eds-brand-trigger--simplified {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  pointer-events: auto;
+}
+
+#view-login.is-simplified .eds-brand-trigger--simplified:active {
+  transform: scale(0.97);
+}
+
+/* ---- Escenario móvil del formulario ---- */
+.eds-login-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding: 24px;
+}
+
+.eds-card-track {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(25%, 0, 0);
+  transition: transform 400ms var(--spring, cubic-bezier(0.16, 1, 0.3, 1));
+  will-change: transform;
+}
+
+#view-login.is-simplified .eds-card-track {
+  transform: translate3d(0, 0, 0);
+}
+
+.eds-login-card,
+.eds-brand-trigger--simplified {
+  pointer-events: auto;
+}
+
+.eds-login-card {
+  max-width: 410px;
+  padding: 34px 32px 30px;
+  border: 0;
+  box-shadow: 0 24px 56px rgba(11, 25, 44, 0.1), 0 6px 18px rgba(11, 25, 44, 0.05);
+  transition: box-shadow 360ms ease;
+}
+
+#view-login.is-simplified .eds-login-card {
+  border: 0;
+  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.48), 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.eds-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eds-password-input {
+  padding-right: 42px;
+}
+
+.eds-field-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.eds-lockout-remaining {
+  font-size: 12px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.eds-submit-btn {
+  width: 100%;
+  font-weight: 700;
+}
+
+.eds-submit-btn:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
-.spinner {
-  display: inline-block;
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
+.eds-support-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-body, #334155);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 120ms ease, transform 90ms ease;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.eds-support-link:hover {
+  color: var(--brand-primary, #FF6B00);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+.eds-support-link:active {
+  transform: scale(0.98);
 }
 
-/* Security and Lockout Alerts (S2-06) */
+.eds-simplified-caption {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--surface-navy-muted, #8FA2BA);
+  text-align: center;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  transition: opacity 280ms ease, transform 360ms var(--spring, cubic-bezier(0.16, 1, 0.3, 1));
+  pointer-events: none;
+}
+
+#view-login.is-simplified .eds-simplified-caption {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---- Alertas de autenticación ---- */
 .login-alert-banner {
   border-radius: 10px;
   padding: 12px 14px;
@@ -176,25 +282,25 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  animation: fadeIn 0.3s ease;
+  animation: edsFadeIn 220ms var(--spring, ease-out);
 }
 
 .login-alert-lockout {
-  background: rgba(239, 35, 60, 0.15);
-  border: 1px solid rgba(239, 35, 60, 0.4);
-  color: #ef233c;
+  background: rgba(239, 35, 60, 0.12);
+  border: 1px solid rgba(239, 35, 60, 0.35);
+  color: #b91c1c;
 }
 
 .login-alert-warning {
-  background: rgba(255, 183, 3, 0.15);
-  border: 1px solid rgba(255, 183, 3, 0.4);
-  color: #fb8500;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
 }
 
 .login-alert-info {
-  background: rgba(0, 180, 216, 0.15);
-  border: 1px solid rgba(0, 180, 216, 0.4);
-  color: #00b4d8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
 }
 
 .alert-icon {
@@ -213,3 +319,289 @@
   font-size: 13.5px;
 }
 
+/* ---- Ventana flotante con blur (línea visual de Cambiar contraseña + paleta EDS) ---- */
+.eds-support-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 25, 44, 0.5);
+  backdrop-filter: blur(10px) saturate(135%);
+  -webkit-backdrop-filter: blur(10px) saturate(135%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: edsFadeIn 0.2s ease-out;
+}
+
+.eds-support-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 24px 48px -12px rgba(11, 25, 44, 0.28), 0 0 0 1px rgba(11, 25, 44, 0.06);
+  padding: 28px;
+  color: var(--text-heading, #0F172A);
+  position: relative;
+  user-select: text;
+  animation: edsMaterialize 0.25s var(--spring, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.eds-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.eds-modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.eds-modal-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand-primary-subtle, #FFF2E8);
+  color: var(--brand-primary, #FF6B00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.eds-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading, #0F172A);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.eds-modal-subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted, #64748B);
+  margin: 4px 0 0;
+}
+
+.eds-modal-btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-light, #94A3B8);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  line-height: 1;
+}
+
+.eds-modal-btn-close:hover {
+  background: var(--surface-subtle, #F1F5F9);
+  color: var(--text-heading, #0F172A);
+}
+
+.eds-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.eds-modal-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-body, #334155);
+}
+
+.eds-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eds-modal-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.eds-modal-label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-heading, #0F172A);
+}
+
+.eds-modal-contact-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+  border: 1.5px solid var(--border-main, #E2E8F0);
+  border-radius: 10px;
+  background: var(--canvas-inner, #F4F7FA);
+  color: var(--text-heading, #0F172A);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.eds-modal-contact-field:hover {
+  border-color: #cbd5e1;
+}
+
+.eds-modal-contact-field--muted {
+  color: var(--text-body, #334155);
+  font-size: 0.84rem;
+}
+
+.eds-contact-link {
+  color: var(--surface-navy, #0B192C);
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.eds-contact-link:hover {
+  color: var(--brand-primary, #FF6B00);
+  text-decoration: underline;
+}
+
+.eds-copy-btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-heading, #0F172A);
+  background-color: #ffffff;
+  border: 1px solid var(--border-main, #E2E8F0);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.eds-copy-btn:hover {
+  background-color: var(--brand-primary-subtle, #FFF2E8);
+  border-color: rgba(255, 107, 0, 0.35);
+  color: var(--brand-primary-strong, #C2410C);
+}
+
+.eds-copy-btn:active {
+  transform: scale(0.96);
+}
+
+.eds-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--surface-subtle, #F1F5F9);
+}
+
+.eds-modal-btn-submit {
+  background: var(--brand-primary, #FF6B00);
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 3px 10px rgba(255, 107, 0, 0.28);
+}
+
+.eds-modal-btn-submit:hover {
+  background: var(--brand-primary-hover, #FA5D00);
+  box-shadow: 0 5px 14px rgba(255, 107, 0, 0.36);
+}
+
+.eds-modal-btn-submit:active {
+  transform: scale(0.97);
+  background: var(--brand-primary-active, #E05300);
+}
+
+@keyframes edsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes edsMaterialize {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Responsive móvil / pantallas pequeñas ---- */
+@media (max-width: 900px) {
+  #view-login.eds-login-shell {
+    overflow-y: auto;
+    border-radius: 18px;
+  }
+
+  .eds-login-light-pane,
+  .eds-login-hero {
+    display: none;
+  }
+
+  .eds-login-stage {
+    position: relative;
+    min-height: 100%;
+    padding: 24px 16px;
+  }
+
+  .eds-card-track {
+    transform: none !important;
+  }
+
+  .eds-brand-trigger--simplified,
+  .eds-simplified-caption {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .eds-pump-watermark--left {
+    left: -30px;
+    width: 210px;
+    opacity: 0.9;
+    transform: none;
+  }
+
+  .eds-pump-watermark--right {
+    right: -30px;
+    width: 210px;
+    transform: none;
+  }
+
+  .eds-login-card {
+    padding: 28px 22px 24px;
+  }
+}
+
+/* ---- Accesibilidad: reducción de movimiento ---- */
+@media (prefers-reduced-motion: reduce) {
+  .eds-login-light-pane,
+  .eds-pump-watermark,
+  .eds-login-hero,
+  .eds-brand-trigger,
+  .eds-card-track,
+  .eds-simplified-caption,
+  .eds-support-backdrop,
+  .eds-support-modal-card {
+    transition-duration: 150ms !important;
+    animation-duration: 1ms !important;
+    transform: none !important;
+  }
+}

@@ -595,4 +595,79 @@ describe('VendorCloseStep2Component', () => {
     expect(localComponent.folded.productos).toBe(false);
     expect(localComponent.productSearchInput).toBe('');
   });
+
+  it('should load initial data only once when currentJournal$ and route queryParams initialize together', async () => {
+    let staffCalls = 0;
+    let closesCalls = 0;
+    const journal: JournalResponse = {
+      id: 34,
+      date: '2026-11-19',
+      consecutive: 318,
+      status: JournalStatus.OPEN,
+      steps: [
+        { id: 1, stepNumber: 1, name: 'Personal', status: StepStatus.COMPLETED, completedAt: '2026-11-19T06:00:00' },
+        { id: 2, stepNumber: 2, name: 'Vendedores', status: StepStatus.PENDING, completedAt: null }
+      ]
+    };
+    const journalSubject = new BehaviorSubject<JournalResponse | null>(journal);
+    const countingSalesMock = {
+      ...salesServiceMock,
+      getAssignedStaff: () => {
+        staffCalls += 1;
+        return of(mockStaff);
+      },
+      getVendorCloses: () => {
+        closesCalls += 1;
+        return of([]);
+      }
+    };
+    const journalServiceStub = {
+      currentJournal$: journalSubject.asObservable(),
+      getCurrentJournalSnapshot: () => journalSubject.value,
+      completeStep: () => of(journal.steps[1]),
+      updateCurrentStep: () => undefined
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: countingSalesMock },
+        { provide: JournalService, useValue: journalServiceStub },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.journalDate).toBe('2026-11-19');
+    expect(staffCalls).toBe(1);
+    expect(closesCalls).toBe(1);
+  });
+
+  it('should not inject demo vendors when getAssignedStaff returns empty on a non-calibration date', async () => {
+    const emptyStaffMock = {
+      ...salesServiceMock,
+      getAssignedStaff: () => of([]),
+      getVendorCloses: () => of([])
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: emptyStaffMock },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-11-19' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.assignedVendors.length).toBe(0);
+    expect(localComponent.errorMessage).toContain('Paso 1');
+  });
 });

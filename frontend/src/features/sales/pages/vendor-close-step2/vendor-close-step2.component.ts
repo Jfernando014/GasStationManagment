@@ -81,8 +81,23 @@ export class VendorCloseStep2Component implements OnInit {
   toastMessage = '';
   toastVisible = false;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private loadedDate: string | null = null;
 
   ngOnInit(): void {
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        if (params['date']) {
+          this.journalDate = params['date'];
+        } else {
+          const snapshotDate = this.journalService?.getCurrentJournalSnapshot()?.date;
+          if (snapshotDate) {
+            this.journalDate = snapshotDate;
+          }
+        }
+        this.ensureDataLoadedForDate();
+      });
+
     if (this.journalService) {
       this.journalService.currentJournal$
         .pipe(takeUntilDestroyed(this.destroyRef))
@@ -94,22 +109,20 @@ export class VendorCloseStep2Component implements OnInit {
           this.isReadOnly = journal.status === JournalStatus.CLOSED || closingStep?.status === StepStatus.COMPLETED;
           if (journal.date && journal.date !== this.journalDate) {
             this.journalDate = journal.date;
-            this.initData();
-          } else {
-            this.cdr.detectChanges();
           }
+          this.ensureDataLoadedForDate();
+          this.cdr.detectChanges();
         });
     }
+  }
 
-    this.route.queryParams.subscribe(params => {
-      if (params['date']) {
-        this.journalDate = params['date'];
-      }
-      this.initData();
-    });
+  private ensureDataLoadedForDate(): void {
+    if (this.loadedDate === this.journalDate) return;
+    this.initData();
   }
 
   initData(): void {
+    this.loadedDate = this.journalDate;
     this.catalogProducts = this.salesService.getCatalogProducts();
     this.loadProductCatalog();
     this.loadFuelPrices();
@@ -191,23 +204,26 @@ export class VendorCloseStep2Component implements OnInit {
 
   loadStaffAndCloses(): void {
     this.isLoading = true;
+    this.errorMessage = '';
     this.salesService.getAssignedStaff(this.journalDate).subscribe({
       next: (staff) => {
         if (staff && staff.length > 0) {
           this.assignedVendors = staff;
-          this.initGrid();
+        } else if (this.journalDate === '2026-08-05') {
+          this.assignedVendors = this.salesService.getCalibrationDemo0805().vendedores;
         } else {
-          // If backend staff query returned empty, initialize from demo for seamless UX
-          const demo = this.salesService.getCalibrationDemo0805();
-          this.assignedVendors = demo.vendedores;
-          this.initGrid();
+          this.assignedVendors = [];
         }
+        this.initGrid();
         this.loadExistingCloses();
       },
       error: () => {
-        // Fallback to demo staff
-        const demo = this.salesService.getCalibrationDemo0805();
-        this.assignedVendors = demo.vendedores;
+        if (this.journalDate === '2026-08-05') {
+          this.assignedVendors = this.salesService.getCalibrationDemo0805().vendedores;
+        } else {
+          this.assignedVendors = [];
+          this.errorMessage = 'No se pudo cargar el personal asignado desde el servidor.';
+        }
         this.initGrid();
         this.loadExistingCloses();
       }
@@ -263,11 +279,11 @@ export class VendorCloseStep2Component implements OnInit {
         this.isLoading = false;
         if (closes && closes.length > 0) {
           this.populateFromBackendCloses(closes);
-        } else {
-          // Auto-load 05/08 demo if date matches calibration date
-          if (this.journalDate === '2026-08-05') {
-            this.loadDemoHoja05(false);
-          }
+          this.errorMessage = '';
+        } else if (this.journalDate === '2026-08-05') {
+          this.loadDemoHoja05(false);
+        } else if (this.assignedVendors.length === 0 && !this.errorMessage) {
+          this.errorMessage = 'No hay vendedores asignados para esta jornada. Confirma el personal en el Paso 1.';
         }
         this.recalculateAll();
         this.cdr.detectChanges();
@@ -276,6 +292,8 @@ export class VendorCloseStep2Component implements OnInit {
         this.isLoading = false;
         if (this.journalDate === '2026-08-05') {
           this.loadDemoHoja05(false);
+        } else if (!this.errorMessage) {
+          this.errorMessage = 'No se pudieron consultar los cierres guardados en el servidor.';
         }
         this.recalculateAll();
         this.cdr.detectChanges();
