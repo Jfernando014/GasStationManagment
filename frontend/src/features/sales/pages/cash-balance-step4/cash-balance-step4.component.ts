@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap } from 'rxjs';
 
 import { CashBalanceStep4Service } from '../../../../core/services/cash-balance-step4.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import {
   buildFinalCashBalancePdf,
   downloadCashBalancePdf
@@ -38,8 +39,14 @@ const EXPENSES_ROUTE = '/gastos';
 export class CashBalanceStep4Component {
   private readonly service = inject(CashBalanceStep4Service);
   private readonly journalService = inject(JournalService);
+  private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
   private requestId = 0;
   private readonly reloadVersion = signal(0);
+  private readonly dirtyHandler: StepDirtyHandler = {
+    hasUnsavedChanges: () => this.hasUnsavedChanges(),
+    saveBeforeExit: () => this.saveBeforeExit()
+  };
 
   readonly expensesRoute = EXPENSES_ROUTE;
   readonly descriptionMax = MAX_FUND_PAYMENT_DESCRIPTION_LENGTH;
@@ -102,6 +109,9 @@ export class CashBalanceStep4Component {
   );
 
   constructor() {
+    this.stepChangesService?.register(this.dirtyHandler);
+    this.destroyRef.onDestroy(() => this.stepChangesService?.unregister(this.dirtyHandler));
+
     effect(() => {
       const date = this.date();
       this.reloadVersion();
@@ -190,28 +200,50 @@ export class CashBalanceStep4Component {
   }
 
   saveDominus(): void {
+    this.persistDominusBalance().subscribe();
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.canEdit() && (this.dominusDirty() || this.paymentOpen());
+  }
+
+  private saveBeforeExit(): Observable<boolean> {
+    if (!this.canEdit()) return of(true);
+    if (this.dominusDirty()) {
+      return this.persistDominusBalance();
+    }
+    if (this.paymentOpen()) {
+      this.paymentError.set('Guarda o cancela el pago del fondo antes de salir.');
+      return of(false);
+    }
+    return of(true);
+  }
+
+  private persistDominusBalance(): Observable<boolean> {
     const date = this.date();
-    if (!date || !this.canEdit() || this.savingDominus()) return;
+    if (!date || !this.canEdit() || this.savingDominus()) return of(true);
     const text = this.dominusText();
     const amount = parseAmount(text);
     if (text.trim() === '' || amount === null) {
       this.dominusError.set('Escribe un saldo válido de Dominus, con máximo dos decimales.');
-      return;
+      return of(false);
     }
 
     this.clearMessages();
     this.savingDominus.set(true);
-    this.service.saveDominusBalance(date, amount).subscribe({
-      next: response => {
+    return this.service.saveDominusBalance(date, amount).pipe(
+      map(response => {
         this.applyResult(response, true);
         this.savingDominus.set(false);
         this.notice.set('Saldo de Dominus guardado.');
-      },
-      error: error => {
+        return true;
+      }),
+      catchError(error => {
         this.dominusError.set(getErrorMessage(error));
         this.savingDominus.set(false);
-      }
-    });
+        return of(false);
+      })
+    );
   }
 
   openPayment(): void {

@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { AutonomyThresholdsService } from '../../../../core/services/autonomy-thresholds.service';
 import { getErrorMessage, getFieldErrors, isApiError } from '../../../../shared/helpers/problem-details.helpers';
 import {
@@ -26,7 +27,7 @@ const emptyThresholdForm: ThresholdForm = { validFrom: '', warningDays: null, cr
 @Component({
   selector: 'app-autonomy-thresholds-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ConfirmModalComponent],
   templateUrl: './autonomy-thresholds-page.component.html'
 })
 export class AutonomyThresholdsPageComponent {
@@ -35,6 +36,9 @@ export class AutonomyThresholdsPageComponent {
 
   readonly thresholds = signal<AutonomyThresholdResponse[]>([]);
   readonly form = signal<ThresholdForm>({ ...emptyThresholdForm });
+  readonly editingId = signal<number | null>(null);
+  readonly deleteTarget = signal<AutonomyThresholdResponse | null>(null);
+  readonly deleting = signal(false);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly submitted = signal(false);
@@ -56,30 +60,99 @@ export class AutonomyThresholdsPageComponent {
     this.clearServerFieldErrors();
   }
 
+  startEdit(threshold: AutonomyThresholdResponse): void {
+    this.editingId.set(threshold.id);
+    this.form.set({
+      validFrom: threshold.validFrom,
+      warningDays: threshold.warningDays,
+      criticalDays: threshold.criticalDays
+    });
+    this.submitted.set(false);
+    this.error.set('');
+    this.clearServerFieldErrors();
+  }
+
+  cancelEdit(): void {
+    this.editingId.set(null);
+    this.form.set({ ...emptyThresholdForm });
+    this.submitted.set(false);
+    this.error.set('');
+    this.clearServerFieldErrors();
+  }
+
   save(): void {
     this.submitted.set(true);
     this.error.set('');
     this.clearServerFieldErrors();
 
-    const form = this.form();
-    const request = this.toRequest(form);
+    const request = this.toRequest(this.form());
     if (!request) {
       this.error.set('Completa la fecha de vigencia y verifica que el umbral crítico sea menor que el de advertencia.');
       return;
     }
 
+    const editId = this.editingId();
+    const operation = editId === null
+      ? this.thresholdsService.create(request)
+      : this.thresholdsService.update(editId, request);
+
     this.saving.set(true);
-    this.thresholdsService.create(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    operation.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.saving.set(false);
         this.submitted.set(false);
+        this.editingId.set(null);
         this.form.set({ ...emptyThresholdForm });
         this.loadThresholds();
-        this.success('Umbrales registrados. Aplican desde la fecha de vigencia.');
+        this.success(
+          editId === null
+            ? 'Umbrales registrados. Aplican desde la fecha de vigencia.'
+            : 'Umbrales actualizados correctamente.'
+        );
       },
       error: (error: unknown) => {
         this.saving.set(false);
         this.setServerError(error);
+      }
+    });
+  }
+
+  requestDelete(threshold: AutonomyThresholdResponse): void {
+    this.error.set('');
+    this.deleteTarget.set(threshold);
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting()) {
+      this.deleteTarget.set(null);
+    }
+  }
+
+  deleteConfirmMessage(): string {
+    const target = this.deleteTarget();
+    return target
+      ? `¿Deseas eliminar los umbrales vigentes desde el ${this.formatDate(target.validFrom)}?`
+      : '';
+  }
+
+  confirmDelete(): void {
+    const target = this.deleteTarget();
+    if (!target) return;
+    this.deleting.set(true);
+    this.thresholdsService.delete(target.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        if (this.editingId() === target.id) {
+          this.cancelEdit();
+        }
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.loadThresholds();
+        this.success('Vigencia de umbrales eliminada correctamente.');
+      },
+      error: (error: unknown) => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.error.set(getErrorMessage(error));
       }
     });
   }

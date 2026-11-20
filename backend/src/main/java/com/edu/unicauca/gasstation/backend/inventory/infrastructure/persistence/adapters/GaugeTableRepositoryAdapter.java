@@ -82,4 +82,11 @@ public class GaugeTableRepositoryAdapter implements GaugeTableRepository {
     public boolean existsByNameAndIdNot(String name, Long id) {
         return tableRepository.existsByNameAndIdNot(name, id);
     }
+
+    @Override
+    @Transactional
+    public void deleteById(Long id) {
+        pointRepository.deleteByGaugeTableId(id);
+        tableRepository.deleteById(id);
+    }
 }

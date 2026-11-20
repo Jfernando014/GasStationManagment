@@ -4,48 +4,31 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { GaugeTablesService } from '../../../../core/services/gauge-tables.service';
 import { TanksService } from '../../../../core/services/tanks.service';
-import { getErrorMessage, getFieldErrors, isApiError } from '../../../../shared/helpers/problem-details.helpers';
+import { getErrorMessage, isApiError } from '../../../../shared/helpers/problem-details.helpers';
 import { GaugeTableResponse } from '../../../../shared/models/dtos/gauge-table.dto';
-import { FuelType, TankRequest, TankResponse } from '../../../../shared/models/dtos/tank.dto';
-
-interface Tank {
-  id: string;
-  backendId?: number;
-  name: string;
-  code: string;
-  fuel: string;
-  fuelType: FuelType;
-  capacity: number;
-  maxHeight: number;
-  tolerance: number;
-  gaugeTableId: number;
-}
-
-type TankField = 'code' | 'name' | 'fuel' | 'capacity' | 'maxHeight' | 'tolerance' | 'gaugeTableId';
+import {
+  FUEL_OPTIONS,
+  TankField,
+  TankFormModel,
+  createEmptyTankForm,
+  fromTankResponse,
+  isTankFieldInvalid,
+  isTankFormValid,
+  mapServerFieldErrors,
+  toFuelType,
+  toTankRequest
+} from '../../helpers/tank-form.helpers';
 
 const TOAST_DURATION_MS = 3000;
 
-const emptyTank: Tank = {
-  id: '',
-  code: '',
-  name: '',
-  fuel: '',
-  fuelType: 'MOTOR',
-  capacity: 0,
-  maxHeight: 0,
-  tolerance: 0,
-  gaugeTableId: 0
-};
-
-const emptyTankDraft = { code: '', name: '', fuel: '', capacity: 0, maxHeight: 0, tolerance: 0, gaugeTableId: 0 };
-
-/** Configuración › Tanques: tank registry linked to the existing gauge tables. */
+/** Configuración › Tanques: tank registry with optional link to gauge tables. */
 @Component({
   selector: 'app-tanks-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ConfirmModalComponent],
   templateUrl: './tanks-page.component.html'
 })
 export class TanksPageComponent {
@@ -53,9 +36,11 @@ export class TanksPageComponent {
   private readonly gaugeTablesService = inject(GaugeTablesService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly tanks = signal<Tank[]>([]);
+  readonly fuelOptions = FUEL_OPTIONS;
+  readonly tanks = signal<TankFormModel[]>([]);
   readonly gaugeTables = signal<GaugeTableResponse[]>([]);
   readonly selectedTankId = signal('');
+  readonly editingTank = signal<TankFormModel | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly serverFieldErrors = signal<Record<string, string>>({});
@@ -63,7 +48,9 @@ export class TanksPageComponent {
   readonly toastVisible = signal(false);
   readonly newTankOpen = signal(false);
   readonly tankSubmitted = signal(false);
-  readonly newTank = signal({ ...emptyTankDraft });
+  readonly newTank = signal<TankFormModel>(createEmptyTankForm());
+  readonly deleteTarget = signal<TankFormModel | null>(null);
+  readonly deleting = signal(false);
   private toastTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
@@ -72,52 +59,66 @@ export class TanksPageComponent {
     this.loadGaugeTables();
   }
 
-  get selectedTank(): Tank {
-    return this.tanks().find(tank => tank.id === this.selectedTankId()) ?? emptyTank;
+  get selectedTank(): TankFormModel {
+    return this.editingTank() ?? createEmptyTankForm();
   }
 
-  gaugeTableName(gaugeTableId: number): string {
-    return this.gaugeTables().find(table => table.id === gaugeTableId)?.name ?? 'Sin tabla';
+  gaugeTableName(gaugeTableId: number | null): string {
+    if (!gaugeTableId) return 'Ninguna';
+    return this.gaugeTables().find(table => table.id === gaugeTableId)?.name ?? 'Ninguna';
   }
 
   selectTank(id: string): void {
+    const tank = this.tanks().find(item => item.id === id);
+    if (!tank) return;
     this.selectedTankId.set(id);
+    this.editingTank.set({ ...tank });
+    this.tankSubmitted.set(false);
+    this.clearServerFieldErrors();
     this.clearFeedback();
   }
 
-  updateTank(id: string, field: keyof Tank, value: string | number): void {
-    const numericField = ['capacity', 'maxHeight', 'tolerance', 'gaugeTableId'].includes(field);
-    this.tanks.update(tanks => tanks.map(tank => {
-      if (tank.id !== id) return tank;
-      if (field === 'fuel') {
-        const fuel = String(value);
-        return { ...tank, fuel, fuelType: this.toFuelType(fuel) };
-      }
-      return { ...tank, [field]: numericField ? Number(value) : value };
-    }));
+  cancelEdit(): void {
+    this.selectedTankId.set('');
+    this.editingTank.set(null);
+    this.tankSubmitted.set(false);
+    this.clearServerFieldErrors();
+    this.clearFeedback();
   }
 
-  saveTank(tank: Tank): void {
+  openNewTank(): void {
+    this.newTankOpen.update(open => !open);
+    this.tankSubmitted.set(false);
+    this.clearServerFieldErrors();
+    this.clearFeedback();
+  }
+
+  updateTank(id: string, field: keyof TankFormModel, value: string | number | null): void {
+    const current = this.editingTank();
+    if (!current || current.id !== id) return;
+    this.editingTank.set(this.patchTank(current, field, value));
+  }
+
+  saveTank(tank: TankFormModel): void {
     this.clearServerFieldErrors();
     this.tankSubmitted.set(true);
-    if (!tank.code.trim() || !tank.name.trim() || !tank.fuel || tank.capacity <= 0 ||
-      tank.maxHeight <= 0 || tank.tolerance < 0 || !tank.gaugeTableId) {
-      this.setError('Completa los datos del tanque y selecciona una tabla de aforo.');
+    if (!isTankFormValid(tank)) {
+      this.setError('Completa código, nombre, combustible, capacidad, altura y tolerancia.');
       return;
     }
-    const request = this.toRequest(tank);
+    const request = toTankRequest(tank);
     const operation = tank.backendId === undefined
       ? this.tanksService.create(request)
       : this.tanksService.update(tank.backendId, request);
     operation.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
-        this.replaceTank(this.fromResponse(saved));
-        // Saving closes the editor so the fields stop being editable until "Editar" is pressed again.
+        this.replaceTank(fromTankResponse(saved));
         this.selectedTankId.set('');
+        this.editingTank.set(null);
         this.tankSubmitted.set(false);
         this.success('Configuración del tanque guardada correctamente.');
       },
-      error: error => this.setServerError(error, 'code')
+      error: error => this.serverFieldErrors.set(mapServerFieldErrors(error, 'code'))
     });
   }
 
@@ -125,57 +126,100 @@ export class TanksPageComponent {
     this.clearServerFieldErrors();
     this.tankSubmitted.set(true);
     const draft = this.newTank();
-    if (!draft.code.trim() || !draft.name.trim() || !draft.fuel || draft.capacity <= 0 ||
-      draft.maxHeight <= 0 || draft.tolerance < 0 || draft.gaugeTableId <= 0 || this.gaugeTables().length === 0) {
-      this.setError(this.gaugeTables().length === 0
-        ? 'Primero registra una tabla de aforo para poder registrar el tanque.'
-        : 'Completa código, nombre, combustible, capacidad, altura, tolerancia y tabla de aforo.');
+    if (!isTankFormValid(draft)) {
+      this.setError('Completa código, nombre, combustible, capacidad, altura y tolerancia.');
       return;
     }
 
-    const request: TankRequest = {
-      code: draft.code.trim(),
-      name: draft.name.trim(),
-      fuelType: this.toFuelType(draft.fuel),
-      maxCapacityGallons: draft.capacity,
-      maxHeightCm: draft.maxHeight,
-      toleranceCm: draft.tolerance,
-      gaugeTableId: draft.gaugeTableId
-    };
-    this.tanksService.create(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.tanksService.create(toTankRequest(draft)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
-        this.tanks.update(tanks => [...tanks, this.fromResponse(saved)]);
-        this.newTank.set({ ...emptyTankDraft });
+        this.tanks.update(tanks => [...tanks, fromTankResponse(saved)]);
+        this.newTank.set(createEmptyTankForm());
         this.newTankOpen.set(false);
+        this.tankSubmitted.set(false);
         this.success('Tanque registrado correctamente.');
       },
-      error: error => this.setServerError(error, 'code')
+      error: error => this.serverFieldErrors.set(mapServerFieldErrors(error, 'code'))
     });
   }
 
-  updateNewTank(field: TankField, value: string | number): void {
-    const numericField = ['capacity', 'maxHeight', 'tolerance', 'gaugeTableId'].includes(field);
-    this.newTank.update(tank => ({ ...tank, [field]: numericField ? Number(value) : value }));
+  updateNewTank(field: TankField, value: string | number | null): void {
+    this.newTank.update(tank => this.patchTank(tank, field, value));
   }
 
-  isTankFieldInvalid(field: TankField, tank: Tank | null = null): boolean {
+  isTankFieldInvalid(field: TankField, tank: TankFormModel | null = null): boolean {
     if (!this.tankSubmitted() && !this.fieldError(field)) return false;
-    const value = tank ? tank[field] : this.newTank()[field];
-    if (field === 'code' || field === 'name' || field === 'fuel') return !String(value).trim();
-    if (field === 'capacity' || field === 'maxHeight') return Number(value) <= 0;
-    if (field === 'gaugeTableId') return Number(value) <= 0;
-    return Number(value) < 0;
+    return isTankFieldInvalid(field, tank ?? this.newTank());
   }
 
   fieldError(field: string): string {
     return this.serverFieldErrors()[field] ?? '';
   }
 
+  requestDeleteTank(tank: TankFormModel): void {
+    this.clearFeedback();
+    this.deleteTarget.set(tank);
+  }
+
+  cancelDeleteTank(): void {
+    if (!this.deleting()) {
+      this.deleteTarget.set(null);
+    }
+  }
+
+  deleteConfirmMessage(): string {
+    const target = this.deleteTarget();
+    return target
+      ? `¿Deseas eliminar el tanque «${target.name} (${target.code})»? Esta acción no se puede deshacer.`
+      : '';
+  }
+
+  confirmDeleteTank(): void {
+    const target = this.deleteTarget();
+    if (!target?.backendId) return;
+    this.deleting.set(true);
+    this.tanksService.delete(target.backendId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.tanks.update(items => items.filter(item => item.id !== target.id));
+        if (this.selectedTankId() === target.id) {
+          this.cancelEdit();
+        }
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.success('Tanque eliminado correctamente.');
+      },
+      error: error => {
+        this.deleting.set(false);
+        this.deleteTarget.set(null);
+        this.setError(
+          isApiError(error) && error.status === 409
+            ? 'No se puede eliminar este tanque porque ya tiene mediciones o recepciones registradas.'
+            : getErrorMessage(error)
+        );
+      }
+    });
+  }
+
+  private patchTank(tank: TankFormModel, field: keyof TankFormModel, value: string | number | null): TankFormModel {
+    if (field === 'fuel') {
+      const fuel = String(value ?? '');
+      return { ...tank, fuel, fuelType: toFuelType(fuel) };
+    }
+    if (field === 'gaugeTableId') {
+      const parsed = value === null || value === '' || Number(value) <= 0 ? null : Number(value);
+      return { ...tank, gaugeTableId: parsed };
+    }
+    if (['capacity', 'maxHeight', 'tolerance'].includes(field)) {
+      return { ...tank, [field]: Number(value ?? 0) };
+    }
+    return { ...tank, [field]: String(value ?? '') };
+  }
+
   private loadTanks(): void {
     this.loading.set(true);
     this.tanksService.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: tanks => {
-        this.tanks.set(tanks.map(tank => this.fromResponse(tank)));
+        this.tanks.set(tanks.map(fromTankResponse));
         this.loading.set(false);
       },
       error: error => {
@@ -192,49 +236,8 @@ export class TanksPageComponent {
     });
   }
 
-  private fromResponse(tank: TankResponse): Tank {
-    return {
-      id: String(tank.id),
-      backendId: tank.id,
-      code: tank.code,
-      name: tank.name,
-      fuel: this.fromFuelType(tank.fuelType),
-      fuelType: tank.fuelType,
-      capacity: tank.maxCapacityGallons,
-      maxHeight: tank.maxHeightCm,
-      tolerance: tank.toleranceCm,
-      gaugeTableId: tank.gaugeTableId ?? 0
-    };
-  }
-
-  private toRequest(tank: Tank): TankRequest {
-    return {
-      code: tank.code,
-      name: tank.name.trim(),
-      fuelType: tank.fuelType,
-      maxCapacityGallons: tank.capacity,
-      maxHeightCm: tank.maxHeight,
-      toleranceCm: tank.tolerance,
-      gaugeTableId: tank.gaugeTableId
-    };
-  }
-
-  private replaceTank(updated: Tank): void {
+  private replaceTank(updated: TankFormModel): void {
     this.tanks.update(tanks => tanks.map(tank => tank.id === updated.id ? updated : tank));
-  }
-
-  private toFuelType(fuel: string): FuelType {
-    if (fuel === 'Diésel ACPM') return 'DIESEL';
-    if (fuel === 'Gasolina Extra') return 'EXTRA';
-    if (fuel === 'Diésel Max Pro') return 'MAX_PRO';
-    return 'MOTOR';
-  }
-
-  private fromFuelType(fuelType: FuelType): string {
-    if (fuelType === 'DIESEL') return 'Diésel ACPM';
-    if (fuelType === 'EXTRA') return 'Gasolina Extra';
-    if (fuelType === 'MAX_PRO') return 'Diésel Max Pro';
-    return 'Gasolina Corriente';
   }
 
   private clearFeedback(): void {
@@ -243,23 +246,6 @@ export class TanksPageComponent {
 
   private clearServerFieldErrors(): void {
     this.serverFieldErrors.set({});
-  }
-
-  private setServerError(error: unknown, fallbackField: string): void {
-    const fields = getFieldErrors(error);
-    const mapped = fields.reduce<Record<string, string>>((result, fieldError) => {
-      result[fieldError.field] = fieldError.message;
-      return result;
-    }, {});
-    if (Object.keys(mapped).length === 0) {
-      const message = isApiError(error) && error.status === 409
-        ? (fallbackField === 'code'
-          ? 'El código ya se encuentra registrado.'
-          : 'El nombre ya se encuentra registrado.')
-        : getErrorMessage(error);
-      mapped[fallbackField] = message;
-    }
-    this.serverFieldErrors.set(mapped);
   }
 
   private setError(text: string): void {

@@ -4,6 +4,7 @@ import com.edu.unicauca.gasstation.backend.inventory.api.dto.AutonomyThresholdRe
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.AutonomyThreshold;
 import com.edu.unicauca.gasstation.backend.inventory.domain.services.AutonomyThresholdService;
 import com.edu.unicauca.gasstation.backend.inventory.exception.AutonomyThresholdAlreadyExistsException;
+import com.edu.unicauca.gasstation.backend.inventory.exception.AutonomyThresholdNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.InvalidAutonomyThresholdException;
 import com.edu.unicauca.gasstation.backend.inventory.infrastructure.mappers.AutonomyThresholdMapperImpl;
 import com.edu.unicauca.gasstation.backend.security.infrastructure.jwt.JwtAuthenticationFilter;
@@ -29,10 +30,14 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -186,6 +191,68 @@ class AutonomyThresholdControllerTest {
         mockMvc.perform(get(URL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    // ---------- PUT & DELETE ----------
+
+    @Test
+    void updateReturnsUpdatedThresholds() throws Exception {
+        AutonomyThreshold updated = threshold(3L, "7.0", "3.0");
+        updated.setValidFrom(LocalDate.of(2026, 9, 1));
+        when(thresholdService.update(eq(3L), any(AutonomyThreshold.class))).thenReturn(updated);
+
+        AutonomyThresholdRequest request = validRequest();
+        request.setValidFrom(LocalDate.of(2026, 9, 1));
+        request.setWarningDays(new BigDecimal("7.0"));
+        request.setCriticalDays(new BigDecimal("3.0"));
+
+        mockMvc.perform(put(URL + "/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3))
+                .andExpect(jsonPath("$.warningDays").value(7.0));
+    }
+
+    @Test
+    void updateReturnsNotFoundWhenThresholdDoesNotExist() throws Exception {
+        when(thresholdService.update(eq(99L), any(AutonomyThreshold.class)))
+                .thenThrow(new AutonomyThresholdNotFoundException(99L));
+
+        mockMvc.perform(put(URL + "/99")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not found"));
+    }
+
+    @Test
+    void updateReturnsConflictWhenValidityDateIsTaken() throws Exception {
+        when(thresholdService.update(eq(3L), any(AutonomyThreshold.class)))
+                .thenThrow(new AutonomyThresholdAlreadyExistsException(FROM));
+
+        mockMvc.perform(put(URL + "/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRequest())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+
+    @Test
+    void deleteReturnsNoContentWhenDeleted() throws Exception {
+        mockMvc.perform(delete(URL + "/3"))
+                .andExpect(status().isNoContent());
+
+        verify(thresholdService).delete(3L);
+    }
+
+    @Test
+    void deleteReturnsNotFoundWhenThresholdDoesNotExist() throws Exception {
+        doThrow(new AutonomyThresholdNotFoundException(99L)).when(thresholdService).delete(99L);
+
+        mockMvc.perform(delete(URL + "/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not found"));
     }
 
     // ---------- helpers ----------

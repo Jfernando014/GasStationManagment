@@ -157,8 +157,6 @@
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/conciliaciones"
             routerLinkActive="active" #reconciliationNav="routerLinkActive"
             [attr.aria-current]="reconciliationNav.isActive ? 'page' : null">Conciliaciones</a>
-          <a class="sub-item-link sub-nav-item" routerLink="/resultados/metas" routerLinkActive="active">Metas y
-            cumplimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/estadisticas"
             routerLinkActive="active" #statisticsNav="routerLinkActive"
             [attr.aria-current]="statisticsNav.isActive ? 'page' : null">Estadísticas</a>
@@ -193,9 +191,6 @@
             routerLinkActive="active">Tanques</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/umbrales"
             routerLinkActive="active">Umbrales</a>
-          <button type="button" class="sub-item-link sub-nav-item sub-nav-button" (click)="openChangePasswordModal()">
-            Cambiar contraseña
-          </button>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/recepciones"
             routerLinkActive="active">Recepciones</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/inspecciones"
@@ -253,27 +248,84 @@
           }
         </button>
 
-        <div class="status-capsule-badge">
-          <span class="dot-green-pulse"></span>
-          <span>Operación Activa</span>
+        <div #profileMenuContainer class="admin-profile-wrapper">
+          <button
+            type="button"
+            class="admin-profile-trigger"
+            [class.is-open]="profileMenuOpen()"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="profileMenuOpen()"
+            aria-label="Menú del perfil de administrador"
+            (click)="toggleProfileMenu()">
+            <span class="admin-avatar-circle" aria-hidden="true">{{ profile().initials }}</span>
+            <span class="admin-profile-text">
+              <strong>{{ profile().displayName }}</strong>
+              <small>{{ profile().roleLabel }}</small>
+            </span>
+            <svg class="admin-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          @if (profileMenuOpen()) {
+            <div class="admin-profile-dropdown" role="menu" aria-label="Opciones del administrador">
+              <div class="admin-dropdown-header">
+                <span class="admin-dropdown-avatar" aria-hidden="true">{{ profile().initials }}</span>
+                <div class="admin-dropdown-identity">
+                  <strong>{{ profile().displayName }}</strong>
+                  <span>{{ profile().email }}</span>
+                  <span class="admin-role-badge">{{ profile().roleLabel }}</span>
+                </div>
+              </div>
+
+              <div class="admin-dropdown-list">
+                <button type="button" class="admin-dropdown-item" role="menuitem" (click)="openProfileModal()">
+                  <span class="admin-menu-icon admin-menu-icon--blue" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </span>
+                  <span>Mi perfil</span>
+                </button>
+
+                <button type="button" class="admin-dropdown-item" role="menuitem" (click)="goToConfiguration()">
+                  <span class="admin-menu-icon admin-menu-icon--slate" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" />
+                    </svg>
+                  </span>
+                  <span>Configuración</span>
+                </button>
+
+                <button type="button" class="admin-dropdown-item" role="menuitem" (click)="openChangePasswordModal()">
+                  <span class="admin-menu-icon admin-menu-icon--green" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </span>
+                  <span>Seguridad</span>
+                </button>
+              </div>
+
+              <div class="admin-dropdown-divider"></div>
+
+              <button type="button" class="admin-dropdown-item admin-dropdown-item--danger" role="menuitem" (click)="logout()">
+                <span class="admin-menu-icon admin-menu-icon--orange" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </span>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          }
         </div>
-
-        <!-- Botón Cambiar Contraseña (S2-06) -->
-        <button type="button" class="btn-change-password-header" (click)="openChangePasswordModal()"
-          title="Cambiar contraseña de administrador"
-          style="height: 34px; padding: 0 12px; border-radius: var(--radius-pill); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 119, 182, 0.1); color: #0077b6; border: 1px solid rgba(0, 119, 182, 0.25); cursor: pointer; font-weight: 600;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <span>Seguridad</span>
-        </button>
-
-        <!-- Botón de Cerrar Sesión -->
-        <button class="btn-solid-primary" (click)="logout()"
-          style="height: 34px; padding: 0 14px; border-radius: var(--radius-pill); font-size: 13px;">
-          Cerrar sesión
-        </button>
       </div>
     </header>
 
@@ -284,7 +336,61 @@
 
   </div>
 
-  <!-- Modal de Cambio de Contraseña de Administrador (S2-06) -->
+  <!-- Modal de Perfil de Administrador -->
+  @if (profileModalOpen()) {
+    <div
+      class="profile-modal-backdrop"
+      role="presentation"
+      tabindex="-1"
+      (click)="closeProfileModal()"
+      (keydown.escape)="closeProfileModal()">
+      <div
+        class="profile-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="adminProfileTitle"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+        <div class="profile-modal-header">
+          <div class="profile-modal-title-group">
+            <span class="profile-modal-avatar" aria-hidden="true">{{ profile().initials }}</span>
+            <div>
+              <h2 id="adminProfileTitle">{{ profile().displayName }}</h2>
+              <p>Información de la cuenta activa en la estación</p>
+            </div>
+          </div>
+          <button type="button" class="profile-modal-close" aria-label="Cerrar ventana" (click)="closeProfileModal()">✕</button>
+        </div>
+
+        <div class="profile-detail-list">
+          <div class="profile-detail-item">
+            <span class="profile-detail-label">Usuario de acceso</span>
+            <strong class="profile-detail-value">{{ profile().username }}</strong>
+          </div>
+          <div class="profile-detail-item">
+            <span class="profile-detail-label">Correo administrativo</span>
+            <strong class="profile-detail-value">{{ profile().email }}</strong>
+          </div>
+          <div class="profile-detail-item">
+            <span class="profile-detail-label">Rol operativo</span>
+            <strong class="profile-detail-value">{{ profile().roleLabel }} · Control integral de estación</strong>
+          </div>
+          <div class="profile-detail-item">
+            <span class="profile-detail-label">Sede asignada</span>
+            <strong class="profile-detail-value">EDS Bellavista · Popayán, Cauca</strong>
+          </div>
+        </div>
+
+        <div class="profile-modal-actions">
+          <button type="button" class="jr-btn jr-btn--sec" (click)="openChangePasswordModal()">Cambiar contraseña</button>
+          <button type="button" class="btn-solid-primary" (click)="closeProfileModal()">Entendido</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de Cambio de Contraseña de Administrador -->
   <app-change-password-modal
     [open]="changePasswordModalOpen()"
     (closed)="closeChangePasswordModal()">

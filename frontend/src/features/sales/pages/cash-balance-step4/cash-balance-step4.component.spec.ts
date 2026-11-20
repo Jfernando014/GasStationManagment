@@ -5,6 +5,7 @@ import { BehaviorSubject, of } from 'rxjs';
 import { CashBalanceStep4Component } from './cash-balance-step4.component';
 import { CashBalanceStep4Service } from '../../../../core/services/cash-balance-step4.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService } from '../../../../core/services/journal-step-changes.service';
 import { JournalResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import { CashBalanceStepResponseDto } from '../../../../shared/models/dtos/cash-balance-step4.dto';
 
@@ -165,5 +166,22 @@ describe('CashBalanceStep4Component', () => {
     fixture.detectChanges();
     const dominusInput = fixture.nativeElement.querySelector('#cb-dominus') as HTMLInputElement;
     expect(dominusInput.disabled).toBe(true);
+  });
+
+  it('asks and saves Dominus balance before leaving Step 4 when dirty', () => {
+    const stepChanges = TestBed.inject(JournalStepChangesService);
+    const input = fixture.nativeElement.querySelector('#cb-dominus') as HTMLInputElement;
+    input.value = '11500000';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.hasUnsavedChanges()).toBe(true);
+    let canLeave = false;
+    stepChanges.canDeactivateStep().subscribe(res => (canLeave = res));
+    expect(stepChanges.modalOpen()).toBe(true);
+
+    stepChanges.confirmSaveAndLeave();
+    expect(service.saveDominusBalance).toHaveBeenCalledWith(openJournal.date, 11_500_000);
+    expect(canLeave).toBe(true);
   });
 });

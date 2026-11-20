@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { Subject, catchError, concatMap, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
+import { Observable, Subject, catchError, concatMap, distinctUntilChanged, filter, map, of, switchMap, take } from 'rxjs';
 
 import { ElectronicPaymentsService } from '../../../../core/services/electronic-payments.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import {
   assignmentReason,
   buildStepSummary,
@@ -65,7 +66,13 @@ interface SummaryRequest {
 export class ElectronicPaymentsStep3Component {
   private readonly service = inject(ElectronicPaymentsService);
   private readonly journalService = inject(JournalService);
+  private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly voucherDraftDirty = signal(false);
+  private readonly dirtyHandler: StepDirtyHandler = {
+    hasUnsavedChanges: () => this.hasUnsavedChanges(),
+    saveBeforeExit: () => this.saveBeforeExit()
+  };
 
   /** Las ediciones de comprobantes se envían una por una y en orden, para que ninguna pise a otra. */
   private readonly saveQueue$ = new Subject<SaveJob>();
@@ -119,6 +126,7 @@ export class ElectronicPaymentsStep3Component {
   readonly loadError = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
   readonly pendingSaves = signal(0);
+  private readonly pendingSaves$ = toObservable(this.pendingSaves);
   readonly invalidCells = signal<ReadonlySet<string>>(new Set<string>());
   readonly completing = signal(false);
 
@@ -211,7 +219,11 @@ export class ElectronicPaymentsStep3Component {
   );
 
   constructor() {
-    this.destroyRef.onDestroy(() => clearTimeout(this.toastTimer));
+    this.stepChangesService?.register(this.dirtyHandler);
+    this.destroyRef.onDestroy(() => {
+      this.stepChangesService?.unregister(this.dirtyHandler);
+      clearTimeout(this.toastTimer);
+    });
 
     this.journalService.currentJournal$
       .pipe(
@@ -288,8 +300,15 @@ export class ElectronicPaymentsStep3Component {
     (event.target as HTMLInputElement).select();
   }
 
+  onVoucherDraftInput(): void {
+    if (this.canEdit()) {
+      this.voucherDraftDirty.set(true);
+    }
+  }
+
   /** Se dispara al salir del campo o con Enter: valida, actualiza la fila y encola el guardado. */
   onVoucherChange(workerId: string, field: VoucherField, event: Event): void {
+    this.voucherDraftDirty.set(false);
     if (!this.canEdit()) return;
     const input = event.target as HTMLInputElement;
     const key = `${workerId}:${field}`;
@@ -390,33 +409,73 @@ export class ElectronicPaymentsStep3Component {
   }
 
   savePoints(): void {
+    this.persistPoints().subscribe();
+  }
+
+  hasUnsavedChanges(): boolean {
+    return (
+      this.canEdit() &&
+      (this.pointsDirty || this.voucherDraftDirty() || this.pendingSaves() > 0 || this.invalidCells().size > 0)
+    );
+  }
+
+  private saveBeforeExit(): Observable<boolean> {
+    if (!this.canEdit()) return of(true);
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    if (active instanceof HTMLInputElement && active.classList.contains('jr-input')) {
+      active.blur();
+    }
+    this.voucherDraftDirty.set(false);
+
+    if (this.invalidCells().size > 0) {
+      return of(false);
+    }
+
+    const waitSaves$ =
+      this.pendingSaves() > 0
+        ? this.pendingSaves$.pipe(
+            filter(count => count === 0),
+            take(1),
+            map(() => this.invalidCells().size === 0 && !this.formError())
+          )
+        : of(true);
+
+    return waitSaves$.pipe(
+      switchMap(vouchersOk => {
+        if (!vouchersOk) return of(false);
+        return this.pointsDirty ? this.persistPoints() : of(true);
+      })
+    );
+  }
+
+  private persistPoints(): Observable<boolean> {
     const date = this.date();
-    if (!date || !this.canEdit() || this.savingPoints()) return;
+    if (!date || !this.canEdit() || this.savingPoints()) return of(true);
 
     const text = this.pointsDraft();
     const total = parseAmount(text);
     if (text.trim() === '' || total === null) {
       this.formError.set('Digita el total de Puntos Colombia como un importe válido.');
-      return;
+      return of(false);
     }
 
     this.formError.set(null);
     this.savingPoints.set(true);
-    this.service
-      .savePoints(date, total)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.savingPoints.set(false);
-          this.pointsDirty = false;
-          this.showToast('Total de Puntos Colombia guardado.');
-          this.refresh(date);
-        },
-        error: (error: unknown) => {
-          this.savingPoints.set(false);
-          this.formError.set(getErrorMessage(error));
-        }
-      });
+    return this.service.savePoints(date, total).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      map(() => {
+        this.savingPoints.set(false);
+        this.pointsDirty = false;
+        this.showToast('Total de Puntos Colombia guardado.');
+        this.refresh(date);
+        return true;
+      }),
+      catchError((error: unknown) => {
+        this.savingPoints.set(false);
+        this.formError.set(getErrorMessage(error));
+        return of(false);
+      })
+    );
   }
 
   // --------------------------------------------------------- completar paso

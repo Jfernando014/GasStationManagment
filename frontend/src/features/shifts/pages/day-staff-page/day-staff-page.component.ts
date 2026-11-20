@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { catchError, distinctUntilChanged, filter, of, switchMap, tap } from 'rxjs';
+import { Observable, catchError, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
@@ -10,6 +10,7 @@ import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-s
 import { SidePanelComponent } from '../../../../atomic-design/organisms/side-panel/side-panel.component';
 import { DayStaffService } from '../../../../core/services/day-staff.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ShiftsScheduleService } from '../../../../core/services/shifts-schedule.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
 import {
@@ -94,8 +95,14 @@ export class DayStaffPageComponent {
   private readonly dayStaffService = inject(DayStaffService);
   private readonly journalService = inject(JournalService);
   private readonly scheduleService = inject(ShiftsScheduleService);
+  private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly noveltyForm = viewChild(NoveltyFormComponent);
+  private readonly dirtyHandler: StepDirtyHandler = {
+    hasUnsavedChanges: () => this.hasUnsavedChanges(),
+    saveBeforeExit: () => this.saveBeforeExit()
+  };
 
   /** La fecha sale de la jornada que abrió el backend; nunca se recalcula aquí. */
   readonly journal = toSignal(this.journalService.currentJournal$, { initialValue: null });
@@ -257,10 +264,56 @@ export class DayStaffPageComponent {
       .pipe(takeUntilDestroyed())
       .subscribe({ next: codes => this.catalog.set(codes), error: () => this.catalog.set([]) });
 
+    this.stepChangesService?.register(this.dirtyHandler);
     this.destroyRef.onDestroy(() => {
+      this.stepChangesService?.unregister(this.dirtyHandler);
       clearTimeout(this.toastTimer);
       clearTimeout(this.flashTimer);
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    if (!this.editable() || !this.panelOpen()) return false;
+    return Boolean(this.noveltyForm()?.form.dirty);
+  }
+
+  private saveBeforeExit(): Observable<boolean> {
+    const formComp = this.noveltyForm();
+    const date = this.date();
+    if (!this.panelOpen() || !formComp || !date) return of(true);
+    if (formComp.form.invalid) {
+      formComp.submit();
+      this.submitMessage.set('Completa los campos de la novedad o cierra el panel antes de salir.');
+      return of(false);
+    }
+    const raw = formComp.form.getRawValue();
+    const type = raw.type ?? 'REPLACEMENT';
+    const request: RegisterNoveltyRequest = {
+      type,
+      workerId: raw.workerId ?? '',
+      counterpartWorkerId: type === 'REPLACEMENT' || type === 'SWAP' ? raw.counterpartWorkerId : null,
+      shiftCode: type === 'SHIFT_CHANGE' || type === 'REPLACEMENT' ? raw.shiftCode : null,
+      exceptionalCoverage: raw.exceptionalCoverage,
+      reason: raw.reason.trim()
+    };
+    this.saving.set(true);
+    this.submitError.set(null);
+    this.submitMessage.set(null);
+    return this.dayStaffService.registerNovelty(date, request).pipe(
+      map(step => {
+        this.saving.set(false);
+        this.step.set(step);
+        this.closePanel();
+        this.showToast(`${NOVELTY_LABELS[request.type]} registrado`);
+        return true;
+      }),
+      catchError((error: unknown) => {
+        this.saving.set(false);
+        this.submitError.set(error);
+        this.submitMessage.set(getErrorMessage(error));
+        return of(false);
+      })
+    );
   }
 
   retry(): void {

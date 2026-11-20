@@ -16,4 +16,6 @@ public interface TankRepository {
     boolean existsByCode(String code);
 
     List<Tank> findByGaugeTableId(Long gaugeTableId);
+
+    void deleteById(Long id);
 }

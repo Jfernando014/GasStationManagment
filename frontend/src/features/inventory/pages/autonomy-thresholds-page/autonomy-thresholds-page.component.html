@@ -25,8 +25,8 @@
   <section class="configuration-card">
     <div class="card-heading">
       <div>
-        <h2>Nueva vigencia</h2>
-        <p>Los umbrales no se modifican: cada cambio se registra con una fecha de vigencia nueva.</p>
+        <h2>{{ editingId() !== null ? 'Editar vigencia' : 'Nueva vigencia' }}</h2>
+        <p>{{ editingId() !== null ? 'Actualiza la fecha de vigencia o los días de advertencia y crítico.' : 'Registra los umbrales de advertencia y crítico por fecha de vigencia.' }}</p>
       </div>
     </div>
     <div class="form-grid thresholds-form">
@@ -61,8 +61,13 @@
       </label>
     </div>
     <div class="card-actions thresholds-actions">
+      @if (editingId() !== null) {
+        <button class="jr-btn jr-btn--ghost" type="button" [disabled]="saving()" (click)="cancelEdit()">
+          Cancelar
+        </button>
+      }
       <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
-        {{ saving() ? 'Guardando…' : 'Guardar umbrales' }}
+        {{ saving() ? 'Guardando…' : (editingId() !== null ? 'Actualizar umbrales' : 'Guardar umbrales') }}
       </button>
     </div>
   </section>
@@ -89,7 +94,7 @@
       <div class="table-scroll">
         <table class="configuration-table">
           <thead>
-            <tr><th>Vigente desde</th><th>Advertencia</th><th>Crítico</th><th>Registrado</th></tr>
+            <tr><th>Vigente desde</th><th>Advertencia</th><th>Crítico</th><th>Registrado</th><th>Acciones</th></tr>
           </thead>
           <tbody>
             @for (threshold of thresholds(); track threshold.id) {
@@ -98,6 +103,10 @@
                 <td class="tnum">{{ threshold.warningDays }} días</td>
                 <td class="tnum">{{ threshold.criticalDays }} días</td>
                 <td>{{ formatDate(threshold.createdAt.slice(0, 10)) }}</td>
+                <td>
+                  <button class="table-action" type="button" (click)="startEdit(threshold)">Editar</button>
+                  <button class="table-action danger" type="button" (click)="requestDelete(threshold)">Eliminar</button>
+                </td>
               </tr>
             }
           </tbody>
@@ -106,3 +115,12 @@
     }
   </section>
 </div>
+
+<app-confirm-modal
+  [open]="deleteTarget() !== null"
+  title="Eliminar vigencia de umbrales"
+  subtitle="Esta vigencia dejará de aplicarse a los cálculos"
+  [message]="deleteConfirmMessage()"
+  [busy]="deleting()"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()" />

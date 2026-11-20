@@ -35,7 +35,8 @@ function usesMobileLayout(url: string): boolean {
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
   host: {
-    '(document:keydown.escape)': 'closeMenu()',
+    '(document:keydown.escape)': 'onEscapeKey()',
+    '(document:click)': 'onDocumentClick($event)',
     '[class.statistics-mobile-layout]': 'statisticsActive()',
     '[class.performance-layout]': 'performanceActive()',
     '[class.sidebar-collapsed]': 'sidebarCollapsed()'
@@ -50,6 +51,19 @@ export class DashboardLayoutComponent {
   readonly personalOpen = signal(true);
   readonly mobileMenuOpen = signal(false);
   readonly changePasswordModalOpen = signal(false);
+  readonly profileMenuOpen = signal(false);
+  readonly profileModalOpen = signal(false);
+  readonly profile = computed(() =>
+    typeof (this.authService as { getUserProfile?: () => ReturnType<AuthService['getUserProfile']> }).getUserProfile === 'function'
+      ? this.authService.getUserProfile()
+      : {
+          username: 'admin',
+          displayName: 'Administrador',
+          email: 'admin@edsbellavista.com',
+          roleLabel: 'Administrador',
+          initials: 'AD'
+        }
+  );
   /** Alerts the administrator has not attended yet; it feeds the bell and the sidebar badge. */
   readonly pendingAlerts = signal(0);
   readonly statisticsActive = signal(usesMobileLayout(this.router.url));
@@ -62,6 +76,7 @@ export class DashboardLayoutComponent {
   readonly navTip = signal<{ text: string; left: number; top: number } | null>(null);
   private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
   private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+  private readonly profileMenuContainer = viewChild<ElementRef<HTMLElement>>('profileMenuContainer');
 
   constructor() {
     const media = typeof window === 'undefined' ? null : window.matchMedia?.(NARROW_QUERY) ?? null;
@@ -157,7 +172,45 @@ export class DashboardLayoutComponent {
     return true;
   }
 
+  toggleProfileMenu(): void {
+    this.profileMenuOpen.update(open => !open);
+  }
+
+  closeProfileMenu(): void {
+    this.profileMenuOpen.set(false);
+  }
+
+  openProfileModal(): void {
+    this.closeProfileMenu();
+    this.profileModalOpen.set(true);
+  }
+
+  closeProfileModal(): void {
+    this.profileModalOpen.set(false);
+  }
+
+  goToConfiguration(): void {
+    this.closeProfileMenu();
+    void this.router.navigate(['/configuracion/parametros']);
+  }
+
+  onEscapeKey(): void {
+    if (this.profileMenuOpen()) this.closeProfileMenu();
+    if (this.profileModalOpen()) this.closeProfileModal();
+    this.closeMenu();
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.profileMenuOpen()) return;
+    const container = this.profileMenuContainer()?.nativeElement;
+    if (container && !container.contains(event.target as Node)) {
+      this.closeProfileMenu();
+    }
+  }
+
   openChangePasswordModal(): void {
+    this.closeProfileMenu();
+    this.closeProfileModal();
     this.changePasswordModalOpen.set(true);
     if (this.mobileMenuOpen()) {
       this.closeMenu(false);
@@ -169,7 +222,8 @@ export class DashboardLayoutComponent {
   }
 
   logout(): void {
+    this.closeProfileMenu();
     this.authService.logout();
-    this.router.navigate(['/login']);
+    void this.router.navigate(['/login']);
   }
 }

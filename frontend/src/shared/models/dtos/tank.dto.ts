@@ -8,7 +8,7 @@ export interface TankResponse {
   maxCapacityGallons: number;
   maxHeightCm: number;
   toleranceCm: number;
-  gaugeTableId?: number;
+  gaugeTableId?: number | null;
 }
 
 export interface TankRequest {
@@ -18,5 +18,5 @@ export interface TankRequest {
   maxCapacityGallons: number;
   maxHeightCm: number;
   toleranceCm: number;
-  gaugeTableId?: number;
+  gaugeTableId?: number | null;
 }

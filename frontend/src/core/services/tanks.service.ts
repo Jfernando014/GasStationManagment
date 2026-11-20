@@ -21,4 +21,8 @@ export class TanksService {
   update(id: number, request: TankRequest): Observable<TankResponse> {
     return this.http.put<TankResponse>(`${this.apiUrl}/${id}`, request);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

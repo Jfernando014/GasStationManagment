@@ -29,12 +29,16 @@ describe('AutonomyThresholdsPageComponent', () => {
   let thresholdsService: {
     list: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
     thresholdsService = {
       list: vi.fn(() => of(THRESHOLDS)),
-      create: vi.fn()
+      create: vi.fn(),
+      update: vi.fn((_id: number, request: unknown) => of({ ...THRESHOLDS[0], ...request as object })),
+      delete: vi.fn(() => of(void 0))
     };
 
     await TestBed.configureTestingModule({
@@ -107,6 +111,51 @@ describe('AutonomyThresholdsPageComponent', () => {
     expect(thresholdsService.list).toHaveBeenCalledTimes(2);
     expect(component.toastText()).toContain('Umbrales registrados');
     expect(component.form()).toEqual({ validFrom: '', warningDays: null, criticalDays: null });
+  });
+
+  it('edits an existing validity threshold and resets back to create mode', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    component.startEdit(THRESHOLDS[0]);
+    expect(component.editingId()).toBe(2);
+    component.updateForm('warningDays', 7);
+    component.save();
+
+    expect(thresholdsService.update).toHaveBeenCalledWith(2, {
+      validFrom: '2026-08-01',
+      warningDays: 7,
+      criticalDays: 2
+    });
+    expect(component.editingId()).toBeNull();
+    expect(component.toastText()).toContain('Umbrales actualizados');
+  });
+
+  it('cancels editing without calling update', () => {
+    const component = create().componentInstance;
+
+    component.startEdit(THRESHOLDS[0]);
+    component.cancelEdit();
+
+    expect(component.editingId()).toBeNull();
+    expect(component.form()).toEqual({ validFrom: '', warningDays: null, criticalDays: null });
+    expect(thresholdsService.update).not.toHaveBeenCalled();
+  });
+
+  it('deletes a validity record after confirming in the modal', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    component.startEdit(THRESHOLDS[0]);
+    component.requestDelete(THRESHOLDS[0]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Eliminar vigencia de umbrales');
+
+    component.confirmDelete();
+
+    expect(thresholdsService.delete).toHaveBeenCalledWith(2);
+    expect(component.editingId()).toBeNull();
+    expect(component.toastText()).toContain('eliminada');
   });
 
   it('shows that a validity date already exists', () => {

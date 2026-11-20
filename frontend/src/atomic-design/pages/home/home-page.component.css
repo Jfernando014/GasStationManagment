@@ -1,6 +1,184 @@
-/* Panel de inventario (HU-7 / HU-29): reuses the inventory cards, KPIs and tables. */
+/* Panel de inventario: existencias por combustible, tanques interactivos y control diario. */
 .home-page {
   gap: 16px;
+}
+
+.optimal-banner-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.optimal-banner-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--semantic-green);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.optimal-banner-close:hover {
+  background: #ffffff;
+}
+
+.home-tanks-headline p {
+  margin: 2px 0 0;
+}
+
+.home-tanks-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-tanks-config-btn {
+  text-decoration: none;
+}
+
+.tank-card-critical {
+  border-color: var(--semantic-red) !important;
+}
+
+.tank-card-warning {
+  border-color: var(--semantic-amber) !important;
+}
+
+.tank-cylinder-trigger {
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.tank-cylinder-trigger:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+.fill-maxpro-flat {
+  background-color: var(--fuel-maxpro);
+}
+
+.tank-ullage-amt {
+  color: var(--brand-primary);
+}
+
+.tank-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-tank-action {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.home-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 27, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9998;
+}
+
+.home-modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.home-modal-header p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.home-modal-close {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.15rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.home-modal-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.home-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.measure-preview-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-main);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.measure-preview-pill strong {
+  color: var(--text-heading);
+}
+
+.home-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .home-page .inv-table td.right,
@@ -127,7 +305,17 @@
   margin-top: 2px;
 }
 
+@media (max-width: 1080px) {
+  .tanks-battery-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .tanks-battery-grid {
+    grid-template-columns: 1fr;
+  }
+
   .home-tank-figures {
     grid-template-columns: 1fr;
   }

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginPageComponent } from '../atomic-design/pages/login/login.component';
 import { DashboardLayoutComponent } from '../atomic-design/templates/dashboard-layout/dashboard-layout.component';
 import { authGuard } from '../core/guards/auth.guard';
+import { unsavedStepChangesGuard } from '../core/guards/unsaved-step-changes.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -16,30 +17,36 @@ export const routes: Routes = [
         children: [
           {
             path: 'personal',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/shifts/pages/day-staff-page/day-staff-page.component').then(m => m.DayStaffPageComponent)
           },
           {
             path: 'vendedores',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/sales/pages/vendor-close-step2/vendor-close-step2.component')
               .then(m => m.VendorCloseStep2Component)
           },
           {
             path: 'electronicos',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/sales/pages/electronic-payments-step3/electronic-payments-step3.component')
               .then(m => m.ElectronicPaymentsStep3Component)
           },
           {
             path: 'caja',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/sales/pages/cash-balance-step4/cash-balance-step4.component')
               .then(m => m.CashBalanceStep4Component)
           },
           {
             path: 'inventario',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/inventory/pages/journal-step5/journal-step5.component')
               .then(m => m.JournalStep5Component)
           },
           {
             path: 'cierre',
+            canDeactivate: [unsavedStepChangesGuard],
             loadComponent: () => import('../features/sales/pages/journal-closing-step6/journal-closing-step6.component')
               .then(m => m.JournalClosingStep6Component)
           },
@@ -51,7 +58,8 @@ export const routes: Routes = [
           {
             path: '',
             pathMatch: 'full',
-            redirectTo: 'vendedores'
+            loadComponent: () => import('../atomic-design/pages/journal/journal-entry-redirect.component')
+              .then(m => m.JournalEntryRedirectComponent)
           }
         ]
       },

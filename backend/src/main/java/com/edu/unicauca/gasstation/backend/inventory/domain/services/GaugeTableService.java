@@ -64,6 +64,16 @@ public class GaugeTableService {
         return replace(current, current.getName(), changes);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        findById(id);
+        tankRepository.findByGaugeTableId(id).forEach(tank -> {
+            tank.setGaugeTableId(null);
+            tankRepository.save(tank);
+        });
+        gaugeTableRepository.deleteById(id);
+    }
+
     @Transactional(readOnly = true)
     public GaugeTable findById(Long id) {
         return gaugeTableRepository.findById(id).orElseThrow(() -> new GaugeTableNotFoundException(id));

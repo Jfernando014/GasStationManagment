@@ -13,5 +13,7 @@ public interface JpaAutonomyThresholdRepository extends JpaRepository<AutonomyTh
 
     boolean existsByValidFrom(LocalDate validFrom);
 
+    boolean existsByValidFromAndIdNot(LocalDate validFrom, Long id);
+
     List<AutonomyThresholdEntity> findAllByOrderByValidFromDesc();
 }

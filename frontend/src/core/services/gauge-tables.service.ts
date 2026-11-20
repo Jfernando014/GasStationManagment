@@ -21,4 +21,8 @@ export class GaugeTablesService {
   update(id: number, request: GaugeTableRequest): Observable<GaugeTableResponse> {
     return this.http.put<GaugeTableResponse>(`${this.apiUrl}/${id}`, request);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
