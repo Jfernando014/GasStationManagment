@@ -1,0 +1,52 @@
+<section class="card" aria-labelledby="day-sales-title" [attr.aria-busy]="loading()">
+  <div class="head">
+    <h2 id="day-sales-title">Ventas de {{ dayLabel() }}</h2>
+    @if (total()) { <span class="total">Total del día <b>{{ total() }}</b></span> }
+  </div>
+
+  @if (loading()) {
+    <div class="skeletons">
+      @for (n of skeletonRows; track n) {
+        <div class="row">
+          <app-skeleton width="150px" height="16px" />
+          <app-skeleton width="40px" height="22px" />
+          <app-skeleton height="14px" />
+          <app-skeleton class="end" width="70px" />
+        </div>
+      }
+    </div>
+  } @else {
+    @for (key of [version()]; track key) {
+      <ul class="rows">
+        @for (row of rows(); track row.workerId) {
+          <li class="item" [style.--i]="$index">
+            <div class="row" [class.is-resting]="row.resting">
+              <span class="who">
+                <app-avatar [name]="row.name" />
+                <span class="who-text">
+                  <span class="name">{{ row.name }}</span>
+                  @if (row.resting) { <span class="role">Descansó</span> }
+                  @else if (row.roleLabel) { <span class="role">{{ row.roleLabel }}</span> }
+                </span>
+              </span>
+              <span class="shift">
+                @if (row.shiftCode) { <app-shift-chip [code]="row.shiftCode" [title]="shiftName(row)" /> }
+              </span>
+              <span class="track" role="img"
+                [attr.aria-label]="row.resting ? row.name + ' descansó' : row.name + ': ' + row.salesText">
+                @if (!row.resting) { <span class="bar" [style.width.%]="row.width"></span> }
+              </span>
+              <span class="amount">{{ row.salesText }}</span>
+            </div>
+            @if (row.empty) {
+              <app-warning-panel>
+                <b>{{ row.name }} no tiene ventas registradas en su turno {{ row.shiftCode }}.</b> Puede ser un cierre sin datos.
+                <a class="link" routerLink="/jornada/cerrada" [queryParams]="{ date: date() }">Revisar el cierre del día</a>
+              </app-warning-panel>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

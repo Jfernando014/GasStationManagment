@@ -1,0 +1,31 @@
+:host { display: block; min-width: 0; }
+
+.filters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; }
+
+.period { display: flex; align-items: center; min-width: 0; }
+.date .flat-input { min-width: 160px; }
+.month { min-width: 200px; }
+.measure { min-width: 220px; }
+
+.range {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border-main);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-body);
+  white-space: nowrap;
+}
+
+.search { margin-left: auto; min-width: 220px; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .period, .month, .measure, .search { flex: 1 1 100%; margin-left: 0; min-width: 0; }
+  .date .flat-input { width: 100%; }
+}

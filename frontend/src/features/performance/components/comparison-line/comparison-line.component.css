@@ -1,0 +1,42 @@
+:host { position: relative; display: block; height: 14px; min-width: 0; --line-ink: var(--semantic-amber); --line-soft: color-mix(in srgb, var(--semantic-amber) 35%, #FFFFFF); }
+:host(.is-up) { --line-ink: var(--semantic-green); --line-soft: color-mix(in srgb, var(--semantic-green) 35%, #FFFFFF); }
+:host(.is-muted) { --line-ink: var(--text-light); --line-soft: var(--surface-hover); }
+
+.rail { position: absolute; left: 0; right: 0; top: 6px; height: 2px; border-radius: 2px; background: var(--surface-hover); }
+
+.stretch {
+  position: absolute;
+  top: 5px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--line-soft);
+  transition: left var(--duration-normal) var(--spring), width var(--duration-normal) var(--spring);
+}
+
+.station {
+  position: absolute;
+  top: 1px;
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  transition: left var(--duration-normal) var(--spring);
+}
+
+.seller {
+  position: absolute;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border: 2px solid var(--surface-card);
+  border-radius: 999px;
+  background: var(--line-ink);
+  box-shadow: 0 0 0 1px rgba(11, 25, 44, 0.12);
+  transition: left var(--duration-normal) var(--spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stretch, .station, .seller { transition: none; }
+}

@@ -1,0 +1,139 @@
+<section class="card" aria-labelledby="why-title" [attr.aria-busy]="loading()">
+  <div class="head">
+    <h2 id="why-title">¿Y por qué?</h2>
+    <p class="sub">Toca un vendedor para ver el detalle por día de la semana.</p>
+  </div>
+
+  <div class="cols">
+    <span>Vendedor</span>
+    <span class="num">Turnos comparados</span>
+    <span class="num">Su promedio</span>
+    <span class="num">Promedio de la estación</span>
+    <span class="hide-sm">Comparación</span>
+    <span class="num idx">Índice <app-info-tooltip [text]="formula" label="Cómo se calcula el índice" /></span>
+    <span></span>
+  </div>
+
+  @if (loading()) {
+    <div class="skeletons">
+      @for (n of skeletonRows; track n) {
+        <div class="skeleton-row">
+          <app-skeleton width="180px" height="16px" />
+          <app-skeleton width="60%" height="14px" />
+        </div>
+      }
+    </div>
+  } @else {
+    @for (key of [version()]; track key) {
+      <ul class="rows">
+        @for (view of sellers(); track view.workerId) {
+          <li class="item" [class.is-open]="isOpen(view.workerId)" [style.--i]="$index">
+            <button type="button" class="row" [class.is-empty]="!view.hasData" [attr.aria-expanded]="isOpen(view.workerId)"
+              [attr.aria-controls]="'detail-' + view.workerId" [attr.aria-label]="sentence(view)" (click)="toggle(view.workerId)">
+              <span class="who">
+                <app-avatar [name]="view.name" />
+                <span class="who-text">
+                  <span class="name">{{ view.name }}</span>
+                  @if (view.roleLabel) { <span class="role">{{ view.roleLabel }}</span> }
+                </span>
+              </span>
+              @if (view.hasData) {
+                <span class="num" data-label="Turnos comparados">{{ view.turns }}</span>
+                <span class="num" data-label="Su promedio">{{ view.sellerAverage }} {{ unit() }}</span>
+                <span class="num" data-label="Promedio de la estación">{{ view.stationAverage }} {{ unit() }}</span>
+                <app-comparison-line class="hide-sm" [seller]="view.sellerValue" [station]="view.stationValue" [maximum]="maximum()"
+                  [description]="'Su promedio ' + view.sellerAverage + ' frente a ' + view.stationAverage + ' de la estación'" />
+                <span class="num idx"><span class="pill" [class.is-up]="tone(view.indexValue) === 'up'" [class.is-down]="tone(view.indexValue) === 'down'">{{ sign(view.indexValue) }} {{ view.indexText }}</span></span>
+              } @else {
+                <span class="nodata">Sin datos suficientes</span>
+              }
+              <svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+
+            <div class="detail" [id]="'detail-' + view.workerId" [class.is-open]="isOpen(view.workerId)"
+              [attr.inert]="isOpen(view.workerId) ? null : ''">
+              <div class="detail-inner">
+                <div class="detail-body">
+                  @if (view.titular.length) {
+                    <div class="dcols" aria-hidden="true">
+                      <span>Como titular</span><span class="num">Turnos</span><span class="num">Vendedor</span><span class="num">Estación</span><span class="hide-sm"></span><span class="num">Índice</span>
+                    </div>
+                    <ul class="lines">
+                      @for (line of view.titular; track line.key) {
+                        <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
+                          <span class="lname">{{ line.label }}</span>
+                          <span class="num">{{ line.observations }}</span>
+                          <span class="num">{{ line.sellerAverage }}</span>
+                          <span class="num">{{ line.stationAverage }}</span>
+                          <app-comparison-line class="hide-sm" [seller]="line.sellerValue" [station]="line.stationValue" [maximum]="maximum()"
+                            [muted]="line.few || line.percentText === null" [description]="lineSentence(line)" />
+                          <span class="num">
+                            @if (line.percentText !== null) {
+                              <span class="pill small" [class.is-up]="tone(line.percentValue) === 'up'" [class.is-down]="tone(line.percentValue) === 'down'" [class.is-few]="line.few">{{ sign(line.percentValue) }} {{ line.percentText }}</span>
+                            } @else {
+                              —
+                            }
+                          </span>
+                          @if (line.percentText === null) {
+                            <span class="few">{{ line.reason }}</span>
+                          } @else if (line.few) {
+                            <span class="few">Pocos turnos: no es una cifra firme.</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  } @else if (!view.support.length) {
+                    <p class="muted">Todavía no hay turnos de este vendedor para comparar.</p>
+                  }
+
+                  @if (view.support.length) {
+                    <div class="support">
+                      <span class="support-text"><b>Como apoyo:</b> {{ view.supportSummary }}</span>
+                      <button type="button" class="link" [attr.aria-expanded]="supportOpen(view.workerId)"
+                        [attr.aria-controls]="'support-' + view.workerId" (click)="toggleSupport(view.workerId)">
+                        {{ supportOpen(view.workerId) ? 'Ocultar turnos de apoyo' : 'Ver turnos de apoyo' }}
+                      </button>
+                    </div>
+                    @if (supportOpen(view.workerId)) {
+                      <ul class="lines" [id]="'support-' + view.workerId">
+                        @for (line of view.support; track line.key) {
+                          <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
+                            <span class="lname">{{ line.label }}</span>
+                            <span class="num">{{ line.observations }}</span>
+                            <span class="num">{{ line.sellerAverage }}</span>
+                            <span class="num">{{ line.stationAverage }}</span>
+                            <app-comparison-line class="hide-sm" [seller]="line.sellerValue" [station]="line.stationValue" [maximum]="maximum()"
+                              [muted]="line.few || line.percentText === null" [description]="lineSentence(line)" />
+                            <span class="num">
+                              @if (line.percentText !== null) {
+                                <span class="pill small" [class.is-up]="tone(line.percentValue) === 'up'" [class.is-down]="tone(line.percentValue) === 'down'" [class.is-few]="line.few">{{ sign(line.percentValue) }} {{ line.percentText }}</span>
+                              } @else {
+                                —
+                              }
+                            </span>
+                            @if (line.percentText === null) {
+                              <span class="few">{{ line.reason }}</span>
+                            } @else if (line.few) {
+                              <span class="few">Pocos turnos: no es una cifra firme.</span>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="legend">
+      <span><i class="mark station" aria-hidden="true"></i>Promedio de la estación</span>
+      <span><i class="mark seller" aria-hidden="true"></i>Promedio del vendedor</span>
+      @if (range()) { <span class="range">Datos de jornadas cerradas · {{ range() }}</span> }
+    </div>
+  }
+</section>
