@@ -32,6 +32,12 @@ public class DistributionProfileRepositoryAdapter implements DistributionProfile
     }
 
     @Override
+    public Optional<StoredProfile> findLatest() {
+        return jdbc.query("SELECT id FROM sales_distribution_profiles ORDER BY created_at DESC, id DESC LIMIT 1",
+                (rs, row) -> rs.getLong("id")).stream().findFirst().flatMap(this::findById);
+    }
+
+    @Override
     public Optional<StoredProfile> findById(long id) {
         var rows = jdbc.query("SELECT * FROM sales_distribution_profiles WHERE id = ?", (rs, row) -> {
             List<BigDecimal> hours = jdbc.query("SELECT weight FROM sales_distribution_hour_weights WHERE profile_id = ? ORDER BY hour",

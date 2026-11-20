@@ -7,5 +7,7 @@ import java.util.Optional;
 public interface DistributionProfileRepository {
     StoredProfile register(DistributionProfile profile);
     Optional<StoredProfile> findById(long id);
+    /** The most recently registered profile, if any. */
+    Optional<StoredProfile> findLatest();
     record StoredProfile(long id, DistributionProfile profile, Instant createdAt) { }
 }
