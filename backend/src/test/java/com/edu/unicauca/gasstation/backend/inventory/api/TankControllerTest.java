@@ -18,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,8 +29,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -174,6 +178,32 @@ class TankControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Nombre nuevo"));
+    }
+
+    @Test
+    void deleteTankReturnsNoContentWhenDeleted() throws Exception {
+        mockMvc.perform(delete(BASE_URL + "/1"))
+                .andExpect(status().isNoContent());
+
+        verify(tankService).deleteTank(1L);
+    }
+
+    @Test
+    void deleteTankReturnsNotFoundWhenTankDoesNotExist() throws Exception {
+        doThrow(new TankNotFoundException(99L)).when(tankService).deleteTank(99L);
+
+        mockMvc.perform(delete(BASE_URL + "/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Tank with code 99 not found"));
+    }
+
+    @Test
+    void deleteTankReturnsConflictWhenReferenced() throws Exception {
+        doThrow(new DataIntegrityViolationException("fk")).when(tankService).deleteTank(1L);
+
+        mockMvc.perform(delete(BASE_URL + "/1"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
     }
 
     private ResultActions postTank(TankRequest request) throws Exception {

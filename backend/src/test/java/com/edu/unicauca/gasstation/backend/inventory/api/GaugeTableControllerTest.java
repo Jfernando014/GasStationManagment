@@ -34,9 +34,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -393,6 +395,25 @@ class GaugeTableControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value(new TankWithoutGaugeTableException(1L).getMessage()));
+    }
+
+    // ---------- DELETE /gauge-tables/{id} ----------
+
+    @Test
+    void deleteReturnsNoContentWhenTableExists() throws Exception {
+        mockMvc.perform(delete(TABLES_URL + "/1"))
+                .andExpect(status().isNoContent());
+
+        verify(gaugeTableService).delete(1L);
+    }
+
+    @Test
+    void deleteReturnsNotFoundWhenTableDoesNotExist() throws Exception {
+        doThrow(new GaugeTableNotFoundException(99L)).when(gaugeTableService).delete(99L);
+
+        mockMvc.perform(delete(TABLES_URL + "/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not found"));
     }
 
     // ---------- helpers ----------

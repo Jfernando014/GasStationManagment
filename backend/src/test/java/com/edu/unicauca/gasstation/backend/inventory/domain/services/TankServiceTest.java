@@ -128,4 +128,23 @@ class TankServiceTest {
 
         verify(tankRepository, never()).save(any());
     }
+
+    @Test
+    void deleteDeletesTankWhenItExists() {
+        Tank existing = TankTestData.tank(1L, "T1C1", "Tanque 1");
+        when(tankRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        tankService.deleteTank(1L);
+
+        verify(tankRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteThrowsWhenTankDoesNotExist() {
+        when(tankRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tankService.deleteTank(99L))
+                .isInstanceOf(TankNotFoundException.class);
+        verify(tankRepository, never()).deleteById(any());
+    }
 }

@@ -208,6 +208,29 @@ class GaugeTableServiceTest {
     }
 
     @Test
+    void deleteUnassignsLinkedTanksAndDeletesTable() {
+        Tank linked = TankTestData.tank(1L, "T1C1", "Tanque 1 Comp. 1");
+        linked.setGaugeTableId(10L);
+        when(gaugeTableRepository.findById(10L)).thenReturn(Optional.of(curve(10L, "Curva")));
+        when(tankRepository.findByGaugeTableId(10L)).thenReturn(List.of(linked));
+
+        gaugeTableService.delete(10L);
+
+        assertThat(linked.getGaugeTableId()).isNull();
+        verify(tankRepository).save(linked);
+        verify(gaugeTableRepository).deleteById(10L);
+    }
+
+    @Test
+    void deleteThrowsWhenTheTableDoesNotExist() {
+        when(gaugeTableRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> gaugeTableService.delete(99L))
+                .isInstanceOf(GaugeTableNotFoundException.class);
+        verify(gaugeTableRepository, never()).deleteById(any());
+    }
+
+    @Test
     void toCsvWritesTheTable() {
         assertThat(gaugeTableService.toCsv(curve(1L, "Curva"))).startsWith("Altura_cm,Volumen_Galones\n1,1\n");
     }

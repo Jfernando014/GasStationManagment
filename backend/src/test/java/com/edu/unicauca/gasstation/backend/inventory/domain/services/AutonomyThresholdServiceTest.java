@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.inventory.domain.services;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.AutonomyThreshold;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.AutonomyThresholdRepository;
 import com.edu.unicauca.gasstation.backend.inventory.exception.AutonomyThresholdAlreadyExistsException;
+import com.edu.unicauca.gasstation.backend.inventory.exception.AutonomyThresholdNotFoundException;
 import com.edu.unicauca.gasstation.backend.inventory.exception.InvalidAutonomyThresholdException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,6 +123,65 @@ class AutonomyThresholdServiceTest {
         when(repository.findAll()).thenReturn(thresholds);
 
         assertThat(service.findAll()).isEqualTo(thresholds);
+    }
+
+    @Test
+    void updateModifiesFieldsWhenValidAndUnique() {
+        AutonomyThreshold existing = threshold(FROM, "5", "2");
+        existing.setId(3L);
+        LocalDate nextDate = LocalDate.of(2026, 9, 1);
+        AutonomyThreshold changes = threshold(nextDate, "7", "3");
+        when(repository.findById(3L)).thenReturn(Optional.of(existing));
+        when(repository.existsByValidFromAndIdNot(nextDate, 3L)).thenReturn(false);
+        when(repository.save(existing)).thenReturn(existing);
+
+        AutonomyThreshold updated = service.update(3L, changes);
+
+        assertThat(updated.getValidFrom()).isEqualTo(nextDate);
+        assertThat(updated.getWarningDays()).isEqualByComparingTo("7");
+        assertThat(updated.getCriticalDays()).isEqualByComparingTo("3");
+    }
+
+    @Test
+    void updateThrowsWhenThresholdDoesNotExist() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.update(99L, threshold(FROM, "5", "2")))
+                .isInstanceOf(AutonomyThresholdNotFoundException.class);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updateRejectsDuplicateValidityDate() {
+        AutonomyThreshold existing = threshold(FROM, "5", "2");
+        existing.setId(3L);
+        LocalDate duplicateDate = LocalDate.of(2026, 9, 1);
+        when(repository.findById(3L)).thenReturn(Optional.of(existing));
+        when(repository.existsByValidFromAndIdNot(duplicateDate, 3L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.update(3L, threshold(duplicateDate, "7", "3")))
+                .isInstanceOf(AutonomyThresholdAlreadyExistsException.class);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deleteDeletesExistingThreshold() {
+        AutonomyThreshold existing = threshold(FROM, "5", "2");
+        existing.setId(3L);
+        when(repository.findById(3L)).thenReturn(Optional.of(existing));
+
+        service.delete(3L);
+
+        verify(repository).deleteById(3L);
+    }
+
+    @Test
+    void deleteThrowsWhenThresholdDoesNotExist() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(99L))
+                .isInstanceOf(AutonomyThresholdNotFoundException.class);
+        verify(repository, never()).deleteById(any());
     }
 
     private AutonomyThreshold threshold(LocalDate validFrom, String warning, String critical) {
