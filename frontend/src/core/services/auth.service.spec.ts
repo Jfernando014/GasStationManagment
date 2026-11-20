@@ -92,4 +92,16 @@ describe('AuthService token expiry', () => {
     expect(localStorage.getItem('token')).toBeNull();
     expect(service.hasToken()).toBe(false);
   });
+
+  it('derives the admin profile summary from a valid JWT token', () => {
+    localStorage.setItem('token', tokenWithExp(Math.floor(Date.now() / 1000) + 3600));
+
+    expect(service.getUserProfile()).toEqual({
+      username: 'admin',
+      displayName: 'Administrador',
+      email: 'admin@edsbellavista.com',
+      roleLabel: 'Administrador',
+      initials: 'AD'
+    });
+  });
 });
