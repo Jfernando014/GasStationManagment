@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { FuelAutonomyService } from '../../../../core/services/fuel-autonomy.service';
 import { FuelVariationsService } from '../../../../core/services/fuel-variations.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService } from '../../../../core/services/journal-step-changes.service';
 import { ProductStockService } from '../../../../core/services/product-stock.service';
 import { TankMeasurementsService } from '../../../../core/services/tank-measurements.service';
 import { TanksService } from '../../../../core/services/tanks.service';
@@ -311,5 +312,31 @@ describe('JournalStep5Component', () => {
     expect(component.unmatchedCodes()).toEqual(['99999']);
     expect(fixture.nativeElement.textContent).toContain('99999');
     expect(fixture.nativeElement.textContent).toContain('No se bloquearon las ventas');
+  });
+
+  it('tracks dirty tank heights and saves them via JournalStepChangesService when confirmed', () => {
+    measurementsService.save.mockReturnValue(of({
+      journalDate: JOURNAL_DATE,
+      measuredAt: '2026-08-05T18:00:00',
+      readings: TANKS.map(tank => ({ tankId: tank.id, heightCm: 100, volumeGallons: 2000 }))
+    }));
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const stepChanges = TestBed.inject(JournalStepChangesService);
+
+    expect(component.hasUnsavedChanges()).toBe(false);
+    for (const tank of TANKS) {
+      component.onHeightChanged({ tankId: tank.id, height: 100 });
+    }
+    expect(component.hasUnsavedChanges()).toBe(true);
+
+    let canLeave = false;
+    stepChanges.canDeactivateStep().subscribe(res => (canLeave = res));
+    expect(stepChanges.modalOpen()).toBe(true);
+
+    stepChanges.confirmSaveAndLeave();
+    expect(measurementsService.save).toHaveBeenCalled();
+    expect(canLeave).toBe(true);
+    expect(component.hasUnsavedChanges()).toBe(false);
   });
 });

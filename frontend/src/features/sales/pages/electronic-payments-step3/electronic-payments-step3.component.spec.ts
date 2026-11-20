@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService } from '../../../../core/services/journal-step-changes.service';
 import { ElectronicPaymentsStatus } from '../../../../shared/models/dtos/electronic-payments.dto';
 import { JournalResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import { ElectronicPaymentsStep3Component } from './electronic-payments-step3.component';
@@ -365,6 +366,28 @@ describe('ElectronicPaymentsStep3Component', () => {
 
       http.expectNone(POINTS_URL);
       expect(root.textContent).toContain('Digita el total de Puntos Colombia');
+    });
+
+    it('detects dirty points input and saves via JournalStepChangesService before leaving', () => {
+      const root = open(pending());
+      const stepChanges = TestBed.inject(JournalStepChangesService);
+      button(root, 'Puntos Colombia').click();
+      fixture.detectChanges();
+
+      const input = root.querySelector('.jr-p3-cuadre input') as HTMLInputElement;
+      input.value = '41380';
+      input.dispatchEvent(new Event('input'));
+
+      expect(fixture.componentInstance.hasUnsavedChanges()).toBe(true);
+      let canLeave = false;
+      stepChanges.canDeactivateStep().subscribe(res => (canLeave = res));
+      expect(stepChanges.modalOpen()).toBe(true);
+
+      stepChanges.confirmSaveAndLeave();
+      const call = http.expectOne(POINTS_URL);
+      call.flush({});
+      http.expectOne(STATUS_URL).flush(status());
+      expect(canLeave).toBe(true);
     });
   });
 });

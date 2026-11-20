@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { VendorCloseStep2Component } from './vendor-close-step2.component';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService } from '../../../../core/services/journal-step-changes.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import { ApiError } from '../../../../shared/models/api-error.model';
 import { JournalResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
@@ -669,5 +670,23 @@ describe('VendorCloseStep2Component', () => {
 
     expect(localComponent.assignedVendors.length).toBe(0);
     expect(localComponent.errorMessage).toContain('Paso 1');
+  });
+
+  it('tracks unsaved edits on Step 2 and saves via JournalStepChangesService before leaving', () => {
+    const stepChanges = TestBed.inject(JournalStepChangesService);
+    expect(component.hasUnsavedChanges()).toBe(false);
+
+    const firstDoc = component.assignedVendors[0].document;
+    component.captures[firstDoc].pico = 50000;
+
+    expect(component.hasUnsavedChanges()).toBe(true);
+    let canLeave = false;
+    stepChanges.canDeactivateStep().subscribe(res => (canLeave = res));
+    expect(stepChanges.modalOpen()).toBe(true);
+
+    stepChanges.confirmSaveAndLeave();
+    expect(canLeave).toBe(true);
+    expect(component.hasUnsavedChanges()).toBe(false);
+    expect(salesServiceMock.getLastSavedRequest()).toBeTruthy();
   });
 });
