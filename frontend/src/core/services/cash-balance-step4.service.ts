@@ -25,6 +25,11 @@ export class CashBalanceStep4Service {
     });
   }
 
+  /** Borra el saldo de Dominus guardado en esa fecha y deja el paso 4 pendiente. */
+  resetDominusBalance(date: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cash-balance/${date}/dominus`);
+  }
+
   registerFundPayment(request: SavingsFundMovementRequestDto): Observable<SavingsFundMovementResponseDto> {
     return this.http.post<SavingsFundMovementResponseDto>(`${this.apiUrl}/savings-fund/payments`, request);
   }

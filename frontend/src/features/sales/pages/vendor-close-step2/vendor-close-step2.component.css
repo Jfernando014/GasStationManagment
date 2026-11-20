@@ -168,53 +168,7 @@
   transform: scale(0.98);
 }
 
-.jr-p2-btn-reset:hover:not(:disabled) {
-  border-color: #fca5a5;
-  color: #b91c1c;
-  background: #fef2f2;
-}
-
-.jr-p2-btn-danger {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: #ffffff;
-}
-
-.jr-p2-btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
-}
-
-/* ---- Confirmación en línea ---- */
-.jr-p2-confirm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  color: #92400e;
-  font-size: 12.5px;
-}
-
-.jr-p2-confirm-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jr-p2-confirm-texto strong {
-  font-size: 13px;
-  color: #78350f;
-}
-
-.jr-p2-confirm-acciones {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* El botón Restablecer y su confirmación en línea (jr-p2-btn-reset, jr-p2-btn-danger, jr-p2-confirm*) están en views.css */
 
 /* ---- Alertas ---- */
 .alert-success,

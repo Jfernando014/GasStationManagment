@@ -14,6 +14,15 @@
         title="La variación y el stock usan las ventas del paso 2"><span class="jr-chip-punto"></span>Paso 2
         pendiente</span>
       }
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset" id="btn-restablecer-inventario"
+        [disabled]="!canReset()" (click)="requestReset()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        <span>{{ resetting() ? 'Restableciendo...' : 'Restablecer' }}</span>
+      </button>
       <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
         [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 (cierre de vendedores) primero' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : ''))"
         (click)="completeStep()">
@@ -21,6 +30,22 @@
       </button>
     </div>
   </div>
+
+  @if (showResetConfirm()) {
+  <div class="jr-p2-confirm" role="alertdialog" aria-label="Confirmar restablecimiento del paso 5">
+    <div class="jr-p2-confirm-texto">
+      <strong>¿Restablecer los campos de esta jornada?</strong>
+      <span>Se borrarán la medición de los tanques y las entradas, traslados y ventas sincronizadas de lubricantes y
+        aditivos de {{ date() }}. Se limpian las dos pestañas, no solo la que estás viendo. La existencia inicial y los
+        ajustes se conservan.</span>
+    </div>
+    <div class="jr-p2-confirm-acciones">
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
+      <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer-inventario"
+        (click)="confirmReset()">Sí, restablecer</button>
+    </div>
+  </div>
+  }
 
   <div class="jr-tabs" role="tablist" aria-label="Inventario">
     <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'tanques'"

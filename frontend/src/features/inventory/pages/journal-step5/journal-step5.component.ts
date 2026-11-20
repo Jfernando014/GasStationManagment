@@ -116,6 +116,19 @@ export class JournalStep5Component {
   readonly dialogError = signal<string | null>(null);
   readonly dialogFieldErrors = signal<Record<string, string>>({});
   readonly dialogSaving = signal(false);
+  readonly resetting = signal(false);
+  readonly showResetConfirm = signal(false);
+  /** Restablecer se permite con la jornada abierta y sin guardados en curso, aunque el paso ya esté completado. */
+  readonly canReset = computed(
+    () =>
+      this.editable() &&
+      !!this.date() &&
+      !this.savingHeights() &&
+      !this.savingTransfers() &&
+      !this.syncing() &&
+      !this.dialogSaving() &&
+      !this.resetting()
+  );
 
   readonly measuredCount = computed(() =>
     this.tanks().filter(tank => isValidTankHeight(tank, this.heights()[tank.id])).length
@@ -341,6 +354,49 @@ export class JournalStep5Component {
           this.formError.set(getErrorMessage(error));
         }
       });
+  }
+
+  requestReset(): void {
+    if (!this.canReset()) return;
+    this.formError.set(null);
+    this.showResetConfirm.set(true);
+  }
+
+  cancelReset(): void {
+    this.showResetConfirm.set(false);
+  }
+
+  /** Borra en el servidor la medición y los movimientos del paso, limpia lo digitado y deja el paso en pendiente. */
+  confirmReset(): void {
+    const date = this.date();
+    if (!date || !this.canReset()) return;
+
+    this.showResetConfirm.set(false);
+    this.resetting.set(true);
+    this.formError.set(null);
+    this.measurementsService
+      .resetStep(date)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.resetting.set(false);
+          this.pendingTransfers.set({});
+          this.unmatchedCodes.set([]);
+          this.markStep5PendingLocally();
+          this.load(date);
+          this.showToast('Tanques y lubricantes restablecidos.');
+        },
+        error: (error: unknown) => {
+          this.resetting.set(false);
+          this.formError.set(getErrorMessage(error));
+        }
+      });
+  }
+
+  private markStep5PendingLocally(): void {
+    const step = this.step();
+    if (!step || step.status === StepStatus.PENDING) return;
+    this.journalService.updateCurrentStep({ ...step, status: StepStatus.PENDING, completedAt: null });
   }
 
   openMovement({ product, mode }: MovementTarget): void {
