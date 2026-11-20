@@ -28,6 +28,7 @@ describe('JournalService (S3-07)', () => {
   };
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [JournalService, provideHttpClient(), provideHttpClientTesting()]
     });
@@ -36,6 +37,7 @@ describe('JournalService (S3-07)', () => {
   });
 
   afterEach(() => {
+    localStorage.clear();
     httpMock.verify();
   });
 
@@ -135,5 +137,25 @@ describe('JournalService (S3-07)', () => {
     const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/history/2026-08-01');
     expect(req.request.method).toBe('GET');
     req.flush(mockDetail);
+  });
+
+  it('should resolve landing step to personal when a journal has no completed or remembered steps', () => {
+    const freshJournal: JournalResponse = {
+      ...mockJournal,
+      date: '2026-11-19',
+      steps: [
+        { id: 1, stepNumber: 1, name: 'Personal', status: StepStatus.PENDING, completedAt: null },
+        { id: 2, stepNumber: 2, name: 'Vendedores', status: StepStatus.PENDING, completedAt: null }
+      ]
+    };
+
+    expect(service.resolveLandingStep(freshJournal)).toBe('personal');
+  });
+
+  it('should persist and restore the last visited step per date', () => {
+    service.rememberStep('2026-08-05', 'inventario');
+
+    expect(service.getRememberedStep('2026-08-05')).toBe('inventario');
+    expect(service.resolveLandingStep(mockJournal)).toBe('inventario');
   });
 });
