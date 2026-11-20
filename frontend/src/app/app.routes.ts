@@ -176,7 +176,7 @@ export const routes: Routes = [
       },
       {
         path: 'gastos',
-        loadComponent: () => import('../atomic-design/pages/administrative-expenses/administrative-expenses-page.component')
+        loadComponent: () => import('../features/expenses/pages/administrative-expenses-page/administrative-expenses-page.component')
           .then(m => m.AdministrativeExpensesPageComponent)
       },
       {
