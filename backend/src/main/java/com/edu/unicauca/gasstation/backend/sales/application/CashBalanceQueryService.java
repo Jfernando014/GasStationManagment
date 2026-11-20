@@ -85,7 +85,8 @@ public class CashBalanceQueryService implements CashBalanceQuery {
         ExpenseListResult result = expenses.list(new ExpenseFilter(null, null, null, date, null, null));
         return new ExpensesInfo(
                 result.expenses().stream()
-                        .map(expense -> new ExpenseItemInfo(expense.date(), expense.description(), expense.amount()))
+                        .map(expense -> new ExpenseItemInfo(
+                                expense.date(), expense.displayDescription(), expense.amount()))
                         .toList(),
                 result.total());
     }

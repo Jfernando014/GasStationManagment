@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Administrative Expenses", description = "Administrative expenses by fortnight or date (HU-36)")
+@Tag(name = "Administrative Expenses", description = "Administrative expenses by fortnight, date, or date range")
 @RestController
 @RequestMapping("/api/v1/sales/administrative-expenses")
 public class AdministrativeExpenseController {
@@ -44,7 +44,8 @@ public class AdministrativeExpenseController {
             @Valid @RequestBody AdministrativeExpenseRequestDto request, Authentication authentication) {
         SalesAdminAuthorization.requireAdmin(authentication);
         AdministrativeExpenseResponseDto response = AdministrativeExpenseResponseDto.from(
-                service.register(request.date(), request.amount(), request.description()));
+                service.register(request.date(), request.amount(), request.name(),
+                        request.documentNumber(), request.description()));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
