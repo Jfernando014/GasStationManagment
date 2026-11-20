@@ -69,6 +69,7 @@ describe('AdministrativeExpensesPageComponent', () => {
     const component = fixture.componentInstance;
     const text = fixture.nativeElement.textContent as string;
 
+    expect(fixture.nativeElement.querySelector('.inv-subview.active')).not.toBeNull();
     expect(expensesService.listByFortnight).toHaveBeenCalledWith(2026, 8, 1);
     expect(component.expenseDate()).toBe('2026-11-20');
     expect(component.pettyCashAvailable()).toBe(500_000 - 24_350);
