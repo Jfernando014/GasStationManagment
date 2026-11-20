@@ -48,7 +48,7 @@
         </div>
         <a class="btn-solid-primary" routerLink="/alertas">Ver bandeja</a>
       </div>
-    } @else {
+    } @else if (!optimalBannerDismissed()) {
       <div class="optimal-alert-banner">
         <div class="alert-card-left">
           <span class="optimal-icon-square-box" aria-hidden="true">
@@ -61,7 +61,15 @@
             <div class="alert-description-text">Ningún combustible está por debajo de los umbrales de autonomía.</div>
           </div>
         </div>
-        <a class="btn-flat-secondary" routerLink="/alertas">Ver bandeja</a>
+        <div class="optimal-banner-actions">
+          <a class="btn-flat-secondary" routerLink="/alertas">Ver bandeja</a>
+          <button
+            type="button"
+            class="optimal-banner-close"
+            aria-label="Ocultar aviso de operación estable"
+            title="Ocultar aviso"
+            (click)="dismissOptimalBanner()">✕</button>
+        </div>
       </div>
     }
 
@@ -157,34 +165,107 @@
       </section>
 
       <section class="home-section">
-        <div class="section-headline-bar">
-          <span class="headline-main-txt">Tanques</span>
-          <span class="headline-sub-txt">{{ measuredTanks() }} de {{ totalTanks() }} con medición.</span>
+        <div class="section-headline-bar home-tanks-headline">
+          <div>
+            <span class="headline-main-txt">Infraestructura de Almacenamiento ({{ totalTanks() }} Tanques Subterráneos)</span>
+            <p class="headline-sub-txt">Último estado registrado por medición con vara y tabla de aforo ({{ measuredTanks() }} de {{ totalTanks() }} medidos).</p>
+          </div>
+          @if (data.tanks.length > 0) {
+            <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="openReceptionModal()">
+              + Nueva Consignación
+            </button>
+          }
         </div>
-        <div class="home-grid">
+        <div class="tanks-battery-grid">
           @for (tank of data.tanks; track tank.tankId) {
-            <article class="inv-card home-tank-card">
-              <div class="inv-card-title">
-                <span>{{ tank.tankCode }} <small class="home-muted">{{ fuelLabels[tank.fuelType] }}</small></span>
-                <span [class]="'state-pill-tag ' + levelTone(tank.alertLevel)">{{ levelLabel(tank.alertLevel) }}</span>
-              </div>
-              @if (tank.gallons === null) {
-                <p class="home-muted">Sin medición registrada.</p>
-              } @else {
-                <div class="home-tank-figures">
-                  <div><span class="home-label">Altura</span><b class="tnum">{{ tank.heightCm }} cm</b></div>
-                  <div><span class="home-label">Galones</span><b class="tnum">{{ formatGallons(tank.gallons) }}</b></div>
-                  <div><span class="home-label">Capacidad</span><b class="tnum">{{ formatGallons(tank.capacityGallons) }}</b></div>
-                  <div><span class="home-label">Medido</span><b>{{ tank.measuredOn ? formatShortDate(tank.measuredOn) : '—' }}</b></div>
+            <article class="tank-monitoring-card"
+              [class.tank-card-critical]="tank.alertLevel === 'CRITICAL'"
+              [class.tank-card-warning]="tank.alertLevel === 'WARNING'">
+              @if (tank.alertLevel === 'CRITICAL' || tank.alertLevel === 'WARNING') {
+                <div class="tank-alert-badge-pill" [class.critical]="tank.alertLevel === 'CRITICAL'"
+                  [class.warning]="tank.alertLevel === 'WARNING'">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>
+                    {{ tank.alertLevel === 'CRITICAL' ? 'RESERVA CRÍTICA:' : 'NIVEL EN ADVERTENCIA:' }}
+                    {{ tank.gallons !== null ? formatGallons(tank.gallons) + ' Gal (' + formatPercent(tank.percentage) + ')' : 'Revisar inventario' }}
+                  </span>
                 </div>
-                <div class="alert-bar-track">
-                  <div class="alert-bar-fill" [style.width.%]="tank.percentage ?? 0"
-                    [style.background]="fuelColors[tank.fuelType]"></div>
-                </div>
-                @if (tank.measuredAt) {
-                  <span class="home-muted">Registrado el {{ formatDateTime(tank.measuredAt) }}</span>
-                }
               }
+
+              <div class="tank-card-header">
+                <div>
+                  <div class="tank-id-title">{{ tankDisplayTitle(tank) }}</div>
+                  <div class="tank-type-sub" [style.color]="fuelColors[tank.fuelType]">{{ fuelLabels[tank.fuelType] }}</div>
+                </div>
+                <span [class]="'state-pill-tag ' + levelTone(tank.alertLevel)">{{ tankStatusLabel(tank.alertLevel) }}</span>
+              </div>
+
+              <div class="gauge-module-row">
+                <button
+                  type="button"
+                  class="vertical-tank-cylinder tank-cylinder-trigger"
+                  [attr.aria-label]="'Medir regla en ' + tank.tankCode"
+                  title="Registrar medición con vara"
+                  (click)="openMeasureModal(tank)">
+                  <div class="tank-volume-fill" [ngClass]="tankFillClass(tank)"
+                    [style.height.%]="clampedPercent(tank.percentage)"></div>
+                </button>
+
+                <div class="tank-data-stack">
+                  @if (tank.gallons === null) {
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Actual Neto:</span>
+                      <span class="data-row-amt home-muted">Sin medición</span>
+                    </div>
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Capacidad:</span>
+                      <span class="data-row-amt tnum">{{ formatGallons(tank.capacityGallons) }} Gal</span>
+                    </div>
+                  } @else {
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Actual Neto:</span>
+                      <span class="data-row-amt tnum" [class.home-negative]="tank.alertLevel === 'CRITICAL'">
+                        {{ formatGallons(tank.gallons) }} Gal
+                        <span class="kpi-calc-badge">{{ tank.heightCm }} cm</span>
+                      </span>
+                    </div>
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Capacidad:</span>
+                      <span class="data-row-amt tnum">{{ formatGallons(tank.capacityGallons) }} Gal</span>
+                    </div>
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Cupo / Ullage:</span>
+                      <span class="data-row-amt tnum tank-ullage-amt">{{ formatGallons(tankUllage(tank)) }} Gal</span>
+                    </div>
+                    <div class="data-row-line">
+                      <span class="data-row-lbl">Medido:</span>
+                      <span class="data-row-amt home-muted">{{ tank.measuredOn ? formatShortDate(tank.measuredOn) : '—' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div class="tank-card-bottom">
+                <span class="availability-label">
+                  Nivel:
+                  <strong class="tnum" [style.color]="tank.alertLevel === 'CRITICAL' ? 'var(--semantic-red)' : fuelColors[tank.fuelType]">
+                    {{ formatPercent(tank.percentage) }}
+                  </strong>
+                </span>
+                <div class="tank-card-actions">
+                  @if (tank.alertLevel === 'CRITICAL' || tank.alertLevel === 'WARNING') {
+                    <button type="button" class="btn-solid-primary btn-tank-action" (click)="openReceptionModal(tank)">
+                      Reabastecer
+                    </button>
+                  }
+                  <button type="button" class="btn-solid-primary btn-flat-secondary btn-tank-action"
+                    (click)="openMeasureModal(tank)">
+                    Medir Regla
+                  </button>
+                </div>
+              </div>
             </article>
           } @empty {
             <app-empty-state heading="Sin tanques"
@@ -312,5 +393,151 @@
         </section>
       }
     }
+  }
+
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  @if (measureTarget(); as target) {
+    <div
+      class="home-modal-backdrop"
+      role="presentation"
+      tabindex="-1"
+      (click)="closeMeasureModal()"
+      (keydown.escape)="closeMeasureModal()">
+      <div
+        class="home-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="measureModalTitle"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+        <div class="home-modal-header">
+          <div>
+            <h2 id="measureModalTitle">Medir regla · {{ tankDisplayTitle(target) }}</h2>
+            <p>{{ fuelLabels[target.fuelType] }} · Capacidad {{ formatGallons(target.capacityGallons) }} Gal</p>
+          </div>
+          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeMeasureModal()">✕</button>
+        </div>
+
+        @if (measureError(); as err) {
+          <div class="alert-box-danger" role="alert">{{ err }}</div>
+        }
+
+        <div class="home-modal-body">
+          <label class="home-modal-field">
+            <span>Fecha de medición</span>
+            <input type="date" class="flat-input" [ngModel]="measureDate()" (ngModelChange)="measureDate.set($event)" />
+          </label>
+          <label class="home-modal-field">
+            <span>Altura medida con vara (cm)</span>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              class="flat-input tnum"
+              [ngModel]="measureHeightText()"
+              (ngModelChange)="onMeasureHeightInput($event)"
+              placeholder="Ej. 116.5" />
+          </label>
+
+          @if (measurePreviewGallons() !== null) {
+            <div class="measure-preview-pill">
+              <span>Equivalente por tabla de aforo:</span>
+              <strong class="tnum">{{ formatGallons(measurePreviewGallons()) }} Gal</strong>
+            </div>
+          }
+        </div>
+
+        <div class="home-modal-actions">
+          <button type="button" class="btn-flat-secondary" [disabled]="savingMeasure()" (click)="closeMeasureModal()">Cancelar</button>
+          <button type="button" class="btn-solid-primary" [disabled]="savingMeasure()" (click)="saveQuickMeasurement()">
+            {{ savingMeasure() ? 'Guardando…' : 'Guardar medición' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (receptionModalOpen()) {
+    <div
+      class="home-modal-backdrop"
+      role="presentation"
+      tabindex="-1"
+      (click)="closeReceptionModal()"
+      (keydown.escape)="closeReceptionModal()">
+      <div
+        class="home-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="receptionModalTitle"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()">
+        <div class="home-modal-header">
+          <div>
+            <h2 id="receptionModalTitle">Registrar consignación de combustible</h2>
+            <p>Ingreso directo por cisterna al compartimiento seleccionado.</p>
+          </div>
+          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeReceptionModal()">✕</button>
+        </div>
+
+        @if (receptionError(); as err) {
+          <div class="alert-box-danger" role="alert">{{ err }}</div>
+        }
+
+        <div class="home-modal-body">
+          <label class="home-modal-field">
+            <span>Tanque destino</span>
+            <select class="flat-select" [ngModel]="receptionTankId()" (ngModelChange)="receptionTankId.set(+$event)">
+              @for (tank of home()?.tanks ?? []; track tank.tankId) {
+                <option [value]="tank.tankId">{{ tankDisplayTitle(tank) }} · {{ fuelLabels[tank.fuelType] }}</option>
+              }
+            </select>
+          </label>
+          @if (selectedReceptionTank(); as sel) {
+            @if (tankUllage(sel) !== null) {
+              <div class="measure-preview-pill">
+                <span>Cupo disponible estimado:</span>
+                <strong class="tnum">{{ formatGallons(tankUllage(sel)) }} Gal</strong>
+              </div>
+            }
+          }
+          <label class="home-modal-field">
+            <span>Fecha de descargue</span>
+            <input type="date" class="flat-input" [ngModel]="receptionDate()" (ngModelChange)="receptionDate.set($event)" />
+          </label>
+          <label class="home-modal-field">
+            <span>Galones recibidos</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              class="flat-input tnum"
+              [ngModel]="receptionGallonsText()"
+              (ngModelChange)="receptionGallonsText.set($event)"
+              placeholder="Ej. 1500" />
+          </label>
+          <label class="home-modal-field">
+            <span>Proveedor</span>
+            <input
+              type="text"
+              class="flat-input"
+              [ngModel]="receptionSupplier()"
+              (ngModelChange)="receptionSupplier.set($event)"
+              placeholder="Ej. Terpel S.A." />
+          </label>
+        </div>
+
+        <div class="home-modal-actions">
+          <button type="button" class="btn-flat-secondary" [disabled]="savingReception()" (click)="closeReceptionModal()">Cancelar</button>
+          <button type="button" class="btn-solid-primary" [disabled]="savingReception()" (click)="submitReception()">
+            {{ savingReception() ? 'Registrando…' : 'Registrar consignación' }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>
