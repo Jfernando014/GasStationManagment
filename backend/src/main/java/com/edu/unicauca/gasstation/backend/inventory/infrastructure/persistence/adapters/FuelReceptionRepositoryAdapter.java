@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,12 @@ public class FuelReceptionRepositoryAdapter implements FuelReceptionRepository {
     @Override
     public BigDecimal sumGallonsAfter(Long tankId, LocalDate date, Long excludedReceptionId) {
         BigDecimal sum = repository.sumGallonsAfter(tankId, date, excludedReceptionId);
+        return sum == null ? BigDecimal.ZERO : sum;
+    }
+
+    @Override
+    public BigDecimal sumGallonsAfterMeasurement(Long tankId, LocalDate measurementDate, LocalDateTime measuredAt) {
+        BigDecimal sum = repository.sumGallonsAfterMeasurement(tankId, measurementDate, measuredAt);
         return sum == null ? BigDecimal.ZERO : sum;
     }
 }

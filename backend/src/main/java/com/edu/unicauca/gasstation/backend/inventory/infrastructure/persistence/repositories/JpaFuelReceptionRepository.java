@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JpaFuelReceptionRepository extends JpaRepository<FuelReceptionEntity, Long> {
@@ -31,4 +32,15 @@ public interface JpaFuelReceptionRepository extends JpaRepository<FuelReceptionE
     BigDecimal sumGallonsAfter(@Param("tankId") Long tankId,
                                @Param("date") LocalDate date,
                                @Param("excludedId") Long excludedId);
+
+    /** Devuelve null cuando no hay recepciones, el adaptador lo convierte en 0. */
+    @Query("""
+            select sum(r.gallons) from FuelReceptionEntity r
+            where r.tankId = :tankId
+              and (r.receptionDate > :date
+                   or (r.receptionDate = :date and r.createdAt > :measuredAt))
+            """)
+    BigDecimal sumGallonsAfterMeasurement(@Param("tankId") Long tankId,
+                                          @Param("date") LocalDate date,
+                                          @Param("measuredAt") LocalDateTime measuredAt);
 }

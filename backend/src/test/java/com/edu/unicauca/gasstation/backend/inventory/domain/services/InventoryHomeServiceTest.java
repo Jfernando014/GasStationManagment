@@ -8,6 +8,7 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.models.InventoryHome
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankMeasurement;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankSnapshot;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelReceptionRepository;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankMeasurementRepository;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,8 @@ import static com.edu.unicauca.gasstation.backend.inventory.FuelType.MOTOR;
 import static com.edu.unicauca.gasstation.backend.inventory.MeasurementTestData.measurement;
 import static com.edu.unicauca.gasstation.backend.inventory.MeasurementTestData.reading;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,13 +44,17 @@ class InventoryHomeServiceTest {
     @Mock
     private TankMeasurementRepository measurementRepository;
     @Mock
+    private FuelReceptionRepository receptionRepository;
+    @Mock
     private InventoryAlertService alertService;
 
     private InventoryHomeService service;
 
     @BeforeEach
     void setUp() {
-        service = new InventoryHomeService(tankRepository, measurementRepository, alertService);
+        service = new InventoryHomeService(tankRepository, measurementRepository, receptionRepository, alertService);
+        // No receptions after any measurement unless a test says otherwise
+        when(receptionRepository.sumGallonsAfterMeasurement(anyLong(), any(), any())).thenReturn(BigDecimal.ZERO);
         // T3 is listed first on purpose: the service must sort by code
         when(tankRepository.findAllOrderByCode()).thenReturn(List.of(
                 withCapacity(tank(3L, "T3", DIESEL, "0.5"), "2000"),
