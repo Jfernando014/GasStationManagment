@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { InventoryAlertsService } from '../../../core/services/inventory-alerts.service';
 import { JournalService } from '../../../core/services/journal.service';
 import { SalesVendorCloseService } from '../../../core/services/sales-vendor-close.service';
+import { DayStaffService } from '../../../core/services/day-staff.service';
 import { SellerPerformanceService } from '../../../core/services/seller-performance.service';
 import { JournalResponse, JournalStatus } from '../../../shared/models/journal.model';
 import { PerformanceQuery } from '../../../shared/models/dtos/seller-performance.dto';
@@ -21,7 +22,7 @@ describe('SCRUM-108 C-09 navigation', () => {
   });
   const providers = () => [provideRouter(routes), { provide: AuthService, useValue: { hasToken: () => true, logout: () => undefined } },
     { provide: InventoryAlertsService, useValue: { pending$: of(0), refreshPending: () => undefined } },
-    { provide: SellerPerformanceService, useValue: api }];
+    { provide: SellerPerformanceService, useValue: api }, { provide: DayStaffService, useValue: { getStep: () => of({ resting: [] }) } }];
   it('uses the existing layout/menu and exposes the new route as mobile-ready', async () => {
     TestBed.configureTestingModule({ providers: providers() });
     const harness = await RouterTestingHarness.create('/resultados/rendimiento');
@@ -44,7 +45,7 @@ describe('SCRUM-108 C-09 navigation', () => {
     const harness = await RouterTestingHarness.create('/jornada/cerrada?date=2026-08-03');
     await harness.fixture.whenStable(); harness.detectChanges();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('#btn-opcion-rendimiento')!.click();
-    await harness.fixture.whenStable(); harness.detectChanges();
+    await harness.fixture.whenStable(); await new Promise(resolve => setTimeout(resolve, 320)); harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/resultados/rendimiento?date=2026-08-03&returnTo=jornada');
     expect(api.readReport).toHaveBeenLastCalledWith({ from: '2026-08-03', to: '2026-08-03', measure: 'FUEL_GALLONS', outputScale: 2 });
     harness.routeNativeElement!.querySelector<HTMLAnchorElement>('a[href="/jornada/cerrada?date=2026-08-03"]')!.click();
