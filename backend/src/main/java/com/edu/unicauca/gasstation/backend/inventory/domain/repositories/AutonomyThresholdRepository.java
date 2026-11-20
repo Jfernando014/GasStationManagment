@@ -10,10 +10,16 @@ public interface AutonomyThresholdRepository {
 
     AutonomyThreshold save(AutonomyThreshold threshold);
 
+    Optional<AutonomyThreshold> findById(Long id);
+
     /** The threshold with the latest validity date that is not after the given date. */
     Optional<AutonomyThreshold> findEffectiveOn(LocalDate date);
 
     boolean existsByValidFrom(LocalDate validFrom);
+
+    boolean existsByValidFromAndIdNot(LocalDate validFrom, Long id);
+
+    void deleteById(Long id);
 
     /** All thresholds, most recent validity first. */
     List<AutonomyThreshold> findAll();

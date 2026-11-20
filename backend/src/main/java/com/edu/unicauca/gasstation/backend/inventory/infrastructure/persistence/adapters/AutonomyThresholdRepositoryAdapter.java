@@ -24,6 +24,11 @@ public class AutonomyThresholdRepositoryAdapter implements AutonomyThresholdRepo
     }
 
     @Override
+    public Optional<AutonomyThreshold> findById(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
     public Optional<AutonomyThreshold> findEffectiveOn(LocalDate date) {
         return repository.findFirstByValidFromLessThanEqualOrderByValidFromDesc(date).map(mapper::toDomain);
     }
@@ -31,6 +36,16 @@ public class AutonomyThresholdRepositoryAdapter implements AutonomyThresholdRepo
     @Override
     public boolean existsByValidFrom(LocalDate validFrom) {
         return repository.existsByValidFrom(validFrom);
+    }
+
+    @Override
+    public boolean existsByValidFromAndIdNot(LocalDate validFrom, Long id) {
+        return repository.existsByValidFromAndIdNot(validFrom, id);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        repository.deleteById(id);
     }
 
     @Override

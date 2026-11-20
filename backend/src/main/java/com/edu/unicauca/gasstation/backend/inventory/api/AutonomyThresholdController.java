@@ -12,8 +12,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,7 +34,7 @@ public class AutonomyThresholdController {
 
     @PostMapping
     @Operation(summary = "Create the thresholds that apply from a date on",
-            description = "Existing thresholds are never modified. The critical threshold must be lower than the warning.")
+            description = "The critical threshold must be lower than the warning.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Thresholds created"),
             @ApiResponse(responseCode = "400", description = "Invalid data"),
@@ -41,6 +44,32 @@ public class AutonomyThresholdController {
         AutonomyThresholdResponse response =
                 mapper.toResponse(thresholdService.create(mapper.toDomain(request)));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update existing autonomy thresholds",
+            description = "The critical threshold must be lower than the warning and validity date must remain unique.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Thresholds updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid data"),
+            @ApiResponse(responseCode = "404", description = "Threshold not found"),
+            @ApiResponse(responseCode = "409", description = "Thresholds already exist for that validity date")
+    })
+    public AutonomyThresholdResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody AutonomyThresholdRequest request) {
+        return mapper.toResponse(thresholdService.update(id, mapper.toDomain(request)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an autonomy threshold validity record")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Thresholds deleted"),
+            @ApiResponse(responseCode = "404", description = "Threshold not found")
+    })
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        thresholdService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
