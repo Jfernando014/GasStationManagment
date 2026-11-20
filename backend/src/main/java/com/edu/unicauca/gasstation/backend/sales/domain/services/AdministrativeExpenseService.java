@@ -21,16 +21,24 @@ public class AdministrativeExpenseService {
     }
 
     public AdministrativeExpense register(LocalDate date, BigDecimal amount, String description) {
+        return register(date, amount, null, null, description);
+    }
+
+    public AdministrativeExpense register(LocalDate date, BigDecimal amount, String name,
+            String documentNumber, String description) {
         if (date == null) {
             throw new InvalidAdministrativeExpenseException("La fecha del gasto es obligatoria");
         }
         if (amount == null || amount.signum() <= 0) {
             throw new InvalidAdministrativeExpenseException("El valor del gasto debe ser mayor que cero");
         }
+        String normalizedName = name == null || name.isBlank() ? null : name.strip();
+        String normalizedDocument = documentNumber == null || documentNumber.isBlank() ? null : documentNumber.strip();
         String normalizedDescription = description == null || description.isBlank()
                 ? "Gasto administrativo"
                 : description.strip();
-        return repository.save(AdministrativeExpense.create(date, amount, normalizedDescription));
+        return repository.save(AdministrativeExpense.create(date, amount,
+                normalizedName, normalizedDocument, normalizedDescription));
     }
 
     public ExpenseListResult list(ExpenseFilter filter) {

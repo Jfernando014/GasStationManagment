@@ -44,7 +44,8 @@ public class AdministrativeExpenseController {
             @Valid @RequestBody AdministrativeExpenseRequestDto request, Authentication authentication) {
         SalesAdminAuthorization.requireAdmin(authentication);
         AdministrativeExpenseResponseDto response = AdministrativeExpenseResponseDto.from(
-                service.register(request.date(), request.amount(), request.description()));
+                service.register(request.date(), request.amount(), request.name(),
+                        request.documentNumber(), request.description()));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

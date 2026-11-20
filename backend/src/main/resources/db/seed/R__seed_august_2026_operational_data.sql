@@ -837,18 +837,18 @@ INSERT INTO points_colombia_day (business_date, points_total, source, updated_at
 ON CONFLICT (business_date) DO UPDATE SET points_total = EXCLUDED.points_total, source = EXCLUDED.source, updated_at = EXCLUDED.updated_at;
 
 -- Administrative expenses.
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-01', 6000.00, 'Ofimatic@.NET - 20 IMPRESIONES B/N');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-01', 18350.00, 'Servientrega S.A - Envío documentos Bogotá');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-03', 20000.00, 'Mónica Sirley Dorado - Apoyo crispetas');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-04', 21750.00, 'Jeronimo Martins Colombia S.A.S. - Insumos crispetas');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-04', 3500.00, 'Ofimatic@.NET - 20 IMPRESIONES B/N');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-06', 46500.00, 'Super sorpresa Panadería - Pastelería - Torta cumpleaños');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-14', 20000.00, 'Casa Yale - Arreglo chapa oficina');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-18', 2400.00, 'Ofimatic@.NET - 8 IMP B/N');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-18', 18350.00, 'Servientrega S.A - Envío documentos Bogotá');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-20', 10500.00, 'Ofimatic@.NET - Impresiones, sobres y carpetas');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-27', 600.00, 'Ofimatic@.NET - 2 impresiones');
-INSERT INTO administrative_expense (expense_date, amount, description) VALUES ('2026-08-27', 20000.00, 'Eduar Quila - Transporte canecas');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-01', 6000.00, 'Ofimatic@.NET', '25275622-2', '20 IMPRESIONES B/N');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-01', 18350.00, 'Servientrega S.A', '880512330-3', 'Envío documentos Bogotá');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-03', 20000.00, 'Mónica Sirley Dorado', '52375796', 'Apoyo crispetas');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-04', 21750.00, 'Jeronimo Martins Colombia S.A.S.', '900480589-1', 'Insumos crispetas');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-04', 3500.00, 'Ofimatic@.NET', '25275622-2', '20 IMPRESIONES B/N');
+INSERT INTO administrative_expense (expense_date, amount, name, description) VALUES ('2026-08-06', 46500.00, 'Super sorpresa Panadería - Pastelería', 'Torta cumpleaños');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-14', 20000.00, 'Casa Yale', '10536131-4', 'Arreglo chapa oficina');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-18', 2400.00, 'Ofimatic@.NET', '25275622-2', '8 IMP B/N');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-18', 18350.00, 'Servientrega S.A', '880512330-3', 'Envío documentos Bogotá');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-20', 10500.00, 'Ofimatic@.NET', '25275622-2', 'Impresiones, sobres y carpetas');
+INSERT INTO administrative_expense (expense_date, amount, name, document_number, description) VALUES ('2026-08-27', 600.00, 'Ofimatic@.NET', '25275622-2', '2 impresiones');
+INSERT INTO administrative_expense (expense_date, amount, name, description) VALUES ('2026-08-27', 20000.00, 'Eduar Quila', 'Transporte canecas');
 
 -- Cash and savings fund.
 INSERT INTO cash_movement (movement_type, movement_date, amount, description) VALUES ('INITIAL_BALANCE', '2026-07-31', 12114000.00, 'Saldo inicial de caja');

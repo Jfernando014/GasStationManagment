@@ -25,6 +25,8 @@ public class AdministrativeExpenseRepositoryAdapter implements AdministrativeExp
         AdministrativeExpenseEntity entity = new AdministrativeExpenseEntity();
         entity.setExpenseDate(expense.date());
         entity.setAmount(expense.amount());
+        entity.setName(expense.name());
+        entity.setDocumentNumber(expense.documentNumber());
         entity.setDescription(expense.description());
         return toDomain(jpaRepository.save(entity));
     }
@@ -59,6 +61,6 @@ public class AdministrativeExpenseRepositoryAdapter implements AdministrativeExp
 
     private static AdministrativeExpense toDomain(AdministrativeExpenseEntity entity) {
         return new AdministrativeExpense(entity.getId(), entity.getExpenseDate(), entity.getAmount(),
-                entity.getDescription(), entity.getCreatedAt());
+                entity.getName(), entity.getDocumentNumber(), entity.getDescription(), entity.getCreatedAt());
     }
 }

@@ -1,13 +1,23 @@
 <main class="expenses-page">
   <header class="page-heading">
     <div>
-      <p class="eyebrow">VENTAS / CONTROL ADMINISTRATIVO</p>
-      <h1>Gastos administrativos</h1>
+      <h1>Gastos</h1>
+      <p>Registra un gasto administrativo en cualquier momento. El paso 4B de la jornada lo toma por su fecha.</p>
     </div>
-    <p class="heading-total">
-      <span>Total del filtro</span>
-      <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-    </p>
+    <div class="summary-cards" aria-label="Resumen del periodo">
+      <div class="summary-card">
+        <span>Total de la quincena</span>
+        <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Comprobantes</span>
+        <strong>{{ expenses.length }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Disponible en caja menor</span>
+        <strong>$ 363.900</strong>
+      </div>
+    </div>
   </header>
 
   @if (errorMessage) {
@@ -23,13 +33,24 @@
           <input type="date" name="expenseDate" [(ngModel)]="expenseDate" required />
         </label>
         <label>
-          Valor (COP)
-          <input type="number" name="amount" [(ngModel)]="amount" min="1" step="100" required />
+          Nombre
+          <input type="text" name="expenseName" [(ngModel)]="expenseName" maxlength="255"
+            placeholder="Proveedor o persona" />
         </label>
         <label>
-          Descripción
-          <textarea name="description" [(ngModel)]="description" maxlength="255" rows="3"
-            placeholder="Ej. Servicios, mantenimiento o suministros"></textarea>
+          Concepto
+          <input type="text" name="description" [(ngModel)]="description" maxlength="255"
+            placeholder="Ej. Envío de documentos" />
+        </label>
+        <label>
+          Valor
+          <input type="number" name="amount" [(ngModel)]="amount" min="1" step="100"
+            placeholder="$ 0" required />
+        </label>
+        <label>
+          NIT o cédula <span class="optional">(opcional)</span>
+          <input type="text" name="documentNumber" [(ngModel)]="documentNumber" maxlength="50"
+            placeholder="Número de identificación" />
         </label>
         <button type="submit" [disabled]="isSubmitting">
           {{ isSubmitting ? 'Guardando…' : 'Registrar gasto' }}
@@ -38,41 +59,21 @@
     </section>
 
     <section class="expense-results" aria-labelledby="results-title">
-      <div class="results-heading">
-        <h2 id="results-title">Movimientos</h2>
-        <span>{{ expenses.length }} gastos</span>
-      </div>
-
-      <div class="filters" aria-label="Filtros de gastos">
-        <label>
-          Periodo
-          <select name="filterMode" [(ngModel)]="filterMode" (ngModelChange)="loadExpenses()">
-            <option value="fortnight">Quincena</option>
-            <option value="date-range">Rango de fechas</option>
-          </select>
-        </label>
+      <div class="results-toolbar">
         @if (filterMode === 'fortnight') {
-          <label>
+          <label class="toolbar-label">
             Mes
             <input type="month" name="month" [(ngModel)]="month" (change)="loadExpenses()" />
           </label>
-          <label>
-            Quincena
+          <label class="toolbar-label">
+            Periodo
             <select name="fortnight" [(ngModel)]="fortnight" (ngModelChange)="loadExpenses()">
-              <option [ngValue]="1">1 · Días 1–15</option>
-              <option [ngValue]="2">2 · Día 16 al cierre</option>
+              <option [ngValue]="1">Quincena 1 (1 al 15)</option>
+              <option [ngValue]="2">Quincena 2 (16 al cierre)</option>
             </select>
           </label>
-        } @else {
-          <label>
-            Desde
-            <input type="date" name="dateFrom" [(ngModel)]="dateFrom" (change)="loadExpenses()" />
-          </label>
-          <label>
-            Hasta
-            <input type="date" name="dateTo" [(ngModel)]="dateTo" (change)="loadExpenses()" />
-          </label>
         }
+        <button type="button" class="reimbursement-button">Plantilla de reembolso</button>
       </div>
 
       @if (isLoading) {
@@ -81,37 +82,42 @@
         <div class="empty-state">No hay gastos para el periodo seleccionado.</div>
       } @else {
         <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Fecha</th>
-              <th scope="col">Descripción</th>
-              <th scope="col" class="amount">Valor</th>
-              <th scope="col"><span class="visually-hidden">Acciones</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (expense of expenses; track expense.id) {
+          <table>
+            <thead>
               <tr>
-              <td>{{ expense.date | date:'yyyy-MM-dd' }}</td>
-              <td>{{ expense.description }}</td>
-              <td class="amount">{{ expense.amount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="action-cell">
-                <button type="button" class="delete-button" (click)="deleteExpense(expense)">
-                  Eliminar
-                </button>
-              </td>
+                <th scope="col">Fecha</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Concepto</th>
+                <th scope="col" class="amount">Valor</th>
+                <th scope="col"><span class="visually-hidden">Acciones</span></th>
               </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row" colspan="2">Total del periodo</th>
-              <td class="amount">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody>
+              @for (expense of expenses; track expense.id) {
+                <tr>
+                  <td>{{ expense.date | date:'dd/MM' }}</td>
+                  <td>
+                    <strong>{{ expense.name || 'Gasto administrativo' }}</strong>
+                    @if (expense.documentNumber) {
+                      <span class="document-number">{{ expense.documentNumber }}</span>
+                    }
+                  </td>
+                  <td>{{ expense.description }}</td>
+                  <td class="amount">{{ expense.amount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                  <td class="action-cell">
+                    <button type="button" class="delete-button" (click)="deleteExpense(expense)">Eliminar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" colspan="3">Total del periodo</th>
+                <td class="amount">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       }
     </section>

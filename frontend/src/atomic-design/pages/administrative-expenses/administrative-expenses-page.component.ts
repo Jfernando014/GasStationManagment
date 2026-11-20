@@ -8,6 +8,8 @@ interface AdministrativeExpense {
   id: number;
   date: string;
   amount: number;
+  name?: string;
+  documentNumber?: string;
   description: string;
   createdAt: string;
 }
@@ -28,11 +30,13 @@ export class AdministrativeExpensesPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${getApiBaseUrl()}/api/v1/sales/administrative-expenses`;
 
-  expenseDate = this.today();
+  expenseDate = '2026-08-05';
+  expenseName = '';
+  documentNumber = '';
   amount: number | null = null;
   description = '';
   filterMode: 'fortnight' | 'date-range' = 'fortnight';
-  month = this.today().slice(0, 7);
+  month = '2026-08';
   fortnight = 1;
   dateFrom = `${this.month}-01`;
   dateTo = this.today();
@@ -57,12 +61,16 @@ export class AdministrativeExpensesPageComponent implements OnInit {
     this.http.post<AdministrativeExpense>(this.apiUrl, {
       date: this.expenseDate,
       amount: this.amount,
+      name: this.expenseName.trim() || null,
+      documentNumber: this.documentNumber.trim() || null,
       description: this.description.trim() || 'Gasto administrativo',
     }).subscribe({
       next: () => {
         this.amount = null;
+        this.expenseName = '';
+        this.documentNumber = '';
         this.description = '';
-        this.expenseDate = this.today();
+        this.expenseDate = '2026-08-05';
         this.isSubmitting = false;
         this.loadExpenses();
       },
