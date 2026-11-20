@@ -296,11 +296,11 @@ export class ElectronicPaymentsStep3Component {
   }
 
   rowLabel(row: ElectronicVendorRow): string {
-    return vendorLabel(row.workerName, row.shiftCode);
+    return vendorLabel(row.workerName);
   }
 
-  checkLabel(name: string | null, shiftCode: string | null): string {
-    return vendorLabel(name, shiftCode);
+  checkLabel(name: string | null): string {
+    return vendorLabel(name);
   }
 
   // ------------------------------------------------------------ comprobantes

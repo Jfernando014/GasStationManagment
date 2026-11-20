@@ -134,8 +134,8 @@ describe('ElectronicPaymentsStep3Component', () => {
     const tabs = Array.from(root.querySelectorAll('[role="tab"]')).map(item => item.textContent?.trim());
     expect(tabs).toEqual(['Credibanco', 'QR', 'Puntos Colombia']);
     expect(root.textContent).toContain('1 de 2 vendedores cuadran');
-    expect(root.textContent).toContain('Carlos (DIA)');
-    expect(root.textContent).toContain('Ana (NOCHE)');
+    expect(root.textContent).toContain('Carlos');
+    expect(root.textContent).toContain('Ana');
     expect(root.querySelectorAll('.jr-chip--cuadra').length).toBeGreaterThan(0);
     expect(root.querySelectorAll('.jr-chip--falta').length).toBeGreaterThan(0);
   });

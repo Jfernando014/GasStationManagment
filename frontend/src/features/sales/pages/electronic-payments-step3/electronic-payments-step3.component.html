@@ -307,7 +307,7 @@
             <tbody>
               @for (vendor of q.vendors; track vendor.workerId) {
               <tr>
-                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, vendor.shiftCode) }}</td>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName) }}</td>
                 <td class="num">{{ money(vendor.redeban) }}</td>
                 <td class="num jr-p3-planilla">{{ money(vendor.planilla) }}</td>
                 <td class="num">{{ signed(vendor.difference) }}</td>
@@ -351,7 +351,7 @@
                 <select class="flat-select" (change)="selectWhatsappVendor($event)">
                   @for (vendor of q.vendors; track vendor.workerId) {
                   <option [value]="vendor.workerId" [selected]="vendor.workerId === whatsappWorkerId()">
-                    {{ checkLabel(vendor.workerName, vendor.shiftCode) }}
+                    {{ checkLabel(vendor.workerName) }}
                   </option>
                   }
                 </select>
@@ -434,7 +434,7 @@
             <tbody>
               @for (vendor of p.vendors; track vendor.workerId) {
               <tr>
-                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, null) }}</td>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName) }}</td>
                 <td class="num">{{ money(vendor.redemptions) }}</td>
               </tr>
               }

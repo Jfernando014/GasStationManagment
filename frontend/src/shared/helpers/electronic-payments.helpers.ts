@@ -127,10 +127,9 @@ export function formatTime(time: string | null): string {
   return time ? time.slice(0, 5) : '—';
 }
 
-/** Nombre para mostrar de un vendedor, con el turno cuando se conoce. */
-export function vendorLabel(name: string | null, shiftCode: string | null): string {
-  const base = name?.trim() || 'Vendedor sin nombre';
-  return shiftCode ? `${base} (${shiftCode})` : base;
+/** Nombre para mostrar de un vendedor, sin el turno. */
+export function vendorLabel(name: string | null): string {
+  return name?.trim() || 'Vendedor sin nombre';
 }
 
 /** Motivo por el que un archivo no se puede subir, o null si es válido. */
@@ -150,7 +149,7 @@ export function buildStepSummary(status: ElectronicPaymentsStatus): string {
     const detail = check.matches
       ? 'Cuadra'
       : `No cuadra (comprobantes ${formatCop(check.vouchersTotal)}, planilla ${formatCop(check.planillaCredibanco)})`;
-    lines.push(`- ${vendorLabel(check.workerName, check.shiftCode)}: ${detail}`);
+    lines.push(`- ${vendorLabel(check.workerName)}: ${detail}`);
   }
 
   lines.push('');
@@ -162,7 +161,7 @@ export function buildStepSummary(status: ElectronicPaymentsStatus): string {
     lines.push(`QR: ${status.qr.matchesDay ? 'Cuadra' : 'No cuadra'} (Redeban ${formatCop(status.qr.redebanTotal)}, planillas ${formatCop(status.qr.planillaTotal)})`);
     for (const check of status.qr.vendors) {
       const detail = check.matches ? 'Cuadra' : `No cuadra (${formatSignedCop(check.difference)})`;
-      lines.push(`- ${vendorLabel(check.workerName, check.shiftCode)}: ${detail}`);
+      lines.push(`- ${vendorLabel(check.workerName)}: ${detail}`);
     }
     if (!status.qr.perVendorReliable) {
       lines.push('Hay transacciones sin asignar a un vendedor.');
