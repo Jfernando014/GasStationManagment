@@ -3,8 +3,10 @@ package com.edu.unicauca.gasstation.backend.inventory.domain.repositories;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.StockBalance;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.StockLocation;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.StockMovement;
+import com.edu.unicauca.gasstation.backend.inventory.domain.models.StockMovementType;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 public interface StockMovementRepository {
@@ -21,6 +23,9 @@ public interface StockMovementRepository {
     List<StockBalance> findBalancesBefore(LocalDate date);
 
     boolean existsInitial(Long productId, StockLocation location);
+
+    /** Removes the movements of the date that are of any of the given types. */
+    void deleteByJournalDateAndTypes(LocalDate journalDate, Collection<StockMovementType> types);
 
     /** Replaces all the SALE movements of the date with the given ones. */
     void replaceSales(LocalDate journalDate, List<StockMovement> sales);

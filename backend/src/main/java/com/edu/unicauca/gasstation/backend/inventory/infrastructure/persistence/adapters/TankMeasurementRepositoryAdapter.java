@@ -52,6 +52,16 @@ public class TankMeasurementRepositoryAdapter implements TankMeasurementReposito
     }
 
     @Override
+    @Transactional
+    public void deleteByJournalDate(LocalDate journalDate) {
+        measurementRepository.findByJournalDate(journalDate).ifPresent(entity -> {
+            readingRepository.deleteByMeasurementId(entity.getId());
+            measurementRepository.delete(entity);
+            measurementRepository.flush();
+        });
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<TankMeasurement> findLatestBefore(LocalDate journalDate) {
         return measurementRepository.findFirstByJournalDateLessThanOrderByJournalDateDesc(journalDate)
