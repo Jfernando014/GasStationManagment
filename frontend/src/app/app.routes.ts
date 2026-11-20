@@ -51,7 +51,8 @@ export const routes: Routes = [
           {
             path: '',
             pathMatch: 'full',
-            redirectTo: 'vendedores'
+            loadComponent: () => import('../atomic-design/pages/journal/journal-entry-redirect.component')
+              .then(m => m.JournalEntryRedirectComponent)
           }
         ]
       },

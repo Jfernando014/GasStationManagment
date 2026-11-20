@@ -3,11 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs';
-import { JournalService } from '../../../core/services/journal.service';
+import { JOURNAL_STEP_ROUTES, JournalService } from '../../../core/services/journal.service';
+import { todayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse } from '../../../shared/models/journal.model';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
 
-const STEP_ROUTES = ['personal', 'vendedores', 'electronicos', 'caja', 'inventario', 'cierre'] as const;
+const STEP_ROUTES = JOURNAL_STEP_ROUTES;
 
 @Component({
   selector: 'app-journal-page',
@@ -41,7 +42,7 @@ export class JournalPageComponent implements OnInit {
 
     const queryDate = this.route?.snapshot?.queryParamMap?.get('date');
     const selectedDate = (this.journalService as { getSelectedDate?: () => string | null }).getSelectedDate?.();
-    const targetDate = queryDate || selectedDate || new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const targetDate = queryDate || selectedDate || todayCalendarDay();
     this.journalService.openJournal(targetDate).subscribe({
       next: (res) => this.journalService.setCurrentJournal(res),
       error: (err) => {
@@ -55,6 +56,7 @@ export class JournalPageComponent implements OnInit {
     this.journalService.currentJournal$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(journal => {
       if (!journal) return;
       this.journal = journal;
+      this.rememberCurrentStep();
       this.cdr.detectChanges();
     });
   }
@@ -92,5 +94,15 @@ export class JournalPageComponent implements OnInit {
     const segments = cleanUrl.split('/').filter(Boolean);
     const last = segments[segments.length - 1] ?? '';
     this.currentStepIndex = STEP_ROUTES.indexOf(last as (typeof STEP_ROUTES)[number]);
+    this.rememberCurrentStep();
+  }
+
+  private rememberCurrentStep(): void {
+    if (this.currentStepIndex < 0 || !this.journal?.date) return;
+    const stepRoute = STEP_ROUTES[this.currentStepIndex];
+    (this.journalService as { rememberStep?: (date: string, step: string) => void }).rememberStep?.(
+      this.journal.date,
+      stepRoute
+    );
   }
 }
