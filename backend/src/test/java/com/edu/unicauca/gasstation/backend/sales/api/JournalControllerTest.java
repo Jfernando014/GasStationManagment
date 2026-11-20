@@ -301,7 +301,7 @@ class JournalControllerTest {
                 .andExpect(jsonPath("$.journalId").value(1))
                 .andExpect(jsonPath("$.completedStepsCount").value(5))
                 .andExpect(jsonPath("$.newAlertsCount").value(1))
-                .andExpect(jsonPath("$.newAlerts[0].fuelType").value("DIESEL"))
-                .andExpect(jsonPath("$.newAlerts[0].level").value("CRITICAL"));
+                .andExpect(jsonPath("$.newAutonomyAlerts[0].fuelName").value("Diésel"))
+                .andExpect(jsonPath("$.newAutonomyAlerts[0].severity").value("CRITICAL"));
     }
 }
