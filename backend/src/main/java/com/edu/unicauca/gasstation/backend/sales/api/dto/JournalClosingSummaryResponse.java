@@ -135,7 +135,7 @@ public record JournalClosingSummaryResponse(
         return new AutonomyAlertItem(null, fuelName(alert.fuelType()), alert.autonomyDays(), null, alert.level());
     }
 
-    private static String fuelName(String fuelType) {
+    static String fuelName(String fuelType) {
         return fuelType == null ? null : FUEL_NAMES.getOrDefault(fuelType, fuelType);
     }
 }
