@@ -129,4 +129,65 @@ describe('LoginPageComponent (HU-1, S1-12, S2-06)', () => {
     const infoBanner = compiled.querySelector('.login-alert-info');
     expect(infoBanner).toBeTruthy();
   });
+
+  it('should toggle between split view and simplified view when clicking EDS Bellavista brand button', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const shell = compiled.querySelector('#view-login');
+    expect(shell?.classList.contains('is-simplified')).toBe(false);
+
+    const splitBrandBtn = compiled.querySelector('#btn-brand-split') as HTMLButtonElement;
+    splitBrandBtn.click();
+    fixture.detectChanges();
+
+    expect(component.isSimplifiedView()).toBe(true);
+    expect(shell?.classList.contains('is-simplified')).toBe(true);
+
+    const simplifiedBrandBtn = compiled.querySelector('#btn-brand-simplified') as HTMLButtonElement;
+    simplifiedBrandBtn.click();
+    fixture.detectChanges();
+
+    expect(component.isSimplifiedView()).toBe(false);
+    expect(shell?.classList.contains('is-simplified')).toBe(false);
+  });
+
+  it('should open and close the blurred Soporte técnico operativo modal via link, Entendido button, and Escape key', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('#support-modal')).toBeNull();
+
+    const supportTrigger = compiled.querySelector('#btn-open-support-modal') as HTMLButtonElement;
+    supportTrigger.click();
+    fixture.detectChanges();
+
+    const modal = compiled.querySelector('#support-modal');
+    expect(modal).toBeTruthy();
+    expect(modal?.textContent).toContain('Soporte técnico operativo');
+    expect(modal?.textContent).toContain('jfportilla@unicauca.edu.co');
+    expect(modal?.textContent).toContain('+57 3128883241');
+
+    const okBtn = compiled.querySelector('#btn-support-understood') as HTMLButtonElement;
+    okBtn.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('#support-modal')).toBeNull();
+
+    // Open again and verify Escape closes it
+    supportTrigger.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('#support-modal')).toBeTruthy();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(compiled.querySelector('#support-modal')).toBeNull();
+  });
+
+  it('should not log authentication response tokens to console on login', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    authService.login.mockReturnValue(of({ token: 'secret-jwt-token' }));
+    authService.hasToken.mockReturnValue(true);
+
+    component.loginForm.setValue({ username: 'admin', password: 'password123' });
+    component.onSubmit();
+
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
 });
