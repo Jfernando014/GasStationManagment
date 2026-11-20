@@ -1,90 +1,147 @@
-  <div class="view-container active" id="view-login">
-    
-    <!-- Lado Izquierdo: Hero Institucional EDS Bellavista -->
-    <div class="login-hero-left">
-      <div class="login-brand-header">
-        <div class="brand-icon-square">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17"/>
-            <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-            <circle cx="10" cy="9" r="2"/>
-          </svg>
-        </div>
-        <div class="brand-badge-row">
-          <span class="brand-title-bold">EDS Bellavista</span>
-          <span class="brand-title-sub">Gestión Operativa y Administrativa</span>
-        </div>
-      </div>
+<div class="view-container active eds-login-shell" id="view-login" [class.is-simplified]="isSimplifiedView()">
+  <!-- Panel claro derecho (se desliza fuera en vista simplificada sin provocar reflow) -->
+  <div class="eds-login-light-pane" aria-hidden="true"></div>
 
-      <div class="login-hero-message">
-        <div class="pill-secure-badge">
-          <span class="pill-secure-dot"></span>
-          <span>OPERACIÓN SEGURA · 24/7</span>
-        </div>
-        <h1 class="login-hero-title">Control confiable para cada jornada.</h1>
-        <p class="login-hero-desc">Administra el inventario de tanques, equipo de vendedores y cierre de ventas de tu estación de servicio desde un solo lugar.</p>
-        
-        <div class="login-check-list">
-          <div class="check-list-item">
-            <svg class="check-icon-dot" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>Monitoreo de 6 tanques de combustible en tiempo real</span>
-          </div>
-          <div class="check-list-item">
-            <svg class="check-icon-dot" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>Trazabilidad de ventas, galonajes y turnos 2x2</span>
-          </div>
-          <div class="check-list-item">
-            <svg class="check-icon-dot" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>Acceso exclusivo para administradores autorizados</span>
-          </div>
-        </div>
-      </div>
+  <!-- Siluetas minimalistas de surtidor en el fondo azul petróleo -->
+  <div class="eds-pump-watermark eds-pump-watermark--left" aria-hidden="true">
+    <svg viewBox="0 0 210 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="16" y="14" width="128" height="236" rx="18" fill="currentColor" />
+      <rect x="36" y="36" width="88" height="58" rx="9" fill="#0B192C" opacity="0.55" />
+      <rect x="36" y="114" width="88" height="10" rx="5" fill="#0B192C" opacity="0.45" />
+      <rect x="36" y="134" width="60" height="8" rx="4" fill="#0B192C" opacity="0.45" />
+      <path d="M144 68H166C179 68 188 77 188 90V176C188 188 179 197 167 197C156 197 148 189 148 178V148"
+            stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </div>
 
-      <div class="login-hero-footer">
-        EDS Bellavista · Sede Popayán, Cauca · Colombia
-      </div>
+  <div class="eds-pump-watermark eds-pump-watermark--right" aria-hidden="true">
+    <svg viewBox="0 0 210 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="16" y="14" width="128" height="236" rx="18" fill="currentColor" />
+      <rect x="36" y="36" width="88" height="58" rx="9" fill="#0B192C" opacity="0.55" />
+      <rect x="36" y="114" width="88" height="10" rx="5" fill="#0B192C" opacity="0.45" />
+      <rect x="36" y="134" width="60" height="8" rx="4" fill="#0B192C" opacity="0.45" />
+      <path d="M144 68H166C179 68 188 77 188 90V176C188 188 179 197 167 197C156 197 148 189 148 178V148"
+            stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </div>
+
+  <!-- Capa Hero Institucional izquierda (Vista dividida) -->
+  <div class="eds-login-hero" [attr.aria-hidden]="isSimplifiedView()">
+    <button type="button"
+            class="eds-brand-trigger eds-brand-trigger--split"
+            id="btn-brand-split"
+            title="Cambiar a vista simplificada"
+            aria-label="EDS Bellavista · Cambiar a vista simplificada"
+            [tabIndex]="isSimplifiedView() ? -1 : 0"
+            (click)="toggleSimplifiedView()">
+      <span class="brand-icon-square">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
+          <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <circle cx="10" cy="9" r="2" />
+        </svg>
+      </span>
+      <span class="brand-badge-row">
+        <span class="brand-title-bold">EDS Bellavista</span>
+        <span class="brand-title-sub">Gestión Operativa y Administrativa</span>
+      </span>
+    </button>
+
+    <div class="eds-hero-copy">
+      <h1 class="login-hero-title">Control confiable para cada jornada.</h1>
     </div>
 
-    <!-- Lado Derecho: Tarjeta Flotante de Acceso (HU-1) -->
-    <div class="login-form-pane">
-      <div class="login-card-floating">
+    <div class="login-hero-footer">
+      Sede Popayán, Cauca · Colombia
+    </div>
+  </div>
+
+  <!-- Escenario del formulario (se desliza suavemente del lado derecho al centro) -->
+  <div class="eds-login-stage">
+    <div class="eds-card-track">
+      <button type="button"
+              class="eds-brand-trigger eds-brand-trigger--simplified"
+              id="btn-brand-simplified"
+              title="Volver a vista institucional"
+              aria-label="EDS Bellavista · Volver a vista dividida"
+              [attr.aria-hidden]="!isSimplifiedView()"
+              [tabIndex]="isSimplifiedView() ? 0 : -1"
+              (click)="toggleSimplifiedView()">
+        <span class="brand-icon-square">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
+            <path d="M17 10h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <circle cx="10" cy="9" r="2" />
+          </svg>
+        </span>
+        <span class="brand-badge-row">
+          <span class="brand-title-bold">EDS Bellavista</span>
+          <span class="brand-title-sub">Gestión Operativa y Administrativa</span>
+        </span>
+      </button>
+
+      <div class="login-card-floating eds-login-card">
         <div>
           <h2 class="login-card-title">Bienvenido, administrador</h2>
           <p class="login-card-subtitle">Ingresa tus credenciales para consultar la operación de la estación.</p>
         </div>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="display: flex; flex-direction: column; gap: 16px;">
-          
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="eds-login-form">
           <div class="login-input-group">
             <label for="login-username" class="login-input-label">Usuario</label>
             <div class="input-field-wrapper">
-              <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input id="login-username" type="text" formControlName="username" class="login-input" placeholder="admin">
+              <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <input id="login-username" type="text" formControlName="username" class="login-input" placeholder="admin" autocomplete="username">
             </div>
             @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)) {
-              <div style="color: #ef233c; font-size: 12px; margin-top: 4px;">Usuario requerido</div>
+              <div class="eds-field-error">Usuario requerido</div>
             }
           </div>
 
           <div class="login-input-group">
             <label for="login-password" class="login-input-label">Contraseña</label>
             <div class="input-field-wrapper">
-              <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input id="login-password" type="password" formControlName="password" class="login-input" placeholder="••••••••" #passwordInput>
-              <button type="button" class="btn-password-peek" title="Mostrar contraseña" (click)="passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="input-prefix-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <input id="login-password"
+                     [type]="showPassword() ? 'text' : 'password'"
+                     formControlName="password"
+                     class="login-input eds-password-input"
+                     placeholder="••••••••"
+                     autocomplete="current-password">
+              <button type="button"
+                      class="btn-password-peek"
+                      [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                      [title]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                      (click)="togglePasswordVisibility()">
+                @if (!showPassword()) {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                } @else {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                }
               </button>
             </div>
             @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
-              <div style="color: #ef233c; font-size: 12px; margin-top: 4px;">Contraseña requerida</div>
+              <div class="eds-field-error">Contraseña requerida</div>
             }
           </div>
 
-          <!-- Alerta de sesión expirada (S2-06) -->
           @if (sessionExpiredMessage && !errorMessage) {
             <div class="login-alert-banner login-alert-info" role="alert">
               <svg class="alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
               <div class="alert-content">
                 <span class="alert-title">Sesión expirada</span>
@@ -93,30 +150,28 @@
             </div>
           }
 
-          <!-- Alerta de cuenta bloqueada (423 Locked) (S2-06) -->
           @if (isAccountLocked) {
             <div class="login-alert-banner login-alert-lockout" role="alert">
               <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
               <div class="alert-content">
                 <span class="alert-title">Acceso Bloqueado Temporalmente</span>
                 <span>{{ errorMessage }}</span>
-                <span style="font-size: 12px; margin-top: 2px; font-weight: 600;">
+                <span class="eds-lockout-remaining">
                   Tiempo restante de bloqueo: ~{{ lockoutRemainingMinutes }} minutos.
                 </span>
               </div>
             </div>
           }
 
-          <!-- Alerta de error estándar / advertencia de intentos (401 / otros) (S2-06) -->
           @if (errorMessage && !isAccountLocked) {
             <div class="login-alert-banner login-alert-warning" role="alert">
               <svg class="alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
               <div class="alert-content">
                 <span>{{ errorMessage }}</span>
@@ -124,22 +179,102 @@
             </div>
           }
 
-          <button type="submit" class="login-btn-primary" [disabled]="isLoading || isAccountLocked">
+          <button type="submit" class="login-btn-primary eds-submit-btn" [disabled]="isLoading || isAccountLocked">
             @if (!isLoading) {
               <span>Iniciar sesión</span>
             } @else {
               <span>Cargando...</span>
             }
-            @if (!isLoading) {
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            }
           </button>
         </form>
 
         <div class="login-footer-help">
-          ¿Problemas de acceso? Contacta a soporte técnico operativo.
+          ¿Problemas de acceso? Contacta a
+          <button type="button"
+                  class="eds-support-link"
+                  id="btn-open-support-modal"
+                  (click)="openSupportModal()">soporte técnico operativo.</button>
         </div>
       </div>
-    </div>
 
+      <p class="eds-simplified-caption" [attr.aria-hidden]="!isSimplifiedView()">
+        Control confiable para cada jornada · Sede Popayán, Cauca · Colombia
+      </p>
+    </div>
   </div>
+</div>
+
+<!-- Modal flotante con blur (mismo diseño de Cambiar contraseña) -->
+@if (isSupportModalOpen()) {
+  <div class="eds-support-backdrop"
+       role="presentation"
+       tabindex="-1"
+       (click)="onSupportBackdropClick($event)"
+       (keydown.escape)="closeSupportModal()">
+    <div class="eds-support-modal-card"
+         id="support-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="support-modal-title">
+      <div class="eds-modal-header">
+        <div class="eds-modal-title-wrapper">
+          <div class="eds-modal-icon-badge" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+            </svg>
+          </div>
+          <div>
+            <h2 id="support-modal-title" class="eds-modal-title">Soporte técnico operativo</h2>
+            <p class="eds-modal-subtitle">Asistencia administrativa y acceso · EDS Bellavista</p>
+          </div>
+        </div>
+        <button type="button" class="eds-modal-btn-close" aria-label="Cerrar modal" (click)="closeSupportModal()">&#10005;</button>
+      </div>
+
+      <div class="eds-modal-body">
+        <p class="eds-modal-desc">
+          Si presentas bloqueos temporales por intentos fallidos, inconvenientes con tu contraseña o errores de conexión con el servidor de la estación, comunícate con nuestro equipo de soporte.
+        </p>
+
+        <div class="eds-modal-fields">
+          <div class="eds-modal-field-group">
+            <span class="eds-modal-label">Correo electrónico</span>
+            <div class="eds-modal-contact-field">
+              <a class="eds-contact-link" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+              <button type="button" class="eds-copy-btn" (click)="copyContact(supportEmail, 'email')">
+                {{ copiedField() === 'email' ? 'Copiado' : 'Copiar' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="eds-modal-field-group">
+            <span class="eds-modal-label">Teléfono / WhatsApp</span>
+            <div class="eds-modal-contact-field">
+              <a class="eds-contact-link" [href]="supportPhoneHref">{{ supportPhone }}</a>
+              <button type="button" class="eds-copy-btn" (click)="copyContact(supportPhone, 'phone')">
+                {{ copiedField() === 'phone' ? 'Copiado' : 'Copiar' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="eds-modal-field-group">
+            <span class="eds-modal-label">Equipo y horario de atención</span>
+            <div class="eds-modal-contact-field eds-modal-contact-field--muted">
+              Ingeniería EDS Bellavista · Lunes a domingo, 6:00 a. m. – 10:00 p. m.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="eds-modal-footer">
+        <button type="button"
+                class="eds-modal-btn-submit"
+                id="btn-support-understood"
+                (click)="closeSupportModal()">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+}
