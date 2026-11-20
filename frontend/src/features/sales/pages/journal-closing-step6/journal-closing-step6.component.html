@@ -140,8 +140,8 @@
                   {{ alert.severity === 'CRITICAL' ? 'Crítica' : 'Advertencia' }}
                 </span>
                 <span>
-                  <b>{{ alert.tankId }} · {{ alert.fuelName }}</b>:
-                  {{ formatNumber(alert.autonomyDays, 1) }} días de autonomía (alcanza hasta {{ alert.reachesUntilDate }})
+                  <b>{{ alert.tankId ? alert.tankId + ' · ' : '' }}{{ alert.fuelName }}</b>:
+                  {{ formatNumber(alert.autonomyDays, 1) }} días de autonomía{{ alert.reachesUntilDate ? ' (alcanza hasta ' + alert.reachesUntilDate + ')' : '' }}
                 </span>
               </div>
             }

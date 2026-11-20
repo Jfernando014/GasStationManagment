@@ -155,7 +155,7 @@ export class JournalClosingStep6Component implements OnInit {
   }
 
   stepChipLabel(step: StepSummaryItemDto): string {
-    if (step.hasDiscrepancy) return 'Con descuadres';
+    if (step.hasDiscrepancy) return 'Con descuadre';
     if (step.status === 'COMPLETED') return 'Completo';
     if (step.status === 'IN_PROGRESS') return 'En curso';
     if (step.status === 'LOCKED') return 'Bloqueado';
