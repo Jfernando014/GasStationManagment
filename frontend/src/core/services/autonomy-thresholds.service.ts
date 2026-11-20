@@ -21,4 +21,12 @@ export class AutonomyThresholdsService {
   create(request: AutonomyThresholdRequest): Observable<AutonomyThresholdResponse> {
     return this.http.post<AutonomyThresholdResponse>(this.apiUrl, request);
   }
+
+  update(id: number, request: AutonomyThresholdRequest): Observable<AutonomyThresholdResponse> {
+    return this.http.put<AutonomyThresholdResponse>(`${this.apiUrl}/${id}`, request);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
