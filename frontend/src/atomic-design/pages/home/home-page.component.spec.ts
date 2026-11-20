@@ -219,7 +219,7 @@ describe('HomePageComponent', () => {
     const component = fixture.componentInstance;
 
     component.openReceptionModal(HOME.tanks[0]);
-    component.receptionGallonsText.set('1200');
+    component.onReceptionGallonsInput(1200 as unknown as string);
     component.receptionSupplier.set('Terpel');
     component.submitReception();
 
@@ -230,5 +230,23 @@ describe('HomePageComponent', () => {
       supplier: 'Terpel'
     });
     expect(homeService.getHome).toHaveBeenCalledTimes(2);
+  });
+
+  it('handles numeric ngModelChange events cleanly in quick measure modal and renders a link to tanks', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const el = fixture.nativeElement as HTMLElement;
+
+    const configLink = el.querySelector('.home-tanks-config-btn') as HTMLAnchorElement;
+    expect(configLink).toBeTruthy();
+    expect(configLink.getAttribute('href')).toContain('/configuracion/tanques');
+
+    component.openMeasureModal(HOME.tanks[0]);
+    component.onMeasureHeightInput(23 as unknown as string);
+    component.saveQuickMeasurement();
+
+    expect(measurementsService.save).toHaveBeenCalledWith(component.measureDate(), {
+      readings: [{ tankId: 1, heightCm: 23 }]
+    });
   });
 });
