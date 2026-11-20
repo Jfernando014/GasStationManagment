@@ -31,6 +31,12 @@ public class AdministrativeExpenseEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal amount;
 
+    @Column(length = 255)
+    private String name;
+
+    @Column(name = "document_number", length = 50)
+    private String documentNumber;
+
     @Column(nullable = false, length = 255)
     private String description;
 

@@ -13,11 +13,13 @@ public record AdministrativeExpenseResponseDto(
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
         LocalDate date,
         BigDecimal amount,
+        String name,
+        String documentNumber,
         String description,
         Instant createdAt) {
 
     public static AdministrativeExpenseResponseDto from(AdministrativeExpense expense) {
         return new AdministrativeExpenseResponseDto(expense.id(), expense.date(), expense.amount(),
-                expense.description(), expense.createdAt());
+                expense.name(), expense.documentNumber(), expense.description(), expense.createdAt());
     }
 }

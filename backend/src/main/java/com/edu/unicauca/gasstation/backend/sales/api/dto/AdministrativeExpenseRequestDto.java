@@ -13,5 +13,13 @@ public record AdministrativeExpenseRequestDto(
         @Schema(example = "2026-08-01") @NotNull LocalDate date,
         @Schema(description = "Amount in COP", example = "80000.00")
         @NotNull @Positive @Digits(integer = 12, fraction = 2) BigDecimal amount,
+        @Schema(description = "Supplier or beneficiary name", example = "Ofimatic@.NET")
+        @Size(max = 255) String name,
+        @Schema(description = "Optional NIT or ID number", example = "25275622-2")
+        @Size(max = 50) String documentNumber,
         @Size(max = 255) String description) {
+
+    public AdministrativeExpenseRequestDto(LocalDate date, BigDecimal amount, String description) {
+        this(date, amount, null, null, description);
+    }
 }

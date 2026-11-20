@@ -75,7 +75,8 @@
         </div>
         <span class="active-notch"></span>
       </button>
-      <button class="sidebar-action-btn" routerLink="/gastos" routerLinkActive="active">
+      <button class="sidebar-action-btn" routerLink="/gastos" routerLinkActive="active"
+        #gastosNav="routerLinkActive" [attr.aria-current]="gastosNav.isActive ? 'page' : null">
         <div class="btn-prefix-stack">
           <svg class="sidebar-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .7V2l-1 .7-3-2-3 2-3-2-3 2-3-2z" />
@@ -229,7 +230,7 @@
       <div class="header-trail">
         <a class="trail-root" routerLink="/">Inicio</a>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : overtimeNav.isActive ? 'Personal / Horas extra' : parametersNav.isActive ? 'Configuración / Parámetros' : statisticsNav.isActive ? 'Resultados / Estadísticas' : performanceNav.isActive ? 'Resultados / Rendimiento' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
+        <span class="trail-active">{{ gastosNav.isActive ? 'Gastos' : alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : overtimeNav.isActive ? 'Personal / Horas extra' : parametersNav.isActive ? 'Configuración / Parámetros' : statisticsNav.isActive ? 'Resultados / Estadísticas' : performanceNav.isActive ? 'Resultados / Rendimiento' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
           }}</span>
       </div>
 

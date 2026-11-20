@@ -32,7 +32,8 @@ class AdministrativeExpenseRepositoryAdapterTest {
         LocalDate date = LocalDate.of(2026, 8, 12);
         BigDecimal amount = new BigDecimal("136100.00");
         Instant createdAt = Instant.parse("2026-08-12T15:30:00Z");
-        AdministrativeExpense expense = AdministrativeExpense.create(date, amount, "Servicios públicos");
+        AdministrativeExpense expense = AdministrativeExpense.create(
+                date, amount, "Servientrega S.A", "860512330-3", "Servicios públicos");
         when(jpaRepository.save(any(AdministrativeExpenseEntity.class))).thenAnswer(invocation -> {
             AdministrativeExpenseEntity entity = invocation.getArgument(0);
             entity.setId(18L);
@@ -46,10 +47,14 @@ class AdministrativeExpenseRepositoryAdapterTest {
         verify(jpaRepository).save(captor.capture());
         assertEquals(date, captor.getValue().getExpenseDate());
         assertEquals(amount, captor.getValue().getAmount());
+        assertEquals("Servientrega S.A", captor.getValue().getName());
+        assertEquals("860512330-3", captor.getValue().getDocumentNumber());
         assertEquals("Servicios públicos", captor.getValue().getDescription());
         assertEquals(18L, saved.id());
         assertEquals(date, saved.date());
         assertEquals(amount, saved.amount());
+        assertEquals("Servientrega S.A", saved.name());
+        assertEquals("860512330-3", saved.documentNumber());
         assertEquals("Servicios públicos", saved.description());
         assertEquals(createdAt, saved.createdAt());
     }

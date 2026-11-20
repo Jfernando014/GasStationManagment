@@ -1,0 +1,219 @@
+<div class="inv-subview active cf-vista">
+  <div class="cf-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Gastos</h1>
+      <p>Registra un gasto administrativo en cualquier momento. El paso 4b de la jornada lo toma por su fecha.</p>
+    </div>
+
+    <div class="jr-indicadores" aria-label="Resumen del período">
+      <div class="jr-indicador">
+        <span>{{ period() === 'MES' ? 'Total del mes' : 'Total de la quincena' }}</span>
+        <b class="tnum">{{ formatCop(total()) }}</b>
+      </div>
+      <div class="jr-indicador">
+        <span>Comprobantes</span>
+        <b class="tnum">{{ expenses().length }}</b>
+      </div>
+      @if (period() === 'MES') {
+        <div class="jr-indicador">
+          <span>Promedio por gasto</span>
+          <b class="tnum">{{ averageExpenseDisplay() }}</b>
+        </div>
+      } @else {
+        <div class="jr-indicador" [class.jr-indicador--falta]="total() > pettyCashFund">
+          <span>Disponible en caja menor</span>
+          <b class="tnum">{{ formatCop(pettyCashAvailable()) }}</b>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage(); as message) {
+    <div class="cf-error" role="alert">{{ message }}</div>
+  }
+  <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
+    <span class="toast-check">✓</span> {{ toastText() }}
+  </div>
+
+  <div class="gs-cuerpo">
+    <form class="ps-card gs-form" (ngSubmit)="submitExpense()" novalidate>
+      <h3>Registrar gasto</h3>
+
+      <label class="cf-campo">
+        <span>Fecha</span>
+        <input
+          type="date"
+          name="expenseDate"
+          class="flat-input tnum"
+          [class.gs-invalid]="isFieldInvalid('date')"
+          [ngModel]="expenseDate()"
+          (ngModelChange)="updateDate($event)"
+          required />
+        @if (isFieldInvalid('date')) {
+          <small class="gs-field-error">{{ fieldErrorMessage('date') }}</small>
+        }
+      </label>
+
+      <label class="cf-campo">
+        <span>Nombre</span>
+        <input
+          type="text"
+          name="expenseName"
+          class="flat-input"
+          [class.gs-invalid]="isFieldInvalid('name')"
+          maxlength="255"
+          placeholder="Proveedor o persona"
+          [ngModel]="expenseName()"
+          (ngModelChange)="updateName($event)"
+          required />
+        @if (isFieldInvalid('name')) {
+          <small class="gs-field-error">{{ fieldErrorMessage('name') }}</small>
+        }
+      </label>
+
+      <label class="cf-campo">
+        <span>Concepto</span>
+        <input
+          type="text"
+          name="description"
+          class="flat-input"
+          [class.gs-invalid]="isFieldInvalid('description')"
+          maxlength="255"
+          placeholder="Ej. Envío de documentos"
+          [ngModel]="description()"
+          (ngModelChange)="updateDescription($event)"
+          required />
+        @if (isFieldInvalid('description')) {
+          <small class="gs-field-error">{{ fieldErrorMessage('description') }}</small>
+        }
+      </label>
+
+      <label class="cf-campo">
+        <span>Valor</span>
+        <input
+          type="number"
+          name="amount"
+          class="flat-input tnum"
+          [class.gs-invalid]="isFieldInvalid('amount')"
+          min="1"
+          step="100"
+          inputmode="numeric"
+          placeholder="$ 0"
+          [ngModel]="amountText()"
+          (ngModelChange)="updateAmount($event)"
+          required />
+        @if (isFieldInvalid('amount')) {
+          <small class="gs-field-error">{{ fieldErrorMessage('amount') }}</small>
+        }
+      </label>
+
+      <label class="cf-campo">
+        <span>NIT o cédula <em>(opcional)</em></span>
+        <input
+          type="text"
+          name="documentNumber"
+          class="flat-input tnum"
+          maxlength="50"
+          [ngModel]="documentNumber()"
+          (ngModelChange)="documentNumber.set($event)" />
+      </label>
+
+      <button type="submit" class="jr-btn jr-btn--pri" [disabled]="submitting()">
+        {{ submitting() ? 'Guardando…' : 'Registrar gasto' }}
+      </button>
+    </form>
+
+    <section class="ps-card gs-lista" aria-label="Listado de gastos administrativos">
+      <div class="ps-barra">
+        <label class="ps-campo">
+          <span>Mes</span>
+          <input
+            type="month"
+            name="month"
+            class="flat-input tnum"
+            [ngModel]="month()"
+            (ngModelChange)="onMonthChange($event)" />
+        </label>
+        <label class="ps-campo">
+          <span>Periodo</span>
+          <select
+            name="period"
+            class="flat-select"
+            [ngModel]="period()"
+            (ngModelChange)="onPeriodChange($event)">
+            <option value="Q1">Quincena 1 (1 al 15)</option>
+            <option value="Q2">Quincena 2 (16 al fin de mes)</option>
+            <option value="MES">Mes completo</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="jr-btn jr-btn--ghost jr-btn--sm gs-exportar"
+          [disabled]="loading() || generatingPdf() || expenses().length === 0"
+          (click)="exportReimbursement()">
+          {{ generatingPdf() ? 'Generando…' : 'Planilla de reembolso' }}
+        </button>
+      </div>
+
+      <div class="ps-tabla-wrap gs-tabla-wrap">
+        <table class="ps-tabla">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Concepto</th>
+              <th scope="col" class="num">Valor</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              <tr>
+                <td colspan="5" class="cf-vacio" aria-live="polite">Cargando gastos…</td>
+              </tr>
+            } @else {
+              @for (expense of sortedExpenses(); track expense.id) {
+                <tr>
+                  <td class="tnum">{{ shortDayMonth(expense.date) }}</td>
+                  <td>
+                    <b>{{ expense.name || 'Gasto administrativo' }}</b>
+                    @if (expense.documentNumber) {
+                      <small>{{ expense.documentNumber }}</small>
+                    }
+                  </td>
+                  <td>{{ expense.description }}</td>
+                  <td class="num">{{ formatCop(expense.amount) }}</td>
+                  <td class="num">
+                    <button type="button" class="gs-quitar" (click)="requestDelete(expense)">
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="cf-vacio">No hay gastos en este periodo.</td>
+                </tr>
+              }
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">Total del periodo</td>
+              <td class="num">{{ formatCop(total()) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<app-confirm-modal
+  [open]="deleteTarget() !== null"
+  title="Eliminar gasto administrativo"
+  subtitle="Se retirará este comprobante del periodo y del paso 4b"
+  [message]="deleteModalMessage()"
+  [busy]="deleting()"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()" />
