@@ -61,6 +61,12 @@ public class CardReconciliationRepositoryAdapter implements CardReconciliationRe
     }
 
     @Override
+    @Transactional
+    public void deleteByDate(LocalDate date) {
+        jdbc.update("DELETE FROM credibanco_vendor_day WHERE business_date = ?", Date.valueOf(date));
+    }
+
+    @Override
     public List<VendorDeclaration> findByDate(LocalDate date) {
         return jdbc.query("SELECT * FROM credibanco_vendor_day WHERE business_date = ? ORDER BY id",
                 (rs, row) -> new VendorDeclaration(rs.getObject("worker_id", UUID.class), rs.getString("shift_code"),

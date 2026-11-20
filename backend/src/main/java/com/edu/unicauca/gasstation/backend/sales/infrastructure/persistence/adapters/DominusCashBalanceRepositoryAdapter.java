@@ -30,6 +30,11 @@ public class DominusCashBalanceRepositoryAdapter implements DominusCashBalanceRe
                 balance.date(), balance.accumulatedBalance(), Instant.now())));
     }
 
+    @Override
+    public void deleteByDate(LocalDate date) {
+        jpaRepository.deleteById(date);
+    }
+
     private DominusCashBalance toModel(DominusCashBalanceEntity entity) {
         return new DominusCashBalance(entity.getBusinessDate(), entity.getAccumulatedBalance());
     }

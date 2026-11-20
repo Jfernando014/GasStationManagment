@@ -95,6 +95,13 @@ public class QrPointsRepositoryAdapter implements QrPointsRepository {
 
     @Override
     @Transactional
+    public void deleteByDate(LocalDate date) {
+        jdbc.update("DELETE FROM redeban_qr_transaction WHERE business_date = ?", Date.valueOf(date));
+        jdbc.update("DELETE FROM points_colombia_day WHERE business_date = ?", Date.valueOf(date));
+    }
+
+    @Override
+    @Transactional
     public void savePoints(LocalDate date, BigDecimal total, String source) {
         jdbc.update("""
                 INSERT INTO points_colombia_day (business_date, points_total, source) VALUES (?, ?, ?)

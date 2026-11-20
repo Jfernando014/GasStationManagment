@@ -4,13 +4,16 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.ElectronicPaymentsStatu
 import com.edu.unicauca.gasstation.backend.sales.api.dto.ElectronicVoucherRequest;
 import com.edu.unicauca.gasstation.backend.sales.application.ElectronicPaymentsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.UUID;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -41,5 +44,19 @@ public class ElectronicPaymentsController {
             Authentication authentication) {
         SalesAdminAuthorization.requireAdmin(authentication);
         return service.saveVouchers(date, workerId, request);
+    }
+
+    @DeleteMapping("/{date}")
+    @Operation(summary = "Reset step 3 of an open journal date",
+            description = "ADMIN only. Deletes the vouchers, the Redeban rows and the Puntos Colombia total of the date "
+                    + "and returns step 3 to PENDING.")
+    @ApiResponse(responseCode = "204", description = "Step 3 data cleared and the step returned to PENDING")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and cannot be modified")
+    public ResponseEntity<Void> reset(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        SalesAdminAuthorization.requireAdmin(authentication);
+        service.reset(date);
+        return ResponseEntity.noContent().build();
     }
 }

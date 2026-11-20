@@ -24,6 +24,9 @@ public interface QrPointsRepository {
 
     void savePoints(LocalDate date, BigDecimal total, String source);
 
+    /** Removes the Redeban rows and the Puntos Colombia total of the date. */
+    void deleteByDate(LocalDate date);
+
     record PointsDay(LocalDate date, BigDecimal total, String source) {
     }
 }
