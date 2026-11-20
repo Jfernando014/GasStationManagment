@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, catchError, of, switchMap, tap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
 import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
@@ -46,9 +47,15 @@ export class VendorCloseStep2Component implements OnInit {
   private readonly salesService = inject(SalesVendorCloseService);
   private readonly journalService = inject(JournalService, { optional: true });
   private readonly productsService = inject(ProductsService, { optional: true });
+  private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private savedInputSnapshot = '';
+  private readonly dirtyHandler: StepDirtyHandler = {
+    hasUnsavedChanges: () => this.hasUnsavedChanges(),
+    saveBeforeExit: () => this.persistVendorCloses()
+  };
 
   readonly denominations = DENOMINATIONS;
   readonly packetValue = 200000;
@@ -84,6 +91,9 @@ export class VendorCloseStep2Component implements OnInit {
   private loadedDate: string | null = null;
 
   ngOnInit(): void {
+    this.stepChangesService?.register(this.dirtyHandler);
+    this.destroyRef.onDestroy(() => this.stepChangesService?.unregister(this.dirtyHandler));
+
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
@@ -286,6 +296,7 @@ export class VendorCloseStep2Component implements OnInit {
           this.errorMessage = 'No hay vendedores asignados para esta jornada. Confirma el personal en el Paso 1.';
         }
         this.recalculateAll();
+        this.markAsClean();
         this.cdr.detectChanges();
       },
       error: () => {
@@ -296,6 +307,7 @@ export class VendorCloseStep2Component implements OnInit {
           this.errorMessage = 'No se pudieron consultar los cierres guardados en el servidor.';
         }
         this.recalculateAll();
+        this.markAsClean();
         this.cdr.detectChanges();
       }
     });
@@ -756,6 +768,7 @@ export class VendorCloseStep2Component implements OnInit {
         this.initGrid();
         this.recalculateAll();
         this.markStep2PendingLocally();
+        this.markAsClean();
         this.saveSuccessMessage = 'Los campos y cierres guardados de esta jornada fueron restablecidos.';
         this.showToast('Campos y cierres restablecidos');
         this.cdr.detectChanges();
@@ -781,9 +794,52 @@ export class VendorCloseStep2Component implements OnInit {
     });
   }
 
+  hasUnsavedChanges(): boolean {
+    if (this.isReadOnly || this.isLoading || !this.savedInputSnapshot) return false;
+    return this.serializeCapturesInputState() !== this.savedInputSnapshot;
+  }
+
+  private markAsClean(): void {
+    this.savedInputSnapshot = this.serializeCapturesInputState();
+  }
+
+  private serializeCapturesInputState(): string {
+    const keys = Object.keys(this.captures).sort();
+    return JSON.stringify(
+      keys.map(doc => {
+        const cap = this.captures[doc];
+        const positiveProducts = Object.entries(cap.productos || {})
+          .filter(([, qty]) => Number(qty) > 0)
+          .sort(([a], [b]) => a.localeCompare(b));
+        return [
+          doc,
+          cap.parciales,
+          cap.pico,
+          cap.efectivo,
+          cap.ga,
+          cap.credibanco,
+          cap.qr,
+          cap.redenciones,
+          cap.canastilla,
+          cap.galMotor,
+          cap.galDiesel,
+          cap.galExtra,
+          cap.galMaxpro,
+          cap.tirilla,
+          cap.denominaciones,
+          positiveProducts
+        ];
+      })
+    );
+  }
+
   // --- Save to Backend ---
   saveCloses(): void {
-    if (this.isReadOnly) return;
+    this.persistVendorCloses().subscribe();
+  }
+
+  private persistVendorCloses(): Observable<boolean> {
+    if (this.isReadOnly) return of(true);
     this.showResetConfirm = false;
     this.isSaving = true;
     this.saveSuccessMessage = '';
@@ -831,25 +887,26 @@ export class VendorCloseStep2Component implements OnInit {
       closes: closesDto
     };
 
-    this.salesService
-      .saveVendorCloses(batchRequest)
-      .pipe(switchMap(() => this.markStep2Completed()))
-      .subscribe({
-        next: marked => {
-          this.isSaving = false;
-          this.saveSuccessMessage = marked
-            ? 'Cierres de turno guardados y paso 2 completado en el servidor.'
-            : 'Cierres de turno guardados en el servidor. El avance de la jornada se actualizará al recargar.';
-          this.showToast('Cierres de vendedores conciliados y guardados');
-          this.cdr.detectChanges();
-        },
-        error: (error: unknown) => {
-          this.isSaving = false;
-          this.errorMessage = `${getErrorMessage(error)} Los datos permanecen en pantalla.`;
-          this.showToast('Error al guardar cierres en servidor');
-          this.cdr.detectChanges();
-        }
-      });
+    return this.salesService.saveVendorCloses(batchRequest).pipe(
+      switchMap(() => this.markStep2Completed()),
+      map(marked => {
+        this.isSaving = false;
+        this.markAsClean();
+        this.saveSuccessMessage = marked
+          ? 'Cierres de turno guardados y paso 2 completado en el servidor.'
+          : 'Cierres de turno guardados en el servidor. El avance de la jornada se actualizará al recargar.';
+        this.showToast('Cierres de vendedores conciliados y guardados');
+        this.cdr.detectChanges();
+        return true;
+      }),
+      catchError((error: unknown) => {
+        this.isSaving = false;
+        this.errorMessage = `${getErrorMessage(error)} Los datos permanecen en pantalla.`;
+        this.showToast('Error al guardar cierres en servidor');
+        this.cdr.detectChanges();
+        return of(false);
+      })
+    );
   }
 
   private markStep2Completed(): Observable<boolean> {

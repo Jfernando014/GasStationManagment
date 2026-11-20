@@ -116,7 +116,8 @@
                   <input class="jr-input" type="text" inputmode="decimal" autocomplete="off" placeholder="0"
                     [attr.aria-label]="column.label + ' de ' + rowLabel(item.row)"
                     [value]="amount(item.row[column.field])" [disabled]="!canEdit()"
-                    (focus)="selectAll($event)" (change)="onVoucherChange(item.row.workerId, column.field, $event)">
+                    (focus)="selectAll($event)" (input)="onVoucherDraftInput()"
+                    (change)="onVoucherChange(item.row.workerId, column.field, $event)">
                 </span>
               </td>
               }

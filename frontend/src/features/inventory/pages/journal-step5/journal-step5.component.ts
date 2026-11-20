@@ -21,6 +21,7 @@ import { TankMeasurementsComponent } from '../../components/tank-measurements/ta
 import { FuelAutonomyService } from '../../../../core/services/fuel-autonomy.service';
 import { FuelVariationsService } from '../../../../core/services/fuel-variations.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ProductStockService } from '../../../../core/services/product-stock.service';
 import { TankMeasurementsService } from '../../../../core/services/tank-measurements.service';
 import { TanksService } from '../../../../core/services/tanks.service';
@@ -66,7 +67,12 @@ export class JournalStep5Component {
   private readonly autonomyService = inject(FuelAutonomyService);
   private readonly stockService = inject(ProductStockService);
   private readonly journalService = inject(JournalService);
+  private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dirtyHandler: StepDirtyHandler = {
+    hasUnsavedChanges: () => this.hasUnsavedChanges(),
+    saveBeforeExit: () => this.saveBeforeExit()
+  };
 
   private readonly movementDialog = viewChild(StockMovementDialogComponent);
 
@@ -93,6 +99,7 @@ export class JournalStep5Component {
   readonly autonomy = signal<FuelAutonomyResponse[]>([]);
   readonly stock = signal<ProductStockResponse[]>([]);
   readonly pendingTransfers = signal<Record<number, number | null>>({});
+  private readonly savedHeightsSnapshot = signal('');
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
@@ -129,6 +136,11 @@ export class JournalStep5Component {
   readonly hasPendingTransfers = computed(() =>
     Object.values(this.pendingTransfers()).some(quantity => quantity !== null && quantity > 0)
   );
+  readonly heightsDirty = computed(() =>
+    this.canEditHeights() &&
+    this.tanks().length > 0 &&
+    this.serializeHeights(this.heights()) !== this.savedHeightsSnapshot()
+  );
 
   readonly visibleProducts = computed(() => {
     const query = this.productSearch().trim().toLowerCase();
@@ -150,7 +162,11 @@ export class JournalStep5Component {
   private toastTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
-    this.destroyRef.onDestroy(() => clearTimeout(this.toastTimer));
+    this.stepChangesService?.register(this.dirtyHandler);
+    this.destroyRef.onDestroy(() => {
+      this.stepChangesService?.unregister(this.dirtyHandler);
+      clearTimeout(this.toastTimer);
+    });
 
     this.journalService.currentJournal$
       .pipe(
@@ -184,31 +200,54 @@ export class JournalStep5Component {
   }
 
   saveMeasurements(): void {
+    this.persistMeasurements().subscribe();
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.heightsDirty() || (this.editable() && this.hasPendingTransfers());
+  }
+
+  private saveBeforeExit(): Observable<boolean> {
+    const saveHeightsNeeded = this.heightsDirty();
+    const saveTransfersNeeded = this.editable() && this.hasPendingTransfers();
+    if (!saveHeightsNeeded && !saveTransfersNeeded) return of(true);
+
+    const ops: Observable<boolean>[] = [];
+    if (saveHeightsNeeded) {
+      ops.push(this.persistMeasurements());
+    }
+    if (saveTransfersNeeded) {
+      ops.push(this.persistTransfers());
+    }
+    return forkJoin(ops).pipe(map(results => results.every(Boolean)));
+  }
+
+  private persistMeasurements(): Observable<boolean> {
     const date = this.date();
-    if (!date || this.savingHeights() || !this.canEditHeights()) return;
+    if (!date || this.savingHeights() || !this.canEditHeights()) return of(true);
     if (!this.allMeasured()) {
       this.formError.set('Digita la altura de los 6 tanques antes de guardar la medición.');
-      return;
+      return of(false);
     }
     const readings = this.tanks().map(tank => ({ tankId: tank.id, heightCm: this.heights()[tank.id] as number }));
     this.savingHeights.set(true);
     this.formError.set(null);
-    this.measurementsService
-      .save(date, { readings })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: measurement => {
-          this.savingHeights.set(false);
-          this.measurement.set(measurement);
-          this.applyMeasurement(measurement, this.tanks());
-          this.reloadVariationAndAutonomy(date);
-          this.showToast('Medición del día guardada.');
-        },
-        error: (error: unknown) => {
-          this.savingHeights.set(false);
-          this.formError.set(getErrorMessage(error));
-        }
-      });
+    return this.measurementsService.save(date, { readings }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      map(measurement => {
+        this.savingHeights.set(false);
+        this.measurement.set(measurement);
+        this.applyMeasurement(measurement, this.tanks());
+        this.reloadVariationAndAutonomy(date);
+        this.showToast('Medición del día guardada.');
+        return true;
+      }),
+      catchError((error: unknown) => {
+        this.savingHeights.set(false);
+        this.formError.set(getErrorMessage(error));
+        return of(false);
+      })
+    );
   }
 
   completeStep(): void {
@@ -239,8 +278,12 @@ export class JournalStep5Component {
   }
 
   saveTransfers(): void {
+    this.persistTransfers().subscribe();
+  }
+
+  private persistTransfers(): Observable<boolean> {
     const date = this.date();
-    if (!date || this.savingTransfers() || !this.editable()) return;
+    if (!date || this.savingTransfers() || !this.editable()) return of(true);
     const requests: StockTransferRequest[] = this.stock()
       .filter(product => {
         const quantity = this.pendingTransfers()[product.productId] ?? null;
@@ -254,26 +297,27 @@ export class JournalStep5Component {
 
     if (requests.length === 0) {
       this.formError.set('No hay traslados válidos para guardar.');
-      return;
+      return of(false);
     }
 
     this.savingTransfers.set(true);
     this.formError.set(null);
-    forkJoin(requests.map(request => this.stockService.registerTransfer(request)))
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.savingTransfers.set(false);
-          this.pendingTransfers.set({});
-          this.loadProductStock(date);
-          this.showToast(`${requests.length} traslado${requests.length === 1 ? '' : 's'} guardado${requests.length === 1 ? '' : 's'}.`);
-        },
-        error: (error: unknown) => {
-          this.savingTransfers.set(false);
-          this.loadProductStock(date);
-          this.formError.set(getErrorMessage(error));
-        }
-      });
+    return forkJoin(requests.map(request => this.stockService.registerTransfer(request))).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      map(() => {
+        this.savingTransfers.set(false);
+        this.pendingTransfers.set({});
+        this.loadProductStock(date);
+        this.showToast(`${requests.length} traslado${requests.length === 1 ? '' : 's'} guardado${requests.length === 1 ? '' : 's'}.`);
+        return true;
+      }),
+      catchError((error: unknown) => {
+        this.savingTransfers.set(false);
+        this.loadProductStock(date);
+        this.formError.set(getErrorMessage(error));
+        return of(false);
+      })
+    );
   }
 
   syncSales(): void {
@@ -399,6 +443,15 @@ export class JournalStep5Component {
     }
     this.heights.set(heights);
     this.gallons.set(gallons);
+    this.savedHeightsSnapshot.set(this.serializeHeights(heights));
+  }
+
+  private serializeHeights(heights: Record<number, number | null>): string {
+    const sorted = this.tanks()
+      .map(t => t.id)
+      .sort((a, b) => a - b)
+      .map(id => [id, heights[id] ?? null]);
+    return JSON.stringify(sorted);
   }
 
   private calculateGallons(): Observable<Record<number, number | null>> {
