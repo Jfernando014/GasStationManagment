@@ -42,7 +42,8 @@ class AdministrativeExpenseControllerTest {
             @Override
             public AdministrativeExpense save(AdministrativeExpense expense) {
                 AdministrativeExpense saved = new AdministrativeExpense(ids.incrementAndGet(), expense.date(),
-                        expense.amount(), expense.description(), Instant.now());
+                        expense.amount(), expense.name(), expense.documentNumber(),
+                        expense.description(), Instant.now());
                 expenses.add(saved);
                 return saved;
             }
@@ -95,9 +96,13 @@ class AdministrativeExpenseControllerTest {
         mockMvc.perform(post("/api/v1/sales/administrative-expenses")
                         .principal(admin())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"date\":\"2026-08-01\",\"amount\":15000,\"description\":\"Papelería\"}"))
+                        .content("{\"date\":\"2026-08-01\",\"amount\":15000,\"name\":\"Ofimatic@.NET\","
+                                + "\"documentNumber\":\"25275622-2\",\"description\":\"Papelería\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.date").value("2026-08-01"));
+                .andExpect(jsonPath("$.date").value("2026-08-01"))
+                .andExpect(jsonPath("$.name").value("Ofimatic@.NET"))
+                .andExpect(jsonPath("$.documentNumber").value("25275622-2"))
+                .andExpect(jsonPath("$.description").value("Papelería"));
 
         mockMvc.perform(get("/api/v1/sales/administrative-expenses")
                         .param("year", "2026").param("month", "8").param("fortnight", "3"))

@@ -31,7 +31,8 @@ class AdministrativeExpenseServiceTest {
             @Override
             public AdministrativeExpense save(AdministrativeExpense expense) {
                 AdministrativeExpense saved = new AdministrativeExpense(ids.incrementAndGet(), expense.date(),
-                        expense.amount(), expense.description(), Instant.now());
+                        expense.amount(), expense.name(), expense.documentNumber(),
+                        expense.description(), Instant.now());
                 store.add(saved);
                 return saved;
             }
@@ -105,5 +106,20 @@ class AdministrativeExpenseServiceTest {
 
         assertEquals(0, service.list(ExpenseFilter.all()).expenses().size());
         assertThrows(AdministrativeExpenseNotFoundException.class, () -> service.delete(expense.id()));
+    }
+
+    @Test
+    void registersAndNormalizesOptionalSupplierNameAndDocumentNumber() {
+        AdministrativeExpense expense = service.register(
+                LocalDate.of(2026, 8, 1),
+                new BigDecimal("18350.00"),
+                "  Servientrega S.A  ",
+                "  860512330-3 ",
+                "  Envío documentos Bogotá ");
+
+        assertEquals("Servientrega S.A", expense.name());
+        assertEquals("860512330-3", expense.documentNumber());
+        assertEquals("Envío documentos Bogotá", expense.description());
+        assertEquals("Servientrega S.A - Envío documentos Bogotá", expense.displayDescription());
     }
 }
