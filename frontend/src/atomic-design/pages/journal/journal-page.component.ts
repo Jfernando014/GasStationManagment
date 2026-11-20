@@ -7,13 +7,14 @@ import { JOURNAL_STEP_ROUTES, JournalService } from '../../../core/services/jour
 import { todayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse } from '../../../shared/models/journal.model';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
+import { UnsavedStepModalComponent } from '../../organisms/unsaved-step-modal/unsaved-step-modal.component';
 
 const STEP_ROUTES = JOURNAL_STEP_ROUTES;
 
 @Component({
   selector: 'app-journal-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, JournalStepperComponent],
+  imports: [CommonModule, RouterModule, JournalStepperComponent, UnsavedStepModalComponent],
   templateUrl: './journal-page.component.html',
   styleUrls: ['./journal-page.component.css']
 })

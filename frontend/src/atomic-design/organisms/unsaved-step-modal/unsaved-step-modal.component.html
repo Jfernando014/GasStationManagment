@@ -1,0 +1,60 @@
+@if (changesService.modalOpen()) {
+  <div
+    class="unsaved-modal-backdrop"
+    role="presentation"
+    tabindex="-1"
+    (click)="onBackdropClick($event)"
+    (keydown.escape)="changesService.cancelLeave()">
+    <div
+      class="unsaved-modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unsavedStepModalTitle"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
+      <div class="unsaved-modal-header">
+        <div class="unsaved-modal-title-wrap">
+          <div class="unsaved-modal-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+              <path d="M12 9v4M12 17h.01" />
+            </svg>
+          </div>
+          <div>
+            <h2 id="unsavedStepModalTitle" class="unsaved-modal-title">Cambios sin guardar</h2>
+            <p class="unsaved-modal-subtitle">Tienes información digitada pendiente en este paso</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="unsaved-modal-close"
+          [disabled]="changesService.saving()"
+          aria-label="Cerrar y permanecer en el paso actual"
+          title="Cancelar y quedarse aquí"
+          (click)="changesService.cancelLeave()">✕</button>
+      </div>
+
+      <p class="unsaved-modal-body">
+        ¿Deseas salir sin guardar los cambios realizados? Si sales sin guardar, se perderán los datos ingresados en este paso.
+      </p>
+
+      <div class="unsaved-modal-actions">
+        <button
+          type="button"
+          class="btn-leave-discard"
+          [disabled]="changesService.saving()"
+          (click)="changesService.confirmLeaveWithoutSaving()">
+          Salir sin guardar
+        </button>
+        <button
+          type="button"
+          class="btn-save-leave"
+          [disabled]="changesService.saving()"
+          (click)="changesService.confirmSaveAndLeave()">
+          {{ changesService.saving() ? 'Guardando…' : 'Guardar cambios y salir' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
