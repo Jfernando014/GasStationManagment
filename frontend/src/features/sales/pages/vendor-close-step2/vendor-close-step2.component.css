@@ -499,7 +499,10 @@
 
 .jr-cell--calc {
   display: block;
+  min-width: 0;
   padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background: #eef2f6;
   border-radius: 6px;
   font-weight: 700;
@@ -516,13 +519,27 @@
   color: #b45309;
 }
 
+/* Con aviso la celda lleva dos importes: el esperado, más pequeño, arriba y el total debajo; no ensancha la columna ni la fila */
+.jr-cell--calc.jr-cell--aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 1px 8px;
+  line-height: 13px;
+}
+
 .jr-cell--total {
   font-weight: 800;
   color: #0f172a;
 }
 
 .jr-p2-esperado {
-  margin-right: 6px;
+  max-width: 100%;
+  margin-right: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
   color: #d97706;
 }
 
