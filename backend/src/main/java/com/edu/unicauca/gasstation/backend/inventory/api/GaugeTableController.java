@@ -117,6 +117,16 @@ public class GaugeTableController {
                 .body(gaugeTableService.toCsv(table).getBytes(StandardCharsets.UTF_8));
     }
 
+    @Operation(summary = "Delete a gauge table",
+            description = "Unassigns any linked tanks (leaving them without a table) and deletes the gauge table")
+    @ApiResponse(responseCode = "204", description = "Gauge table deleted")
+    @ApiResponse(responseCode = "404", description = "Gauge table not found")
+    @DeleteMapping("/gauge-tables/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        gaugeTableService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Calculate the gallons of a tank from the height measured with the ruler",
             description = "Interpolates the tank's gauge table and subtracts the configured dead volume "
                     + "(never below 0)")

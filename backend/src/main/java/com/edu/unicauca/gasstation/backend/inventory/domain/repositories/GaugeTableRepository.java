@@ -18,4 +18,6 @@ public interface GaugeTableRepository {
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
+
+    void deleteById(Long id);
 }
