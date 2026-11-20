@@ -1,0 +1,71 @@
+<section class="card" aria-labelledby="normalized-title" [attr.aria-busy]="loading()">
+  <div class="head">
+    <span class="title">
+      <h2 id="normalized-title">Ventas ajustadas por turno</h2>
+      <app-info-tooltip [text]="explanation" label="Qué es el factor de ajuste" />
+    </span>
+    <p class="sub">Cada turno se lleva a la misma escala para comparar a todos. Los factores solo se leen aquí.</p>
+  </div>
+
+  @if (people().length) {
+    <div class="chips" role="group" aria-label="Vendedores a comparar">
+      @for (person of people(); track person.workerId) {
+        <button type="button" class="chip" [class.is-on]="included(person.workerId)" [attr.aria-pressed]="included(person.workerId)"
+          (click)="toggleWorker.emit(person.workerId)">{{ person.recordedName }}</button>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="skeletons">
+      @for (n of skeletonRows; track n) {
+        <div class="skeleton-row"><app-skeleton width="180px" height="16px" /><app-skeleton width="60%" height="14px" /></div>
+      }
+    </div>
+  } @else if (!rows().length) {
+    <app-empty-state
+      [heading]="noMatches() ? 'Sin coincidencias' : 'Todavía no hay ventas ajustadas'"
+      [description]="noMatches() ? 'Ningún vendedor coincide con lo que escribiste.' : 'Para ajustar hacen falta la clasificación de los turnos y los factores aprobados. No se usa un factor por defecto.'" />
+  } @else {
+    <div class="wrap">
+      <table>
+        <caption class="sr">Ventas reales y ajustadas por turno, con el origen del factor de ajuste</caption>
+        <thead>
+          <tr>
+            <th scope="col">Vendedor</th>
+            <th scope="col">Turno</th>
+            <th scope="col" class="num">Vendió</th>
+            <th scope="col" class="num">Factor de ajuste</th>
+            <th scope="col" class="num">Ventas ajustadas</th>
+            <th scope="col">De dónde sale el factor</th>
+            <th scope="col">Estado</th>
+          </tr>
+        </thead>
+        @for (v of [version()]; track v) {
+          <tbody>
+            @for (row of rows(); track rowKey(row, $index); let i = $index) {
+              <tr [style.--i]="i">
+                <td><span class="who"><app-avatar [name]="row.recordedName" /><b>{{ row.recordedName }}</b></span></td>
+                <td>
+                  <span class="shift">
+                    <app-shift-chip [code]="row.scenario.workedCode" [toneOverride]="row.scenario.period === 'DAY' ? 'dia' : 'noche'" />
+                    <span>{{ scenarioText(row.scenario) }}</span>
+                  </span>
+                </td>
+                <td class="num">{{ format(row.sales) }} {{ unit() }}</td>
+                <td class="num">{{ row.availability === 'AVAILABLE' ? format(row.multiplier) + ' ×' : '—' }}</td>
+                <td class="num strong">{{ row.normalizedSales !== null ? format(row.normalizedSales) + ' ' + unit() : '—' }}</td>
+                <td class="origin">{{ row.multiplierSource ?? '—' }}</td>
+                <td>
+                  @if (row.availability === 'AVAILABLE') { <span class="ok">Listo</span> }
+                  @else { <span class="why">{{ reasonText(row.reason) }}</span> }
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
+    </div>
+    <p class="note">No hay un puesto general entre turnos: cada escenario se muestra por separado.</p>
+  }
+</section>

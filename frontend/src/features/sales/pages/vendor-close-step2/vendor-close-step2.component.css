@@ -168,53 +168,7 @@
   transform: scale(0.98);
 }
 
-.jr-p2-btn-reset:hover:not(:disabled) {
-  border-color: #fca5a5;
-  color: #b91c1c;
-  background: #fef2f2;
-}
-
-.jr-p2-btn-danger {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: #ffffff;
-}
-
-.jr-p2-btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
-}
-
-/* ---- Confirmación en línea ---- */
-.jr-p2-confirm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  color: #92400e;
-  font-size: 12.5px;
-}
-
-.jr-p2-confirm-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jr-p2-confirm-texto strong {
-  font-size: 13px;
-  color: #78350f;
-}
-
-.jr-p2-confirm-acciones {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* El botón Restablecer y su confirmación en línea (jr-p2-btn-reset, jr-p2-btn-danger, jr-p2-confirm*) están en views.css */
 
 /* ---- Alertas ---- */
 .alert-success,
@@ -545,7 +499,10 @@
 
 .jr-cell--calc {
   display: block;
+  min-width: 0;
   padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background: #eef2f6;
   border-radius: 6px;
   font-weight: 700;
@@ -562,13 +519,27 @@
   color: #b45309;
 }
 
+/* Con aviso la celda lleva dos importes: el esperado, más pequeño, arriba y el total debajo; no ensancha la columna ni la fila */
+.jr-cell--calc.jr-cell--aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 1px 8px;
+  line-height: 13px;
+}
+
 .jr-cell--total {
   font-weight: 800;
   color: #0f172a;
 }
 
 .jr-p2-esperado {
-  margin-right: 6px;
+  max-width: 100%;
+  margin-right: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
   color: #d97706;
 }
 

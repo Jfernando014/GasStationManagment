@@ -82,7 +82,8 @@ export class SalesVendorCloseService {
   }
 
   /**
-   * Authentic August 5, 2026 calibration data (Control Juan Clavijo Hoja 05)
+   * August 5, 2026 calibration data (Control Juan Clavijo Hoja 05), adjusted for the demo so that every vendor
+   * closes with no difference: cash, bill counts, G.A. and the slip total were changed, the rest is the sheet's.
    */
   getCalibrationDemo0805() {
     return {
@@ -115,64 +116,64 @@ export class SalesVendorCloseService {
       ],
       capturas: {
         '52875796': {
-          b100k: 8,
-          b50k: 24,
+          b100k: 9,
+          b50k: 25,
           b20k: 7,
-          b10k: 14,
+          b10k: 15,
           b5k: 13,
-          b2k: 14,
+          b2k: 15,
           parciales: 10,
-          pico: 373000,
-          ga: 0,
+          pico: 535000,
+          ga: 593,
           credibanco: 1354436,
-          qr: 162606,
+          qr: 0,
           redenciones: 0,
           galMotor: 223.701,
           galDiesel: 13.413,
           galExtra: 2.755,
           galMaxpro: 0,
           canastilla: 20800,
-          tirilla: 3890028.87
+          tirilla: 3890029
         },
         '1061696674': {
-          b100k: 13,
-          b50k: 26,
+          b100k: 9,
+          b50k: 25,
           b20k: 0,
           b10k: 2,
           b5k: 2,
-          b2k: 24,
+          b2k: 22,
           parciales: 9,
-          pico: 47000,
-          ga: 0,
+          pico: 424000,
+          ga: 371,
           credibanco: 2019760,
-          qr: 377902,
+          qr: 0,
           redenciones: 41380,
           galMotor: 229.649,
           galDiesel: 11.314,
           galExtra: 13.606,
           galMaxpro: 7.595,
           canastilla: 25800,
-          tirilla: 4285510.58
+          tirilla: 4285511
         },
         '76326816': {
-          b100k: 9,
+          b100k: 12,
           b50k: 29,
           b20k: 21,
-          b10k: 44,
+          b10k: 47,
           b5k: 10,
-          b2k: 25,
+          b2k: 27,
           parciales: 16,
-          pico: 110000,
-          ga: 0,
+          pico: 444000,
+          ga: 162,
           credibanco: 2317116,
-          qr: 335500,
+          qr: 0,
           redenciones: 0,
           galMotor: 331.237,
           galDiesel: 33.753,
           galExtra: 0.735,
           galMaxpro: 7.820,
           canastilla: 34500,
-          tirilla: 5961277.95
+          tirilla: 5961278
         }
       },
       productos: {

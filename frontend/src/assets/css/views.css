@@ -2645,6 +2645,15 @@
     .jr-p2-aviso-paso1 a { color: var(--brand-primary-strong); }
     .jr-p2-acciones { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     body.dev-mode .jr-p2-acciones .dev-only { display: inline-flex !important; }
+
+    /* Botón Restablecer de los pasos 2 a 5 y su confirmación en línea */
+    .jr-p2-btn-reset:hover:not(:disabled) { border-color: #fca5a5; color: #b91c1c; background: #fef2f2; }
+    .jr-p2-btn-danger { background: #dc2626; border-color: #dc2626; color: #ffffff; }
+    .jr-p2-btn-danger:hover:not(:disabled) { background: #b91c1c; }
+    .jr-p2-confirm { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 10px 14px; border-radius: 8px; background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; font-size: 12.5px; }
+    .jr-p2-confirm-texto { display: flex; flex-direction: column; gap: 2px; }
+    .jr-p2-confirm-texto strong { font-size: 13px; color: #78350f; }
+    .jr-p2-confirm-acciones { display: flex; align-items: center; gap: 8px; }
     .jr-btn.is-bloqueado { color: var(--text-muted); background: var(--surface-subtle); cursor: not-allowed; }
     .jr-p2-sub .jr-leyenda { flex-wrap: nowrap; }
     .jr-p2 .jr-grid th small.jr-p2-ayuda { font-weight: 500; color: var(--text-light); cursor: help; }

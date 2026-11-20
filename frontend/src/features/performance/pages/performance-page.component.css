@@ -1,39 +1,41 @@
 :host { display: block; min-width: 0; }
-.performance-page { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.performance-actions, .performance-filters, .performance-selection { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
-.performance-filters { margin-bottom: 0; }
-.performance-filters .ps-campo, .performance-selection .ps-campo { min-width: 150px; max-width: 100%; }
-.performance-selection select { max-width: 420px; width: 100%; }
+.performance-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.performance-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .performance-notice { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-subtle); display: flex; gap: 10px; flex-wrap: wrap; font-size: 12.5px; }
-.is-error { color: var(--semantic-red-strong); background: var(--semantic-red-subtle); }
-.performance-period, .performance-coverage { color: var(--text-muted); font-size: 12px; }
-.performance-coverage ul { max-height: 180px; overflow: auto; padding-left: 20px; }
-.sales-kpi-grid { margin-bottom: 12px; }
-.vendor-kpi { border-top: 3px solid var(--brand-primary); }
-.vendor-kpi .sales-kpi-val { color: var(--brand-primary); }
-.station-kpi { border-top: 3px solid var(--surface-navy); }
-.sales-kpi-val { font-size: clamp(18px, 2vw, 26px); overflow-wrap: anywhere; }
-.sales-kpi-card small { color: var(--text-muted); }
-.readonly-config-callout { display: block; margin-bottom: 0; }
-.readonly-config-callout p { font-size: 12px; margin-top: 6px; }
-.vendor-chips-selector { flex-wrap: wrap; margin: 0; }
-.rs-tabla-wrap { max-width: 100%; overflow-x: auto; border-radius: var(--radius-sm); }
-table { min-width: 960px; }
-.tnum { white-space: nowrap; }
-td[colspan] { white-space: normal; }
-.scenario-cell { white-space: normal; min-width: 190px; max-width: 300px; overflow-wrap: anywhere; }
-.performance-person { display: flex; gap: 8px; align-items: center; min-width: 170px; white-space: normal; }
-.performance-person app-avatar { flex-shrink: 0; background: var(--brand-primary-subtle); color: var(--brand-primary); }
-.daily-target { display: block; white-space: normal; max-width: 260px; color: var(--text-muted); margin-top: 6px; }
-.performance-chart { min-width: 0; padding: 18px; }
-.performance-chart h2 { font-size: 15px; }
-.chart-top-bar { gap: 12px; flex-wrap: wrap; }
-section[role=tabpanel] { min-width: 0; }
+
+/* The panel keeps the previous answer on screen, dimmed, while the next one arrives. */
+.panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; transition: opacity var(--duration-normal) ease; }
+.panel.is-busy { opacity: .55; pointer-events: none; }
+
+.state { padding: 24px 16px; border: 1px solid var(--border-main); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-card); }
+
+.info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  background: var(--surface-card);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-body);
+  animation: info-in var(--duration-normal) var(--spring) backwards;
+}
+
+.info p { margin: 0; }
+.info b { color: var(--text-heading); }
+.info .dot { flex: none; width: 10px; height: 10px; margin-top: 6px; border-radius: 999px; background: var(--semantic-blue); }
+
+.pending { max-height: 180px; padding-left: 20px; overflow: auto; font-size: 12.5px; color: var(--text-muted); }
+
+@keyframes info-in { from { opacity: 0; transform: translateY(6px); } }
+
 @media (max-width: 768px) {
   .rs-cabecera { flex-wrap: wrap; gap: 12px; }
-  .sales-kpi-grid.cols-3 { grid-template-columns: 1fr; }
-  .performance-filters > .ps-campo, .performance-selection > .ps-campo { flex: 1 1 150px; }
-  .performance-filters input, .performance-filters select { width: 100%; min-width: 0; }
-  .performance-chart { padding: 12px; }
-  .rs-tabs { flex-wrap: wrap; gap: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { transition: none; }
+  .info { animation: none; }
 }

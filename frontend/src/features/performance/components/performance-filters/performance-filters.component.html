@@ -1,0 +1,28 @@
+<div class="filters">
+  <app-segmented-control label="Período" [options]="modeOptions" [value]="mode()" (valueChange)="modeChange.emit($event)" />
+
+  <div class="period">
+    @switch (mode()) {
+      @case ('dia') {
+        <label class="date">
+          <span class="sr">Día</span>
+          <input type="date" class="flat-input" [value]="date()" [min]="start" [max]="today()" (change)="onDate($event)">
+        </label>
+      }
+      @case ('mes') {
+        <app-select-field class="month" fieldId="performance-month" label="Mes" [labelHidden]="true"
+          [control]="monthControl" [options]="monthOptions()" [required]="true" />
+      }
+      @default {
+        <span class="range" role="status">{{ historyText() }}</span>
+      }
+    }
+  </div>
+
+  <app-select-field class="measure" fieldId="performance-measure" label="Qué se mide" [labelHidden]="true"
+    [control]="measureControl" [options]="measureOptions" [required]="true" />
+
+  <div class="search">
+    <app-search-field fieldId="performance-search" [label]="searchLabel()" placeholder="Buscar vendedor" (searchChange)="searchChange.emit($event)" />
+  </div>
+</div>

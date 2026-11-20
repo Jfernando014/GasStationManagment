@@ -129,6 +129,8 @@ export class ElectronicPaymentsStep3Component {
   private readonly pendingSaves$ = toObservable(this.pendingSaves);
   readonly invalidCells = signal<ReadonlySet<string>>(new Set<string>());
   readonly completing = signal(false);
+  readonly resetting = signal(false);
+  readonly showResetConfirm = signal(false);
 
   readonly uploading = signal(false);
   readonly dragging = signal(false);
@@ -146,6 +148,17 @@ export class ElectronicPaymentsStep3Component {
   readonly toastVisible = signal(false);
 
   readonly saving = computed(() => this.pendingSaves() > 0);
+  /** Restablecer se permite con la jornada abierta y sin guardados ni cargas en curso. */
+  readonly canReset = computed(
+    () =>
+      this.editable() &&
+      !!this.date() &&
+      !this.saving() &&
+      !this.completing() &&
+      !this.uploading() &&
+      !this.savingPoints() &&
+      !this.resetting()
+  );
   readonly credibanco = computed(() => this.status()?.credibanco ?? null);
   readonly qr = computed(() => this.status()?.qr ?? null);
   readonly points = computed(() => this.status()?.points ?? null);
@@ -283,11 +296,11 @@ export class ElectronicPaymentsStep3Component {
   }
 
   rowLabel(row: ElectronicVendorRow): string {
-    return vendorLabel(row.workerName, row.shiftCode);
+    return vendorLabel(row.workerName);
   }
 
-  checkLabel(name: string | null, shiftCode: string | null): string {
-    return vendorLabel(name, shiftCode);
+  checkLabel(name: string | null): string {
+    return vendorLabel(name);
   }
 
   // ------------------------------------------------------------ comprobantes
@@ -505,6 +518,55 @@ export class ElectronicPaymentsStep3Component {
 
   closeLoadError(): void {
     this.loadError.set(null);
+  }
+
+  // ------------------------------------------------------------ restablecer
+
+  requestReset(): void {
+    if (!this.canReset()) return;
+    this.formError.set(null);
+    this.showResetConfirm.set(true);
+  }
+
+  cancelReset(): void {
+    this.showResetConfirm.set(false);
+  }
+
+  /** Borra en el servidor lo guardado por las tres pestañas y deja el paso en pendiente. */
+  confirmReset(): void {
+    const date = this.date();
+    if (!date || !this.canReset()) return;
+
+    this.showResetConfirm.set(false);
+    this.resetting.set(true);
+    this.formError.set(null);
+    this.service
+      .resetStep(date)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.resetting.set(false);
+          this.pointsDirty = false;
+          this.voucherDraftDirty.set(false);
+          this.pointsDraft.set('');
+          this.importResult.set(null);
+          this.importedFileName.set(null);
+          this.whatsappWorkerId.set(null);
+          this.markStep3PendingLocally();
+          this.refresh(date);
+          this.showToast('Comprobantes, QR y Puntos restablecidos.');
+        },
+        error: (error: unknown) => {
+          this.resetting.set(false);
+          this.formError.set(getErrorMessage(error));
+        }
+      });
+  }
+
+  private markStep3PendingLocally(): void {
+    const step = this.step();
+    if (!step || step.status === StepStatus.PENDING) return;
+    this.journalService.updateCurrentStep({ ...step, status: StepStatus.PENDING, completedAt: null });
   }
 
   // --------------------------------------------------------------- privados

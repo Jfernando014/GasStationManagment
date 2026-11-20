@@ -190,14 +190,14 @@
             <tbody>
               @for (a of autonomyAlerts(); track a.tankId + '-' + a.fuelName) {
                 <tr>
-                  <td><b>{{ a.tankId }}</b></td>
+                  <td><b>{{ a.tankId || '—' }}</b></td>
                   <td>{{ a.fuelName }}</td>
                   <td class="num">
                     <span class="jr-chip" [ngClass]="a.severity === 'CRITICAL' ? 'jr-chip--falta' : 'jr-chip--aviso'">
                       {{ formatNumber(a.autonomyDays, 1) }} d
                     </span>
                   </td>
-                  <td>{{ a.reachesUntilDate }}</td>
+                  <td>{{ a.reachesUntilDate || '—' }}</td>
                 </tr>
               }
               @if (autonomyAlerts().length === 0) {

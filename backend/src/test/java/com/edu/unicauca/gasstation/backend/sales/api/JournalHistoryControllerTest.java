@@ -82,11 +82,12 @@ class JournalHistoryControllerTest {
                         .param("yearMonth", "2026-08"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.yearMonth").value("2026-08"))
-                .andExpect(jsonPath("$.closedInSystemCount").value(1))
-                .andExpect(jsonPath("$.migratedDaysCount").value(27))
-                .andExpect(jsonPath("$.days[0].type").value("MIGRATED"))
-                .andExpect(jsonPath("$.days[1].type").value("JOURNAL"))
-                .andExpect(jsonPath("$.days[1].status").value("CLOSED"));
+                .andExpect(jsonPath("$.closedSystemCount").value(1))
+                .andExpect(jsonPath("$.migratedCount").value(27))
+                .andExpect(jsonPath("$.days[0].source").value("MIGRATED"))
+                .andExpect(jsonPath("$.days[0].state").value("MIGRATED"))
+                .andExpect(jsonPath("$.days[1].source").value("JOURNAL"))
+                .andExpect(jsonPath("$.days[1].state").value("CLOSED"));
     }
 
     @Test
@@ -105,8 +106,8 @@ class JournalHistoryControllerTest {
                         .header("Authorization", getBearerToken()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.date").value("2026-08-01"))
-                .andExpect(jsonPath("$.type").value("MIGRATED"))
-                .andExpect(jsonPath("$.status").value("CLOSED"))
-                .andExpect(jsonPath("$.hasDiscrepancy").value(true));
+                .andExpect(jsonPath("$.source").value("MIGRATED"))
+                .andExpect(jsonPath("$.state").value("MIGRATED"))
+                .andExpect(jsonPath("$.markers[0]").value("DISCREPANCY"));
     }
 }

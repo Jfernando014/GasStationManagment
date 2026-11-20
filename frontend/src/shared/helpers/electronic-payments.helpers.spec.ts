@@ -225,10 +225,10 @@ describe('electronic payments helpers', () => {
     });
   });
 
-  it('labels vendors with their shift and has a fallback name', () => {
-    expect(vendorLabel('Carlos', 'DIA')).toBe('Carlos (DIA)');
-    expect(vendorLabel('Carlos', null)).toBe('Carlos');
-    expect(vendorLabel(null, 'DIA')).toBe('Vendedor sin nombre (DIA)');
+  it('labels vendors by name only and has a fallback name', () => {
+    expect(vendorLabel('Carlos')).toBe('Carlos');
+    expect(vendorLabel('  Carlos  ')).toBe('Carlos');
+    expect(vendorLabel(null)).toBe('Vendedor sin nombre');
   });
 
   it('explains why a Redeban row was not assigned', () => {
@@ -259,8 +259,8 @@ describe('electronic payments helpers', () => {
       const text = buildStepSummary(status());
       expect(text).toContain('*Medios electrónicos 05/08/2026*');
       expect(text).toContain('Credibanco: No cuadra');
-      expect(text).toContain('- Carlos (DIA): Cuadra');
-      expect(text).toContain('- Ana (NOCHE): No cuadra (comprobantes $2.039.520, planilla $2.019.760)');
+      expect(text).toContain('- Carlos: Cuadra');
+      expect(text).toContain('- Ana: No cuadra (comprobantes $2.039.520, planilla $2.019.760)');
       expect(text).toContain('QR: Cuadra (Redeban $540.508, planillas $540.508)');
       expect(text).toContain('Puntos Colombia: sin redenciones');
       expect(text).toContain('Paso 3: pendiente.');

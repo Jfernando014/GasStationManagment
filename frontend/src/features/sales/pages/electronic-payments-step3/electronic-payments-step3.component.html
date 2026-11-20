@@ -14,6 +14,15 @@
       <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" [disabled]="!status()" (click)="copyStepSummary()">
         Copiar resumen
       </button>
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset" id="btn-restablecer-pagos"
+        [disabled]="!canReset()" (click)="requestReset()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        <span>{{ resetting() ? 'Restableciendo...' : 'Restablecer' }}</span>
+      </button>
       <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
         [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 primero' : (status()?.canComplete ? '' : 'Todavía hay diferencias o datos pendientes'))"
         (click)="completeStep()">
@@ -21,6 +30,21 @@
       </button>
     </div>
   </div>
+
+  @if (showResetConfirm()) {
+  <div class="jr-p2-confirm" role="alertdialog" aria-label="Confirmar restablecimiento del paso 3">
+    <div class="jr-p2-confirm-texto">
+      <strong>¿Restablecer los campos de esta jornada?</strong>
+      <span>Se borrarán los comprobantes de Credibanco, el archivo de Redeban cargado y el total de Puntos Colombia de
+        {{ dateLabel() }}. Se limpian las tres pestañas, no solo la que estás viendo.</span>
+    </div>
+    <div class="jr-p2-confirm-acciones">
+      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
+      <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer-pagos"
+        (click)="confirmReset()">Sí, restablecer</button>
+    </div>
+  </div>
+  }
 
   @if (!salesCompleted() && !completed() && date()) {
   <div class="jr-p3-aviso-paso2" role="status">
@@ -283,7 +307,7 @@
             <tbody>
               @for (vendor of q.vendors; track vendor.workerId) {
               <tr>
-                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, vendor.shiftCode) }}</td>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName) }}</td>
                 <td class="num">{{ money(vendor.redeban) }}</td>
                 <td class="num jr-p3-planilla">{{ money(vendor.planilla) }}</td>
                 <td class="num">{{ signed(vendor.difference) }}</td>
@@ -327,7 +351,7 @@
                 <select class="flat-select" (change)="selectWhatsappVendor($event)">
                   @for (vendor of q.vendors; track vendor.workerId) {
                   <option [value]="vendor.workerId" [selected]="vendor.workerId === whatsappWorkerId()">
-                    {{ checkLabel(vendor.workerName, vendor.shiftCode) }}
+                    {{ checkLabel(vendor.workerName) }}
                   </option>
                   }
                 </select>
@@ -410,7 +434,7 @@
             <tbody>
               @for (vendor of p.vendors; track vendor.workerId) {
               <tr>
-                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName, null) }}</td>
+                <td class="jr-p3-nombre">{{ checkLabel(vendor.workerName) }}</td>
                 <td class="num">{{ money(vendor.redemptions) }}</td>
               </tr>
               }

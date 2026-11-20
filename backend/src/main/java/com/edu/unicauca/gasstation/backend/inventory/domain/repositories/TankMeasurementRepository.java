@@ -13,6 +13,9 @@ public interface TankMeasurementRepository {
 
     boolean existsByJournalDate(LocalDate journalDate);
 
+    /** Removes the measurement of the date with its readings, if any. */
+    void deleteByJournalDate(LocalDate journalDate);
+
     Optional<TankMeasurement> findLatestBefore(LocalDate journalDate);
 
     Optional<TankMeasurement> findLatestContainingTank(Long tankId);

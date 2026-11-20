@@ -1523,6 +1523,8 @@
     .jr-btn--sm { height: 30px; padding: 0 10px; font-size: 12px; }
     .jr-btn--pri { background: var(--brand-primary); border-color: var(--brand-primary); color: var(--surface-navy); }
     .jr-btn--pri:hover { background: var(--brand-primary-hover); }
+    /* En la jornada diaria (pasos 1 a 6, jornada cerrada y sus diálogos) el naranja lleva texto blanco, en negrita y de 14 px para compensar el contraste. Hover, foco y deshabilitado heredan: solo cambia el color del texto */
+    .journal-page-container .jr-btn--pri { color: #FFFFFF; font-size: 14px; font-weight: 700; }
     .jr-btn--sec { background: var(--surface-card); border-color: var(--jr-cell-border); color: var(--text-heading); }
     .jr-btn--sec:hover { background: var(--surface-subtle); }
     .jr-btn--ghost { background: transparent; color: var(--text-body); }

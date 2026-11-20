@@ -89,6 +89,12 @@ public class QrPointsReconciliationService {
         return points(date);
     }
 
+    /** Removes what was loaded for the date: the Redeban rows and the Puntos Colombia total. */
+    @Transactional
+    public void removeDay(LocalDate date) {
+        qrPoints.deleteByDate(date);
+    }
+
     @Transactional(readOnly = true)
     public PointsResult points(LocalDate date) {
         List<VendorDeclaration> declarations = cards.findByDate(date);

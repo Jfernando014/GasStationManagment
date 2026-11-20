@@ -177,10 +177,13 @@ public class JournalClosingSummaryService {
             ClosingInventorySnapshot inventorySnapshot) {
         return switch (stepNumber) {
             case 1 -> {
-                if (assignedVendors.isEmpty()) {
-                    yield isCompleted ? "Personal del día confirmado" : "Sin confirmar personal del día";
+                if (!isCompleted) {
+                    yield "Pendiente de confirmar el personal del día";
                 }
-                yield assignedVendors.size() + " vendedores asignados";
+                if (assignedVendors.isEmpty()) {
+                    yield "Personal del día confirmado";
+                }
+                yield assignedVendors.size() + (assignedVendors.size() == 1 ? " vendedor en turno" : " vendedores en turno");
             }
             case 2 -> {
                 if (daySummary == null || vendorCloses.isEmpty()) {
@@ -189,10 +192,11 @@ public class JournalClosingSummaryService {
                 String discText = vendorsWithDiscrepancyCount == 0
                         ? "todos cuadran"
                         : vendorsWithDiscrepancyCount + " con descuadre";
-                yield "Total entregado $" + daySummary.totalDelivered().toPlainString() + " · " + discText;
+                String pending = isCompleted ? "" : "Pendiente de completar · ";
+                yield pending + "Total entregado $" + daySummary.totalDelivered().toPlainString() + " · " + discText;
             }
             case 3 -> {
-                if (daySummary == null) {
+                if (!isCompleted || daySummary == null) {
                     yield isCompleted ? "Medios electrónicos conciliados" : "Pendiente de conciliar medios electrónicos";
                 }
                 BigDecimal credibanco = daySummary.totalCredibanco() != null ? daySummary.totalCredibanco() : BigDecimal.ZERO;
@@ -203,7 +207,7 @@ public class JournalClosingSummaryService {
                         + " · Puntos $" + pts.toPlainString();
             }
             case 4 -> isCompleted
-                    ? "Consolidado de estación y saldo en caja verificados"
+                    ? "Consolidado y saldo en caja verificados"
                     : "Pendiente de verificar consolidado y saldo en caja";
             case 5 -> {
                 if (!inventorySnapshot.hasMeasurement() && inventorySnapshot.variations().isEmpty()) {
@@ -216,7 +220,8 @@ public class JournalClosingSummaryService {
                         ? "Variaciones dentro de tolerancia"
                         : outCount + " combustible(s) fuera de tolerancia";
                 int alertsCount = inventorySnapshot.newAlerts().size();
-                yield varText + " · " + alertsCount + " alerta(s) nueva(s)";
+                String pending = isCompleted ? "" : "Pendiente de completar · ";
+                yield pending + varText + " · " + alertsCount + " alerta(s) nueva(s)";
             }
             default -> "";
         };

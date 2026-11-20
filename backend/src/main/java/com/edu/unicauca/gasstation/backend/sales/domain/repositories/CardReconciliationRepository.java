@@ -18,6 +18,9 @@ public interface CardReconciliationRepository {
     /** @return true when a row existed */
     boolean delete(LocalDate date, UUID workerId);
 
+    /** Removes every vendor row of the day. */
+    void deleteByDate(LocalDate date);
+
     List<VendorDeclaration> findByDate(LocalDate date);
 
     /** Daily totals between both dates (inclusive); the QR of each day is the sum of the planillas. */

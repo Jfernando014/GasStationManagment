@@ -1,7 +1,7 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
-import com.edu.unicauca.gasstation.backend.sales.domain.models.JournalHistoryModels.JournalHistoryCalendar;
-import com.edu.unicauca.gasstation.backend.sales.domain.models.JournalHistoryModels.JournalHistoryDayDetail;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalHistoryDayDetailResponse;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalHistoryMonthResponse;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,21 +30,21 @@ public class JournalHistoryController {
     @Operation(summary = "Get monthly journal history calendar with status, discrepancy and alert markers (C-10, S3-06)")
     @ApiResponse(responseCode = "200", description = "Monthly calendar returned")
     @GetMapping
-    public ResponseEntity<JournalHistoryCalendar> getMonthCalendar(
+    public ResponseEntity<JournalHistoryMonthResponse> getMonthCalendar(
             @Parameter(description = "Target year and month in YYYY-MM format (defaults to 2026-08)")
             @RequestParam(required = false) String yearMonth) {
         YearMonth parsedMonth = (yearMonth != null && !yearMonth.isBlank())
                 ? YearMonth.parse(yearMonth.strip())
                 : YearMonth.of(2026, 8);
-        return ResponseEntity.ok(journalHistoryService.getMonthCalendar(parsedMonth));
+        return ResponseEntity.ok(JournalHistoryMonthResponse.from(journalHistoryService.getMonthCalendar(parsedMonth)));
     }
 
     @Operation(summary = "Get historical or migrated day detail for a specific date (C-10, S3-06)")
     @ApiResponse(responseCode = "200", description = "Day detail returned")
     @GetMapping("/{date}")
-    public ResponseEntity<JournalHistoryDayDetail> getDayDetail(
+    public ResponseEntity<JournalHistoryDayDetailResponse> getDayDetail(
             @Parameter(description = "Operational date in YYYY-MM-DD format")
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(journalHistoryService.getDayDetail(date));
+        return ResponseEntity.ok(JournalHistoryDayDetailResponse.from(journalHistoryService.getDayDetail(date)));
     }
 }

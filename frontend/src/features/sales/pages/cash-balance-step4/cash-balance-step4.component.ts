@@ -91,6 +91,15 @@ export class CashBalanceStep4Component {
   });
 
   readonly completing = signal(false);
+  readonly resetting = signal(false);
+  readonly showResetConfirm = signal(false);
+  /** Restablecer se permite con la jornada abierta, aunque el paso ya esté completado. */
+  readonly canReset = computed(() => {
+    const journal = this.journal();
+    if (!journal || journal.status !== JournalStatus.OPEN) return false;
+    if (journal.steps.find(item => item.stepNumber === 6)?.status === StepStatus.COMPLETED) return false;
+    return !this.savingDominus() && !this.completing() && !this.resetting();
+  });
   readonly paymentOpen = signal(false);
   readonly paymentDate = signal('');
   readonly paymentAmount = signal('');
@@ -244,6 +253,45 @@ export class CashBalanceStep4Component {
         return of(false);
       })
     );
+  }
+
+  requestReset(): void {
+    if (!this.canReset()) return;
+    this.clearMessages();
+    this.showResetConfirm.set(true);
+  }
+
+  cancelReset(): void {
+    this.showResetConfirm.set(false);
+  }
+
+  /** Borra el saldo de Dominus guardado en el servidor, deja el campo vacío y el paso en pendiente. */
+  confirmReset(): void {
+    const date = this.date();
+    if (!date || !this.canReset()) return;
+    this.showResetConfirm.set(false);
+    this.clearMessages();
+    this.resetting.set(true);
+    this.service.resetDominusBalance(date).subscribe({
+      next: () => {
+        this.resetting.set(false);
+        this.dominusText.set('');
+        this.dominusError.set(null);
+        this.markStep4PendingLocally();
+        this.notice.set('El saldo de Dominus de esta jornada fue restablecido.');
+        this.refresh();
+      },
+      error: error => {
+        this.resetting.set(false);
+        this.actionError.set(getErrorMessage(error));
+      }
+    });
+  }
+
+  private markStep4PendingLocally(): void {
+    const step = this.step();
+    if (!step || step.status === StepStatus.PENDING) return;
+    this.journalService.updateCurrentStep({ ...step, status: StepStatus.PENDING, completedAt: null });
   }
 
   openPayment(): void {

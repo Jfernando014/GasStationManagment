@@ -32,6 +32,14 @@ export class TankMeasurementsService {
     return this.http.put<TankMeasurementResponse>(`${this.apiUrl}/${journalDate}`, request);
   }
 
+  /**
+   * Resets the whole step 5 of the date: deletes the measurement and the entries, transfers and sales of the
+   * products, and returns the step to PENDING. The opening stock and the adjustments are kept.
+   */
+  resetStep(journalDate: string): Observable<void> {
+    return this.http.delete<void>(`${getApiBaseUrl()}/api/v1/inventory/journal-step/${journalDate}`);
+  }
+
   /** Gallons of one height in one tank, without saving anything. */
   volume(tankId: number, heightCm: number): Observable<GaugeVolumeResponse> {
     return this.http.get<GaugeVolumeResponse>(`${this.tanksUrl}/${tankId}/volume`, {

@@ -7,7 +7,7 @@ import java.util.List;
  * Internal integration port for verified, versioned performance parameters. Implementations must use
  * public producer contracts, preserve provenance and operational dates, and never infer past periods
  * from today's catalog. Empty lists mean unavailable parameters, not zero targets or identity factors.
- * No production adapter is registered until those producer contracts and rules exist.
+ * The production adapter is {@code infrastructure.adapters.PublicContractsSellerPerformanceParameterSource}.
  */
 @FunctionalInterface
 public interface SellerPerformanceParameterSource {

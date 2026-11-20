@@ -1,0 +1,48 @@
+<section class="card" aria-labelledby="index-chart-title" [attr.aria-busy]="loading()">
+  <div class="head">
+    <span class="title">
+      <h2 id="index-chart-title">Índice frente a la estación</h2>
+      <app-info-tooltip [text]="formula" label="Cómo se calcula el índice" />
+    </span>
+    <span class="legend">
+      <span><i class="swatch is-up" aria-hidden="true"></i>▲ Vende más que la estación</span>
+      <span><i class="swatch is-down" aria-hidden="true"></i>▼ Vende menos</span>
+    </span>
+  </div>
+
+  @if (loading()) {
+    <div class="skeletons">
+      @for (n of skeletonRows; track n) {
+        <div class="row">
+          <app-skeleton width="140px" />
+          <app-skeleton height="18px" />
+          <app-skeleton class="end" width="50px" />
+        </div>
+      }
+    </div>
+  } @else {
+    @for (key of [version()]; track key) {
+      <ul class="bars">
+        @for (bar of model().bars; track bar.workerId) {
+          <li class="row" [style.--i]="$index">
+            <span class="name">{{ bar.name }}</span>
+            <span class="track" role="img" [attr.aria-label]="bar.ariaLabel">
+              <span class="mid"></span>
+              <span class="bar" [class.is-up]="bar.up" [class.is-down]="!bar.up" [style.width.%]="bar.width"></span>
+            </span>
+            <span class="pct" [class.is-up]="bar.up" [class.is-down]="!bar.up" aria-hidden="true">{{ bar.up ? '▲' : '▼' }} {{ bar.percentText }}</span>
+          </li>
+        }
+      </ul>
+    }
+    <div class="axis" aria-hidden="true">
+      <span></span>
+      <div class="marks">
+        @for (mark of model().axis; track mark.position) {
+          <span class="mark" [class.is-center]="mark.emphasis" [style.left.%]="mark.position">{{ mark.text }}</span>
+        }
+      </div>
+      <span></span>
+    </div>
+  }
+</section>

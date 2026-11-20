@@ -10,6 +10,7 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankMeasurement;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankReading;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankSnapshot;
+import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelReceptionRepository;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankMeasurementRepository;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class InventoryHomeService {
 
     private final TankRepository tankRepository;
     private final TankMeasurementRepository measurementRepository;
+    private final FuelReceptionRepository receptionRepository;
     private final InventoryAlertService alertService;
 
     public InventoryHome get() {
@@ -65,7 +67,9 @@ public class InventoryHomeService {
     private TankSnapshot snapshot(Tank tank, AutonomyLevel alertLevel) {
         Optional<TankMeasurement> latest = measurementRepository.findLatestContainingTank(tank.getId());
         Optional<TankReading> reading = latest.flatMap(measurement -> measurement.readingOf(tank.getId()));
-        BigDecimal gallons = reading.map(TankReading::getVolumeGallons).orElse(null);
+        // Current stock: the last measurement plus what was received after it. Without a measurement there is no base
+        BigDecimal gallons = reading.map(found -> found.getVolumeGallons().add(receivedAfter(tank, latest.get())))
+                .orElse(null);
         BigDecimal capacity = tank.getMaxCapacityGallons();
         return TankSnapshot.builder()
                 .tankId(tank.getId())
@@ -79,6 +83,11 @@ public class InventoryHomeService {
                 .measuredAt(latest.map(TankMeasurement::getMeasuredAt).orElse(null))
                 .alertLevel(alertLevel)
                 .build();
+    }
+
+    private BigDecimal receivedAfter(Tank tank, TankMeasurement measurement) {
+        return receptionRepository.sumGallonsAfterMeasurement(
+                tank.getId(), measurement.getJournalDate(), measurement.getMeasuredAt());
     }
 
     private List<FuelStockSummary> summarize(List<TankSnapshot> tanks, Map<FuelType, AutonomyLevel> alertLevels) {

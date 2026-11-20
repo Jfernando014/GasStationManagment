@@ -4,6 +4,7 @@ import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
 import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaff;
 import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
+import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ClosedJournalSnapshot;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.JournalSalesProcessing;
 import com.edu.unicauca.gasstation.backend.statistics.domain.models.ShiftSaleAmounts;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +37,22 @@ public class ShiftSaleHistoryRegistrationService {
     private final SellerCloseQuery sales;
     private final DayStaffQuery staff;
     private final ShiftSaleHistoryRepository history;
+    private final ScheduleWorkerDirectory workers;
 
     public ShiftSaleHistoryRegistrationService(
             SellerCloseQuery sales, DayStaffQuery staff, ShiftSaleHistoryRepository history) {
+        this(sales, staff, history, null);
+    }
+
+    /** Without a worker directory only full worker UUIDs identify a vendor; with one, a registered document does too. */
+    @Autowired
+    public ShiftSaleHistoryRegistrationService(
+            SellerCloseQuery sales, DayStaffQuery staff, ShiftSaleHistoryRepository history,
+            @Nullable ScheduleWorkerDirectory workers) {
         this.sales = sales;
         this.staff = staff;
         this.history = history;
+        this.workers = workers;
     }
 
     public JournalSalesProcessing registerClosedJournal(ClosedJournalSnapshot journal) {
@@ -119,7 +132,8 @@ public class ShiftSaleHistoryRegistrationService {
         return List.copyOf(snapshots);
     }
 
-    private static UUID resolveWorkerId(String originalIdentifier) {
+    /** A full worker UUID identifies the vendor directly; otherwise the identifier is looked up as a worker document. */
+    private UUID resolveWorkerId(String originalIdentifier) {
         try {
             if (originalIdentifier == null) {
                 throw new IllegalArgumentException("Missing vendor identifier");
@@ -131,8 +145,15 @@ public class ShiftSaleHistoryRegistrationService {
             }
             return workerId;
         } catch (IllegalArgumentException failure) {
+            if (workers != null && originalIdentifier != null && !originalIdentifier.isBlank()) {
+                var byDocument = workers.findWorkerIdByDocument(originalIdentifier.strip());
+                if (byDocument.isPresent()) {
+                    return byDocument.get();
+                }
+            }
             throw new ShiftSaleHistoryIntegrationException(Code.INVALID_VENDOR_IDENTIFIER,
-                    "vendorDocument must be a full worker UUID; cedula lookup is not provided by the public contracts",
+                    "vendorDocument must be a full worker UUID or the document of a registered worker; no worker "
+                            + "matches '" + originalIdentifier + "'",
                     failure);
         }
     }

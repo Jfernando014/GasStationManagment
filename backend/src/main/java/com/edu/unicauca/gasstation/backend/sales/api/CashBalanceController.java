@@ -5,12 +5,14 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.DominusBalanceRequestDt
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -51,5 +53,19 @@ public class CashBalanceController {
         SalesAdminAuthorization.requireAdmin(authentication);
         return ResponseEntity.ok(CashBalanceStepResponseDto.from(
                 service.saveDominusBalance(date, request.accumulatedBalance())));
+    }
+
+    @Operation(summary = "Reset step 4 of an open journal date",
+            description = "ADMIN only. Deletes the Dominus accumulated balance of the date and returns step 4 to "
+                    + "PENDING. Not allowed once the journal is closed.")
+    @ApiResponse(responseCode = "204", description = "Dominus balance cleared and step 4 returned to PENDING")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and cannot be modified")
+    @DeleteMapping("/{date}/dominus")
+    public ResponseEntity<Void> resetDominus(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        SalesAdminAuthorization.requireAdmin(authentication);
+        service.resetDominusBalance(date);
+        return ResponseEntity.noContent().build();
     }
 }

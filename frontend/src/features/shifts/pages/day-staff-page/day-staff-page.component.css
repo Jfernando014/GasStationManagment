@@ -41,6 +41,8 @@
 .ds-warnings { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 
 .ds-card { padding: 0; box-shadow: var(--shadow-card); overflow: hidden; }
+/* La lista de novedades trae su propio espacio interno: sin esto el título queda pegado al borde y se ve recortado */
+app-novelty-list.ds-card { padding: 14px 16px; }
 
 /* ---- Esqueleto ---- */
 .ds-skeleton { display: flex; flex-direction: column; gap: 8px; }

@@ -386,6 +386,7 @@ export class VendorCloseStep2Component implements OnInit {
   loadDemoHoja05(notify = true): void {
     const demo = this.salesService.getCalibrationDemo0805();
     const docTargetMap: Record<string, string> = {};
+    const skippedVendors: string[] = [];
 
     for (const [doc, data] of Object.entries(demo.capturas)) {
       let targetDoc = doc;
@@ -397,8 +398,8 @@ export class VendorCloseStep2Component implements OnInit {
         if (existingByName && this.captures[existingByName.document]) {
           targetDoc = existingByName.document;
         } else if (foundStaff) {
-          this.assignedVendors.push(foundStaff);
-          this.captures[doc] = this.createEmptyCapture(foundStaff);
+          // A vendor who is not in the staff of the day gets no column: its close could not be registered
+          skippedVendors.push(foundStaff.name);
         }
       }
       docTargetMap[doc] = targetDoc;
@@ -442,7 +443,9 @@ export class VendorCloseStep2Component implements OnInit {
 
     this.recalculateAll();
     if (notify) {
-      this.showToast('Hoja 05 de calibración cargada exitosamente');
+      this.showToast(skippedVendors.length > 0
+        ? `Hoja 05 cargada. Sin columna en esta jornada (no están en el personal del día): ${skippedVendors.join(', ')}`
+        : 'Hoja 05 de calibración cargada exitosamente');
     }
   }
 

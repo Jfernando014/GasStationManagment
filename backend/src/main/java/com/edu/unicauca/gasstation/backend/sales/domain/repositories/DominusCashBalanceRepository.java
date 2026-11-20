@@ -11,4 +11,7 @@ public interface DominusCashBalanceRepository {
 
     /** Inserts the day or replaces the figures already stored for it. */
     DominusCashBalance save(DominusCashBalance balance);
+
+    /** Removes the figures stored for the day, if any. */
+    void deleteByDate(LocalDate date);
 }

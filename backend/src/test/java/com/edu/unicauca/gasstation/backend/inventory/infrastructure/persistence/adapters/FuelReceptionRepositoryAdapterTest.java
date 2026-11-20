@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static com.edu.unicauca.gasstation.backend.inventory.MeasurementTestData.reception;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,5 +174,78 @@ class FuelReceptionRepositoryAdapterTest {
     void sumGallonsAfterIsZeroWhenThereAreNoLaterReceptions() {
         assertThat(adapter.sumGallonsAfter(tank1Id, AUG_10, null)).isEqualByComparingTo("0");
         assertThat(adapter.sumGallonsAfter(9999L, AUG_1, null)).isEqualByComparingTo("0");
+    }
+
+    // ---------- sumGallonsAfterMeasurement ----------
+
+    private void saveReceptionCreatedAt(Long tankId, LocalDate date, String gallons, LocalDateTime createdAt) {
+        FuelReception reception = reception(null, tankId, date, gallons);
+        reception.setCreatedAt(createdAt);
+        adapter.save(reception);
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    @Test
+    void sumAfterMeasurementAddsTheLaterDatesAndTheSameDayReceptionsRegisteredAfterIt() {
+        // Receptions of tank 1 are registered at 08:00 of their date: Aug 1 (100), Aug 5 (200), Aug 10 (300)
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_1, AUG_1.atTime(7, 0))).isEqualByComparingTo("600");
+    }
+
+    @Test
+    void aReceptionOfTheSameDayRegisteredBeforeTheMeasurementIsAlreadyInIt() {
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_1, AUG_1.atTime(9, 0))).isEqualByComparingTo("500");
+    }
+
+    @Test
+    void aReceptionRegisteredAtTheExactMomentOfTheMeasurementIsNotCounted() {
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_1, AUG_1.atTime(8, 0))).isEqualByComparingTo("500");
+    }
+
+    @Test
+    void aReceptionOneSecondAfterTheMeasurementIsCounted() {
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_1, AUG_1.atTime(7, 59, 59)))
+                .isEqualByComparingTo("600");
+    }
+
+    @Test
+    void receptionsOfLaterDatesCountWhateverTheHourOfTheMeasurement() {
+        // Measured at 23:00 of Aug 5: the Aug 5 reception (08:00) is in it, the Aug 10 one is not
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_5, AUG_5.atTime(23, 0))).isEqualByComparingTo("300");
+    }
+
+    @Test
+    void aReceptionDatedBeforeTheMeasurementIsInItEvenIfItWasRegisteredAfter() {
+        // The fuel arrived on Aug 4, before the measurement of Aug 5, so the measurement already shows it
+        saveReceptionCreatedAt(tank1Id, LocalDate.of(2026, 8, 4), "70", AUG_5.atTime(12, 0));
+
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_5, AUG_5.atTime(7, 0))).isEqualByComparingTo("500");
+    }
+
+    @Test
+    void aReceptionOfTheSameDateRegisteredLaterInTheDayCounts() {
+        saveReceptionCreatedAt(tank1Id, AUG_5, "60", AUG_5.atTime(18, 0));
+
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_5, AUG_5.atTime(9, 30))).isEqualByComparingTo("360");
+    }
+
+    @Test
+    void theReceptionsOfOtherTanksAreNotAdded() {
+        assertThat(adapter.sumGallonsAfterMeasurement(tank2Id, AUG_5, AUG_5.atTime(7, 0))).isEqualByComparingTo("50");
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_6, AUG_6.atTime(7, 0))).isEqualByComparingTo("300");
+    }
+
+    @Test
+    void withoutReceptionsAfterTheMeasurementTheSumIsZeroNotNull() {
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_10, AUG_10.atTime(9, 0))).isEqualByComparingTo("0");
+        assertThat(adapter.sumGallonsAfterMeasurement(9999L, AUG_1, AUG_1.atTime(7, 0))).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void theDecimalsOfTheGallonsAreKept() {
+        saveReceptionCreatedAt(tank1Id, LocalDate.of(2026, 8, 11), "12.34", LocalDate.of(2026, 8, 11).atTime(8, 0));
+        saveReceptionCreatedAt(tank1Id, LocalDate.of(2026, 8, 12), "0.66", LocalDate.of(2026, 8, 12).atTime(8, 0));
+
+        assertThat(adapter.sumGallonsAfterMeasurement(tank1Id, AUG_10, AUG_10.atTime(9, 0))).isEqualByComparingTo("13.00");
     }
 }

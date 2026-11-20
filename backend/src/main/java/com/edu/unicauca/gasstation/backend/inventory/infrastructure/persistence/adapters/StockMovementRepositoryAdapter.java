@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -50,6 +51,12 @@ public class StockMovementRepositoryAdapter implements StockMovementRepository {
     @Override
     public boolean existsInitial(Long productId, StockLocation location) {
         return repository.existsByProductIdAndLocationAndMovementType(productId, location, StockMovementType.INITIAL);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByJournalDateAndTypes(LocalDate journalDate, Collection<StockMovementType> types) {
+        types.forEach(type -> repository.deleteByJournalDateAndMovementType(journalDate, type));
     }
 
     @Override

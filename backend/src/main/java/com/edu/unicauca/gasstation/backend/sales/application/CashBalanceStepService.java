@@ -13,6 +13,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.models.DominusCashBalanc
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DominusCashBalanceRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.JournalDateReadPort;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.CashBalanceCalculator;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepReset;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepService;
 import com.edu.unicauca.gasstation.backend.sales.exception.CashBalanceJournalNotFoundException;
 import com.edu.unicauca.gasstation.backend.sales.exception.CashBalanceNotEditableException;
@@ -88,6 +89,24 @@ public class CashBalanceStepService {
         }
         dominus.save(new DominusCashBalance(date, accumulatedBalance));
         return evaluate(requireTable(date));
+    }
+
+    /** Deletes the Dominus balance of an open journal date and returns step 4 to PENDING. */
+    @Transactional
+    public void resetDominusBalance(LocalDate date) {
+        if (date == null) {
+            return;
+        }
+        Journal journal = journalRepository.findByDate(date).orElse(null);
+        if (journal != null) {
+            if (JournalStepReset.isClosed(journal)) {
+                throw new CashBalanceNotEditableException(JournalStepReset.closedMessage(date));
+            }
+            if (JournalStepReset.returnToPending(journal, STEP_NUMBER)) {
+                journalRepository.save(journal);
+            }
+        }
+        dominus.deleteByDate(date);
     }
 
     /** Completes step 4 when the difference against Dominus can be calculated. */

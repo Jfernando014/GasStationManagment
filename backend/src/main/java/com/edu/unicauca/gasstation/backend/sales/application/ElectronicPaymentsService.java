@@ -17,6 +17,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.QrReconci
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.ReconciliationValidationException;
 import com.edu.unicauca.gasstation.backend.sales.domain.reconciliation.VendorDeclaration;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.CardReconciliationRepository;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepReset;
 import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerDirectory;
 import com.edu.unicauca.gasstation.backend.shifts.spi.ScheduleWorkerInfo;
 import java.math.BigDecimal;
@@ -122,6 +123,28 @@ public class ElectronicPaymentsService {
 
         credibancoService.saveVendor(date, declaration);
         return getStatus(date);
+    }
+
+    /**
+     * Deletes everything step 3 stores for an open journal date (vouchers, Redeban rows and Puntos Colombia total)
+     * and returns the step to PENDING. The planilla figures come back from step 2 the next time the status is read.
+     */
+    @Transactional
+    public void reset(LocalDate date) {
+        if (date == null) {
+            return;
+        }
+        Journal journal = journals.findByDate(date).orElse(null);
+        if (journal != null) {
+            if (JournalStepReset.isClosed(journal)) {
+                throw new IllegalStateException(JournalStepReset.closedMessage(date));
+            }
+            if (JournalStepReset.returnToPending(journal, 3)) {
+                journals.save(journal);
+            }
+        }
+        cards.deleteByDate(date);
+        qrPointsService.removeDay(date);
     }
 
     private void synchronizePlanillas(LocalDate date, List<VendorCloseSummary> closes, WorkerResolver resolver) {

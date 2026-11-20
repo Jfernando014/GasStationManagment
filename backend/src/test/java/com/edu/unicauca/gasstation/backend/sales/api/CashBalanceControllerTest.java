@@ -1,9 +1,11 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -181,5 +183,52 @@ class CashBalanceControllerTest {
                         .content("{not json"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
+    }
+
+    // ---- reset of step 4 ----
+
+    @Test
+    void deleteResetsTheDominusBalanceForAnAdminAndAnswersNoContent() throws Exception {
+        mockMvc.perform(delete(URL + "/dominus").principal(authenticated("ADMIN")))
+                .andExpect(status().isNoContent());
+
+        verify(service).resetDominusBalance(DAY);
+    }
+
+    @Test
+    void deleteWithoutTheAdminAuthorityIs403AndResetsNothing() throws Exception {
+        mockMvc.perform(delete(URL + "/dominus").principal(authenticated("READ_ONLY")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verify(service, never()).resetDominusBalance(any());
+    }
+
+    @Test
+    void deleteWithoutAuthenticationIs401AndResetsNothing() throws Exception {
+        mockMvc.perform(delete(URL + "/dominus"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+
+        verify(service, never()).resetDominusBalance(any());
+    }
+
+    @Test
+    void deleteOnAClosedJournalIs409WithAStableCode() throws Exception {
+        doThrow(new CashBalanceNotEditableException("La jornada del 2026-08-01 ya está cerrada."))
+                .when(service).resetDominusBalance(DAY);
+
+        mockMvc.perform(delete(URL + "/dominus").principal(authenticated("ADMIN")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CASH_BALANCE_NOT_EDITABLE"));
+    }
+
+    @Test
+    void deleteWithAnInvalidDateIs400AndResetsNothing() throws Exception {
+        mockMvc.perform(delete("/api/v1/sales/cash-balance/not-a-date/dominus").principal(authenticated("ADMIN")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_PARAMETER"));
+
+        verify(service, never()).resetDominusBalance(any());
     }
 }

@@ -31,6 +31,11 @@ export class ElectronicPaymentsService {
     return this.http.put<ElectronicPaymentsStatus>(`${this.paymentsUrl}/${date}/vendors/${workerId}/vouchers`, body);
   }
 
+  /** Borra lo guardado por el paso 3 en esa fecha (comprobantes, CSV de Redeban y Puntos) y lo deja pendiente. */
+  resetStep(date: string): Observable<void> {
+    return this.http.delete<void>(`${this.paymentsUrl}/${date}`);
+  }
+
   /** Sube el CSV de Redeban del día (campo multipart "file"). */
   importRedeban(date: string, file: File): Observable<RedebanImportResponse> {
     const form = new FormData();
