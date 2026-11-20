@@ -34,6 +34,17 @@
   margin: 2px 0 0;
 }
 
+.home-tanks-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-tanks-config-btn {
+  text-decoration: none;
+}
+
 .tank-card-critical {
   border-color: var(--semantic-red) !important;
 }

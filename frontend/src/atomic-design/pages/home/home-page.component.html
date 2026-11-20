@@ -170,11 +170,16 @@
             <span class="headline-main-txt">Infraestructura de Almacenamiento ({{ totalTanks() }} Tanques Subterráneos)</span>
             <p class="headline-sub-txt">Último estado registrado por medición con vara y tabla de aforo ({{ measuredTanks() }} de {{ totalTanks() }} medidos).</p>
           </div>
-          @if (data.tanks.length > 0) {
-            <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="openReceptionModal()">
-              + Nueva Consignación
-            </button>
-          }
+          <div class="home-tanks-header-actions">
+            <a routerLink="/configuracion/tanques" class="btn-flat-secondary home-tanks-config-btn">
+              Gestionar tanques
+            </a>
+            @if (data.tanks.length > 0) {
+              <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="openReceptionModal()">
+                + Nueva Consignación
+              </button>
+            }
+          </div>
         </div>
         <div class="tanks-battery-grid">
           @for (tank of data.tanks; track tank.tankId) {
@@ -517,7 +522,7 @@
               min="0.01"
               class="flat-input tnum"
               [ngModel]="receptionGallonsText()"
-              (ngModelChange)="receptionGallonsText.set($event)"
+              (ngModelChange)="onReceptionGallonsInput($event)"
               placeholder="Ej. 1500" />
           </label>
           <label class="home-modal-field">

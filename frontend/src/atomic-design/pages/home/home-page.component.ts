@@ -24,7 +24,7 @@ import {
   FUEL_LABELS,
   PRODUCT_CATEGORY_LABELS
 } from '../../../shared/helpers/inventory-display.helpers';
-import { getErrorMessage } from '../../../shared/helpers/problem-details.helpers';
+import { getErrorMessage, isApiError } from '../../../shared/helpers/problem-details.helpers';
 import { AutonomyLevel } from '../../../shared/models/dtos/inventory-alert.dto';
 import { DailyControlResponse, ProductControlResponse } from '../../../shared/models/dtos/daily-control.dto';
 import { InventoryHomeResponse, TankSnapshotResponse } from '../../../shared/models/dtos/inventory-home.dto';
@@ -148,7 +148,12 @@ export class HomePageComponent {
           if (!req || !this.measurementsService) return of<{ gallons: number | null; error: string | null }>({ gallons: null, error: null });
           return this.measurementsService.volume(req.tankId, req.heightCm).pipe(
             switchMap(res => of({ gallons: res.volumeGallons, error: null })),
-            catchError(err => of({ gallons: null, error: getErrorMessage(err) }))
+            catchError(err => of({
+              gallons: null,
+              error: isApiError(err) && err.status === 409
+                ? 'Este tanque no tiene una tabla de aforo asignada. Configúrala en Tanques.'
+                : getErrorMessage(err)
+            }))
           );
         }),
         takeUntilDestroyed(this.destroyRef)
@@ -250,33 +255,33 @@ export class HomePageComponent {
     this.previewVolume$.next(null);
   }
 
-  onMeasureHeightInput(value: string): void {
-    this.measureHeightText.set(value);
+  onMeasureHeightInput(value: string | number | null): void {
+    const parsed = this.parseDecimalInput(value);
+    this.measureHeightText.set(parsed.text);
     this.measureError.set(null);
     const target = this.measureTarget();
-    const numeric = Number(value.replace(',', '.'));
-    if (!target || value.trim() === '' || !Number.isFinite(numeric) || numeric < 0) {
+    if (!target || parsed.text === '' || !Number.isFinite(parsed.numeric) || parsed.numeric < 0) {
       this.measurePreviewGallons.set(null);
       this.previewVolume$.next(null);
       return;
     }
-    this.previewVolume$.next({ tankId: target.tankId, heightCm: numeric });
+    this.previewVolume$.next({ tankId: target.tankId, heightCm: parsed.numeric });
   }
 
   saveQuickMeasurement(): void {
     const target = this.measureTarget();
     if (!target || this.savingMeasure() || !this.measurementsService) return;
-    const heightCm = Number(this.measureHeightText().trim().replace(',', '.'));
+    const parsed = this.parseDecimalInput(this.measureHeightText());
     if (!this.measureDate()) {
       this.measureError.set('Selecciona la fecha de medición.');
       return;
     }
-    if (this.measureHeightText().trim() === '' || !Number.isFinite(heightCm) || heightCm < 0) {
+    if (parsed.text === '' || !Number.isFinite(parsed.numeric) || parsed.numeric < 0) {
       this.measureError.set('Digita una altura válida en centímetros.');
       return;
     }
     const maxHeight = this.tankMeta(target.tankId)?.maxHeightCm;
-    if (maxHeight !== undefined && heightCm > maxHeight) {
+    if (maxHeight !== undefined && parsed.numeric > maxHeight) {
       this.measureError.set(`La altura no puede superar el máximo del tanque (${maxHeight} cm).`);
       return;
     }
@@ -284,7 +289,7 @@ export class HomePageComponent {
     this.savingMeasure.set(true);
     this.measureError.set(null);
     this.measurementsService
-      .save(this.measureDate(), { readings: [{ tankId: target.tankId, heightCm }] })
+      .save(this.measureDate(), { readings: [{ tankId: target.tankId, heightCm: parsed.numeric }] })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -298,6 +303,11 @@ export class HomePageComponent {
           this.measureError.set(getErrorMessage(err));
         }
       });
+  }
+
+  onReceptionGallonsInput(value: string | number | null): void {
+    this.receptionGallonsText.set(this.parseDecimalInput(value).text);
+    this.receptionError.set(null);
   }
 
   openReceptionModal(tank?: TankSnapshotResponse): void {
@@ -326,8 +336,8 @@ export class HomePageComponent {
     if (this.savingReception() || !this.receptionsService) return;
     const tankId = Number(this.receptionTankId());
     const date = this.receptionDate();
-    const gallons = Number(this.receptionGallonsText().trim().replace(',', '.'));
-    const supplier = this.receptionSupplier().trim();
+    const gallons = this.parseDecimalInput(this.receptionGallonsText()).numeric;
+    const supplier = String(this.receptionSupplier() ?? '').trim();
 
     if (!tankId || tankId <= 0 || !date || !Number.isFinite(gallons) || gallons <= 0 || !supplier) {
       this.receptionError.set('Completa el tanque, la fecha, los galones recibidos y el proveedor.');
@@ -356,6 +366,14 @@ export class HomePageComponent {
   closeActiveModal(): void {
     if (this.measureTarget()) this.closeMeasureModal();
     if (this.receptionModalOpen()) this.closeReceptionModal();
+  }
+
+  private parseDecimalInput(value: string | number | null | undefined): { text: string; numeric: number } {
+    const text = String(value ?? '').trim();
+    return {
+      text,
+      numeric: text === '' ? Number.NaN : Number(text.replace(',', '.'))
+    };
   }
 
   private showToast(text: string): void {
