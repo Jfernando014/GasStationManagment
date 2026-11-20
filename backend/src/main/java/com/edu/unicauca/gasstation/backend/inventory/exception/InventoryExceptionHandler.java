@@ -66,7 +66,8 @@ public class InventoryExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, "Conflict",
-                "The tank could not be saved: the data conflicts with existing records", request);
+                "The operation could not be completed: the record is referenced by or conflicts with existing records",
+                request);
     }
 
     private ResponseEntity<Map<String, Object>> build(
@@ -211,6 +212,12 @@ public class InventoryExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAutonomyThresholdAlreadyExists(
             AutonomyThresholdAlreadyExistsException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AutonomyThresholdNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAutonomyThresholdNotFound(
+            AutonomyThresholdNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoSalesDataException.class)

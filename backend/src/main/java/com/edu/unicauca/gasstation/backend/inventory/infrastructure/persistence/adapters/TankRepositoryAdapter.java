@@ -44,4 +44,10 @@ public class TankRepositoryAdapter implements TankRepository {
     public List<Tank> findByGaugeTableId(Long gaugeTableId) {
         return repository.findByGaugeTableIdOrderByCode(gaugeTableId).stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+        repository.flush();
+    }
 }

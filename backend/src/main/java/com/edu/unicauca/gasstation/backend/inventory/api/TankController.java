@@ -60,4 +60,14 @@ public class TankController {
     public TankResponse update(@PathVariable Long id, @Valid @RequestBody TankRequest request) {
         return tankMapper.toResponse(tankService.updateTank(id, tankMapper.toEntity(request)));
     }
+
+    @Operation(summary = "Delete a tank")
+    @ApiResponse(responseCode = "204", description = "Tank deleted")
+    @ApiResponse(responseCode = "404", description = "Tank not found")
+    @ApiResponse(responseCode = "409", description = "Tank is referenced by existing records")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        tankService.deleteTank(id);
+        return ResponseEntity.noContent().build();
+    }
 }

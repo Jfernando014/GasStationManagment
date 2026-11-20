@@ -58,6 +58,12 @@ public class TankService {
         return tankRepository.save(tank);
     }
 
+    @Transactional
+    public void deleteTank(Long id) {
+        findTankById(id);
+        tankRepository.deleteById(id);
+    }
+
     private void requireExistingGaugeTable(Long gaugeTableId) {
         if (gaugeTableId != null && !gaugeTableRepository.existsById(gaugeTableId)) {
             throw new GaugeTableNotFoundException(gaugeTableId);
