@@ -12,7 +12,7 @@ import { ChangePasswordModalComponent } from '../../organisms/change-password-mo
 const COLLAPSED_KEY = 'eds.sidebar.collapsed';
 
 /** Debajo de este ancho la barra lateral ya es un cajón; contraerla no aplica. */
-const NARROW_QUERY = '(max-width: 768px)';
+const NARROW_QUERY = '(max-width: 1024px)';
 
 function storedCollapsed(): boolean {
   try {
@@ -83,7 +83,10 @@ export class DashboardLayoutComponent {
     const media = typeof window === 'undefined' ? null : window.matchMedia?.(NARROW_QUERY) ?? null;
     if (media) {
       // Se escuchan los dos eventos: algunos navegadores embebidos no emiten el 'change' de la media query.
-      const sync = () => this.narrow.set(media.matches);
+      const sync = () => {
+        this.narrow.set(media.matches);
+        if (!media.matches) this.closeMenu(false);
+      };
       sync();
       media.addEventListener('change', sync);
       window.addEventListener('resize', sync);

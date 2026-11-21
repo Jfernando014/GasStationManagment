@@ -64,3 +64,7 @@
   flex-shrink: 0;
   margin-left: 12px;
 }
+
+@media (max-width: 640px) {
+  .select-menu { width: 100%; max-width: 100%; max-height: min(260px, 40dvh); }
+}

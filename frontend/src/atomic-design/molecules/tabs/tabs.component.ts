@@ -53,7 +53,12 @@ export class TabsComponent {
     effect(() => {
       this.active();
       this.tabs();
-      requestAnimationFrame(() => this.measure());
+      requestAnimationFrame(() => {
+        this.measure();
+        // Con muchas pestañas la lista hace scroll: la activa debe quedar a la vista.
+        this.host.nativeElement.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+          ?.scrollIntoView?.({ inline: 'nearest', block: 'nearest' });
+      });
     });
     afterNextRender(() => {
       if (typeof ResizeObserver === 'undefined') return;
