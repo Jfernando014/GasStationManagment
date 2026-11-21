@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ProductStockService } from '../../../../core/services/product-stock.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import {
@@ -48,7 +49,7 @@ const EMPTY_DRAFT: ProductDraft = {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective],
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
 })

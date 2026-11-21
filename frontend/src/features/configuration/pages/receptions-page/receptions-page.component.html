@@ -91,7 +91,7 @@
     }
 
     <div class="receptions-actions">
-      <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
+      <button appButton variant="primary" size="sm" type="button" [disabled]="saving()" (click)="save()">
         {{ saving() ? 'Guardando…' : 'Registrar recepción' }}
       </button>
     </div>
@@ -136,13 +136,13 @@
         <input type="date" [ngModel]="filters().to ?? ''" (ngModelChange)="onDateFilter('to', $event)">
       </label>
 
-      <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
+      <button appButton variant="secondary" size="sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
     </div>
 
     @if (loadError(); as message) {
       <div class="receptions-alert" role="alert">
         <span>{{ message }}</span>
-        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="load()">Reintentar</button>
+        <button appButton variant="secondary" size="sm" type="button" (click)="load()">Reintentar</button>
       </div>
     } @else if (loading()) {
       <p class="receptions-empty" aria-live="polite">Cargando recepciones…</p>

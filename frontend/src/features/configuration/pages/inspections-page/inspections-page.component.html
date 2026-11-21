@@ -6,8 +6,8 @@
       <p>Bitácora de calibraciones ONAC, hermeticidad, plan ambiental y bombas, con su vencimiento.</p>
     </div>
     <div class="inspections-header-actions">
-      <button class="jr-btn jr-btn--ghost" type="button" (click)="exportCsv()">Exportar</button>
-      <button class="jr-btn jr-btn--pri" type="button" (click)="openCreate()">
+      <button appButton variant="ghost" size="sm" type="button" (click)="exportCsv()">Exportar</button>
+      <button appButton variant="primary" size="sm" type="button" (click)="openCreate()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -188,8 +188,8 @@
       }
 
       <div class="inspections-actions">
-        <button class="jr-btn jr-btn--ghost" type="button" (click)="closeForm()">Cancelar</button>
-        <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="save()">
+        <button appButton variant="ghost" size="sm" type="button" (click)="closeForm()">Cancelar</button>
+        <button appButton variant="primary" size="sm" type="button" [disabled]="saving()" (click)="save()">
           {{ saving() ? 'Guardando…' : 'Guardar inspección' }}
         </button>
       </div>
@@ -221,14 +221,14 @@
             }
           </select>
         </label>
-        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
+        <button appButton variant="secondary" size="sm" type="button" (click)="clearFilters()">Limpiar filtros</button>
       </div>
     </div>
 
     @if (loadError(); as message) {
       <div class="inspections-alert" role="alert">
         <span>{{ message }}</span>
-        <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="load()">Reintentar</button>
+        <button appButton variant="secondary" size="sm" type="button" (click)="load()">Reintentar</button>
       </div>
     } @else if (loading()) {
       <p class="inspections-empty" aria-live="polite">Cargando inspecciones…</p>
