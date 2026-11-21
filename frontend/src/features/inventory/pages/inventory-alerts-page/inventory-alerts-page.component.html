@@ -182,10 +182,10 @@
       }
 
       <div class="alert-attend-actions">
-        <button class="btn-flat-secondary" type="button" [disabled]="attendSaving()" (click)="closeAttend()">
+        <button appButton variant="secondary" size="sm" type="button" [disabled]="attendSaving()" (click)="closeAttend()">
           Cancelar
         </button>
-        <button class="btn-action-primary" type="button" [disabled]="attendSaving()" (click)="confirmAttend()">
+        <button appButton variant="primary" size="sm" type="button" [disabled]="attendSaving()" (click)="confirmAttend()">
           {{ attendSaving() ? 'Guardando…' : 'Confirmar atención' }}
         </button>
       </div>

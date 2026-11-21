@@ -361,7 +361,7 @@
               <p>Información de la cuenta activa en la estación</p>
             </div>
           </div>
-          <button type="button" class="profile-modal-close" aria-label="Cerrar ventana" (click)="closeProfileModal()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar ventana" (click)="closeProfileModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         <div class="profile-detail-list">
@@ -384,8 +384,8 @@
         </div>
 
         <div class="profile-modal-actions">
-          <button type="button" class="jr-btn jr-btn--sec" (click)="openChangePasswordModal()">Cambiar contraseña</button>
-          <button type="button" class="btn-solid-primary" (click)="closeProfileModal()">Entendido</button>
+          <button type="button" appButton variant="secondary" size="sm" (click)="openChangePasswordModal()">Cambiar contraseña</button>
+          <button type="button" appButton variant="primary" size="sm" (click)="closeProfileModal()">Entendido</button>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@
       @for (period of periods(); track period) { <option [value]="period">{{ label(period) }}{{ period === month() ? available() ? ' (Datos disponibles)' : ' (Periodo Sin Información)' : '' }}</option> }
     </select>
   </label>
-  <button type="button" class="btn-action-primary" [disabled]="!available() || loading()" (click)="export()">{{ loading() ? 'GENERANDO PRESENTACIÓN…' : '↓ EXPORTAR A ARCHIVO DE PRESENTACIÓN (.pptx)' }}</button>
+  <button type="button" appButton variant="primary" size="sm" [disabled]="!available() || loading()" (click)="export()">{{ loading() ? 'GENERANDO PRESENTACIÓN…' : '↓ EXPORTAR A ARCHIVO DE PRESENTACIÓN (.pptx)' }}</button>
 </div>
 @if (!available()) { <p class="stats-note" role="status">No hay información suficiente para generar el balance de este período. Se requieren observaciones proporcionadas o ventas reales disponibles.</p> }
 @if (checking()) { <p class="stats-note" role="status">Consultando disponibilidad de ventas reales del período…</p> }

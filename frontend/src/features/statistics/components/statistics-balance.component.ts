@@ -1,5 +1,6 @@
 import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 import { SalesStatisticsService } from '../../../core/services/sales-statistics.service';
@@ -9,7 +10,7 @@ import { StatisticsWorkspace } from '../statistics-workspace';
 import { buildStatisticsBalance } from '../statistics-balance';
 import { BasketStatisticsResponse } from '../../../shared/models/dtos/basket-statistics.dto';
 
-@Component({ selector: 'app-statistics-balance', standalone: true, imports: [FormsModule],
+@Component({ selector: 'app-statistics-balance', standalone: true, imports: [FormsModule, ActionButtonDirective],
   templateUrl: './statistics-balance.component.html', styleUrls: ['../statistics.css', '../statistics-visuals.css'] })
 export class StatisticsBalanceComponent {
   readonly workspace = inject(StatisticsWorkspace);

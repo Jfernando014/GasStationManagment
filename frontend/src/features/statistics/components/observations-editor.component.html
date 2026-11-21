@@ -14,5 +14,5 @@
   </div>
   @if (error) { <p class="stats-error" role="alert">{{ error }}</p> }
   <div class="stats-toolbar"><button type="button" appButton variant="secondary" size="sm" (click)="add()" [disabled]="rows.length >= 1000">Añadir observación</button>
-    <button type="submit" class="btn-action-primary">Usar observaciones</button></div>
+    <button type="submit" appButton variant="primary" size="sm">Usar observaciones</button></div>
 </form>

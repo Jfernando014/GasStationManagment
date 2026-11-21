@@ -49,7 +49,7 @@
           <p>Alta de personal operativo para rotación 2×2</p>
         }
       </div>
-      <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="cancelled.emit()">
+      <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="cancelled.emit()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -59,8 +59,8 @@
       <ng-container [ngTemplateOutlet]="fields" />
     </div>
     <div class="dialog-footer">
-      <button type="button" class="btn-flat-secondary" [disabled]="saving()" (click)="cancelled.emit()">Cancelar</button>
-      <button type="submit" class="btn-solid-primary worker-save" [class.is-saving]="saving()" [disabled]="saving()">
+      <button type="button" appButton variant="secondary" size="sm" [disabled]="saving()" (click)="cancelled.emit()">Cancelar</button>
+      <button type="submit" appButton variant="primary" size="sm" class="worker-save" [class.is-saving]="saving()" [disabled]="saving()">
         @if (saving()) {
           <span class="worker-spinner" aria-hidden="true"></span> Guardando…
         } @else {

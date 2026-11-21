@@ -424,7 +424,7 @@
             <h2 id="measureModalTitle">Medir regla · {{ tankDisplayTitle(target) }}</h2>
             <p>{{ fuelLabels[target.fuelType] }} · Capacidad {{ formatGallons(target.capacityGallons) }} Gal</p>
           </div>
-          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeMeasureModal()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeMeasureModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         @if (measureError(); as err) {
@@ -457,8 +457,8 @@
         </div>
 
         <div class="home-modal-actions">
-          <button type="button" class="btn-flat-secondary" [disabled]="savingMeasure()" (click)="closeMeasureModal()">Cancelar</button>
-          <button type="button" class="btn-solid-primary" [disabled]="savingMeasure()" (click)="saveQuickMeasurement()">
+          <button type="button" appButton variant="secondary" size="sm" [disabled]="savingMeasure()" (click)="closeMeasureModal()">Cancelar</button>
+          <button type="button" appButton variant="primary" size="sm" [disabled]="savingMeasure()" (click)="saveQuickMeasurement()">
             {{ savingMeasure() ? 'Guardando…' : 'Guardar medición' }}
           </button>
         </div>
@@ -486,7 +486,7 @@
             <h2 id="receptionModalTitle">Registrar consignación de combustible</h2>
             <p>Ingreso directo por cisterna al compartimiento seleccionado.</p>
           </div>
-          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeReceptionModal()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeReceptionModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         @if (receptionError(); as err) {
@@ -537,8 +537,8 @@
         </div>
 
         <div class="home-modal-actions">
-          <button type="button" class="btn-flat-secondary" [disabled]="savingReception()" (click)="closeReceptionModal()">Cancelar</button>
-          <button type="button" class="btn-solid-primary" [disabled]="savingReception()" (click)="submitReception()">
+          <button type="button" appButton variant="secondary" size="sm" [disabled]="savingReception()" (click)="closeReceptionModal()">Cancelar</button>
+          <button type="button" appButton variant="primary" size="sm" [disabled]="savingReception()" (click)="submitReception()">
             {{ savingReception() ? 'Registrando…' : 'Registrar consignación' }}
           </button>
         </div>

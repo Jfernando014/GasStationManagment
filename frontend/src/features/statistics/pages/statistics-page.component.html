@@ -40,7 +40,7 @@
     </div>
     <app-statistics-chart #chart [series]="chartSeries()" [kind]="chartKind()" [unit]="chartUnit()" [sourceLabel]="chartSource()" />
     <div class="stats-dialog-actions"><button type="button" appButton variant="secondary" size="sm" [disabled]="chartSeries().length === 0" (click)="chart.download()">Descargar Gráfica (PNG)</button>
-      <button type="button" class="btn-action-primary" (click)="dialog.set(null)">Volver al reporte</button></div>
+      <button type="button" appButton variant="primary" size="sm" (click)="dialog.set(null)">Volver al reporte</button></div>
   </app-statistics-dialog>
 }
 @if (dialog() === 'balance') {

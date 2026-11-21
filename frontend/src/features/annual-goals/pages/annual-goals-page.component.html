@@ -186,7 +186,7 @@
               <span class="tile-note">Holgura operacional (venta máxima − meta base)</span>
             </div>
           </div>
-          <button class="btn-action-primary goals-save" type="submit" [disabled]="!canRegister() || !form.valid || confirming()">
+          <button appButton variant="primary" [block]="true" class="goals-save" type="submit" [disabled]="!canRegister() || !form.valid || confirming()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><path d="M17 21v-8H7v8M7 3v5h8" /></svg>
             <span>{{ saving() ? 'GUARDANDO…' : annualTarget() ? 'METAS GUARDADAS (PERIODO BLOQUEADO)' : 'GUARDAR METAS' }}</span>
           </button>

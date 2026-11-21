@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { AuthService } from '../../../core/services/auth.service';
 import { InventoryAlertsService } from '../../../core/services/inventory-alerts.service';
 import { ChangePasswordModalComponent } from '../../organisms/change-password-modal/change-password-modal.component';
@@ -31,7 +32,7 @@ function usesMobileLayout(url: string): boolean {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ChangePasswordModalComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ActionButtonDirective, ChangePasswordModalComponent],
   templateUrl: './dashboard-layout.component.html',
   styleUrl: './dashboard-layout.component.css',
   host: {
