@@ -25,7 +25,7 @@
 .wp-range { margin: 0; font-size: 12px; color: var(--text-muted); }
 
 /* The table scrolls inside its card on narrow screens */
-.wp-table-wrap { overflow-x: auto; }
+.wp-table-wrap { overflow-x: auto; overscroll-behavior-x: contain; }
 
 .wp-table {
   width: 100%;

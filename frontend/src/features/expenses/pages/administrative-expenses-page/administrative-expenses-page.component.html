@@ -157,7 +157,7 @@
       </div>
 
       <div class="ps-tabla-wrap gs-tabla-wrap">
-        <table class="ps-tabla">
+        <table class="ps-tabla table-sticky-first table-cards">
           <thead>
             <tr>
               <th scope="col">Fecha</th>
@@ -175,16 +175,16 @@
             } @else {
               @for (expense of sortedExpenses(); track expense.id) {
                 <tr>
-                  <td class="tnum">{{ shortDayMonth(expense.date) }}</td>
-                  <td>
+                  <td class="tnum" data-label="Fecha">{{ shortDayMonth(expense.date) }}</td>
+                  <td class="tc-title">
                     <b>{{ expense.name || 'Gasto administrativo' }}</b>
                     @if (expense.documentNumber) {
                       <small>{{ expense.documentNumber }}</small>
                     }
                   </td>
-                  <td>{{ expense.description }}</td>
-                  <td class="num">{{ formatCop(expense.amount) }}</td>
-                  <td class="num">
+                  <td data-label="Concepto">{{ expense.description }}</td>
+                  <td class="num" data-label="Valor">{{ formatCop(expense.amount) }}</td>
+                  <td class="num tc-actions">
                     <button type="button" class="gs-quitar" (click)="requestDelete(expense)">
                       Eliminar
                     </button>

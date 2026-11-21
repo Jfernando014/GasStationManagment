@@ -187,7 +187,7 @@
 }
 
 .item.is-open .detail-content { opacity: 1; transform: none; }
-.detail-scroll { overflow-x: auto; }
+.detail-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 
 table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 13.5px; color: var(--text-body); font-variant-numeric: tabular-nums; }
 

@@ -9,7 +9,7 @@
   animation: rise-in var(--duration-normal) var(--spring) backwards;
 }
 
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 
 table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
 
@@ -33,6 +33,12 @@ tbody th.date { font-weight: 600; color: var(--text-heading); white-space: nowra
 tbody td { color: var(--text-heading); }
 tr.rest td, tr.rest th { color: var(--text-light); }
 tr.holiday { background: #FFF8F1; }
+
+/* El festivo pinta el color en la fila, no en las celdas: la primera columna,
+   que queda fija en pantallas angostas, tiene que heredarlo. */
+@media (max-width: 1024px) {
+  tr.holiday > :first-child { background-color: inherit; }
+}
 .sunday { color: var(--brand-primary-strong); font-weight: 600; }
 .holiday-tag { margin-left: 4px; padding: 1px 7px; font-size: 11px; }
 .zero { color: #CBD5E1; }

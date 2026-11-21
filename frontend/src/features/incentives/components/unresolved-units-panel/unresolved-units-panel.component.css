@@ -1,7 +1,7 @@
 /* The panel itself (bar, dot, fold button) is the shared warning panel; this is only the list inside it. */
 :host { display: block; }
 
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 
 table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13.5px; color: #334155; font-variant-numeric: tabular-nums; }
 

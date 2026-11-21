@@ -85,15 +85,15 @@
         }
       </div>
       <div class="table-scroll">
-        <table class="configuration-table">
+        <table class="configuration-table table-cards">
           <thead><tr><th>Identificador</th><th>Combustible</th><th>Capacidad</th><th>Tabla de aforo</th><th>Acciones</th></tr></thead>
           <tbody>
             @for (tank of tanks(); track tank.id) {
               <tr>
-                <td><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
-                <td>{{ tank.fuel }}</td>
-                <td class="tnum">{{ tank.capacity | number }} Gal</td>
-                <td>
+                <td class="tc-title"><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
+                <td data-label="Combustible">{{ tank.fuel }}</td>
+                <td class="tnum" data-label="Capacidad">{{ tank.capacity | number }} Gal</td>
+                <td data-label="Tabla de aforo">
                   <select class="aforo-tank-select" [attr.aria-label]="'Tabla de aforo para ' + tank.name" [ngModel]="tank.gaugeTableId" (ngModelChange)="assignTankGaugeTable(tank, $event)">
                     <option [ngValue]="null">Ninguna</option>
                     @for (table of gaugeTables(); track table.id) {
@@ -101,7 +101,7 @@
                     }
                   </select>
                 </td>
-                <td>
+                <td class="tc-actions">
                   <button class="table-action" type="button" (click)="editTankFromTable(tank)">Editar</button>
                   <button class="table-action danger" type="button" (click)="requestDeleteTank(tank)">Eliminar</button>
                 </td>

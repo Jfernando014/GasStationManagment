@@ -9,7 +9,7 @@
   animation: rise-in var(--duration-normal) var(--spring) backwards;
 }
 
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 
 table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 

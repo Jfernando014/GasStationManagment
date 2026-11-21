@@ -115,7 +115,7 @@
           <span class="rs-nota">Presupuesto: {{ format(monthlyFuel()?.value ?? null) }}{{ monthlyFuel() ? ' gal' : '' }} · {{ format(monthlyBasket()?.value ?? null) }}{{ monthlyBasket() ? ' COP canastilla' : '' }}</span>
         </div>
         <div class="rs-tabla-wrap">
-          <table class="ps-tabla" aria-label="Cálculo de metas distribuidas">
+          <table class="ps-tabla table-sticky-first" aria-label="Cálculo de metas distribuidas">
             <thead><tr><th>Vendedor</th><th class="num">% reparto</th><th class="num">Meta galones mes</th><th class="num">Meta galones día</th><th class="num">Meta canastilla mes</th></tr></thead>
             <tbody><tr><td colspan="5"><app-empty-state heading="Sin datos de metas distribuidas" description="Se requiere una meta mensual, un perfil de reparto y las asignaciones de turnos para calcular metas individuales.">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
@@ -129,7 +129,7 @@
       <section class="ps-card">
         <div class="rs-barra"><h2 class="ps-card-titulo">Ganancia si se cumple la meta</h2><span class="rs-nota">Sin datos de ventas e incentivos</span></div>
         <div class="rs-tabla-wrap">
-          <table class="ps-tabla" aria-label="Ganancia al cumplir metas">
+          <table class="ps-tabla table-sticky-first" aria-label="Ganancia al cumplir metas">
             <thead><tr><th>Vendedor</th><th class="num">Vendido</th><th class="num">Falta para la meta</th><th class="num">Ganancia al cumplir</th><th class="num">Con podio</th></tr></thead>
             <tbody><tr><td colspan="5"><app-empty-state heading="Datos no disponibles" description="La ganancia y el podio dependen de ventas reales y reglas vigentes de incentivos.">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 15V9m5 6V5m5 10v-4" /></svg>

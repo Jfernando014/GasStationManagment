@@ -8,6 +8,7 @@
 .sg-scroll {
   overflow: auto;
   max-height: calc(100vh - 255px);
+  max-height: calc(100dvh - 255px);
   min-height: 240px;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;

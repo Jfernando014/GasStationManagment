@@ -13,7 +13,7 @@
     <div class="stats-table-heading"><h2>Desglose Diario de Turnos en el Período</h2>
       <span class="sales-kpi-badge neutral">{{ rows().length }} observaciones del cliente</span></div>
     <div class="stats-table-scroll" tabindex="0" role="region" aria-label="Desglose diario de observaciones">
-      <table class="inv-table">
+      <table class="inv-table table-sticky-first">
         <thead><tr><th>FECHA</th><th>VENDEDOR</th><th>TURNO</th><th class="right">GALONES</th><th class="right">CANASTILLA</th><th>COMPARATIVA VS PROMEDIO DEL TURNO</th></tr></thead>
         <tbody>
           @for (row of rows(); track row.date + row.journey) {

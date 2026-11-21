@@ -10,7 +10,7 @@
       <p>Liquidación acumulada de canastilla de aceites y aditivos ordenada por mayor volumen comercial</p></div>
       <span class="sales-kpi-badge neutral">{{ status() === 'AVAILABLE' ? 'Ventas históricas reales · ' + data()?.to : status() === 'NO_DATA' ? 'Sin registros en el período' : 'Último corte: No disponible' }}</span></div>
     <div class="stats-table-scroll" role="region" tabindex="0" aria-label="Canastilla por vendedor">
-      <table class="inv-table stats-basket-table"><thead><tr><th>VENDEDOR</th><th class="right">TURNOS</th><th class="right">VENTA CANASTAS (COP)</th>
+      <table class="inv-table stats-basket-table table-sticky-first"><thead><tr><th>VENDEDOR</th><th class="right">TURNOS</th><th class="right">VENTA CANASTAS (COP)</th>
         <th class="right">PROMEDIO / TURNO (COP)</th><th>PARTICIPACIÓN</th><th>ACCIONES</th></tr></thead>
         <tbody>
           @for (seller of sellers(); track seller.workerId) {

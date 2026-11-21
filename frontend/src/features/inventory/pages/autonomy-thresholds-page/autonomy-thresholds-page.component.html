@@ -92,18 +92,18 @@
       </div>
     } @else {
       <div class="table-scroll">
-        <table class="configuration-table">
+        <table class="configuration-table table-cards">
           <thead>
             <tr><th>Vigente desde</th><th>Advertencia</th><th>Crítico</th><th>Registrado</th><th>Acciones</th></tr>
           </thead>
           <tbody>
             @for (threshold of thresholds(); track threshold.id) {
               <tr>
-                <td><strong>{{ formatDate(threshold.validFrom) }}</strong></td>
-                <td class="tnum">{{ threshold.warningDays }} días</td>
-                <td class="tnum">{{ threshold.criticalDays }} días</td>
-                <td>{{ formatDate(threshold.createdAt.slice(0, 10)) }}</td>
-                <td>
+                <td class="tc-title"><strong>{{ formatDate(threshold.validFrom) }}</strong></td>
+                <td class="tnum" data-label="Advertencia">{{ threshold.warningDays }} días</td>
+                <td class="tnum" data-label="Crítico">{{ threshold.criticalDays }} días</td>
+                <td data-label="Registrado">{{ formatDate(threshold.createdAt.slice(0, 10)) }}</td>
+                <td class="tc-actions">
                   <button class="table-action" type="button" (click)="startEdit(threshold)">Editar</button>
                   <button class="table-action danger" type="button" (click)="requestDelete(threshold)">Eliminar</button>
                 </td>
