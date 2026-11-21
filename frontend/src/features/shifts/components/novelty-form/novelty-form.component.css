@@ -125,3 +125,7 @@
 @media (prefers-reduced-motion: reduce) {
   .novelty-type { transition: none; }
 }
+
+@media (max-width: 640px) {
+  .novelty-actions { flex-direction: column-reverse; align-items: stretch; padding-bottom: env(safe-area-inset-bottom); }
+}

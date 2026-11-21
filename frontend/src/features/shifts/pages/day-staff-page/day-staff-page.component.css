@@ -179,3 +179,19 @@ app-novelty-list.ds-card { padding: 14px 16px; }
   .ds-confirm { width: 100%; }
   .ds-off-person { flex-wrap: wrap; }
 }
+
+/* Teléfono: la Jornada ya deja una barra fija abajo; la confirmación pasa al final del contenido. */
+@media (max-width: 640px) {
+  .ds-title h1 { font-size: 20px; }
+  .ds-footer { position: static; }
+}
+
+@container (max-width: 560px) {
+  .ds-nov-tag { white-space: normal; }
+  .ds-person-end .ab { flex: 1; }
+}
+
+@container (max-width: 520px) {
+  .ds-off-person .ab { flex: 1 1 100%; }
+  .ds-off-who b, .ds-off-who small { overflow-wrap: anywhere; }
+}

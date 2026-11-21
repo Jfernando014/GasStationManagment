@@ -7,3 +7,41 @@
   margin: 0 auto;
 }
 
+/* Tablet y teléfono: los ajustes quedan acotados a esta página; los indicadores y la
+   cabecera de paso son compartidos y no se tocan en sus reglas globales. */
+@media (max-width: 1024px) {
+  .jr-hist { padding: 16px; }
+  .jr-hist .jr-hist-cabecera { flex-direction: column; align-items: stretch; }
+  .jr-hist .jr-hist-cuerpo { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .jr-hist { padding: 12px; }
+
+  .jr-hist .jr-indicadores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .jr-hist .jr-indicador { min-width: 0; padding: 0 8px; }
+  .jr-hist .jr-indicador span { white-space: normal; line-height: 1.2; }
+
+  .jr-hist .jr-hist-mes { width: 100%; gap: 6px; }
+  .jr-hist .jr-hist-mes label { flex: 1; min-width: 0; }
+  .jr-hist .jr-hist-mes .flat-input { width: 100%; min-width: 0; height: 44px; font-family: inherit; font-size: 16px; }
+  .jr-hist .jr-hist-mes .jr-btn { flex-shrink: 0; width: 44px; height: 44px; min-height: 44px; padding: 0; }
+
+  .jr-hist .jr-hist-leyenda { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; width: 100%; font-size: 11px; }
+
+  .jr-hist .jr-hist-calendario { gap: 4px; padding: 10px 8px 12px; }
+  .jr-hist .jr-hist-dia { align-items: center; justify-content: center; min-height: 44px; padding: 4px; }
+  .jr-hist .jr-hist-marcas { top: 4px; right: 4px; }
+
+  /* En la celda solo queda el punto de color; el texto del estado sigue disponible para lectores de pantalla. */
+  .jr-hist .jr-hist-estado-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .jr-hist .jr-hist-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -119,6 +119,7 @@ export class JournalHistoryPageComponent implements OnInit {
           this.selectedDayDetail = detail;
           this.isLoadingDetail = false;
           this.cdr.detectChanges();
+          this.revealPanelOnNarrowScreens();
         },
         error: () => {
           this.isLoadingDetail = false;
@@ -130,6 +131,12 @@ export class JournalHistoryPageComponent implements OnInit {
 
     this.journalService.setSelectedDate?.(day.date);
     this.router.navigate(['/jornada/personal'], { queryParams: { date: day.date } });
+  }
+
+  /** Hasta tablet el panel queda debajo del calendario: se acerca a la vista una vez pintado. */
+  private revealPanelOnNarrowScreens(): void {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(max-width: 1024px)').matches) return;
+    document.getElementById('jr-hist-panel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   closeMigratedPanel(): void {
