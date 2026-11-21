@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
+import { TabsComponent } from '../../../atomic-design/molecules/tabs/tabs.component';
 import { formatStatistics, weekday } from '../../../shared/helpers/sales-statistics.helpers';
 import { basketSellers } from '../../../shared/helpers/statistics-contracts.helpers';
 import { StatisticsChartSeries, StatisticsTab } from '../../../shared/models/dtos/sales-statistics.dto';
@@ -14,7 +15,7 @@ import { ObservationsEditorComponent } from '../components/observations-editor.c
 import { StatisticsBalanceComponent } from '../components/statistics-balance.component';
 
 @Component({ selector: 'app-statistics-page', standalone: true,
-  imports: [ActionButtonDirective, ShiftAveragesComponent, ScenariosComponent, BasketStatisticsComponent, CompetitionStatisticsComponent,
+  imports: [ActionButtonDirective, TabsComponent, ShiftAveragesComponent, ScenariosComponent, BasketStatisticsComponent, CompetitionStatisticsComponent,
     StatisticsDialogComponent, StatisticsChartComponent, ObservationsEditorComponent, StatisticsBalanceComponent],
   providers: [StatisticsWorkspace], templateUrl: './statistics-page.component.html', styleUrls: ['../statistics.css', '../statistics-visuals.css']
 })
@@ -50,16 +51,4 @@ export class StatisticsPageComponent {
           .sort((a, b) => a.date.localeCompare(b.date)).map(point => ({ label: point.date, value: point.value }))
     }));
   });
-  selectTab(tab: StatisticsTab, event: Event): void {
-    this.tab.set(tab);
-    (event.currentTarget as HTMLElement).scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-  }
-  tabKey(event: KeyboardEvent, index: number): void {
-    const key = event.key;
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
-    event.preventDefault();
-    const next = key === 'Home' ? 0 : key === 'End' ? this.tabs.length - 1 : (index + (key === 'ArrowRight' ? 1 : -1) + this.tabs.length) % this.tabs.length;
-    this.tab.set(this.tabs[next].id);
-    (event.target as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next].focus();
-  }
 }

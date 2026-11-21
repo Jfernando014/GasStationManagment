@@ -25,7 +25,7 @@
             <td class="num">{{ formatGallons(row.stockGallons) }}</td>
             <td class="num">{{ formatGallons(row.expectedDailySalesGallons) }}</td>
             <td class="num">{{ formatDays(row.autonomyDays) }}</td>
-            <td><span [class]="'jr-chip ' + autonomyTone(row)">{{ autonomyLabel(row) }}</span></td>
+            <td><app-tag [variant]="autonomyTone(row)" [style.cursor]="autonomyTone(row) === 'amber' ? 'help' : null">{{ autonomyLabel(row) }}</app-tag></td>
           </tr>
         } @empty {
           <tr><td colspan="5" class="jr-p5-tenue">Sin datos de autonomía para la fecha.</td></tr>

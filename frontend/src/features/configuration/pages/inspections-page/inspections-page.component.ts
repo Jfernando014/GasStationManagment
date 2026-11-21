@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { InspectionsService } from '../../../../core/services/inspections.service';
 import { saveBlob } from '../../../../shared/helpers/file-download.helpers';
 import {
@@ -37,7 +38,7 @@ interface InspectionDraft {
 @Component({
   selector: 'app-inspections-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ActionButtonDirective],
+  imports: [CommonModule, FormsModule, ActionButtonDirective, TagComponent],
   templateUrl: './inspections-page.component.html',
   styleUrl: './inspections-page.component.css'
 })

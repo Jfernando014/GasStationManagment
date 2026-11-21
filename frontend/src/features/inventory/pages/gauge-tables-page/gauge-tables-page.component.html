@@ -51,7 +51,7 @@
       <div class="aforo-stats">
         <span>Volumen máximo <b>{{ (selectedTable?.maxVolumeGallons ?? 0) | number }} Gal</b></span>
         <span>Altura máxima <b>{{ (selectedTable?.maxHeightCm ?? 0) | number:'1.1-1' }} cm</b></span>
-        <span class="state-pill-tag optimal">{{ selectedCurve.length }} puntos</span>
+        <app-tag variant="green">{{ selectedCurve.length }} puntos</app-tag>
         <button appButton variant="danger" size="sm" type="button" (click)="requestDeleteTable()">Eliminar tabla</button>
       </div>
     </section>
@@ -81,7 +81,7 @@
           <p>Asigna a cada tanque una tabla de aforo, déjalo en Ninguna o edita/elimina el tanque directamente.</p>
         </div>
         @if (selectedGaugeTableId() !== null) {
-          <span class="state-pill-tag optimal">{{ tanksInSelectedTable.length }} en esta tabla</span>
+          <app-tag variant="green">{{ tanksInSelectedTable.length }} en esta tabla</app-tag>
         }
       </div>
       <div class="table-scroll">

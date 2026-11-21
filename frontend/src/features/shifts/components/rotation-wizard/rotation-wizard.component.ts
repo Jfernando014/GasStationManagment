@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
 import { RotationPreviewGridComponent, rotationCoverageTip } from '../rotation-preview-grid/rotation-preview-grid.component';
 import { ShiftsScheduleService } from '../../../../core/services/shifts-schedule.service';
@@ -42,7 +43,7 @@ export interface RotationDone {
 @Component({
   selector: 'app-rotation-wizard',
   standalone: true,
-  imports: [ActionButtonDirective, ShiftChipComponent, RotationPreviewGridComponent],
+  imports: [ActionButtonDirective, TagComponent, ShiftChipComponent, RotationPreviewGridComponent],
   templateUrl: './rotation-wizard.component.html',
   styleUrl: './rotation-wizard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

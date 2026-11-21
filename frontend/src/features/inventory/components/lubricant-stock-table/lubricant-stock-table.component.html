@@ -79,11 +79,11 @@
           <td class="num jr-p5-tenue">{{ counterAfterTransfer(product) }}</td>
           <td>
             @if (product.status === 'NEGATIVE_STOCK') {
-              <span class="jr-chip jr-chip--falta" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</span>
+              <app-tag variant="red" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</app-tag>
             } @else if (existingTotal(product) <= 0) {
-              <span class="jr-chip jr-chip--falta">Agotado</span>
+              <app-tag variant="red">Agotado</app-tag>
             } @else if (product.office.closing <= 0) {
-              <span class="jr-chip jr-chip--aviso">Sin reserva en oficina</span>
+              <app-tag variant="amber" style="cursor: help">Sin reserva en oficina</app-tag>
             }
           </td>
           <td class="num jr-p5-acciones-fila">

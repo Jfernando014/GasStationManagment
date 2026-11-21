@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
+import { TabItem, TabsComponent } from '../../../../atomic-design/molecules/tabs/tabs.component';
 import { ProductStockService } from '../../../../core/services/product-stock.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import {
@@ -49,7 +51,7 @@ const EMPTY_DRAFT: ProductDraft = {
 @Component({
   selector: 'app-products-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, TagComponent, TabsComponent],
   templateUrl: './products-page.component.html',
   styleUrl: './products-page.component.css'
 })
@@ -69,6 +71,10 @@ export class ProductsPageComponent {
   readonly loadError = signal<string | null>(null);
 
   readonly tab = signal<ProductTab>('catalogo');
+  readonly tabs: TabItem[] = [
+    { id: 'catalogo', label: 'Catálogo' },
+    { id: 'margenes', label: 'Márgenes' }
+  ];
   readonly search = signal('');
   readonly category = signal<ProductCategory | ''>('');
   readonly activeFilter = signal<ActiveFilter>('all');

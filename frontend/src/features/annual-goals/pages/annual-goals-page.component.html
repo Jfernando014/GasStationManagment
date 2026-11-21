@@ -14,17 +14,10 @@
   </div>
 
   <div class="rs-tabs">
-    <div class="jr-tabs" role="tablist" aria-label="Metas y cumplimiento">
-      <button class="jr-tab" id="tab-cumplimiento" role="tab" type="button"
-        [class.is-activa]="tab() === 'cumplimiento'" [attr.aria-selected]="tab() === 'cumplimiento'"
-        aria-controls="panel-cumplimiento" (click)="tab.set('cumplimiento')">Cumplimiento</button>
-      <button class="jr-tab" id="tab-metas" role="tab" type="button"
-        [class.is-activa]="tab() === 'metas'" [attr.aria-selected]="tab() === 'metas'"
-        aria-controls="panel-metas" (click)="tab.set('metas')">Metas</button>
-    </div>
+    <app-tabs idPrefix="goals" label="Metas y cumplimiento" [tabs]="tabs" [active]="tab()" (activeChange)="tab.set($any($event))" />
   </div>
 
-  <section class="jr-tabpanel" id="panel-cumplimiento" role="tabpanel" aria-labelledby="tab-cumplimiento" [hidden]="tab() !== 'cumplimiento'">
+  <section class="jr-tabpanel" id="goals-panel-cumplimiento" role="tabpanel" aria-labelledby="goals-tab-cumplimiento" [hidden]="tab() !== 'cumplimiento'">
     <div class="rs-seccion">
       <form class="rs-barra compliance-toolbar" [formGroup]="complianceForm" (ngSubmit)="consultCompliance()">
         <div class="ps-segmento" role="group" aria-label="Periodo">
@@ -77,9 +70,9 @@
                   <span class="tnum">{{ formatCompliance(seller.percent) }}{{ seller.percent !== null ? ' %' : '' }}</span>
                 </div>
               </td>
-              <td><span class="state-pill-tag" [class.optimal]="seller.availability === 'AVAILABLE' && seller.reached" [class.warning]="seller.availability !== 'AVAILABLE' || !seller.reached">
+              <td><app-tag [variant]="seller.availability === 'AVAILABLE' && seller.reached ? 'green' : 'amber'">
                 {{ seller.availability === 'AVAILABLE' ? (seller.reached ? 'Meta alcanzada' : 'Por debajo de la meta') : 'No calculable' }}
-              </span>@if (seller.reason) { <small class="compliance-reason">{{ reasonText(seller.reason) }}</small> }</td>
+              </app-tag>@if (seller.reason) { <small class="compliance-reason">{{ reasonText(seller.reason) }}</small> }</td>
             </tr>
           } @empty {
           <tr><td colspan="6">
@@ -98,7 +91,7 @@
     </div>
   </section>
 
-  <section class="jr-tabpanel" id="panel-metas" role="tabpanel" aria-labelledby="tab-metas" [hidden]="tab() !== 'metas'">
+  <section class="jr-tabpanel" id="goals-panel-metas" role="tabpanel" aria-labelledby="goals-tab-metas" [hidden]="tab() !== 'metas'">
     <div class="goals-period-toolbar">
       <app-select-field fieldId="goals-fiscal-year" label="Año fiscal" [control]="yearControl" [options]="yearOptions" [required]="true" />
       <label class="ps-campo">Mes de referencia
@@ -155,9 +148,9 @@
         <form class="inv-panel-card annual-card" [formGroup]="form" (ngSubmit)="requestSave()" [attr.aria-busy]="loading() || saving()">
           <div class="inv-panel-card-title annual-header">
             <div class="annual-heading"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg><span>Año Fiscal · {{ year() }}</span></div>
-            <span class="state-pill-tag" [class.optimal]="annualTarget() || canRegister()" [class.warning]="!annualTarget() && !canRegister()">
+            <app-tag [variant]="annualTarget() || canRegister() ? 'green' : 'amber'">
               {{ annualTarget() ? 'MODO CONSULTA · PERIODO BLOQUEADO' : canRegister() ? '✓ MODO EDICIÓN ACTIVO' : saving() ? 'GUARDANDO' : 'CONSULTA PENDIENTE' }}
-            </span>
+            </app-tag>
           </div>
           <p class="annual-subtitle">Parametrización global anual para EDS Bellavista.</p>
           @if (annualTarget()) {

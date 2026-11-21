@@ -21,7 +21,7 @@ describe('SCRUM-108 C-14 compliance tab', () => {
     page = fixture.componentInstance;
     fixture.detectChanges();
   }
-  const panel = () => fixture.nativeElement.querySelector('#panel-cumplimiento') as HTMLElement;
+  const panel = () => fixture.nativeElement.querySelector('#goals-panel-cumplimiento') as HTMLElement;
   const rows = () => Array.from(panel().querySelectorAll<HTMLTableRowElement>('.compliance-seller'));
   beforeEach(() => {
     api.read.mockReset().mockImplementation((query: PerformanceQuery) => of(decode(performanceFixture(query), query)));

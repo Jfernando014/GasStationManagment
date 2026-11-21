@@ -268,13 +268,9 @@
                 <td>{{ inspection.certifier }}</td>
                 <td>{{ inspection.toleranceMeasured }}</td>
                 <td>
-                  <span
-                    class="state-pill-tag"
-                    [class.optimal]="inspection.status === 'VIGENTE'"
-                    [class.warning]="inspection.status === 'PROXIMO'"
-                    [class.critical]="inspection.status === 'VENCIDO'">
+                  <app-tag [variant]="inspection.status === 'VIGENTE' ? 'green' : inspection.status === 'PROXIMO' ? 'amber' : inspection.status === 'VENCIDO' ? 'red' : 'gray'">
                     {{ statusLabels[inspection.status] }}
-                  </span>
+                  </app-tag>
                 </td>
                 <td>{{ inspection.certDoc ?? '—' }}</td>
                 <td class="num">

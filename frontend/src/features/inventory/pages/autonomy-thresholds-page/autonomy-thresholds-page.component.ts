@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { AutonomyThresholdsService } from '../../../../core/services/autonomy-thresholds.service';
 import { getErrorMessage, getFieldErrors, isApiError } from '../../../../shared/helpers/problem-details.helpers';
@@ -28,7 +29,7 @@ const emptyThresholdForm: ThresholdForm = { validFrom: '', warningDays: null, cr
 @Component({
   selector: 'app-autonomy-thresholds-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, ActionButtonDirective, ConfirmModalComponent],
+  imports: [FormsModule, RouterLink, ActionButtonDirective, TagComponent, ConfirmModalComponent],
   templateUrl: './autonomy-thresholds-page.component.html'
 })
 export class AutonomyThresholdsPageComponent {

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { GaugeTablesService } from '../../../../core/services/gauge-tables.service';
 import { TanksService } from '../../../../core/services/tanks.service';
@@ -29,7 +30,7 @@ const TOAST_DURATION_MS = 3000;
 @Component({
   selector: 'app-tanks-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, ConfirmModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, TagComponent, ConfirmModalComponent],
   templateUrl: './tanks-page.component.html'
 })
 export class TanksPageComponent {

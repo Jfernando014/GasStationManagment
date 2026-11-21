@@ -46,9 +46,9 @@
   <div class="jr-p5-card-pie">
     <span class="jr-p5-etq">{{ measuredCount() }} de {{ tanks().length }} tanques medidos</span>
     @if (allMeasured()) {
-      <span class="jr-chip jr-chip--cerrada">Completo</span>
+      <app-tag variant="green">Completo</app-tag>
     } @else {
-      <span class="jr-chip jr-chip--pendiente">Faltan alturas</span>
+      <app-tag variant="gray">Faltan alturas</app-tag>
     }
     <button
       appButton variant="primary" size="sm"
