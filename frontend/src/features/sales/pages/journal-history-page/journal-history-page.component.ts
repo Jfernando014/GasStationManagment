@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { Router, RouterModule } from '@angular/router';
 import { JournalService } from '../../../../core/services/journal.service';
 import {
@@ -12,7 +13,7 @@ import {
 @Component({
   selector: 'app-journal-history-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ActionButtonDirective],
   templateUrl: './journal-history-page.component.html',
   styleUrls: ['./journal-history-page.component.css']
 })

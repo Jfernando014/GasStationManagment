@@ -32,10 +32,13 @@
         </div>
         <button
           type="button"
-          class="confirm-modal-close"
+          appButton
+          variant="ghost"
+          size="sm"
+          [icon]="true"
           [disabled]="busy()"
           aria-label="Cerrar confirmación"
-          (click)="cancelled.emit()">✕</button>
+          (click)="cancelled.emit()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
       </div>
 
       <p class="confirm-modal-body">{{ message() }}</p>
@@ -43,14 +46,16 @@
       <div class="confirm-modal-actions">
         <button
           type="button"
-          class="btn-confirm-cancel"
+          appButton
+          variant="secondary"
           [disabled]="busy()"
           (click)="cancelled.emit()">
           Cancelar
         </button>
         <button
           type="button"
-          class="btn-confirm-danger"
+          appButton
+          variant="destructive"
           [disabled]="busy()"
           (click)="confirmed.emit()">
           {{ busy() ? 'Eliminando…' : confirmLabel() }}

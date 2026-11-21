@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, inject, input, output, viewChild
 } from '@angular/core';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 
 /**
  * Small confirmation over the current screen. It is a native modal `<dialog>`: the rest of the page is inert,
@@ -10,6 +11,7 @@ import {
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
+  imports: [ActionButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dialog #dialog class="confirm" role="alertdialog" aria-labelledby="confirm-title"
@@ -19,8 +21,8 @@ import {
         <p>{{ message() }}</p>
       }
       <div class="actions">
-        <button type="button" class="secondary" autofocus (click)="cancelled.emit()">{{ cancelLabel() }}</button>
-        <button type="button" class="danger" (click)="confirmed.emit()">{{ confirmLabel() }}</button>
+        <button type="button" appButton variant="secondary" autofocus (click)="cancelled.emit()">{{ cancelLabel() }}</button>
+        <button type="button" appButton variant="destructive" (click)="confirmed.emit()">{{ confirmLabel() }}</button>
       </div>
     </dialog>
   `,

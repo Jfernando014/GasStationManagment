@@ -119,11 +119,11 @@
 
       <footer class="footer">
         @if (noChange() !== null) {
-          <button type="button" class="secondary" (click)="changeData()">Cambiar datos</button>
-          <button type="button" class="primary" (click)="requestClose()">Entendido</button>
+          <button type="button" appButton variant="secondary" (click)="changeData()">Cambiar datos</button>
+          <button type="button" appButton variant="primary" (click)="requestClose()">Entendido</button>
         } @else {
-          <button type="button" class="secondary" [disabled]="submitting()" (click)="requestClose()">Cancelar</button>
-          <button type="submit" form="rule-form" class="primary" [disabled]="!canSubmit()" [attr.aria-busy]="submitting()">
+          <button type="button" appButton variant="secondary" [disabled]="submitting()" (click)="requestClose()">Cancelar</button>
+          <button type="submit" form="rule-form" appButton variant="primary" [disabled]="!canSubmit()" [loading]="submitting()">
             <span class="label" [class.is-hidden]="submitting()">Crear regla</span>
             @if (submitting()) {
               <span class="spinner" aria-hidden="true"></span>

@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { JournalStepChangesService } from '../../../core/services/journal-step-changes.service';
 
 /** Blurred modal asking whether to save changes, discard them, or stay on the current step. */
 @Component({
   selector: 'app-unsaved-step-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ActionButtonDirective],
   templateUrl: './unsaved-step-modal.component.html',
   styleUrl: './unsaved-step-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

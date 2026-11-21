@@ -90,38 +90,13 @@ h2 {
   border-top: 1px solid var(--border-main);
 }
 
-.secondary,
-.primary {
+/* The footer buttons are appButton; they only need an anchor for the spinner and a minimum width. */
+.footer button {
   position: relative;
-  height: 44px;
   min-width: 96px;
-  padding: 0 20px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) ease,
-    border-color var(--duration-fast) ease,
-    color var(--duration-fast) ease,
-    transform var(--duration-fast) var(--spring-fast);
 }
 
-.secondary { border-color: var(--jr-cell-border); background: var(--surface-card); color: var(--text-heading); }
-.secondary:hover:not(:disabled) { background: var(--surface-subtle); }
-.primary { background: var(--brand-primary); color: #FFFFFF; }
-.primary:hover:not(:disabled) { background: var(--brand-primary-hover); }
-.primary:disabled { background: var(--border-main); color: var(--text-light); cursor: not-allowed; }
-.primary[aria-busy='true']:disabled { background: var(--brand-primary); color: #FFFFFF; cursor: progress; }
-.secondary:disabled { color: var(--text-light); cursor: not-allowed; }
-.secondary:active:not(:disabled),
-.primary:active:not(:disabled) { transform: scale(0.97); }
-
-.close:focus-visible,
-.secondary:focus-visible,
-.primary:focus-visible {
+.close:focus-visible {
   outline: none;
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px #FFE4CC;
