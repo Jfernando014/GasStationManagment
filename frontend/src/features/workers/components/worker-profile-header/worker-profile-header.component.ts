@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild } from '@angular/core';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { StatusBadgeComponent } from '../../../../atomic-design/atoms/status-badge/status-badge.component';
 import { toNameCase } from '../../../../shared/helpers/text.helpers';
@@ -10,7 +11,7 @@ import { Worker } from '../../../../shared/models/dtos/worker.dto';
   selector: 'app-worker-profile-header',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AvatarComponent, StatusBadgeComponent],
+  imports: [ActionButtonDirective, AvatarComponent, StatusBadgeComponent],
   templateUrl: './worker-profile-header.component.html',
   styleUrl: './worker-profile-header.component.css'
 })

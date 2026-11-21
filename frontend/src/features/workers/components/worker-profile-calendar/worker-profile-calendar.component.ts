@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
@@ -57,7 +58,7 @@ const SKELETON_CELLS = Array.from({ length: 35 }, (_, index) => index);
   selector: 'app-worker-profile-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ShiftChipComponent, InfoTooltipComponent, EmptyStateComponent],
+  imports: [ActionButtonDirective, ShiftChipComponent, InfoTooltipComponent, EmptyStateComponent],
   templateUrl: './worker-profile-calendar.component.html',
   styleUrl: './worker-profile-calendar.component.css'
 })

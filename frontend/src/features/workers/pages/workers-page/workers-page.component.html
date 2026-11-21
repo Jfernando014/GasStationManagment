@@ -5,7 +5,7 @@
       <p>Registro de vendedores, su rol y su estado.</p>
     </div>
     <div class="ps-cabecera-der">
-      <button type="button" class="jr-btn jr-btn--pri workers-nuevo" (click)="openDialog()">
+      <button type="button" appButton variant="primary" size="sm" class="workers-nuevo" (click)="openDialog()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -45,7 +45,7 @@
             <path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76" /><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68" />
             <path d="M5 13a10 10 0 0 1 5.24-2.76" /><line x1="12" y1="20" x2="12.01" y2="20" />
           </svg>
-          <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="retry()">Reintentar</button>
+          <button type="button" appButton variant="secondary" size="sm" (click)="retry()">Reintentar</button>
         </app-empty-state>
       } @else if (loading() && workers().length === 0) {
         <p class="ps-vacio workers-cargando" aria-live="polite">Cargando vendedores…</p>
@@ -62,7 +62,7 @@
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <button type="button" class="jr-btn jr-btn--pri jr-btn--sm" (click)="openDialog()">Nuevo vendedor</button>
+            <button type="button" appButton variant="primary" size="sm" (click)="openDialog()">Nuevo vendedor</button>
           </app-empty-state>
         }
       } @else {
@@ -98,7 +98,7 @@
           </app-empty-state>
         } @else {
           <div class="workers-ver-perfil">
-            <a class="jr-btn jr-btn--sec jr-btn--sm" [routerLink]="['/personal/vendedores', key]">
+            <a appButton variant="secondary" size="sm" [routerLink]="['/personal/vendedores', key]">
               Ver perfil
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </a>

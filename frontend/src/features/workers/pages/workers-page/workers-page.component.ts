@@ -4,6 +4,7 @@ import { FormControl } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { SearchFieldComponent } from '../../../../atomic-design/atoms/search-field/search-field.component';
 import { StatusBadgeComponent } from '../../../../atomic-design/atoms/status-badge/status-badge.component';
@@ -25,6 +26,7 @@ const DIALOG_CLOSE_DELAY_MS = 320;
   selector: 'app-workers-page',
   standalone: true,
   imports: [
+    ActionButtonDirective,
     AvatarComponent,
     SearchFieldComponent,
     StatusBadgeComponent,

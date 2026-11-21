@@ -16,6 +16,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { StatusBadgeComponent } from '../../../../atomic-design/atoms/status-badge/status-badge.component';
 import { FormFieldComponent } from '../../../../atomic-design/molecules/form-field/form-field.component';
@@ -54,6 +55,7 @@ function formatValidator(pattern: RegExp, message: string): ValidatorFn {
   imports: [
     NgTemplateOutlet,
     ReactiveFormsModule,
+    ActionButtonDirective,
     AvatarComponent,
     StatusBadgeComponent,
     FormFieldComponent,

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { catchError, filter, map, of, switchMap, tap } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
 import { WorkerPerformanceService } from '../../../../core/services/worker-performance.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
@@ -18,7 +19,7 @@ import { WorkerProfilePerformanceTableComponent } from '../worker-profile-perfor
   selector: 'app-worker-profile-performance-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyStateComponent, WorkerProfilePerformanceTableComponent, WorkerProfileMaxSaleComponent],
+  imports: [ActionButtonDirective, EmptyStateComponent, WorkerProfilePerformanceTableComponent, WorkerProfileMaxSaleComponent],
   templateUrl: './worker-profile-performance-tab.component.html',
   styleUrl: './worker-profile-performance-tab.component.css'
 })
