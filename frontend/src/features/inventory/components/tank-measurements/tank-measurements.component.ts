@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, input, output, viewChildren } from '@angular/core';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { formatGallons, FUEL_COLORS, FUEL_LABELS } from '../../../../shared/helpers/inventory-display.helpers';
 import { isValidTankHeight } from '../../../../shared/helpers/inventory-rules.helpers';
 import { TankResponse } from '../../../../shared/models/dtos/tank.dto';
@@ -9,6 +10,7 @@ import { TankHeightChange } from '../../models/step5.model';
 @Component({
   selector: 'app-tank-measurements',
   standalone: true,
+  imports: [ActionButtonDirective],
   templateUrl: './tank-measurements.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

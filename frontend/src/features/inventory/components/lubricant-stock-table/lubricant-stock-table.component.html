@@ -18,10 +18,10 @@
         [ngModel]="search()"
         (ngModelChange)="searchChanged.emit($event)">
     </label>
-    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" [disabled]="!editable() || syncing()" (click)="syncRequested.emit()">
+    <button appButton variant="secondary" size="sm" type="button" [disabled]="!editable() || syncing()" (click)="syncRequested.emit()">
       {{ syncing() ? 'Sincronizando…' : 'Sincronizar ventas del paso 2' }}
     </button>
-    <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!editable() || savingTransfers() || !hasPendingTransfers()" (click)="saveRequested.emit()">
+    <button appButton variant="primary" size="sm" type="button" [disabled]="!editable() || savingTransfers() || !hasPendingTransfers()" (click)="saveRequested.emit()">
       {{ savingTransfers() ? 'Guardando…' : 'Guardar traslados' }}
     </button>
   </div>

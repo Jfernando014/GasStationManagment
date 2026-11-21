@@ -9,10 +9,10 @@
       <span class="inv-header-sub">Existencias por combustible y tanque desde la última medición registrada.</span>
     </div>
     <div class="inv-header-actions">
-      <button class="btn-flat-secondary" type="button" [disabled]="loading()" (click)="loadHome()">
+      <button appButton variant="secondary" size="sm" type="button" [disabled]="loading()" (click)="loadHome()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
       </button>
-      <a class="btn-solid-primary" routerLink="/alertas">
+      <a appButton variant="primary" size="sm" routerLink="/alertas">
         Bandeja de alertas
         @if (pendingAlerts() > 0) {
           <span class="alert-counter-badge">{{ pendingAlerts() > 99 ? '99+' : pendingAlerts() }}</span>
@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-        <a class="btn-solid-primary" routerLink="/alertas">Ver bandeja</a>
+        <a appButton variant="primary" size="sm" routerLink="/alertas">Ver bandeja</a>
       </div>
     } @else if (!optimalBannerDismissed()) {
       <div class="optimal-alert-banner">
@@ -62,7 +62,7 @@
           </div>
         </div>
         <div class="optimal-banner-actions">
-          <a class="btn-flat-secondary" routerLink="/alertas">Ver bandeja</a>
+          <a appButton variant="secondary" size="sm" routerLink="/alertas">Ver bandeja</a>
           <button
             type="button"
             class="optimal-banner-close"
@@ -171,11 +171,11 @@
             <p class="headline-sub-txt">Último estado registrado por medición con vara y tabla de aforo ({{ measuredTanks() }} de {{ totalTanks() }} medidos).</p>
           </div>
           <div class="home-tanks-header-actions">
-            <a routerLink="/configuracion/tanques" class="btn-flat-secondary home-tanks-config-btn">
+            <a appButton variant="secondary" size="sm" routerLink="/configuracion/tanques" class="home-tanks-config-btn">
               Gestionar tanques
             </a>
             @if (data.tanks.length > 0) {
-              <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="openReceptionModal()">
+              <button type="button" appButton variant="secondary" size="sm" (click)="openReceptionModal()">
                 + Nueva Consignación
               </button>
             }
@@ -291,7 +291,7 @@
           <input id="control-date" class="flat-input" type="date" [value]="controlDate()"
             (change)="onControlDateChange($event)" />
         </div>
-        <button class="btn-action-primary" type="button" [disabled]="controlLoading()" (click)="loadControl()">
+        <button appButton variant="primary" size="sm" type="button" [disabled]="controlLoading()" (click)="loadControl()">
           {{ controlLoading() ? 'Consultando…' : 'Consultar' }}
         </button>
         @if (control(); as controlData) {

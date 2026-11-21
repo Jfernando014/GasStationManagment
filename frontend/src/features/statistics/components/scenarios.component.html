@@ -3,7 +3,7 @@
     @for (scenario of scenarios; track $index; let index = $index) {
       @if (index === 1) {
         <div class="vs-divider-btn-wrap"><div class="vs-circle-badge">VS</div>
-          <button type="button" class="btn-action-primary" (click)="workspace.compare(first, second)" [disabled]="!!workspace.rangeError() || workspace.loadingComparison()">
+          <button type="button" appButton variant="primary" size="sm" (click)="workspace.compare(first, second)" [disabled]="!!workspace.rangeError() || workspace.loadingComparison()">
             {{ workspace.loadingComparison() ? 'COMPARANDO…' : 'COMPARAR' }}
           </button>
         </div>

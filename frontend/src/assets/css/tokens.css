@@ -54,6 +54,7 @@
       --semantic-green-strong: #047857;
       --semantic-amber-strong: #B45309;
       --semantic-red-strong: #B91C1C;
+      --semantic-red-strong-hover: #9D0F1B;  /* hover y active del botón destructivo sólido */
       --semantic-blue-strong: #1D4ED8;
 
       /* Jornada: tipos de celda de la rejilla de captura */

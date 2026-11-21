@@ -33,7 +33,7 @@
         <path d="m9 18 6-6-6-6" />
       </svg>
     </button>
-    <button type="button" class="btn-action-primary monthly-consult" (click)="consult()"
+    <button type="button" appButton variant="primary" size="sm" class="monthly-consult" (click)="consult()"
       [disabled]="loading() || !month()">
       @if (loading()) {
         <span class="monthly-spinner" aria-hidden="true"></span>
@@ -58,7 +58,7 @@
         <strong>No se pudieron cargar las conciliaciones</strong>
         <p>{{ message }}</p>
       </div>
-      <button type="button" class="jr-btn jr-btn--sec" (click)="consult()" [disabled]="loading()">Reintentar</button>
+      <button type="button" appButton variant="secondary" size="sm" (click)="consult()" [disabled]="loading()">Reintentar</button>
     </div>
   }
 

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { formatStatistics, weekday } from '../../../shared/helpers/sales-statistics.helpers';
 import { basketSellers } from '../../../shared/helpers/statistics-contracts.helpers';
 import { StatisticsChartSeries, StatisticsTab } from '../../../shared/models/dtos/sales-statistics.dto';
@@ -13,7 +14,7 @@ import { ObservationsEditorComponent } from '../components/observations-editor.c
 import { StatisticsBalanceComponent } from '../components/statistics-balance.component';
 
 @Component({ selector: 'app-statistics-page', standalone: true,
-  imports: [ShiftAveragesComponent, ScenariosComponent, BasketStatisticsComponent, CompetitionStatisticsComponent,
+  imports: [ActionButtonDirective, ShiftAveragesComponent, ScenariosComponent, BasketStatisticsComponent, CompetitionStatisticsComponent,
     StatisticsDialogComponent, StatisticsChartComponent, ObservationsEditorComponent, StatisticsBalanceComponent],
   providers: [StatisticsWorkspace], templateUrl: './statistics-page.component.html', styleUrls: ['../statistics.css', '../statistics-visuals.css']
 })

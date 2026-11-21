@@ -35,8 +35,8 @@
       }
 
       <div class="jr-p5-dialogo-acciones">
-        <button class="jr-btn jr-btn--ghost" type="button" (click)="close()">Cancelar</button>
-        <button class="jr-btn jr-btn--pri" type="button" [disabled]="saving()" (click)="confirm()">
+        <button appButton variant="ghost" size="sm" type="button" (click)="close()">Cancelar</button>
+        <button appButton variant="primary" size="sm" type="button" [disabled]="saving()" (click)="confirm()">
           {{ saving() ? 'Guardando…' : 'Guardar' }}
         </button>
       </div>

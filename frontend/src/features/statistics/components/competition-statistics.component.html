@@ -12,7 +12,7 @@
     </label>
     <span class="sales-kpi-badge neutral stats-trailing">Última verificación: {{ latestVerification() }}</span>
   </div>
-  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" class="jr-btn jr-btn--ghost" (click)="reload()">Reintentar</button></p> }
+  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" appButton variant="ghost" size="sm" (click)="reload()">Reintentar</button></p> }
   @if (success()) { <p class="stats-success" role="status">{{ success() }}</p> }
   <section class="inv-panel-card stats-competition-card">
     <div class="inv-panel-card-title stats-table-heading"><h2><span class="stats-orange" aria-hidden="true">◎</span> Matriz Comparativa de Precios en Popayán (Área de Influencia)</h2>
@@ -49,9 +49,9 @@
       </table>
     </div></div>
     <div class="stats-market-actions">
-      <button type="button" class="jr-btn jr-btn--sec" (click)="open('station')">Registrar estación</button>
-      <button type="button" class="btn-action-primary" (click)="open('observation')">Registrar precio observado</button>
-      <button type="button" class="jr-btn jr-btn--ghost" (click)="reload()" [disabled]="loading()">Actualizar</button>
+      <button type="button" appButton variant="secondary" size="sm" (click)="open('station')">Registrar estación</button>
+      <button type="button" appButton variant="primary" size="sm" (click)="open('observation')">Registrar precio observado</button>
+      <button type="button" appButton variant="ghost" size="sm" (click)="reload()" [disabled]="loading()">Actualizar</button>
     </div>
     <p class="stats-note">La referencia de zona usa las últimas observaciones de competidores activos, excluye a Bellavista y no limita su antigüedad. Los filtros de marca solo acotan las filas visibles.</p>
   </section>
@@ -70,7 +70,7 @@
           </select></label>
           <label class="stats-field">Costo de adquisición opcional (COP/galón)<input type="text" inputmode="decimal" class="flat-input tnum" formControlName="acquisitionCost" placeholder="Sin costo informado"></label>
           <small class="stats-note">Hasta dos decimales, sin separadores de miles. El costo puede ser cero; no se infiere del precio de venta.</small>
-          <button type="submit" class="btn-action-primary" [disabled]="simulating()">{{ simulating() ? 'SIMULANDO…' : 'SIMULAR PRECIO' }}</button>
+          <button type="submit" appButton variant="primary" size="sm" [disabled]="simulating()">{{ simulating() ? 'SIMULANDO…' : 'SIMULAR PRECIO' }}</button>
         </form>
         <div class="stats-simulation-impact"><h3>Impacto Financiero Proyectado:</h3>
           <dl>

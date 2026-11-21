@@ -5,7 +5,7 @@
       <h1>Tanques</h1>
       <p>Configura los tanques y asócialos a una tabla de aforo o déjalos con tabla Ninguna.</p>
     </div>
-    <button class="jr-btn jr-btn--pri" type="button" (click)="openNewTank()">+ Nuevo tanque</button>
+    <button appButton variant="primary" size="sm" type="button" (click)="openNewTank()">+ Nuevo tanque</button>
   </header>
 
   <nav class="configuration-tabs" aria-label="Configuración">
@@ -57,14 +57,14 @@
           </select>
         </label>
       </div>
-      <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newTankOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="addTank()">Guardar tanque</button></div>
+      <div class="card-actions"><button appButton variant="ghost" size="sm" type="button" (click)="newTankOpen.set(false)">Cancelar</button><button appButton variant="primary" size="sm" type="button" (click)="addTank()">Guardar tanque</button></div>
     </section>
   }
 
   @if (loading()) {
     <section class="configuration-card configuration-empty-state"><h2>Cargando tanques...</h2></section>
   } @else if (tanks().length === 0) {
-    <section class="configuration-card configuration-empty-state"><h2>No hay tanques registrados</h2><p>Registra el primer tanque de la estación para iniciar su configuración.</p><button class="jr-btn jr-btn--pri" type="button" (click)="newTankOpen.set(true)">Registrar primer tanque</button></section>
+    <section class="configuration-card configuration-empty-state"><h2>No hay tanques registrados</h2><p>Registra el primer tanque de la estación para iniciar su configuración.</p><button appButton variant="primary" size="sm" type="button" (click)="newTankOpen.set(true)">Registrar primer tanque</button></section>
   } @else {
     <section class="configuration-card">
       <div class="card-heading">
@@ -120,8 +120,8 @@
           </label>
         </div>
         <div class="card-actions">
-          <button class="jr-btn jr-btn--ghost" type="button" (click)="cancelEdit()">Cancelar</button>
-          <button class="jr-btn jr-btn--pri" type="button" (click)="saveTank(selectedTank)">Guardar configuración</button>
+          <button appButton variant="ghost" size="sm" type="button" (click)="cancelEdit()">Cancelar</button>
+          <button appButton variant="primary" size="sm" type="button" (click)="saveTank(selectedTank)">Guardar configuración</button>
         </div>
       </section>
     }

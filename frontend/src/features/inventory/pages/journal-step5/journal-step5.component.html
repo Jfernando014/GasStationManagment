@@ -14,7 +14,7 @@
         title="La variación y el stock usan las ventas del paso 2"><span class="jr-chip-punto"></span>Paso 2
         pendiente</span>
       }
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset" id="btn-restablecer-inventario"
+      <button type="button" appButton variant="secondary" size="sm" class="jr-p2-btn-reset" id="btn-restablecer-inventario"
         [disabled]="!canReset()" (click)="requestReset()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -23,7 +23,7 @@
         </svg>
         <span>{{ resetting() ? 'Restableciendo...' : 'Restablecer' }}</span>
       </button>
-      <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
+      <button appButton variant="primary" size="sm" type="button" [disabled]="!canComplete()"
         [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 (cierre de vendedores) primero' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : ''))"
         (click)="completeStep()">
         Marcar paso 5 completado
@@ -40,8 +40,8 @@
         ajustes se conservan.</span>
     </div>
     <div class="jr-p2-confirm-acciones">
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
-      <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer-inventario"
+      <button type="button" appButton variant="secondary" size="sm" (click)="cancelReset()">Cancelar</button>
+      <button type="button" appButton variant="destructive" size="sm" id="btn-confirmar-restablecer-inventario"
         (click)="confirmReset()">Sí, restablecer</button>
     </div>
   </div>
@@ -72,7 +72,7 @@
   @if (loadError(); as message) {
   <section class="jr-p5-card jr-p5-vacio">
     <p>{{ message }}</p>
-    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="loadError.set(null)">Cerrar</button>
+    <button appButton variant="secondary" size="sm" type="button" (click)="loadError.set(null)">Cerrar</button>
   </section>
   } @else if (loading()) {
   <p class="jr-p5-tenue" aria-live="polite">Cargando inventario de la jornada…</p>

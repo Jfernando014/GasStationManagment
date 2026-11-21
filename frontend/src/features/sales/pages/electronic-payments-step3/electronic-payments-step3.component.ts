@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { RouterLink } from '@angular/router';
 import { Observable, Subject, catchError, concatMap, distinctUntilChanged, filter, map, of, switchMap, take } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ElectronicPaymentsService } from '../../../../core/services/electronic-payments.service';
 import { JournalService } from '../../../../core/services/journal.service';
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
@@ -58,7 +59,7 @@ interface SummaryRequest {
 @Component({
   selector: 'app-electronic-payments-step3',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ActionButtonDirective],
   templateUrl: './electronic-payments-step3.component.html',
   styleUrl: './electronic-payments-step3.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

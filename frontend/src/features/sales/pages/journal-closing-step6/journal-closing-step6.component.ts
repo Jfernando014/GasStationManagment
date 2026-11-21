@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angul
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { JournalService } from '../../../../core/services/journal.service';
 import {
   AutonomyAlertSummaryItemDto,
@@ -17,7 +18,7 @@ import { DailyDownloadsComponent } from '../../../../atomic-design/organisms/dai
 @Component({
   selector: 'app-journal-closing-step6',
   standalone: true,
-  imports: [CommonModule, RouterModule, DailyDownloadsComponent],
+  imports: [CommonModule, RouterModule, ActionButtonDirective, DailyDownloadsComponent],
   templateUrl: './journal-closing-step6.component.html',
   styleUrls: ['./journal-closing-step6.component.css']
 })

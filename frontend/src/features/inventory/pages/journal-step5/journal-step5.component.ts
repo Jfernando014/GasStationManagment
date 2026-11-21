@@ -13,6 +13,7 @@ import {
   switchMap
 } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { FuelAutonomyTableComponent } from '../../components/fuel-autonomy-table/fuel-autonomy-table.component';
 import { FuelVariationTableComponent } from '../../components/fuel-variation-table/fuel-variation-table.component';
 import { LubricantStockTableComponent } from '../../components/lubricant-stock-table/lubricant-stock-table.component';
@@ -50,6 +51,7 @@ const TOAST_DURATION_MS = 3000;
   selector: 'app-journal-step5',
   standalone: true,
   imports: [
+    ActionButtonDirective,
     FuelAutonomyTableComponent,
     FuelVariationTableComponent,
     LubricantStockTableComponent,

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -60,7 +61,7 @@ function writeOptimalDismissed(dismissed: boolean): void {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, EmptyStateComponent],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -6,7 +6,7 @@
     <label class="stats-date">Fecha final:
       <input type="date" class="flat-input tnum" name="to" [ngModel]="workspace.to()" (ngModelChange)="workspace.setRange(workspace.from(), $event)" required>
     </label>
-    <button type="submit" class="btn-action-primary" [disabled]="!!workspace.rangeError() || workspace.loadingAverages()">{{ workspace.loadingAverages() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
+    <button type="submit" appButton variant="primary" size="sm" [disabled]="!!workspace.rangeError() || workspace.loadingAverages()">{{ workspace.loadingAverages() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
   </form>
   @if (workspace.rangeError()) { <p class="stats-error" role="alert">{{ workspace.rangeError() }}</p> }
   <div class="inv-table-wrapper">

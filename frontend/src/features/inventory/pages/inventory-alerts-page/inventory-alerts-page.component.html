@@ -12,8 +12,8 @@
       </span>
     </div>
     <div class="inv-header-actions">
-      <a class="btn-flat-secondary" routerLink="/">Volver al panel</a>
-      <button class="btn-action-primary" type="button" [disabled]="loading()" (click)="loadAlerts()">
+      <a appButton variant="secondary" size="sm" routerLink="/">Volver al panel</a>
+      <button appButton variant="primary" size="sm" type="button" [disabled]="loading()" (click)="loadAlerts()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
       </button>
     </div>
@@ -144,13 +144,13 @@
 
           <div class="alert-card-actions">
             @if (alert.status === 'ACTIVE') {
-              <button class="btn-flat-secondary" type="button"
+              <button appButton variant="secondary" size="sm" type="button"
                 [disabled]="savingId() !== null" (click)="markRead(alert)">
                 {{ savingId() === alert.id ? 'Marcando…' : 'Marcar como leída' }}
               </button>
             }
             @if (alert.status !== 'RESOLVED') {
-              <button class="btn-action-primary" type="button"
+              <button appButton variant="primary" size="sm" type="button"
                 [disabled]="savingId() !== null" (click)="openAttend(alert)">
                 Atender
               </button>

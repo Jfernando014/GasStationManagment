@@ -1,12 +1,13 @@
 import { Component, inject, output } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { targetDecimalValidator, decimalText } from '../../../shared/helpers/sales-target.helpers';
 import { serializeObservations } from '../../../shared/helpers/sales-statistics.helpers';
 import { SalesJourney } from '../../../shared/models/dtos/sales-statistics.dto';
 import { SalesTargetCategory } from '../../../shared/models/dtos/sales-target.dto';
 import { StatisticsWorkspace } from '../statistics-workspace';
 
-@Component({ selector: 'app-observations-editor', standalone: true, imports: [ReactiveFormsModule],
+@Component({ selector: 'app-observations-editor', standalone: true, imports: [ReactiveFormsModule, ActionButtonDirective],
   templateUrl: './observations-editor.component.html', styleUrls: ['../statistics.css', './observations-editor.component.css'] })
 export class ObservationsEditorComponent {
   readonly workspace = inject(StatisticsWorkspace);

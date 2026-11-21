@@ -1,12 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
 import { difference, formatStatistics, participation } from '../../../shared/helpers/sales-statistics.helpers';
 import { SalesObservation } from '../../../shared/models/dtos/sales-statistics.dto';
 import { StatisticsWorkspace } from '../statistics-workspace';
 
 @Component({
-  selector: 'app-shift-averages', standalone: true, imports: [FormsModule, EmptyStateComponent],
+  selector: 'app-shift-averages', standalone: true, imports: [FormsModule, ActionButtonDirective, EmptyStateComponent],
   templateUrl: './shift-averages.component.html', styleUrl: '../statistics.css'
 })
 export class ShiftAveragesComponent {

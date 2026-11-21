@@ -11,7 +11,7 @@
       @if (completed()) {
         <span class="cb-chip cb-chip--ok">Paso completado</span>
       }
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset" id="btn-restablecer-caja"
+      <button type="button" appButton variant="secondary" size="sm" class="jr-p2-btn-reset" id="btn-restablecer-caja"
         [disabled]="!canReset()" (click)="requestReset()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -31,8 +31,8 @@
           movimientos de caja, el fondo y los gastos no se tocan.</span>
       </div>
       <div class="jr-p2-confirm-acciones">
-        <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
-        <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer-caja"
+        <button type="button" appButton variant="secondary" size="sm" (click)="cancelReset()">Cancelar</button>
+        <button type="button" appButton variant="destructive" size="sm" id="btn-confirmar-restablecer-caja"
           (click)="confirmReset()">Sí, restablecer</button>
       </div>
     </div>

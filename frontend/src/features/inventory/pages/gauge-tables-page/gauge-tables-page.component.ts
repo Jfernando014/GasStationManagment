@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { GaugeTablesService } from '../../../../core/services/gauge-tables.service';
 import { TanksService } from '../../../../core/services/tanks.service';
@@ -36,7 +37,7 @@ const TOAST_DURATION_MS = 3000;
 @Component({
   selector: 'app-gauge-tables-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ConfirmModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, ConfirmModalComponent],
   templateUrl: './gauge-tables-page.component.html',
   styleUrl: './gauge-tables-page.component.css'
 })

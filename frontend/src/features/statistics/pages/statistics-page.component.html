@@ -15,9 +15,9 @@
           (click)="selectTab(item.id, $event)" (keydown)="tabKey($event, index)">{{ item.label }}</button>
       }
     </div>
-    <div class="rs-tabs-acciones"><button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="dialog.set('charts')">Ver gráficas</button>
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="dialog.set('balance')">Exportar balance (.pptx)</button>
-      @if (tab() === 'promedios' || tab() === 'escenarios') { <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" title="Observaciones proporcionadas por el cliente" (click)="dialog.set('observations')">Datos del análisis</button> }
+    <div class="rs-tabs-acciones"><button type="button" appButton variant="ghost" size="sm" (click)="dialog.set('charts')">Ver gráficas</button>
+      <button type="button" appButton variant="secondary" size="sm" (click)="dialog.set('balance')">Exportar balance (.pptx)</button>
+      @if (tab() === 'promedios' || tab() === 'escenarios') { <button type="button" appButton variant="ghost" size="sm" title="Observaciones proporcionadas por el cliente" (click)="dialog.set('observations')">Datos del análisis</button> }
     </div>
   </div>
   @if (workspace.error() && (tab() === 'promedios' || tab() === 'escenarios')) { <p class="stats-error" role="alert">{{ workspace.error() }}</p> }
@@ -39,7 +39,7 @@
       <button type="button" [class.active]="chartKind() === 'lines'" [attr.aria-pressed]="chartKind() === 'lines'" (click)="chartKind.set('lines')">Líneas</button>
     </div>
     <app-statistics-chart #chart [series]="chartSeries()" [kind]="chartKind()" [unit]="chartUnit()" [sourceLabel]="chartSource()" />
-    <div class="stats-dialog-actions"><button type="button" class="jr-btn jr-btn--sec" [disabled]="chartSeries().length === 0" (click)="chart.download()">Descargar Gráfica (PNG)</button>
+    <div class="stats-dialog-actions"><button type="button" appButton variant="secondary" size="sm" [disabled]="chartSeries().length === 0" (click)="chart.download()">Descargar Gráfica (PNG)</button>
       <button type="button" class="btn-action-primary" (click)="dialog.set(null)">Volver al reporte</button></div>
   </app-statistics-dialog>
 }

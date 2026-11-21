@@ -99,7 +99,7 @@
           (ngModelChange)="confirmation.set($event)">
       </label>
 
-      <button class="jr-btn jr-btn--pri backup-action backup-action--restore" type="button"
+      <button appButton variant="destructive" size="sm" [block]="true" class="backup-action" type="button"
         [disabled]="!isRestoreReady()" (click)="restore()">
         @if (restoring()) {
           <span class="backup-spinner" aria-hidden="true"></span>
