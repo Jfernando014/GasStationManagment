@@ -118,7 +118,7 @@
           (ngModelChange)="documentNumber.set($event)" />
       </label>
 
-      <button type="submit" class="jr-btn jr-btn--pri" [disabled]="submitting()">
+      <button type="submit" appButton variant="primary" size="sm" [disabled]="submitting()">
         {{ submitting() ? 'Guardando…' : 'Registrar gasto' }}
       </button>
     </form>
@@ -148,7 +148,8 @@
         </label>
         <button
           type="button"
-          class="jr-btn jr-btn--ghost jr-btn--sm gs-exportar"
+          appButton variant="ghost" size="sm"
+          class="gs-exportar"
           [disabled]="loading() || generatingPdf() || expenses().length === 0"
           (click)="exportReimbursement()">
           {{ generatingPdf() ? 'Generando…' : 'Planilla de reembolso' }}

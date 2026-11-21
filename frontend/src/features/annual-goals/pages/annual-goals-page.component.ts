@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, catchError, merge, of, startWith, switchMap, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../atomic-design/atoms/avatar/avatar.component';
 import { PercentBarComponent } from '../../../atomic-design/atoms/percent-bar/percent-bar.component';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
@@ -25,7 +26,7 @@ function localToday(): string {
 @Component({
   selector: 'app-annual-goals-page',
   standalone: true,
-  imports: [ReactiveFormsModule, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent, AvatarComponent, PercentBarComponent],
+  imports: [ReactiveFormsModule, ActionButtonDirective, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent, AvatarComponent, PercentBarComponent],
   templateUrl: './annual-goals-page.component.html',
   styleUrl: './annual-goals-page.component.css'
 })

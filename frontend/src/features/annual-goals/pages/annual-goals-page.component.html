@@ -38,7 +38,7 @@
         <div class="ps-campo"><span aria-hidden="true">Vendedor</span>
           <app-search-field fieldId="goals-seller-search" label="Vendedor" placeholder="Buscar" (searchChange)="sellerSearch.set($event)" />
         </div>
-        <button type="submit" class="jr-btn jr-btn--sec" [disabled]="complianceLoading() || !!complianceRangeError()">CONSULTAR</button>
+        <button type="submit" appButton variant="secondary" size="sm" [disabled]="complianceLoading() || !!complianceRangeError()">CONSULTAR</button>
       </form>
       @if (periodMode() === 'semana') {
         <p class="ps-nota">Selecciona el inicio y el fin de la semana. Se consultan exactamente esas fechas; la definición de semana y de semanas parciales está pendiente.</p>
@@ -46,7 +46,7 @@
       @if (complianceRangeError()) { <p class="goals-notice goals-error" role="alert">{{ complianceRangeError() }}</p> }
       @if (complianceError()) {
         <div class="goals-notice goals-error" role="alert"><span>{{ complianceError() }}</span>
-          <button type="button" class="jr-btn jr-btn--sec" (click)="consultCompliance()">Reintentar consulta</button>
+          <button type="button" appButton variant="secondary" size="sm" (click)="consultCompliance()">Reintentar consulta</button>
         </div>
       }
       @if (compliance(); as response) {
@@ -113,7 +113,7 @@
     @if (loading()) { <p class="goals-notice" role="status">Consultando metas del año {{ year() }}…</p> }
     @if (loadError()) {
       <div class="goals-notice goals-error" role="alert"><span>{{ loadError() }}</span>
-        <button type="button" class="jr-btn jr-btn--sec" (click)="retry()" [disabled]="loading() || saving()">Reintentar consulta</button>
+        <button type="button" appButton variant="secondary" size="sm" (click)="retry()" [disabled]="loading() || saving()">Reintentar consulta</button>
       </div>
     }
     <div class="rs-metas-grid">

@@ -5,8 +5,8 @@
       <p>Cuánto vende cada vendedor comparado con la estación en los mismos días, turnos y rol.</p>
     </div>
     <div class="performance-actions">
-      @if (fromJournal()) { <a class="jr-btn jr-btn--ghost" routerLink="/jornada/cerrada" [queryParams]="{ date: journalDate() }">← Volver a Jornada cerrada</a> }
-      <button class="jr-btn jr-btn--sec" type="button" (click)="openDownloads()">Descargar</button>
+      @if (fromJournal()) { <a appButton variant="ghost" size="sm" routerLink="/jornada/cerrada" [queryParams]="{ date: journalDate() }">← Volver a Jornada cerrada</a> }
+      <button appButton variant="secondary" size="sm" type="button" (click)="openDownloads()">Descargar</button>
     </div>
   </div>
 
@@ -26,7 +26,7 @@
     @if (error()) {
       <section class="state">
         <app-empty-state tone="error" heading="No pudimos cargar el rendimiento" [description]="error()">
-          <button class="jr-btn jr-btn--sec" type="button" (click)="retry()">Reintentar</button>
+          <button appButton variant="secondary" size="sm" type="button" (click)="retry()">Reintentar</button>
         </app-empty-state>
       </section>
     } @else if (loadingFirst()) {

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { AdministrativeExpensesService } from '../../../../core/services/administrative-expenses.service';
 import { JournalService } from '../../../../core/services/journal.service';
@@ -27,7 +28,7 @@ const TOAST_DURATION_MS = 3200;
 @Component({
   selector: 'app-administrative-expenses-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmModalComponent],
+  imports: [CommonModule, FormsModule, ActionButtonDirective, ConfirmModalComponent],
   templateUrl: './administrative-expenses-page.component.html',
   styleUrl: './administrative-expenses-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
