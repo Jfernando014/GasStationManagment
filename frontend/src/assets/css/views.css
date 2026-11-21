@@ -2517,6 +2517,11 @@
     }
     .jr-jornada-pie-acciones { display: flex; align-items: center; gap: 8px; }
     .jr-jornada-pie-nota { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+    @media (max-width: 640px) {
+      .jr-jornada-pie { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); }
+      .jr-jornada-pie-acciones { display: contents; }
+      .jr-jornada-pie-nota { grid-column: 1 / -1; order: -1; margin: 0; text-align: center; }
+    }
     .jr-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
     .jr-btn[hidden] { display: none; }
 
@@ -2879,7 +2884,7 @@
     .jr-p5-grid { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.3fr); gap: 10px; align-items: start; }
     .jr-p5-columna { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
     .jr-p5-card { display: flex; flex-direction: column; background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-md); overflow: hidden; min-width: 0; }
-    .jr-p5-tabla-scroll { width: 100%; min-width: 0; overflow-x: auto; }
+    .jr-p5-tabla-scroll { width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
     .jr-p5-card-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; }
     .jr-p5-card-cab b { font-size: 13px; color: var(--text-heading); }
     .jr-p5-card-cab a { font-size: 12px; font-weight: 600; color: var(--brand-primary-strong); }
@@ -2928,6 +2933,18 @@
     .jr-p5-traslado { width: 96px !important; }
     .jr-p5-traslado .jr-input::placeholder { color: var(--brand-primary-strong); opacity: 0.75; }
     .jr-p5-lub-pie { justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+
+    /* Paso 5 en teléfono: medición de tanques y tablas de variación y autonomía (sin css propio). */
+    @media (max-width: 640px) {
+      .jr-p5 .jr-input { height: 44px; font-size: 16px; }
+      .jr-p5 .jr-p5-tabla td:has(.jr-input) { height: 52px; }
+      .jr-p5 .jr-p5-tabla td .jr-cell--edit { width: 80px; }
+      .jr-p5 .jr-p5-tanque { white-space: normal; }
+      .jr-p5 .jr-p5-card { overflow-x: auto; }
+      .jr-p5 .jr-p5-card-pie .ab { width: 100%; }
+      .jr-p5 .jr-p5-tabla-var :is(th, td):first-child:not([colspan]) { max-width: 120px; white-space: normal; }
+      .jr-p5 .jr-p5-tabla-var td[colspan] { white-space: normal; }
+    }
 
     /* ---- JORNADA · Paso 6 · Cierre de jornada (prompt 9) ---- */
     #jr-btn-cerrar-jornada { display: none; }
@@ -2998,7 +3015,7 @@
     .jr-cerrada-pie { position: static; }
 
     .jr-cerrada-detalle-cab { display: flex; align-items: center; gap: 12px; }
-    .jr-cerrada-tabla-wrap { background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-md); overflow: hidden; }
+    .jr-cerrada-tabla-wrap { background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-md); overflow-x: auto; overflow-y: hidden; }
     .jr-cerrada-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
     .jr-cerrada-tabla th { padding: 8px 10px; text-align: left; font-size: 11.5px; font-weight: 600; color: var(--text-muted); background: #F8FAFC; border-bottom: 1px solid var(--border-main); white-space: nowrap; }
     .jr-cerrada-tabla td { padding: 7px 10px; font-size: 12.5px; color: var(--text-heading); border-bottom: 1px solid var(--surface-subtle); vertical-align: middle; }
@@ -3126,7 +3143,7 @@
     .ps-max { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: var(--semantic-green-subtle); color: var(--semantic-green-strong); font-size: 10px; font-weight: 700; }
 
     /* Tablas */
-    .ps-tabla-wrap { overflow: auto; }
+    .ps-tabla-wrap { overflow: auto; overscroll-behavior-x: contain; }
     .ps-tabla { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
     .ps-tabla th { position: sticky; top: 0; z-index: 1; background: var(--surface-card); text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 6px 10px; border-bottom: 1px solid var(--border-main); white-space: nowrap; }
     .ps-tabla td { padding: 4px 10px; color: var(--text-heading); border-bottom: 1px solid var(--surface-subtle); white-space: nowrap; }
@@ -3177,7 +3194,7 @@
     .ps-cifra-max b { color: var(--semantic-green-strong); }
     .ps-perfil .ps-barra { align-items: center; }
     .ps-perfil .ps-campo { flex-direction: row; align-items: center; gap: 8px; }
-    .ps-perfil .ps-tabla-wrap { max-height: calc(100vh - 372px); min-height: 180px; }
+    .ps-perfil .ps-tabla-wrap { max-height: calc(100vh - 372px); max-height: calc(100dvh - 372px); min-height: 180px; }
 
     /* ---- Malla de turnos ---- */
     .ps-malla-card .ps-barra { align-items: center; }
@@ -3237,7 +3254,7 @@
     /* ---- Horas extra ---- */
     .ps-he-id { margin: 0 0 0 auto; font-size: 12px; color: var(--text-body); align-self: center; }
     .ps-he-id b { color: var(--text-heading); }
-    .ps-he-wrap { max-height: calc(100vh - 300px); }
+    .ps-he-wrap { max-height: calc(100vh - 300px); max-height: calc(100dvh - 300px); }
     .ps-he-tabla td { padding-top: 2px; padding-bottom: 2px; }
     .ps-he-tabla tfoot td { padding-top: 5px; padding-bottom: 5px; font-weight: 700; }
     .ps-he-tabla tfoot td:first-child { font-size: 11px; }
@@ -3278,8 +3295,8 @@
     .rs-nota { margin: 0 0 0 auto; font-size: 12px; color: var(--text-muted); align-self: center; }
     .rs-barra--suelta .rs-nota { margin-left: 0; }
     .rs-nota b { color: var(--text-heading); text-transform: capitalize; }
-    .rs-tabla-wrap { overflow: auto; background: var(--surface-card); border-radius: var(--radius-md); }
-    .rs-seccion > .rs-tabla-wrap { border: 1px solid var(--border-main); max-height: calc(100vh - 300px); }
+    .rs-tabla-wrap { overflow: auto; overscroll-behavior-x: contain; background: var(--surface-card); border-radius: var(--radius-md); }
+    .rs-seccion > .rs-tabla-wrap { border: 1px solid var(--border-main); max-height: calc(100vh - 300px); max-height: calc(100dvh - 300px); }
     .rs-seccion > .rs-tabla-wrap .inv-table td { padding-top: 8px; padding-bottom: 8px; }
     .rs-origen { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 4px; background: var(--brand-primary-subtle); color: var(--brand-primary-strong); font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; }
 
@@ -3290,10 +3307,10 @@
     .rs-inc-jornadas { margin-bottom: 12px; }
     .apple-dialog-card.rs-dialog-balance { max-width: 980px; width: 94vw; }
     .rs-dialog-balance .dialog-body { max-height: 78vh; overflow: auto; }
-    .rs-vista .inv-table-wrapper { max-height: calc(100vh - 330px); overflow: auto; }
+    .rs-vista .inv-table-wrapper { max-height: calc(100vh - 330px); max-height: calc(100dvh - 330px); overflow: auto; overscroll-behavior-x: contain; }
     .rs-vista .inv-table-wrapper thead th { position: sticky; top: 0; z-index: 1; }
     .rs-plegable .inv-panel-card { border: 0; margin: 0 !important; }
-    #rs-subview-conciliaciones .inv-table-wrapper { max-height: calc(100vh - 430px); }
+    #rs-subview-conciliaciones .inv-table-wrapper { max-height: calc(100vh - 430px); max-height: calc(100dvh - 430px); }
     .rs-inc-jornadas .rs-tabla-wrap { max-height: 120px; }
     .ps-campo[hidden] { display: none; }
 
@@ -3313,10 +3330,10 @@
     #cf-subview-productos #prod-pane-kardex { display: none !important; }
     #cf-subview-productos .kpis-quad-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     #cf-subview-productos .kpis-quad-row > :nth-child(4) { display: none; }
-    .cf-vista .inv-table-wrapper { max-height: calc(100vh - 330px); overflow: auto; }
+    .cf-vista .inv-table-wrapper { max-height: calc(100vh - 330px); max-height: calc(100dvh - 330px); overflow: auto; overscroll-behavior-x: contain; }
     .cf-vista .inv-table-wrapper thead th { position: sticky; top: 0; z-index: 1; }
-    #cf-subview-aforo .inv-table-wrapper { max-height: calc(100vh - 320px); }
-    #cf-subview-inspecciones .inv-table-wrapper { max-height: calc(100vh - 420px); }
+    #cf-subview-aforo .inv-table-wrapper { max-height: calc(100vh - 320px); max-height: calc(100dvh - 320px); }
+    #cf-subview-inspecciones .inv-table-wrapper { max-height: calc(100vh - 420px); max-height: calc(100dvh - 420px); }
 
     /* Parámetros */
     .cf-param-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
@@ -3346,7 +3363,7 @@
     .gs-lista .ps-barra { align-items: center; }
     .gs-lista .ps-campo { flex-direction: row; align-items: center; gap: 8px; }
     .gs-exportar { margin-left: auto; }
-    .gs-tabla-wrap { max-height: calc(100vh - 290px); }
+    .gs-tabla-wrap { max-height: calc(100vh - 290px); max-height: calc(100dvh - 290px); }
     .gs-tabla-wrap td small { display: block; font-size: 11px; color: var(--text-muted); }
     .gs-tabla-wrap td { white-space: normal; }
     .gs-tabla-wrap tfoot td { position: sticky; bottom: 0; background: var(--surface-subtle); font-weight: 700; border-top: 1px solid var(--border-main); }
@@ -3377,7 +3394,7 @@
     .configuration-page .configuration-empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 54px 24px; text-align: center; }
     .configuration-page .configuration-empty-state h2 { color: var(--text-heading); font-size: 17px; }
     .configuration-page .configuration-empty-state p { color: var(--text-muted); font-size: 13px; }
-    .configuration-page .table-scroll { overflow-x: auto; }
+    .configuration-page .table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
     .configuration-page .configuration-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .configuration-page .configuration-table th { background: var(--surface-subtle); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 12px 18px; white-space: nowrap; }
     .configuration-page .configuration-table td { border-top: 1px solid var(--border-hairline); padding: 14px 18px; white-space: nowrap; }
@@ -3414,4 +3431,53 @@
         .configuration-page .form-grid,
         .configuration-page .new-tank-card .form-grid { grid-template-columns: 1fr; }
         .configuration-page h1 { font-size: 24px; }
+    }
+
+    /* ==========================================================================
+       Tablas en teléfono (≤ 640px): celdas compactas
+       ========================================================================== */
+    @media (max-width: 640px) {
+      .clean-table-flow th { padding: 6px 10px; }
+      .clean-table-flow td { padding: 8px 10px; }
+    }
+
+    /* ==========================================================================
+       Cabeceras de página (título a la izquierda, acciones o indicadores a la derecha)
+       en tablet y teléfono. Todo queda acotado a las seis clases de cabecera: los
+       indicadores y la cabecera de paso son compartidos por otras pantallas.
+       El [class] en los bloques de la derecha sube su especificidad para ganarle a
+       los ajustes que cada página trae en su propio CSS.
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera { flex-wrap: wrap; }
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) > .jr-paso-cabecera { flex: 1 1 320px; min-width: 0; }
+    }
+
+    @media (max-width: 640px) {
+      .jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera { flex-direction: column; align-items: stretch; }
+
+      .jr-p3-cabecera .ep-acciones[class],
+      .jr-p5-cabecera .jr-p5-acciones[class],
+      .jr-p6-cabecera .jr-p6-cabecera-acciones[class],
+      .rs-cabecera .rs-cabecera-der[class],
+      .rs-cabecera .performance-actions[class],
+      .ps-cabecera .ps-cabecera-der[class] { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+
+      /* Indicadores: columnas flexibles, sin separadores (al pasar a otra fila quedarían sueltos). */
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) .jr-indicadores[class] {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px 12px; width: 100%; min-width: 0;
+      }
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) .jr-indicadores .jr-indicador {
+        min-width: 0; padding: 0; border-left: 0;
+      }
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) .jr-indicadores .jr-indicador span {
+        white-space: normal; line-height: 1.2;
+      }
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) .jr-indicadores .jr-indicador b {
+        white-space: normal; overflow-wrap: anywhere; line-height: 1.2;
+      }
+
+      /* Acciones principales a todo el ancho: se tocan fácil y no quedan cortadas. */
+      .jr-p6-cabecera-acciones #jr-btn-cerrar-jornada,
+      .ps-cabecera-der .workers-nuevo { width: 100%; }
     }

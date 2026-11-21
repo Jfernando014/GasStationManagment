@@ -1,4 +1,6 @@
 /* css/tokens.css · extraído de styles.css (paso 5, sin modificaciones) */
+/* Breakpoints (max-width): teléfono ≤ 640px, tablet ≤ 1024px, escritorio > 1024px.
+   Las media queries no aceptan variables CSS, por eso se escriben los valores literales. */
     /* ==========================================================================
        ATOMIC DESIGN SYSTEM · EDS BELLAVISTA (COLOMBIA)
        Sentido de pertenencia: Naranja Energía + Deep Petroleum Navy + Blanco Cerámico

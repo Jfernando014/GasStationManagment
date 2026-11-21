@@ -32,6 +32,14 @@
       pointer-events: none;
     }
 
+    @media (max-width: 640px) {
+      body.modal-open #view-dashboard {
+        transform: none;
+        filter: none;
+        border-radius: 0;
+      }
+    }
+
     /* SIDEBAR FLOTANTE EN DEEP PETROLEUM NAVY SÓLIDO */
     .app-floating-sidebar {
       width: 290px;
