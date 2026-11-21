@@ -11,9 +11,13 @@ import {
   signal
 } from '@angular/core';
 
+import { TagVariant } from '../../atoms/tag/tag.component';
+
 export interface TabItem {
   id: string;
   label: string;
+  /** Optional status dot before the label, with the same tones as `app-tag`. No dot by default. */
+  tone?: TagVariant;
 }
 
 /**

@@ -11,6 +11,9 @@
       [tabindex]="tab.id === active() ? 0 : -1"
       (click)="select(tab.id)"
       (keydown)="onKeydown($event)">
+      @if (tab.tone) {
+        <span class="dot" [attr.data-tone]="tab.tone" aria-hidden="true"></span>
+      }
       {{ tab.label }}
     </button>
   }

@@ -93,7 +93,7 @@
       <div class="kpi-tile-box">
         <div class="kpi-tile-top">
           <span class="kpi-tile-name">Alertas pendientes</span>
-          <span class="state-pill-tag critical">Campana</span>
+          <app-tag variant="red">Campana</app-tag>
         </div>
         <div class="kpi-figure-lead tnum">{{ pendingAlerts() }}</div>
         <div class="kpi-figure-foot">Activas o leídas sin atender</div>
@@ -108,19 +108,9 @@
       </div>
     </div>
 
-    <div class="jr-tabs" role="tablist" aria-label="Vistas del inventario">
-      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'resumen'"
-        [class.is-activa]="tab() === 'resumen'" (click)="changeTab('resumen')">
-        <span class="jr-tab-punto jr-tab-punto--ok"></span>
-        Resumen
-      </button>
-      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'control'"
-        [class.is-activa]="tab() === 'control'" (click)="changeTab('control')">
-        <span class="jr-tab-punto jr-tab-punto--aviso"></span>
-        Control del día
-      </button>
-    </div>
+    <app-tabs idPrefix="home" label="Vistas del inventario" [tabs]="tabs" [active]="tab()" (activeChange)="changeTab($any($event))" />
 
+    <div role="tabpanel" id="home-panel-resumen" aria-labelledby="home-tab-resumen" [hidden]="tab() !== 'resumen'">
     @if (tab() === 'resumen') {
       <section class="home-section">
         <div class="section-headline-bar">
@@ -135,7 +125,7 @@
                   <span class="home-fuel-dot" [style.background]="fuelColors[fuel.fuelType]"></span>
                   {{ fuelLabels[fuel.fuelType] }}
                 </span>
-                <span [class]="'state-pill-tag ' + levelTone(fuel.alertLevel)">{{ levelLabel(fuel.alertLevel) }}</span>
+                <app-tag [variant]="levelTone(fuel.alertLevel)">{{ levelLabel(fuel.alertLevel) }}</app-tag>
               </div>
               <div class="home-fuel-figures">
                 <span class="tnum">{{ formatGallons(fuel.currentGallons) }}</span>
@@ -147,9 +137,9 @@
               </div>
               <div class="home-fuel-foot">
                 <span>{{ formatPercent(fuel.percentage) }} de la capacidad</span>
-                <span [class]="'state-pill-tag ' + (fuel.complete ? 'optimal' : 'warning')">
+                <app-tag [variant]="(fuel.complete ? 'green' : 'amber')">
                   {{ fuel.complete ? 'Medición completa' : 'Medición incompleta' }}
-                </span>
+                </app-tag>
               </div>
             </article>
           } @empty {
@@ -204,7 +194,7 @@
                   <div class="tank-id-title">{{ tankDisplayTitle(tank) }}</div>
                   <div class="tank-type-sub" [style.color]="fuelColors[tank.fuelType]">{{ fuelLabels[tank.fuelType] }}</div>
                 </div>
-                <span [class]="'state-pill-tag ' + levelTone(tank.alertLevel)">{{ tankStatusLabel(tank.alertLevel) }}</span>
+                <app-tag [variant]="levelTone(tank.alertLevel)">{{ tankStatusLabel(tank.alertLevel) }}</app-tag>
               </div>
 
               <div class="gauge-module-row">
@@ -284,7 +274,10 @@
           }
         </div>
       </section>
-    } @else {
+    }
+    </div>
+    <div role="tabpanel" id="home-panel-control" aria-labelledby="home-tab-control" [hidden]="tab() !== 'control'">
+    @if (tab() === 'control') {
       <section class="inv-filter-toolbar">
         <div class="filter-item-group">
           <label class="filter-item-label" for="control-date">Fecha del diario</label>
@@ -295,7 +288,7 @@
           {{ controlLoading() ? 'Consultando…' : 'Consultar' }}
         </button>
         @if (control(); as controlData) {
-          <span class="state-pill-tag optimal">{{ formatShortDate(controlData.journalDate) }}</span>
+          <app-tag variant="green">{{ formatShortDate(controlData.journalDate) }}</app-tag>
         }
       </section>
 
@@ -342,9 +335,9 @@
                     </td>
                     <td class="right tnum">{{ formatDays(fuel.autonomy.autonomyDays) }}</td>
                     <td>
-                      <span [class]="'state-pill-tag ' + levelTone(fuel.autonomy.level)">
+                      <app-tag [variant]="levelTone(fuel.autonomy.level)">
                         {{ autonomyLabel(fuel.autonomy.status, fuel.autonomy.level) }}
-                      </span>
+                      </app-tag>
                     </td>
                     <td>{{ fuel.estimatedDepletionDate ? formatShortDate(fuel.estimatedDepletionDate) : '—' }}</td>
                   </tr>
@@ -384,9 +377,9 @@
                     <td class="right tnum">{{ product.officeStock }}</td>
                     <td class="right tnum">{{ product.counterStock }}</td>
                     <td>
-                      <span [class]="'state-pill-tag ' + productStatusTone(product)">
+                      <app-tag [variant]="productStatusTone(product)">
                         {{ productStatusLabel(product) }}
-                      </span>
+                      </app-tag>
                     </td>
                   </tr>
                 } @empty {
@@ -398,6 +391,7 @@
         </section>
       }
     }
+    </div>
   }
 
   <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
