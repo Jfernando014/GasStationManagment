@@ -17,6 +17,7 @@
 
 .jr-p6-inv-tabla-wrap {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .jr-p6-alertas-lista {
@@ -33,3 +34,29 @@
   font-size: 12.5px;
   color: var(--text-body);
 }
+
+@media (max-width: 1024px) {
+  .jr-p6-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Teléfono: los estilos base de jr-p6-* viven en views.css; aquí solo se acomodan en este paso. */
+@media (max-width: 640px) {
+  .jr-p6-linea { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'num nombre ver' 'chip detalle detalle'; align-items: start; gap: 6px 10px; }
+  .jr-p6-num { grid-area: num; justify-self: start; }
+  .jr-p6-nombre { grid-area: nombre; align-self: center; }
+  .jr-p6-linea .jr-chip { grid-area: chip; }
+  .jr-p6-detalle { grid-area: detalle; min-width: 0; overflow-wrap: anywhere; }
+  .jr-p6-ver { grid-area: ver; display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; }
+
+  .jr-p6-cerrada { flex-wrap: wrap; align-items: flex-start; }
+  .jr-p6-cerrada span { flex: 1 1 0; min-width: 0; }
+  .jr-p6-cerrada a { display: flex; flex: 1 1 100%; align-items: center; justify-content: center; min-height: 44px; }
+  .jr-p6-actualiza { align-items: flex-start; }
+
+  .jr-cerrada-tabla :is(th, td):first-child { max-width: 120px; white-space: normal; }
+  .jr-p6-inv-tabla-wrap .jr-chip { white-space: nowrap; }
+  .jr-p6-alerta-item { align-items: flex-start; }
+  .jr-p6-alerta-item .jr-chip { flex-shrink: 0; }
+  .jr-p6-alerta-item > span:last-child, .jr-p6-dlg-lista, .jr-p3-mensaje { min-width: 0; overflow-wrap: anywhere; }
+}
+

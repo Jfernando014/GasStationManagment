@@ -437,3 +437,17 @@
     width: 100%;
   }
 }
+
+@media (max-width: 640px) {
+  .cb-card { padding: 12px; }
+  .cb-input { min-height: 44px; font-size: 16px; }
+  .cb-btn { min-height: 44px; }
+  .cb-drop b { overflow-wrap: anywhere; }
+  .cb-dialog-grid { grid-template-columns: 1fr; }
+  .jr-p2-confirm, .jr-p2-confirm-acciones { flex-direction: column; align-items: stretch; }
+
+  /* Diálogo de pago como hoja inferior: ancho completo y scroll interno. */
+  .cb-scrim { place-items: end stretch; padding: 0; }
+  .cb-dialog { width: 100%; max-height: 90vh; max-height: 90dvh; overflow-y: auto; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; }
+}
+

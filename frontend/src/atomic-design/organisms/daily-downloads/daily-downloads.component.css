@@ -16,3 +16,11 @@
 .daily-downloads-message--error {
   color: var(--semantic-red-strong);
 }
+
+@media (max-width: 640px) {
+  .jr-p6-descarga { flex-wrap: wrap; }
+  .jr-p6-descarga-nombre { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; }
+  .jr-p6-bajar { width: 44px; min-height: 44px; padding: 0; }
+  .daily-downloads-message { overflow-wrap: anywhere; }
+}
+

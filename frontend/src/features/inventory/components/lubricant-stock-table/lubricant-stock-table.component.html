@@ -34,7 +34,7 @@
 }
 
 <section class="jr-p5-card">
-  <table class="jr-p5-tabla jr-p5-tabla-lub">
+  <table class="jr-p5-tabla jr-p5-tabla-lub table-cards">
     <thead>
       <tr>
         <th>Producto</th>
@@ -51,17 +51,17 @@
     <tbody>
       @for (product of products(); track product.productId) {
         <tr [class.is-atenuada]="existingTotal(product) <= 0">
-          <td><span class="jr-p5-sku">{{ product.productCode }}</span>{{ product.productName }}</td>
-          <td class="num">{{ product.office.closing }}</td>
-          <td class="num">{{ product.counter.closing }}</td>
-          <td class="num">
+          <td class="tc-title"><span class="jr-p5-sku">{{ product.productCode }}</span>{{ product.productName }}</td>
+          <td class="num" data-label="Oficina">{{ product.office.closing }}</td>
+          <td class="num" data-label="Mostrador">{{ product.counter.closing }}</td>
+          <td class="num" data-label="Vendido hoy">
             @if (product.office.sold + product.counter.sold > 0) {
               {{ product.office.sold + product.counter.sold }}
             } @else {
               <span class="jr-p5-tenue">—</span>
             }
           </td>
-          <td class="num">
+          <td class="num" data-label="Traslado a mostrador">
             <span class="jr-cell jr-cell--edit jr-p5-traslado" [class.jr-cell--invalido]="transferInvalid(product)">
               <input
                 class="jr-input"
@@ -75,9 +75,9 @@
                 (input)="onTransferInput(product, $event)">
             </span>
           </td>
-          <td class="num"><b>{{ existingTotal(product) }}</b></td>
-          <td class="num jr-p5-tenue">{{ counterAfterTransfer(product) }}</td>
-          <td>
+          <td class="num" data-label="Existencia"><b>{{ existingTotal(product) }}</b></td>
+          <td class="num jr-p5-tenue" data-label="Queda en mostrador">{{ counterAfterTransfer(product) }}</td>
+          <td data-label="Estado">
             @if (product.status === 'NEGATIVE_STOCK') {
               <app-tag variant="red" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</app-tag>
             } @else if (existingTotal(product) <= 0) {
@@ -86,7 +86,7 @@
               <app-tag variant="amber" style="cursor: help">Sin reserva en oficina</app-tag>
             }
           </td>
-          <td class="num jr-p5-acciones-fila">
+          <td class="num jr-p5-acciones-fila tc-actions">
             <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openMovement.emit({ product, mode: 'entry' })">Entrada</button>
             <button class="jr-p5-enlace" type="button" [disabled]="!editable()" (click)="openMovement.emit({ product, mode: 'initial' })">Inicial</button>
           </td>
