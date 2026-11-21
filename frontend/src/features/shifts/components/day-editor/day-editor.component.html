@@ -16,19 +16,14 @@
       Este día ya pasó: queda como se trabajó y no se puede cambiar.
     </p>
   } @else {
-    <div class="form-item">
-      <label class="item-label" for="de-note">Nota (opcional)</label>
-      <input
-        id="de-note"
-        class="flat-input"
-        type="text"
-        maxlength="255"
-        placeholder="Ej. Cambio pedido por el vendedor"
-        autocomplete="off"
-        [formControl]="note"
-        aria-describedby="de-note-help">
-      <p class="field-hint" id="de-note-help">Se guarda junto con el turno que elijas. Escríbela antes de elegir.</p>
-    </div>
+    <app-form-field
+      fieldId="de-note"
+      label="Nota (opcional)"
+      [control]="note"
+      [maxLength]="noteMax"
+      placeholder="Ej. Cambio pedido por el vendedor"
+      autocomplete="off"
+      hint="Se guarda junto con el turno que elijas. Escríbela antes de elegir." />
 
     @if (errorMessage(); as message) {
       <p class="de-error" role="alert">{{ message }}</p>

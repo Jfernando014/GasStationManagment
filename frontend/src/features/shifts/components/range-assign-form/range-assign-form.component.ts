@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
+import { FormFieldComponent } from '../../../../atomic-design/molecules/form-field/form-field.component';
 import { SelectFieldComponent, SelectOption } from '../../../../atomic-design/molecules/select-field/select-field.component';
 import { applyFieldErrors } from '../../../../shared/helpers/problem-details.helpers';
 import {
@@ -35,7 +36,7 @@ interface PreviewDay {
 @Component({
   selector: 'app-range-assign-form',
   standalone: true,
-  imports: [ReactiveFormsModule, ActionButtonDirective, SelectFieldComponent, ShiftChipComponent],
+  imports: [ReactiveFormsModule, ActionButtonDirective, FormFieldComponent, SelectFieldComponent, ShiftChipComponent],
   templateUrl: './range-assign-form.component.html',
   styleUrl: './range-assign-form.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

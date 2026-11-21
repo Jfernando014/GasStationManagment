@@ -108,7 +108,7 @@
         @for (item of fuels; track item.value) { <option [value]="item.value">{{ item.label }}</option> }
       </select></label>
       <app-form-field fieldId="observed-price" label="Precio por galón (COP)" [control]="observationForm.controls.pricePerGallon" [required]="true" />
-      <label class="stats-field">Fecha y hora de observación (Colombia)<input type="datetime-local" class="flat-input" formControlName="observedAt"></label>
+      <app-form-field fieldId="observed-at" label="Fecha y hora de observación (Colombia)" type="datetime-local" [control]="observationForm.controls.observedAt" />
       @if (formError()) { <p class="stats-error" role="alert">{{ formError() }}</p> }
       <button type="submit" appButton variant="primary" size="sm" [disabled]="saving()">{{ saving() ? 'GUARDANDO…' : 'REGISTRAR OBSERVACIÓN' }}</button>
     </form>

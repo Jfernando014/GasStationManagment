@@ -24,8 +24,6 @@
   gap: 10px;
 }
 
-.ra-dates .flat-input { min-height: 44px; }
-
 .ra-check {
   display: flex;
   align-items: center;
