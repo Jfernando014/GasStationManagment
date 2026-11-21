@@ -163,12 +163,7 @@
 .jr-indicador--falta .jr-indicador-val { color: #dc2626; }
 .jr-indicador--sobra .jr-indicador-val { color: #2563eb; }
 .jr-indicador--cuadra .jr-indicador-val { color: #16a34a; }
-
-.jr-p2-acciones .jr-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-/* El botón Restablecer y su confirmación en línea (jr-p2-btn-reset, jr-p2-btn-danger, jr-p2-confirm*) están en views.css */
+/* El botón Restablecer y su confirmación en línea (jr-p2-btn-reset, jr-p2-confirm*) están en views.css */
 
 /* ---- Alertas ---- */
 .alert-success,
@@ -684,22 +679,6 @@
 
 .jr-p2-panel-cab h3 { margin: 0; font-size: 15px; font-weight: 700; color: #0f172a; }
 .jr-p2-panel-cab p { margin: 3px 0 0; font-size: 12px; color: #64748b; }
-
-.btn-dialog-close {
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #64748b;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.btn-dialog-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
 .jr-p2-panel-cuerpo {
   flex: 1;
   overflow-y: auto;

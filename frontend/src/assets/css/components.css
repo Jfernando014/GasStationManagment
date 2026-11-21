@@ -307,46 +307,6 @@
       transform: scale(0.97);
       background-color: var(--brand-primary-active);
     }
-
-    /* Botón de Acción Principal EDS Bellavista (HU-12 a HU-29) */
-    .btn-action-primary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 8px 18px;
-      background-color: var(--brand-primary);
-      color: #FFFFFF;
-      border: 1px solid var(--brand-primary);
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 700;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25);
-      transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease, transform 100ms var(--spring-fast), box-shadow var(--duration-fast) ease;
-    }
-
-    .btn-action-primary:hover {
-      background-color: var(--brand-primary-hover);
-      border-color: var(--brand-primary-hover);
-      box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
-    }
-
-    .btn-action-primary:active {
-      transform: scale(0.97);
-      background-color: var(--brand-primary-active);
-      border-color: var(--brand-primary-active);
-    }
-
-    .btn-action-primary:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
     /* Botón Secundario Plano / Neutro EDS Bellavista */
     .btn-flat-secondary {
       display: inline-flex;
@@ -897,26 +857,6 @@
       color: var(--text-muted);
       margin-top: 2px;
     }
-
-    .btn-dialog-close {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background-color: var(--surface-subtle);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: background-color var(--duration-fast) ease, transform 100ms var(--spring-fast);
-    }
-
-    .btn-dialog-close:hover {
-      background-color: var(--surface-hover);
-      color: var(--text-heading);
-    }
-
     .dialog-body {
       padding: 22px 24px;
       display: flex;
@@ -1447,8 +1387,7 @@
     /* Controles de desarrollo del header: solo visibles en modo desarrollo (?dev=1) */
     .dev-only { display: none !important; }
     body.dev-mode .dev-only { display: revert !important; }
-    body.dev-mode .state-pill-tag.dev-only,
-    body.dev-mode .btn-solid-primary.dev-only { display: inline-flex !important; }
+    body.dev-mode .state-pill-tag.dev-only { display: inline-flex !important; }
 
     /* Selector de fecha dentro del indicador de Jornada del header */
     .period-control-pill input[type="date"] {
@@ -1787,7 +1726,7 @@
     .ab--icon.ab--sm { width: 36px; }
     .ab--loading { pointer-events: none; }
 
-    /* Naranja con texto blanco, igual que .btn-action-primary */
+    /* Naranja con texto blanco */
     .ab--primary {
       background: var(--brand-primary); color: #FFFFFF; font-weight: 700;
       box-shadow: 0 1px 2px rgba(11, 25, 44, 0.14), 0 6px 14px -6px rgba(255, 107, 0, 0.6);
@@ -1825,6 +1764,7 @@
     .ab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
     .ab[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
     .ab[aria-busy='true'] { cursor: progress; }
+    .ab--loading[disabled] { opacity: 1; }
 
     @media (prefers-reduced-motion: reduce) {
       .ab { transition: none; }

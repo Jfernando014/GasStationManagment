@@ -128,22 +128,6 @@
   font-size: 12.5px;
   color: var(--text-muted);
 }
-
-.home-modal-close {
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 1.15rem;
-  padding: 4px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.home-modal-close:hover {
-  background: #f1f5f9;
-  color: #334155;
-}
-
 .home-modal-body {
   display: flex;
   flex-direction: column;

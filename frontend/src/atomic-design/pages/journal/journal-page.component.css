@@ -66,11 +66,6 @@
 .jr-jornada-pie {
   margin-top: 14px;
 }
-
-.jr-jornada-pie .jr-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
 .readonly-banner {
   display: flex;
   justify-content: space-between;

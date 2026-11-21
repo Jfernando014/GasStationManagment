@@ -314,18 +314,6 @@
 .profile-modal-title-group { display: flex; align-items: center; gap: 12px; }
 .profile-modal-title-group h2 { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-heading); }
 .profile-modal-title-group p { margin: 3px 0 0; font-size: 0.82rem; color: var(--text-muted); }
-
-.profile-modal-close {
-  border: 0;
-  background: transparent;
-  color: #94A3B8;
-  font-size: 1.15rem;
-  padding: 4px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.profile-modal-close:hover { background: #F1F5F9; color: #334155; }
-
 .profile-detail-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .profile-detail-item {
   display: flex;

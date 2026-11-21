@@ -68,30 +68,8 @@ h1 {
   pointer-events: none;
 }
 
-.new-rule {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--brand-primary);
-  color: #FFFFFF;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color var(--duration-fast) ease, transform var(--duration-fast) var(--spring-fast);
-}
-
-.new-rule:hover { background: var(--brand-primary-hover); }
-.new-rule:active { background: var(--brand-primary-active); transform: scale(0.98); }
-
 .date-picker:focus-visible,
-.new-rule:focus-visible,
 .chevron:focus-visible,
-.retry:focus-visible,
 .link:focus-visible {
   outline: none;
   border-color: var(--brand-primary);
@@ -320,23 +298,6 @@ h1 {
   font-size: 14px;
   color: var(--text-muted);
 }
-
-.retry {
-  height: 36px;
-  padding: 0 16px;
-  border: 1px solid var(--jr-cell-border);
-  border-radius: 10px;
-  background: var(--surface-card);
-  color: var(--text-heading);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--duration-fast) ease;
-}
-
-.retry:hover { border-color: var(--text-light); }
-
 .row-skeleton { height: 64px; border-bottom: 1px solid var(--surface-subtle); }
 .row-skeleton:last-child { border-bottom: 0; }
 

@@ -35,10 +35,6 @@
 
 /* The edit form slides in when another worker is chosen */
 .workers-panel { animation: workers-panel-in var(--duration-normal) var(--spring) both; }
-
-/* Primary buttons of this screen with white text, like the modal's GUARDAR */
-.jr-btn--pri { color: #FFFFFF; }
-
 /* "Nuevo vendedor": the plus sign turns a little on hover */
 .workers-nuevo svg { transition: transform var(--duration-normal) var(--spring); }
 .workers-nuevo:hover svg { transform: rotate(90deg); }

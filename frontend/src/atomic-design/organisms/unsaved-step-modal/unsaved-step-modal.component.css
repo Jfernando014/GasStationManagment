@@ -62,24 +62,6 @@
   font-size: 0.82rem;
   color: #64748b;
 }
-
-.unsaved-modal-close {
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 1.2rem;
-  line-height: 1;
-  padding: 5px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.unsaved-modal-close:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #334155;
-}
-
 .unsaved-modal-body {
   margin: 0 0 22px;
   font-size: 0.9rem;
@@ -94,47 +76,6 @@
   gap: 10px;
   flex-wrap: wrap;
 }
-
-.btn-leave-discard {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #b91c1c;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.btn-leave-discard:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #fca5a5;
-}
-
-.btn-save-leave {
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: 0;
-  background: var(--brand-primary, #ff6b00);
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.btn-save-leave:hover:not(:disabled) {
-  opacity: 0.92;
-}
-
-.btn-leave-discard:disabled,
-.btn-save-leave:disabled,
-.unsaved-modal-close:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 @keyframes fadeInBackdrop {
   from { opacity: 0; }
   to { opacity: 1; }

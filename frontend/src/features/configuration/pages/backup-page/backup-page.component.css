@@ -175,18 +175,6 @@
   width: 100%;
   min-height: 38px;
 }
-
-.backup-action--restore {
-  background: var(--semantic-red-strong);
-  border-color: var(--semantic-red-strong);
-  color: #fff;
-}
-
-.backup-action--restore:hover:not(:disabled) {
-  background: #9d0f1b;
-  border-color: #9d0f1b;
-}
-
 .backup-action:disabled {
   cursor: not-allowed;
   opacity: .6;
