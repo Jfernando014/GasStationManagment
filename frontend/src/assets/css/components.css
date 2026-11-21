@@ -427,37 +427,6 @@
       color: var(--text-muted);
     }
 
-    .state-pill-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .state-pill-tag.optimal {
-      background-color: var(--semantic-green-subtle);
-      color: var(--semantic-green);
-    }
-
-    .state-pill-tag.warning {
-      background-color: var(--semantic-amber-subtle);
-      color: var(--semantic-amber);
-    }
-
-    .state-pill-tag.critical {
-      background-color: var(--semantic-red-subtle);
-      color: var(--semantic-red);
-    }
-
-    .state-pill-tag.neutral {
-      background-color: var(--surface-subtle);
-      color: var(--text-muted);
-      border: 1px solid var(--border-hairline);
-    }
-
     .inv-header-bar {
       display: flex;
       align-items: center;
@@ -1379,15 +1348,6 @@
       color: var(--surface-navy);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
-
-    /* Códigos de historia de usuario: solo visibles en modo desarrollo (?dev=1) */
-    .hu-ref { display: none; }
-    body.dev-mode .hu-ref { display: inline; }
-
-    /* Controles de desarrollo del header: solo visibles en modo desarrollo (?dev=1) */
-    .dev-only { display: none !important; }
-    body.dev-mode .dev-only { display: revert !important; }
-    body.dev-mode .state-pill-tag.dev-only { display: inline-flex !important; }
 
     /* Selector de fecha dentro del indicador de Jornada del header */
     .period-control-pill input[type="date"] {

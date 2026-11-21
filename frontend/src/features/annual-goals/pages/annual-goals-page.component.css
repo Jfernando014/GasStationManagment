@@ -25,7 +25,6 @@ table { min-width: 680px; }
 .annual-header { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .annual-heading { display: flex; align-items: center; gap: 8px; }
 .annual-heading svg, .equivalences-heading svg { color: var(--brand-primary); }
-.annual-header .state-pill-tag { font-size: 11.5px; font-weight: 700; }
 .annual-subtitle { font-size: 12.5px; color: var(--text-muted); margin: -6px 0 16px; }
 .goals-locked-banner { color: var(--semantic-green-strong); }
 .goals-locked-banner p { font-size: 12.5px; margin-top: 4px; }
