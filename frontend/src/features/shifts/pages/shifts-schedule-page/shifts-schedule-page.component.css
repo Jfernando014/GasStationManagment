@@ -45,7 +45,7 @@
   background: transparent; color: inherit; cursor: pointer;
   transition: background-color var(--duration-fast) var(--spring-fast), color var(--duration-fast) var(--spring-fast);
 }
-.sp-filter-off:hover { background: var(--brand-primary); color: var(--surface-navy); }
+.sp-filter-off:hover { background: var(--brand-primary); color: #FFFFFF; font-weight: 700; }
 .sp-filter-off:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
 
 /* ---- Leyenda: desplegable de "Cómo leer la malla", en dos columnas, y filtro de la malla ---- */

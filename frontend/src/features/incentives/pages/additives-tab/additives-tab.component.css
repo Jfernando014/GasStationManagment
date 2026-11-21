@@ -80,13 +80,13 @@ h1 {
   color: #FFFFFF;
   font-family: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background-color var(--duration-fast) ease, transform var(--duration-fast) var(--spring-fast);
 }
 
 .new-rule:hover { background: var(--brand-primary-hover); }
-.new-rule:active { transform: scale(0.98); }
+.new-rule:active { background: var(--brand-primary-active); transform: scale(0.98); }
 
 .date-picker:focus-visible,
 .new-rule:focus-visible,

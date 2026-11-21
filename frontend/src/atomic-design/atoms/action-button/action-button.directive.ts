@@ -11,7 +11,10 @@ import { Directive, input } from '@angular/core';
   standalone: true,
   host: {
     '[class]': "'ab ab--' + variant() + ' ab--' + size()",
-    '[class.ab--block]': 'block()'
+    '[class.ab--block]': 'block()',
+    '[class.ab--icon]': 'icon()',
+    '[class.ab--loading]': 'loading()',
+    '[attr.aria-busy]': "loading() ? 'true' : null"
   }
 })
 export class ActionButtonDirective {
@@ -19,4 +22,8 @@ export class ActionButtonDirective {
   readonly size = input<'md' | 'sm'>('md');
   /** Ocupa todo el ancho disponible (pie de página en celular). */
   readonly block = input(false);
+  /** Botón cuadrado de solo icono: lleva `aria-label` en el elemento. */
+  readonly icon = input(false);
+  /** En curso: marca `aria-busy` y ignora clics sin tocar `disabled`. */
+  readonly loading = input(false);
 }
