@@ -41,6 +41,7 @@ const DIALOG_CLOSE_DELAY_MS = 320;
 export class WorkersPageComponent {
   private readonly workersService = inject(WorkersService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   readonly workers = signal<Worker[]>([]);
@@ -160,6 +161,15 @@ export class WorkersPageComponent {
 
   select(worker: Worker): void {
     this.selected.set(worker);
+    this.revealDetailOnNarrowScreens();
+  }
+
+  /** Up to tablet the detail sits below the list: once painted, it is brought into view. */
+  private revealDetailOnNarrowScreens(): void {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(max-width: 1024px)').matches) return;
+    requestAnimationFrame(() =>
+      this.host.nativeElement.querySelector('.ps-perfil')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    );
   }
 
   onCreated(worker: Worker): void {

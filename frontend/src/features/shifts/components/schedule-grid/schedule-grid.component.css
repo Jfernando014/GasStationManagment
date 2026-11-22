@@ -358,3 +358,8 @@
 @media (prefers-reduced-motion: reduce) {
   .sg-tip { animation: none; }
 }
+
+/* Tablet (tabla): la celda sube a 44px para tocarla con comodidad. */
+@media (min-width: 721px) and (max-width: 1024px) {
+  .sg-cell { height: 44px; }
+}

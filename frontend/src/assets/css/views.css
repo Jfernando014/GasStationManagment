@@ -3196,6 +3196,20 @@
     .ps-perfil .ps-campo { flex-direction: row; align-items: center; gap: 8px; }
     .ps-perfil .ps-tabla-wrap { max-height: calc(100vh - 372px); max-height: calc(100dvh - 372px); min-height: 180px; }
 
+    /* Vendedores en tablet y teléfono: lista arriba y detalle debajo; filtros y filas táctiles. */
+    @media (max-width: 1024px) {
+      .ps-vend-cuerpo { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .ps-vend-filtros .flat-input, .ps-vend-filtros .flat-select { height: 44px; font-size: 16px; }
+      .ps-vend-fila { min-height: 52px; }
+      .ps-vend-fila .ps-etiqueta { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+      .ps-form-acciones { flex-direction: column-reverse; align-items: stretch; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+      .ps-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ps-cifras > span:nth-child(odd) { border-left: 0; }
+      .ps-cifras > span:nth-child(-n + 2) { border-bottom: 1px solid var(--surface-subtle); }
+    }
+
     /* ---- Malla de turnos ---- */
     .ps-malla-card .ps-barra { align-items: center; }
     .ps-malla-card .ps-campo { flex-direction: row; align-items: center; gap: 8px; }

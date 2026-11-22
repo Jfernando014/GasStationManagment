@@ -63,3 +63,11 @@
 @keyframes worker-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Phone (dialog variant): header and footer stay put and the body scrolls; the role menu opens inside the body. */
+@media (max-width: 640px) {
+  :host { display: flex; flex-direction: column; min-height: 0; }
+  form:has(> .dialog-body) { display: flex; flex-direction: column; min-height: 0; }
+  .worker-dialog-body { overflow-y: auto; min-height: 0; }
+  .dialog-footer { border-radius: 0; }
+}
