@@ -30,7 +30,7 @@
       @if (!isClosed()) {
         <button
           type="button"
-          class="jr-btn jr-btn--pri jr-accion"
+          appButton variant="primary" size="sm" class="jr-accion"
           id="jr-btn-cerrar-jornada"
           (click)="openCloseDialog()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -96,7 +96,7 @@
             <b>Variación de combustibles del día</b>
           </div>
           <div class="jr-p6-inv-tabla-wrap">
-            <table class="jr-cerrada-tabla">
+            <table class="jr-cerrada-tabla table-sticky-first">
               <thead>
                 <tr>
                   <th>Combustible</th>
@@ -188,7 +188,7 @@
           <h3 id="jr-p6-dlg-titulo">Cerrar la jornada del {{ shortDayMonth() }}</h3>
           <p>La jornada queda en solo lectura. Reabrirla no está disponible.</p>
         </div>
-        <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="closeConfirmDialog()">✕</button>
+        <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeConfirmDialog()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
       </div>
 
       <div class="dialog-body jr-p6-dlg-cuerpo" id="jr-p6-dlg-cuerpo">
@@ -209,10 +209,10 @@
       </div>
 
       <div class="dialog-footer">
-        <button type="button" class="btn-solid-primary btn-flat-secondary" [disabled]="isClosing" (click)="closeConfirmDialog()">
+        <button type="button" appButton variant="secondary" size="sm" [disabled]="isClosing" (click)="closeConfirmDialog()">
           Cancelar
         </button>
-        <button type="button" class="btn-solid-primary" id="btn-confirmar-cierre" [disabled]="isClosing" (click)="confirmCloseJournal()">
+        <button type="button" appButton variant="primary" size="sm" id="btn-confirmar-cierre" [disabled]="isClosing" (click)="confirmCloseJournal()">
           {{ isClosing ? 'Cerrando...' : 'Cerrar jornada' }}
         </button>
       </div>

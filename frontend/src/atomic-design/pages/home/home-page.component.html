@@ -9,10 +9,10 @@
       <span class="inv-header-sub">Existencias por combustible y tanque desde la última medición registrada.</span>
     </div>
     <div class="inv-header-actions">
-      <button class="btn-flat-secondary" type="button" [disabled]="loading()" (click)="loadHome()">
+      <button appButton variant="secondary" size="sm" type="button" [disabled]="loading()" (click)="loadHome()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
       </button>
-      <a class="btn-solid-primary" routerLink="/alertas">
+      <a appButton variant="primary" size="sm" routerLink="/alertas">
         Bandeja de alertas
         @if (pendingAlerts() > 0) {
           <span class="alert-counter-badge">{{ pendingAlerts() > 99 ? '99+' : pendingAlerts() }}</span>
@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-        <a class="btn-solid-primary" routerLink="/alertas">Ver bandeja</a>
+        <a appButton variant="primary" size="sm" routerLink="/alertas">Ver bandeja</a>
       </div>
     } @else if (!optimalBannerDismissed()) {
       <div class="optimal-alert-banner">
@@ -62,7 +62,7 @@
           </div>
         </div>
         <div class="optimal-banner-actions">
-          <a class="btn-flat-secondary" routerLink="/alertas">Ver bandeja</a>
+          <a appButton variant="secondary" size="sm" routerLink="/alertas">Ver bandeja</a>
           <button
             type="button"
             class="optimal-banner-close"
@@ -93,7 +93,7 @@
       <div class="kpi-tile-box">
         <div class="kpi-tile-top">
           <span class="kpi-tile-name">Alertas pendientes</span>
-          <span class="state-pill-tag critical">Campana</span>
+          <app-tag variant="red">Campana</app-tag>
         </div>
         <div class="kpi-figure-lead tnum">{{ pendingAlerts() }}</div>
         <div class="kpi-figure-foot">Activas o leídas sin atender</div>
@@ -108,19 +108,9 @@
       </div>
     </div>
 
-    <div class="jr-tabs" role="tablist" aria-label="Vistas del inventario">
-      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'resumen'"
-        [class.is-activa]="tab() === 'resumen'" (click)="changeTab('resumen')">
-        <span class="jr-tab-punto jr-tab-punto--ok"></span>
-        Resumen
-      </button>
-      <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'control'"
-        [class.is-activa]="tab() === 'control'" (click)="changeTab('control')">
-        <span class="jr-tab-punto jr-tab-punto--aviso"></span>
-        Control del día
-      </button>
-    </div>
+    <app-tabs idPrefix="home" label="Vistas del inventario" [tabs]="tabs" [active]="tab()" (activeChange)="changeTab($any($event))" />
 
+    <div role="tabpanel" id="home-panel-resumen" aria-labelledby="home-tab-resumen" [hidden]="tab() !== 'resumen'">
     @if (tab() === 'resumen') {
       <section class="home-section">
         <div class="section-headline-bar">
@@ -135,7 +125,7 @@
                   <span class="home-fuel-dot" [style.background]="fuelColors[fuel.fuelType]"></span>
                   {{ fuelLabels[fuel.fuelType] }}
                 </span>
-                <span [class]="'state-pill-tag ' + levelTone(fuel.alertLevel)">{{ levelLabel(fuel.alertLevel) }}</span>
+                <app-tag [variant]="levelTone(fuel.alertLevel)">{{ levelLabel(fuel.alertLevel) }}</app-tag>
               </div>
               <div class="home-fuel-figures">
                 <span class="tnum">{{ formatGallons(fuel.currentGallons) }}</span>
@@ -147,9 +137,9 @@
               </div>
               <div class="home-fuel-foot">
                 <span>{{ formatPercent(fuel.percentage) }} de la capacidad</span>
-                <span [class]="'state-pill-tag ' + (fuel.complete ? 'optimal' : 'warning')">
+                <app-tag [variant]="(fuel.complete ? 'green' : 'amber')">
                   {{ fuel.complete ? 'Medición completa' : 'Medición incompleta' }}
-                </span>
+                </app-tag>
               </div>
             </article>
           } @empty {
@@ -171,11 +161,11 @@
             <p class="headline-sub-txt">Último estado registrado por medición con vara y tabla de aforo ({{ measuredTanks() }} de {{ totalTanks() }} medidos).</p>
           </div>
           <div class="home-tanks-header-actions">
-            <a routerLink="/configuracion/tanques" class="btn-flat-secondary home-tanks-config-btn">
+            <a appButton variant="secondary" size="sm" routerLink="/configuracion/tanques" class="home-tanks-config-btn">
               Gestionar tanques
             </a>
             @if (data.tanks.length > 0) {
-              <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="openReceptionModal()">
+              <button type="button" appButton variant="secondary" size="sm" (click)="openReceptionModal()">
                 + Nueva Consignación
               </button>
             }
@@ -204,7 +194,7 @@
                   <div class="tank-id-title">{{ tankDisplayTitle(tank) }}</div>
                   <div class="tank-type-sub" [style.color]="fuelColors[tank.fuelType]">{{ fuelLabels[tank.fuelType] }}</div>
                 </div>
-                <span [class]="'state-pill-tag ' + levelTone(tank.alertLevel)">{{ tankStatusLabel(tank.alertLevel) }}</span>
+                <app-tag [variant]="levelTone(tank.alertLevel)">{{ tankStatusLabel(tank.alertLevel) }}</app-tag>
               </div>
 
               <div class="gauge-module-row">
@@ -284,18 +274,21 @@
           }
         </div>
       </section>
-    } @else {
+    }
+    </div>
+    <div role="tabpanel" id="home-panel-control" aria-labelledby="home-tab-control" [hidden]="tab() !== 'control'">
+    @if (tab() === 'control') {
       <section class="inv-filter-toolbar">
         <div class="filter-item-group">
           <label class="filter-item-label" for="control-date">Fecha del diario</label>
           <input id="control-date" class="flat-input" type="date" [value]="controlDate()"
             (change)="onControlDateChange($event)" />
         </div>
-        <button class="btn-action-primary" type="button" [disabled]="controlLoading()" (click)="loadControl()">
+        <button appButton variant="primary" size="sm" type="button" [disabled]="controlLoading()" (click)="loadControl()">
           {{ controlLoading() ? 'Consultando…' : 'Consultar' }}
         </button>
         @if (control(); as controlData) {
-          <span class="state-pill-tag optimal">{{ formatShortDate(controlData.journalDate) }}</span>
+          <app-tag variant="green">{{ formatShortDate(controlData.journalDate) }}</app-tag>
         }
       </section>
 
@@ -309,8 +302,8 @@
             <span class="headline-main-txt">Combustibles</span>
             <span class="headline-sub-txt">Variación y autonomía del {{ formatShortDate(controlData.journalDate) }}.</span>
           </div>
-          <div class="inv-table-wrapper">
-            <table class="inv-table">
+          <div class="inv-table-wrapper table-scroll-x">
+            <table class="inv-table table-sticky-first">
               <thead>
                 <tr>
                   <th>Combustible</th>
@@ -342,9 +335,9 @@
                     </td>
                     <td class="right tnum">{{ formatDays(fuel.autonomy.autonomyDays) }}</td>
                     <td>
-                      <span [class]="'state-pill-tag ' + levelTone(fuel.autonomy.level)">
+                      <app-tag [variant]="levelTone(fuel.autonomy.level)">
                         {{ autonomyLabel(fuel.autonomy.status, fuel.autonomy.level) }}
-                      </span>
+                      </app-tag>
                     </td>
                     <td>{{ fuel.estimatedDepletionDate ? formatShortDate(fuel.estimatedDepletionDate) : '—' }}</td>
                   </tr>
@@ -361,8 +354,8 @@
             <span class="headline-main-txt">Lubricantes y aditivos</span>
             <span class="headline-sub-txt">Unidades vendidas y existencia de cierre.</span>
           </div>
-          <div class="inv-table-wrapper">
-            <table class="inv-table">
+          <div class="inv-table-wrapper table-scroll-x">
+            <table class="inv-table table-sticky-first">
               <thead>
                 <tr>
                   <th>Código</th>
@@ -384,9 +377,9 @@
                     <td class="right tnum">{{ product.officeStock }}</td>
                     <td class="right tnum">{{ product.counterStock }}</td>
                     <td>
-                      <span [class]="'state-pill-tag ' + productStatusTone(product)">
+                      <app-tag [variant]="productStatusTone(product)">
                         {{ productStatusLabel(product) }}
-                      </span>
+                      </app-tag>
                     </td>
                   </tr>
                 } @empty {
@@ -398,6 +391,7 @@
         </section>
       }
     }
+    </div>
   }
 
   <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
@@ -424,7 +418,7 @@
             <h2 id="measureModalTitle">Medir regla · {{ tankDisplayTitle(target) }}</h2>
             <p>{{ fuelLabels[target.fuelType] }} · Capacidad {{ formatGallons(target.capacityGallons) }} Gal</p>
           </div>
-          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeMeasureModal()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeMeasureModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         @if (measureError(); as err) {
@@ -457,8 +451,8 @@
         </div>
 
         <div class="home-modal-actions">
-          <button type="button" class="btn-flat-secondary" [disabled]="savingMeasure()" (click)="closeMeasureModal()">Cancelar</button>
-          <button type="button" class="btn-solid-primary" [disabled]="savingMeasure()" (click)="saveQuickMeasurement()">
+          <button type="button" appButton variant="secondary" size="sm" [disabled]="savingMeasure()" (click)="closeMeasureModal()">Cancelar</button>
+          <button type="button" appButton variant="primary" size="sm" [disabled]="savingMeasure()" (click)="saveQuickMeasurement()">
             {{ savingMeasure() ? 'Guardando…' : 'Guardar medición' }}
           </button>
         </div>
@@ -486,7 +480,7 @@
             <h2 id="receptionModalTitle">Registrar consignación de combustible</h2>
             <p>Ingreso directo por cisterna al compartimiento seleccionado.</p>
           </div>
-          <button type="button" class="home-modal-close" aria-label="Cerrar" (click)="closeReceptionModal()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeReceptionModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         @if (receptionError(); as err) {
@@ -537,8 +531,8 @@
         </div>
 
         <div class="home-modal-actions">
-          <button type="button" class="btn-flat-secondary" [disabled]="savingReception()" (click)="closeReceptionModal()">Cancelar</button>
-          <button type="button" class="btn-solid-primary" [disabled]="savingReception()" (click)="submitReception()">
+          <button type="button" appButton variant="secondary" size="sm" [disabled]="savingReception()" (click)="closeReceptionModal()">Cancelar</button>
+          <button type="button" appButton variant="primary" size="sm" [disabled]="savingReception()" (click)="submitReception()">
             {{ savingReception() ? 'Registrando…' : 'Registrar consignación' }}
           </button>
         </div>

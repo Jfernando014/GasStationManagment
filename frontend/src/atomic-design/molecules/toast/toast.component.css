@@ -53,3 +53,16 @@ b { font-weight: 700; }
   :host { transition: opacity var(--duration-fast) ease; transform: none; }
   :host(.is-visible) .check { animation: none; }
 }
+
+@media (max-width: 640px) {
+  :host {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: fit-content;
+    max-width: calc(100vw - 24px);
+    margin: 0 auto;
+    transform: translateY(10px);
+  }
+}

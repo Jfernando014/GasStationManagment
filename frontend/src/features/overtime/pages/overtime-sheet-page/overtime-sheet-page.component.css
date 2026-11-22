@@ -93,3 +93,14 @@ h1:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   .negative { animation: none; }
 }
+
+/* Teléfono: volver y paginador arriba; nombre y periodo debajo. */
+@media (max-width: 640px) {
+  :host { padding: 12px 0 24px; }
+  .who { display: contents; }
+  .back { order: 0; min-height: 44px; }
+  .side { order: 1; margin-left: auto; }
+  .divider { display: none; }
+  h1 { order: 2; flex: 1 1 100%; }
+  .period { order: 3; flex: 1 1 100%; }
+}

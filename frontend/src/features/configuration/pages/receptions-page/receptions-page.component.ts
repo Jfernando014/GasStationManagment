@@ -3,6 +3,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { FuelReceptionsService } from '../../../../core/services/fuel-receptions.service';
 import { TanksService } from '../../../../core/services/tanks.service';
 import { FUEL_LABELS, formatGallons } from '../../../../shared/helpers/inventory-display.helpers';
@@ -23,7 +24,7 @@ interface ReceptionDraft {
 @Component({
   selector: 'app-receptions-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ActionButtonDirective],
   templateUrl: './receptions-page.component.html',
   styleUrl: './receptions-page.component.css'
 })

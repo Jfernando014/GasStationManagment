@@ -1,12 +1,13 @@
 import { afterNextRender, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 
-@Component({ selector: 'app-statistics-dialog', standalone: true,
+@Component({ selector: 'app-statistics-dialog', standalone: true, imports: [ActionButtonDirective],
   template: `
     <dialog #dialog class="stats-dialog" tabindex="-1" aria-labelledby="statistics-dialog-title" (cancel)="cancel($event)" (click)="backdrop($event)" (keydown.escape)="cancel($event)">
-      <div class="dialog-header">@if (showBack()) { <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="closed.emit()">← Volver al reporte</button> }
+      <div class="dialog-header">@if (showBack()) { <button type="button" appButton variant="secondary" size="sm" (click)="closed.emit()">← Volver al reporte</button> }
         <div class="dialog-titles"><h2 id="statistics-dialog-title">{{ heading() }}</h2><p>{{ subtitle() }}</p></div>
         <ng-content select="[dialogControls]" />
-        <button type="button" class="btn-dialog-close" aria-label="Cerrar diálogo" (click)="closed.emit()">✕</button>
+        <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar diálogo" (click)="closed.emit()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
       </div>
       <div class="dialog-body"><ng-content /></div>
     </dialog>

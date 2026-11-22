@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap, tap } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
 import { TabItem, TabsComponent } from '../../../../atomic-design/molecules/tabs/tabs.component';
 import { ToastComponent } from '../../../../atomic-design/molecules/toast/toast.component';
@@ -41,6 +42,7 @@ const SAVED_MESSAGE = 'Datos del vendedor actualizados';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    ActionButtonDirective,
     EmptyStateComponent,
     TabsComponent,
     ToastComponent,

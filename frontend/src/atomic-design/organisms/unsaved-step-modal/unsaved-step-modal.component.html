@@ -28,11 +28,14 @@
         </div>
         <button
           type="button"
-          class="unsaved-modal-close"
+          appButton
+          variant="ghost"
+          size="sm"
+          [icon]="true"
           [disabled]="changesService.saving()"
           aria-label="Cerrar y permanecer en el paso actual"
           title="Cancelar y quedarse aquí"
-          (click)="changesService.cancelLeave()">✕</button>
+          (click)="changesService.cancelLeave()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
       </div>
 
       <p class="unsaved-modal-body">
@@ -42,14 +45,16 @@
       <div class="unsaved-modal-actions">
         <button
           type="button"
-          class="btn-leave-discard"
+          appButton
+          variant="danger"
           [disabled]="changesService.saving()"
           (click)="changesService.confirmLeaveWithoutSaving()">
           Salir sin guardar
         </button>
         <button
           type="button"
-          class="btn-save-leave"
+          appButton
+          variant="primary"
           [disabled]="changesService.saving()"
           (click)="changesService.confirmSaveAndLeave()">
           {{ changesService.saving() ? 'Guardando…' : 'Guardar cambios y salir' }}

@@ -8,12 +8,12 @@ export function autonomyLevelLabel(level: AutonomyLevel | null): string {
   return 'Sin evaluar';
 }
 
-/** Tone of the `state-pill-tag` class for an autonomy level. */
-export function autonomyLevelTone(level: AutonomyLevel | null): 'optimal' | 'warning' | 'critical' | 'neutral' {
-  if (level === 'CRITICAL') return 'critical';
-  if (level === 'WARNING') return 'warning';
-  if (level === 'OK') return 'optimal';
-  return 'neutral';
+/** Variant of `app-tag` for an autonomy level. */
+export function autonomyLevelTone(level: AutonomyLevel | null): 'green' | 'amber' | 'red' | 'gray' {
+  if (level === 'CRITICAL') return 'red';
+  if (level === 'WARNING') return 'amber';
+  if (level === 'OK') return 'green';
+  return 'gray';
 }
 
 export function alertStatusLabel(status: AlertStatus): string {
@@ -23,12 +23,12 @@ export function alertStatusLabel(status: AlertStatus): string {
   return 'Resuelta';
 }
 
-/** Tone of the `state-pill-tag` class for an alert status. */
-export function alertStatusTone(status: AlertStatus): 'optimal' | 'warning' | 'critical' | 'neutral' {
-  if (status === 'ACTIVE') return 'critical';
-  if (status === 'READ') return 'warning';
-  if (status === 'ATTENDED') return 'neutral';
-  return 'optimal';
+/** Variant of `app-tag` for an alert status. */
+export function alertStatusTone(status: AlertStatus): 'green' | 'amber' | 'red' | 'gray' {
+  if (status === 'ACTIVE') return 'red';
+  if (status === 'READ') return 'amber';
+  if (status === 'ATTENDED') return 'gray';
+  return 'green';
 }
 
 export function alertTypeLabel(type: string): string {

@@ -18,6 +18,7 @@
 /* Tablas anchas (once columnas en Credibanco): se desplazan dentro de su caja, nunca la página. */
 .ep-scroll {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .ep-bloqueos {
@@ -67,3 +68,46 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Tablet: el reporte contable pasa de 7 a 4 columnas. */
+@media (max-width: 1024px) {
+  .jr-p3-reporte-fila { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .jr-p3-reporte-celda { border-right: 0; border-bottom: 1px solid var(--surface-subtle); }
+  .jr-p3-reporte-celda b { overflow-wrap: anywhere; }
+}
+
+/* Teléfono: los ajustes quedan acotados a este paso; .jr-input, .jr-tabs y .jr-archivo son compartidos. */
+@media (max-width: 640px) {
+  .jr-p3-reporte-fila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .jr-p3-tiempos { grid-template-columns: minmax(0, 1fr); }
+  .jr-p3-flecha { justify-self: center; transform: rotate(90deg); }
+
+  .jr-p3 .jr-tabs { overflow-x: auto; scrollbar-width: none; }
+  .jr-p3 .jr-tabs::-webkit-scrollbar { display: none; }
+  .jr-p3 .jr-tab { flex-shrink: 0; height: 44px; margin-bottom: 0; padding: 0 10px; white-space: nowrap; }
+
+  .jr-p3 .jr-input { height: 44px; font-size: 16px; }
+  .jr-p3-tabla td { height: 52px; }
+  .jr-p3-tabla td .jr-cell--edit { width: 120px; }
+  .jr-p3-tabla td.jr-p3-nombre, .jr-p3-tabla th:first-child { max-width: 128px; white-space: normal; }
+  .jr-p3-cuadre-fila { flex-direction: column; align-items: stretch; gap: 10px; }
+  .jr-p3-cuadre-fila .jr-cell, .jr-p3-cuadre-fila .jr-cell--calc { width: 100%; }
+  .jr-p3-vs { display: none; }
+  .jr-plegable-cuerpo { overflow-x: auto; }
+
+  .jr-p3 .jr-archivo { padding: 16px; }
+  .jr-p3 .jr-archivo-vacio, .jr-p3 .jr-archivo-cargado { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; }
+  .jr-p3 .jr-archivo-icono { align-self: center; }
+  .jr-p3 .jr-archivo-textos b { white-space: normal; overflow-wrap: anywhere; }
+  .ep-archivo-boton { justify-content: center; min-height: 44px; }
+
+  .jr-p3-whatsapp-cab { flex-direction: column; align-items: stretch; }
+  .jr-p3-whatsapp-cab label { width: 100%; }
+  .jr-p3-whatsapp-cab .flat-select { width: 100%; max-width: 100%; height: 44px; font-size: 16px; }
+  .jr-p3-burbuja-fondo { padding: 10px; }
+  .jr-p3-burbuja { max-width: 100%; overflow-wrap: anywhere; }
+  .jr-p3-whatsapp-acciones .ab { flex: 1; }
+
+  .jr-p2-confirm, .jr-p2-confirm-acciones { flex-direction: column; align-items: stretch; }
+}
+

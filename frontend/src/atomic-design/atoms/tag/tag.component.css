@@ -15,3 +15,11 @@
 :host(.tag--amber) { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); }
 :host(.tag--red) { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); }
 :host(.tag--orange) { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
+
+/* Dot before the text: the strong color of the variant text, or the plain semantic color like the old status chips. */
+.dot { flex-shrink: 0; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: currentColor; }
+:host(.tag--green) .dot { background: var(--semantic-green); }
+:host(.tag--red) .dot { background: var(--semantic-red); }
+:host(.tag--amber) .dot { background: var(--semantic-amber); }
+:host(.tag--orange) .dot { background: var(--brand-primary); }
+:host(.tag--blue) .dot { background: var(--shift-support); }

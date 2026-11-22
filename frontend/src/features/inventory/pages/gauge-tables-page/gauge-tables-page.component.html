@@ -5,7 +5,7 @@
       <h1>Tabla de aforo</h1>
       <p>Registra, edita o elimina las tablas de aforo y administra desde aquí los tanques asignados.</p>
     </div>
-    <button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">+ Nueva tabla</button>
+    <button appButton variant="primary" size="sm" type="button" (click)="newGaugeTableOpen.set(true)">+ Nueva tabla</button>
   </header>
 
   <nav class="configuration-tabs" aria-label="Configuración">
@@ -29,14 +29,14 @@
       <div class="form-grid">
         <label>Nombre de la tabla <input [class.configuration-field-invalid]="isRequiredTextInvalid(newGaugeTable().name) || fieldError('name')" [ngModel]="newGaugeTable().name" (ngModelChange)="updateNewGaugeTableName($event)" placeholder="Ej. Tabla T1 - 250 cm">@if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> } @else if (isRequiredTextInvalid(newGaugeTable().name)) { <span class="field-error">Este campo es obligatorio.</span> }</label>
       </div>
-      <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newGaugeTableOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="createGaugeTable()">Guardar tabla</button></div>
+      <div class="card-actions"><button appButton variant="ghost" size="sm" type="button" (click)="newGaugeTableOpen.set(false)">Cancelar</button><button appButton variant="primary" size="sm" type="button" (click)="createGaugeTable()">Guardar tabla</button></div>
     </section>
   }
 
   @if (gaugeTableLoading()) {
     <section class="configuration-card configuration-empty-state"><h2>Cargando tablas...</h2></section>
   } @else if (gaugeTables().length === 0) {
-    <section class="configuration-card configuration-empty-state"><h2>No hay tablas de aforo registradas</h2><p>Registra una tabla o asigna tus tanques temporalmente con «Ninguna».</p><button class="jr-btn jr-btn--pri" type="button" (click)="newGaugeTableOpen.set(true)">Registrar primera tabla</button></section>
+    <section class="configuration-card configuration-empty-state"><h2>No hay tablas de aforo registradas</h2><p>Registra una tabla o asigna tus tanques temporalmente con «Ninguna».</p><button appButton variant="primary" size="sm" type="button" (click)="newGaugeTableOpen.set(true)">Registrar primera tabla</button></section>
   } @else {
     <section class="configuration-card aforo-toolbar">
       <div class="aforo-toolbar-fields">
@@ -51,8 +51,8 @@
       <div class="aforo-stats">
         <span>Volumen máximo <b>{{ (selectedTable?.maxVolumeGallons ?? 0) | number }} Gal</b></span>
         <span>Altura máxima <b>{{ (selectedTable?.maxHeightCm ?? 0) | number:'1.1-1' }} cm</b></span>
-        <span class="state-pill-tag optimal">{{ selectedCurve.length }} puntos</span>
-        <button class="jr-btn jr-btn--danger" type="button" (click)="requestDeleteTable()">Eliminar tabla</button>
+        <app-tag variant="green">{{ selectedCurve.length }} puntos</app-tag>
+        <button appButton variant="danger" size="sm" type="button" (click)="requestDeleteTable()">Eliminar tabla</button>
       </div>
     </section>
 
@@ -61,10 +61,10 @@
       <div class="card-heading">
         <div><h2>Puntos de calibración</h2><p>Edita la relación entre altura y volumen o renombra la tabla arriba antes de guardar.</p></div>
         <div class="configuration-actions">
-          <button class="jr-btn jr-btn--sec" type="button" (click)="openImport()">Importar tabla</button>
-          <button class="jr-btn jr-btn--sec" type="button" (click)="exportCsv()">Exportar tabla</button>
-          <button class="jr-btn jr-btn--sec" type="button" (click)="addPoint()">Agregar fila</button>
-          <button class="jr-btn jr-btn--pri" type="button" (click)="saveCurve()">Guardar cambios</button>
+          <button appButton variant="secondary" size="sm" type="button" (click)="openImport()">Importar tabla</button>
+          <button appButton variant="secondary" size="sm" type="button" (click)="exportCsv()">Exportar tabla</button>
+          <button appButton variant="secondary" size="sm" type="button" (click)="addPoint()">Agregar fila</button>
+          <button appButton variant="primary" size="sm" type="button" (click)="saveCurve()">Guardar cambios</button>
         </div>
       </div>
       <div class="table-scroll"><table class="configuration-table calibration-table"><thead><tr><th># Punto</th><th>Altura (cm)</th><th>Volumen (galones)</th><th>Acciones</th></tr></thead><tbody>
@@ -81,19 +81,19 @@
           <p>Asigna a cada tanque una tabla de aforo, déjalo en Ninguna o edita/elimina el tanque directamente.</p>
         </div>
         @if (selectedGaugeTableId() !== null) {
-          <span class="state-pill-tag optimal">{{ tanksInSelectedTable.length }} en esta tabla</span>
+          <app-tag variant="green">{{ tanksInSelectedTable.length }} en esta tabla</app-tag>
         }
       </div>
       <div class="table-scroll">
-        <table class="configuration-table">
+        <table class="configuration-table table-cards">
           <thead><tr><th>Identificador</th><th>Combustible</th><th>Capacidad</th><th>Tabla de aforo</th><th>Acciones</th></tr></thead>
           <tbody>
             @for (tank of tanks(); track tank.id) {
               <tr>
-                <td><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
-                <td>{{ tank.fuel }}</td>
-                <td class="tnum">{{ tank.capacity | number }} Gal</td>
-                <td>
+                <td class="tc-title"><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
+                <td data-label="Combustible">{{ tank.fuel }}</td>
+                <td class="tnum" data-label="Capacidad">{{ tank.capacity | number }} Gal</td>
+                <td data-label="Tabla de aforo">
                   <select class="aforo-tank-select" [attr.aria-label]="'Tabla de aforo para ' + tank.name" [ngModel]="tank.gaugeTableId" (ngModelChange)="assignTankGaugeTable(tank, $event)">
                     <option [ngValue]="null">Ninguna</option>
                     @for (table of gaugeTables(); track table.id) {
@@ -101,7 +101,7 @@
                     }
                   </select>
                 </td>
-                <td>
+                <td class="tc-actions">
                   <button class="table-action" type="button" (click)="editTankFromTable(tank)">Editar</button>
                   <button class="table-action danger" type="button" (click)="requestDeleteTank(tank)">Eliminar</button>
                 </td>
@@ -138,8 +138,8 @@
             </label>
           </div>
           <div class="card-actions">
-            <button class="jr-btn jr-btn--ghost" type="button" (click)="cancelTankEdit()">Cancelar</button>
-            <button class="jr-btn jr-btn--pri" type="button" (click)="saveEditingTank()">Guardar tanque</button>
+            <button appButton variant="ghost" size="sm" type="button" (click)="cancelTankEdit()">Cancelar</button>
+            <button appButton variant="primary" size="sm" type="button" (click)="saveEditingTank()">Guardar tanque</button>
           </div>
         </div>
       }

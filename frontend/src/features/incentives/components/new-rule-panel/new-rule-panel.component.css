@@ -6,6 +6,7 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -90,38 +91,13 @@ h2 {
   border-top: 1px solid var(--border-main);
 }
 
-.secondary,
-.primary {
+/* The footer buttons are appButton; they only need an anchor for the spinner and a minimum width. */
+.footer button {
   position: relative;
-  height: 44px;
   min-width: 96px;
-  padding: 0 20px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) ease,
-    border-color var(--duration-fast) ease,
-    color var(--duration-fast) ease,
-    transform var(--duration-fast) var(--spring-fast);
 }
 
-.secondary { border-color: var(--jr-cell-border); background: var(--surface-card); color: var(--text-heading); }
-.secondary:hover:not(:disabled) { background: var(--surface-subtle); }
-.primary { background: var(--brand-primary); color: #FFFFFF; }
-.primary:hover:not(:disabled) { background: var(--brand-primary-hover); }
-.primary:disabled { background: var(--border-main); color: var(--text-light); cursor: not-allowed; }
-.primary[aria-busy='true']:disabled { background: var(--brand-primary); color: #FFFFFF; cursor: progress; }
-.secondary:disabled { color: var(--text-light); cursor: not-allowed; }
-.secondary:active:not(:disabled),
-.primary:active:not(:disabled) { transform: scale(0.97); }
-
-.close:focus-visible,
-.secondary:focus-visible,
-.primary:focus-visible {
+.close:focus-visible {
   outline: none;
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px #FFE4CC;
@@ -308,4 +284,17 @@ input.control { user-select: text; }
   .scrim, .panel, .field, .note-in, .note-out, .box-in, .box-out, .has-error .control, .spinner { animation: none; }
   .is-closing .scrim, .is-closing .panel { animation: none; opacity: 0; }
   .spinner { border-top-color: #FFFFFF; border-right-color: #FFFFFF; }
+}
+
+/* Teléfono: el panel ocupa toda la pantalla; el cuerpo hace scroll y el pie queda fijo con safe-area. */
+@media (max-width: 640px) {
+  .panel { width: 100%; }
+  .header { padding: 0 8px 0 16px; }
+  .close { width: 44px; height: 44px; }
+  .body { padding: 16px; }
+  .general-error { padding: 10px 16px 0; }
+  .footer { flex-direction: column-reverse; align-items: stretch; padding: 12px 16px max(16px, env(safe-area-inset-bottom)); }
+  .footer button { min-width: 0; }
+  .control, .money input { font-size: 16px; }
+  .area { height: 88px; }
 }

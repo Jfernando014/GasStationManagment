@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { JOURNAL_STEP_ROUTES, JournalService } from '../../../core/services/journal.service';
 import { todayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse } from '../../../shared/models/journal.model';
@@ -14,7 +15,7 @@ const STEP_ROUTES = JOURNAL_STEP_ROUTES;
 @Component({
   selector: 'app-journal-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, JournalStepperComponent, UnsavedStepModalComponent],
+  imports: [CommonModule, RouterModule, ActionButtonDirective, JournalStepperComponent, UnsavedStepModalComponent],
   templateUrl: './journal-page.component.html',
   styleUrls: ['./journal-page.component.css']
 })

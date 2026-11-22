@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { CashBalanceStep4Service } from '../../../../core/services/cash-balance-step4.service';
 import { JournalService } from '../../../../core/services/journal.service';
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
@@ -31,7 +32,7 @@ const EXPENSES_ROUTE = '/gastos';
 @Component({
   selector: 'app-cash-balance-step4',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ActionButtonDirective],
   templateUrl: './cash-balance-step4.component.html',
   styleUrl: './cash-balance-step4.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

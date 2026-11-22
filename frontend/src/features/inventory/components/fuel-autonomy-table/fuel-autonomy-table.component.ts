@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { formatDays, formatGallons, FUEL_COLORS, FUEL_LABELS } from '../../../../shared/helpers/inventory-display.helpers';
 import { FuelAutonomyResponse } from '../../../../shared/models/dtos/fuel-autonomy.dto';
 
@@ -7,6 +8,7 @@ import { FuelAutonomyResponse } from '../../../../shared/models/dtos/fuel-autono
 @Component({
   selector: 'app-fuel-autonomy-table',
   standalone: true,
+  imports: [TagComponent],
   templateUrl: './fuel-autonomy-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -26,10 +28,10 @@ export class FuelAutonomyTableComponent {
     return 'Normal';
   }
 
-  autonomyTone(autonomy: FuelAutonomyResponse): string {
-    if (autonomy.level === 'CRITICAL') return 'jr-chip--falta';
-    if (autonomy.level === 'WARNING') return 'jr-chip--aviso';
-    if (autonomy.level === 'OK') return 'jr-chip--cerrada';
-    return 'jr-chip--pendiente';
+  autonomyTone(autonomy: FuelAutonomyResponse): 'red' | 'amber' | 'green' | 'gray' {
+    if (autonomy.level === 'CRITICAL') return 'red';
+    if (autonomy.level === 'WARNING') return 'amber';
+    if (autonomy.level === 'OK') return 'green';
+    return 'gray';
   }
 }

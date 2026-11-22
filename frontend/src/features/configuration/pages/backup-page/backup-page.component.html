@@ -27,7 +27,7 @@
         El archivo se comprime en el servidor. Guárdalo en un lugar seguro; contiene la información de la estación.
       </div>
 
-      <button class="jr-btn jr-btn--pri backup-action" type="button" [disabled]="exporting()" (click)="exportBackup()">
+      <button appButton variant="primary" size="sm" [block]="true" class="backup-action" type="button" [disabled]="exporting()" (click)="exportBackup()">
         @if (exporting()) {
           <span class="backup-spinner" aria-hidden="true"></span>
           Generando respaldo...
@@ -99,7 +99,7 @@
           (ngModelChange)="confirmation.set($event)">
       </label>
 
-      <button class="jr-btn jr-btn--pri backup-action backup-action--restore" type="button"
+      <button appButton variant="destructive" size="sm" [block]="true" class="backup-action" type="button"
         [disabled]="!isRestoreReady()" (click)="restore()">
         @if (restoring()) {
           <span class="backup-spinner" aria-hidden="true"></span>
@@ -143,7 +143,7 @@
         <h2 id="backup-audit-title">Historial reciente</h2>
         <p>Últimas exportaciones y restauraciones registradas en el sistema.</p>
       </div>
-      <button class="jr-btn jr-btn--ghost jr-btn--sm" type="button" [disabled]="auditLoading()" (click)="loadAudit()">Actualizar</button>
+      <button appButton variant="ghost" size="sm" type="button" [disabled]="auditLoading()" (click)="loadAudit()">Actualizar</button>
     </div>
 
     @if (auditLoading()) {
@@ -154,7 +154,7 @@
       <p class="backup-empty">Todavía no hay operaciones de respaldo registradas.</p>
     } @else {
       <div class="backup-table-scroll">
-        <table class="backup-table">
+        <table class="backup-table table-sticky-first">
           <thead>
             <tr>
               <th scope="col">Fecha</th>

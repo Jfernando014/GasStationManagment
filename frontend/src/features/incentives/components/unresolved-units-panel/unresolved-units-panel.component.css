@@ -1,7 +1,7 @@
 /* The panel itself (bar, dot, fold button) is the shared warning panel; this is only the list inside it. */
 :host { display: block; }
 
-.scroll { overflow-x: auto; }
+.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 
 table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13.5px; color: #334155; font-variant-numeric: tabular-nums; }
 
@@ -41,4 +41,9 @@ tbody tr { animation: row-in var(--duration-normal) var(--spring) backwards; ani
 
 @media (prefers-reduced-motion: reduce) {
   tbody tr { animation: none; }
+}
+
+@media (max-width: 640px) {
+  a { position: relative; }
+  a::after { content: ''; position: absolute; inset: -12px -6px; }
 }

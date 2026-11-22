@@ -5,7 +5,7 @@
       <h1>Tanques</h1>
       <p>Configura los tanques y asócialos a una tabla de aforo o déjalos con tabla Ninguna.</p>
     </div>
-    <button class="jr-btn jr-btn--pri" type="button" (click)="openNewTank()">+ Nuevo tanque</button>
+    <button appButton variant="primary" size="sm" type="button" (click)="openNewTank()">+ Nuevo tanque</button>
   </header>
 
   <nav class="configuration-tabs" aria-label="Configuración">
@@ -57,31 +57,31 @@
           </select>
         </label>
       </div>
-      <div class="card-actions"><button class="jr-btn jr-btn--ghost" type="button" (click)="newTankOpen.set(false)">Cancelar</button><button class="jr-btn jr-btn--pri" type="button" (click)="addTank()">Guardar tanque</button></div>
+      <div class="card-actions"><button appButton variant="ghost" size="sm" type="button" (click)="newTankOpen.set(false)">Cancelar</button><button appButton variant="primary" size="sm" type="button" (click)="addTank()">Guardar tanque</button></div>
     </section>
   }
 
   @if (loading()) {
     <section class="configuration-card configuration-empty-state"><h2>Cargando tanques...</h2></section>
   } @else if (tanks().length === 0) {
-    <section class="configuration-card configuration-empty-state"><h2>No hay tanques registrados</h2><p>Registra el primer tanque de la estación para iniciar su configuración.</p><button class="jr-btn jr-btn--pri" type="button" (click)="newTankOpen.set(true)">Registrar primer tanque</button></section>
+    <section class="configuration-card configuration-empty-state"><h2>No hay tanques registrados</h2><p>Registra el primer tanque de la estación para iniciar su configuración.</p><button appButton variant="primary" size="sm" type="button" (click)="newTankOpen.set(true)">Registrar primer tanque</button></section>
   } @else {
     <section class="configuration-card">
       <div class="card-heading">
         <div><h2>Tanques instalados</h2><p>Tanques configurados en la estación.</p></div>
-        <span class="state-pill-tag optimal">{{ tanks().length }} activos</span>
+        <app-tag variant="green">{{ tanks().length }} activos</app-tag>
       </div>
       <div class="table-scroll">
-        <table class="configuration-table">
+        <table class="configuration-table table-cards">
           <thead><tr><th>Identificador</th><th>Combustible</th><th>Capacidad</th><th>Tabla de aforo</th><th>Acciones</th></tr></thead>
           <tbody>
             @for (tank of tanks(); track tank.id) {
               <tr>
-                <td><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
-                <td>{{ tank.fuel }}</td>
-                <td class="tnum">{{ tank.capacity | number }} Gal</td>
-                <td>{{ gaugeTableName(tank.gaugeTableId) }}</td>
-                <td>
+                <td class="tc-title"><strong>{{ tank.name }}</strong><small>{{ tank.code }}</small></td>
+                <td data-label="Combustible">{{ tank.fuel }}</td>
+                <td class="tnum" data-label="Capacidad">{{ tank.capacity | number }} Gal</td>
+                <td data-label="Tabla de aforo">{{ gaugeTableName(tank.gaugeTableId) }}</td>
+                <td class="tc-actions">
                   <button class="table-action" type="button" (click)="selectTank(tank.id)">Editar</button>
                   <button class="table-action danger" type="button" (click)="requestDeleteTank(tank)">Eliminar</button>
                 </td>
@@ -120,8 +120,8 @@
           </label>
         </div>
         <div class="card-actions">
-          <button class="jr-btn jr-btn--ghost" type="button" (click)="cancelEdit()">Cancelar</button>
-          <button class="jr-btn jr-btn--pri" type="button" (click)="saveTank(selectedTank)">Guardar configuración</button>
+          <button appButton variant="ghost" size="sm" type="button" (click)="cancelEdit()">Cancelar</button>
+          <button appButton variant="primary" size="sm" type="button" (click)="saveTank(selectedTank)">Guardar configuración</button>
         </div>
       </section>
     }

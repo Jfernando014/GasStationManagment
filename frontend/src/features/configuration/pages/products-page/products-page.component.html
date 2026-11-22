@@ -5,7 +5,7 @@
       <h1>Productos</h1>
       <p>Catálogo de lubricantes, aditivos y otros productos que se venden en la estación.</p>
     </div>
-    <button class="jr-btn jr-btn--pri" type="button" (click)="openCreate()">
+    <button appButton variant="primary" size="sm" type="button" (click)="openCreate()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
         <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
       </svg>
@@ -13,26 +13,7 @@
     </button>
   </header>
 
-  <nav class="jr-tabs" role="tablist" aria-label="Productos">
-    <button
-      type="button"
-      class="jr-tab"
-      role="tab"
-      [attr.aria-selected]="tab() === 'catalogo'"
-      [class.is-activa]="tab() === 'catalogo'"
-      (click)="tab.set('catalogo')">
-      Catálogo
-    </button>
-    <button
-      type="button"
-      class="jr-tab"
-      role="tab"
-      [attr.aria-selected]="tab() === 'margenes'"
-      [class.is-activa]="tab() === 'margenes'"
-      (click)="tab.set('margenes')">
-      Márgenes
-    </button>
-  </nav>
+  <app-tabs idPrefix="products" label="Productos" [tabs]="tabs" [active]="tab()" (activeChange)="tab.set($any($event))" />
 
   <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
     <span class="toast-check">✓</span> {{ toastText() }}
@@ -152,14 +133,15 @@
       }
 
       <div class="products-actions">
-        <button class="jr-btn jr-btn--ghost" type="button" (click)="closeForm()">Cancelar</button>
-        <button class="jr-btn jr-btn--pri" type="button" [disabled]="!canSubmit()" (click)="save()">
+        <button appButton variant="ghost" size="sm" type="button" (click)="closeForm()">Cancelar</button>
+        <button appButton variant="primary" size="sm" type="button" [disabled]="!canSubmit()" (click)="save()">
           {{ saving() ? 'Guardando…' : 'Guardar producto' }}
         </button>
       </div>
     </section>
   }
 
+  <div role="tabpanel" id="products-panel-catalogo" aria-labelledby="products-tab-catalogo" [hidden]="tab() !== 'catalogo'">
   @if (tab() === 'catalogo') {
     <section class="products-card">
       <div class="products-filters">
@@ -211,7 +193,7 @@
       @if (loadError(); as message) {
         <div class="products-alert" role="alert">
           <span>{{ message }}</span>
-          <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="retry()">Reintentar</button>
+          <button appButton variant="secondary" size="sm" type="button" (click)="retry()">Reintentar</button>
         </div>
       } @else if (loading()) {
         <p class="products-empty" aria-live="polite">Cargando productos…</p>
@@ -225,7 +207,7 @@
         </p>
       } @else {
         <div class="products-table-scroll">
-          <table class="products-table">
+          <table class="products-table table-sticky-first">
             <thead>
               <tr>
                 <th>Código</th>
@@ -261,11 +243,11 @@
                   }
                   <td>
                     @if (!product.active) {
-                      <span class="jr-chip jr-chip--pendiente">Inactivo</span>
+                      <app-tag variant="gray">Inactivo</app-tag>
                     } @else if (stockOf(product)?.status === 'NEGATIVE_STOCK') {
-                      <span class="jr-chip jr-chip--falta" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</span>
+                      <app-tag variant="red" title="La existencia de una ubicación quedó por debajo de cero">Existencia negativa</app-tag>
                     } @else {
-                      <span class="jr-chip jr-chip--cerrada">Activo</span>
+                      <app-tag variant="green">Activo</app-tag>
                     }
                   </td>
                   <td class="num">
@@ -286,7 +268,10 @@
         }
       </p>
     </section>
-  } @else {
+  }
+  </div>
+  <div role="tabpanel" id="products-panel-margenes" aria-labelledby="products-tab-margenes" [hidden]="tab() !== 'margenes'">
+  @if (tab() === 'margenes') {
     <section class="products-card">
       <div class="jr-indicadores products-kpis">
         <div class="jr-indicador">
@@ -333,4 +318,5 @@
       }
     </section>
   }
+  </div>
 </div>

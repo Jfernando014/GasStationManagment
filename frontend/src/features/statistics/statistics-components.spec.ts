@@ -45,7 +45,7 @@ describe('SCRUM-84 navigation and dialogs', () => {
     expect(root.querySelector('#statistics-panel-promedios')?.hasAttribute('hidden')).toBe(true);
     [...root.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === 'Ver gráficas')!.click(); harness.detectChanges(); await harness.fixture.whenStable();
     expect(root.querySelector('dialog')).not.toBeNull(); expect(root.querySelector('dialog')?.textContent).toContain('Volver al reporte');
-    root.querySelector<HTMLButtonElement>('dialog .btn-dialog-close')!.click(); harness.detectChanges(); expect(root.querySelector('dialog')).toBeNull();
+    root.querySelector<HTMLButtonElement>('dialog button[aria-label="Cerrar diálogo"]')!.click(); harness.detectChanges(); expect(root.querySelector('dialog')).toBeNull();
   });
   it('redirects anonymous statistics access through the existing auth guard', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes), { provide: AuthService, useValue: { hasToken: () => false } }] });

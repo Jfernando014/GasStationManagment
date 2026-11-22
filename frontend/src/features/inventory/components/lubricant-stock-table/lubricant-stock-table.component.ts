@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { isTransferInvalid } from '../../../../shared/helpers/inventory-rules.helpers';
 import { ProductStockResponse } from '../../../../shared/models/dtos/product-stock.dto';
 import {
@@ -13,7 +15,7 @@ import {
 @Component({
   selector: 'app-lubricant-stock-table',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ActionButtonDirective, TagComponent],
   templateUrl: './lubricant-stock-table.component.html',
   styleUrl: './lubricant-stock-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,6 +38,19 @@ export class LubricantStockTableComponent {
   readonly syncRequested = output<void>();
   readonly saveRequested = output<void>();
   readonly openMovement = output<MovementTarget>();
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    // En teléfono los filtros hacen scroll horizontal: el activo debe quedar a la vista.
+    effect(() => {
+      this.filter();
+      requestAnimationFrame(() =>
+        this.host.nativeElement.querySelector<HTMLElement>('.jr-p5-seg .is-activo')
+          ?.scrollIntoView?.({ inline: 'nearest', block: 'nearest' })
+      );
+    });
+  }
 
   transferOf(productId: number): number | null {
     return this.pendingTransfers()[productId] ?? null;

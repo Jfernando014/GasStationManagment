@@ -6,14 +6,18 @@
 </label>
 <input
   class="flat-input"
-  [class.is-invalid]="errorMessage()"
+  [class.is-invalid]="invalid() || errorMessage()"
   [id]="fieldId()"
   [type]="type()"
   [placeholder]="placeholder()"
   [formControl]="control()"
   [attr.maxlength]="nativeMaxLength()"
   [attr.inputmode]="inputMode()"
-  [attr.aria-invalid]="errorMessage() ? true : null"
+  [attr.min]="min()"
+  [attr.max]="max()"
+  [attr.autocomplete]="autocomplete()"
+  [attr.aria-label]="ariaLabel()"
+  [attr.aria-invalid]="invalid() || errorMessage() ? true : null"
   [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : null"
   (input)="onInput($event)">
 @if (errorMessage(); as message) {

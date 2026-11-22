@@ -24,8 +24,6 @@
   gap: 10px;
 }
 
-.ra-dates .flat-input { min-height: 44px; }
-
 .ra-check {
   display: flex;
   align-items: center;
@@ -102,4 +100,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ra-day { animation: none; }
+}
+
+@media (max-width: 640px) {
+  .ra-dates { grid-template-columns: 1fr; }
+  .ra-days { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
+  .ra-actions { flex-direction: column-reverse; align-items: stretch; padding-bottom: env(safe-area-inset-bottom); }
 }

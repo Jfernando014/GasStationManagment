@@ -1,6 +1,6 @@
 :host { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 
-.pg-scroll { overflow-x: auto; scroll-behavior: smooth; }
+.pg-scroll { overflow-x: auto; overscroll-behavior-x: contain; scroll-behavior: smooth; }
 .pg { border-collapse: separate; border-spacing: 2px; font-variant-numeric: tabular-nums; }
 
 .pg-name {

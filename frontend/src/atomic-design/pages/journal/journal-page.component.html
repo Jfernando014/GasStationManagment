@@ -49,7 +49,9 @@
       <footer class="jr-jornada-pie" aria-label="Navegación entre pasos de la jornada">
         <button
           type="button"
-          class="jr-btn jr-btn--ghost"
+          appButton
+          variant="ghost"
+          size="sm"
           id="jr-btn-anterior"
           [disabled]="!hasPreviousStep"
           (click)="goToPreviousStep()">
@@ -68,7 +70,9 @@
           @if (hasNextStep) {
             <button
               type="button"
-              class="jr-btn jr-btn--pri"
+              appButton
+              variant="primary"
+              size="sm"
               id="jr-btn-siguiente"
               (click)="goToNextStep()">
               Siguiente

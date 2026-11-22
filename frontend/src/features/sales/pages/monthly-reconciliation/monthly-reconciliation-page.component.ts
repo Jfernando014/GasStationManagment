@@ -3,6 +3,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, Subject, catchError, map, switchMap, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { MonthlyReconciliationService } from '../../../../core/services/monthly-reconciliation.service';
 import { ApiError } from '../../../../shared/models/api-error.model';
 import { MonthlyReconciliation } from '../../../../shared/models/dtos/monthly-reconciliation.dto';
@@ -12,7 +13,7 @@ const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 @Component({
   selector: 'app-monthly-reconciliation-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ActionButtonDirective],
   templateUrl: './monthly-reconciliation-page.component.html',
   styleUrl: './monthly-reconciliation-page.component.css'
 })

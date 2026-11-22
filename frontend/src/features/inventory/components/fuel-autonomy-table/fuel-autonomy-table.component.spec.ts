@@ -44,10 +44,10 @@ describe('FuelAutonomyTableComponent', () => {
     expect(text).toContain('Advertencia ≤ 4,0 días');
   });
 
-  it('tones the autonomy levels with the shared chips', () => {
+  it('tones the autonomy levels with the shared tags', () => {
     const component = TestBed.createComponent(FuelAutonomyTableComponent).componentInstance;
 
-    expect(component.autonomyTone(AUTONOMY[0])).toBe('jr-chip--falta');
-    expect(component.autonomyTone(AUTONOMY[1])).toBe('jr-chip--pendiente');
+    expect(component.autonomyTone(AUTONOMY[0])).toBe('red');
+    expect(component.autonomyTone(AUTONOMY[1])).toBe('gray');
   });
 });

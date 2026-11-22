@@ -2,6 +2,7 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { catchError, forkJoin, of, Subject, switchMap, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
 import { AvatarComponent } from '../../../atomic-design/atoms/avatar/avatar.component';
 import { StatisticsDialogComponent } from './statistics-dialog.component';
@@ -14,7 +15,7 @@ import { Worker } from '../../../shared/models/dtos/worker.dto';
 import { BasketSeller } from '../../../shared/models/dtos/basket-statistics.dto';
 import { StatisticsWorkspace } from '../statistics-workspace';
 
-@Component({ selector: 'app-basket-statistics', standalone: true, imports: [FormsModule, EmptyStateComponent, AvatarComponent, StatisticsDialogComponent],
+@Component({ selector: 'app-basket-statistics', standalone: true, imports: [FormsModule, ActionButtonDirective, EmptyStateComponent, AvatarComponent, StatisticsDialogComponent],
   templateUrl: './basket-statistics.component.html', styleUrl: '../statistics.css' })
 export class BasketStatisticsComponent {
   readonly workspace = inject(StatisticsWorkspace);

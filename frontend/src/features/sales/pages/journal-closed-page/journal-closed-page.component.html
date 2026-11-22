@@ -4,7 +4,7 @@
     <div class="jr-paso-construccion">
       <p>La jornada de este día todavía no está cerrada.</p>
       <div class="jr-paso-bloqueado-acciones">
-        <a routerLink="/jornada/cierre" class="jr-btn jr-btn--pri">Ir al cierre de jornada</a>
+        <a routerLink="/jornada/cierre" appButton variant="primary" size="sm">Ir al cierre de jornada</a>
       </div>
     </div>
   }
@@ -76,7 +76,7 @@
     <!-- Subvista: Rendimiento de los vendedores del día -->
     @if (viewMode === 'rendimiento') {
       <div class="jr-cerrada-detalle-cab">
-        <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="setViewMode('inicio')">
+        <button type="button" appButton variant="ghost" size="sm" (click)="setViewMode('inicio')">
           ← Volver
         </button>
         <div>
@@ -85,7 +85,7 @@
         </div>
       </div>
 
-      <div class="jr-cerrada-tabla-wrap">
+      <div class="jr-cerrada-tabla-wrap table-scroll-x">
         <table class="jr-cerrada-tabla">
           <thead>
             <tr>
@@ -131,7 +131,7 @@
     <!-- Subvista: Control de inventario del día -->
     @if (viewMode === 'inventario') {
       <div class="jr-cerrada-detalle-cab">
-        <button type="button" class="jr-btn jr-btn--ghost jr-btn--sm" (click)="setViewMode('inicio')">
+        <button type="button" appButton variant="ghost" size="sm" (click)="setViewMode('inicio')">
           ← Volver
         </button>
         <div>
@@ -141,8 +141,8 @@
       </div>
 
       <div class="jr-cerrada-inv">
-        <div class="jr-cerrada-tabla-wrap">
-          <table class="jr-cerrada-tabla">
+        <div class="jr-cerrada-tabla-wrap table-scroll-x">
+          <table class="jr-cerrada-tabla table-sticky-first">
             <thead>
               <tr>
                 <th>Combustible</th>
@@ -177,8 +177,8 @@
           </table>
         </div>
 
-        <div class="jr-cerrada-tabla-wrap">
-          <table class="jr-cerrada-tabla">
+        <div class="jr-cerrada-tabla-wrap table-scroll-x">
+          <table class="jr-cerrada-tabla table-sticky-first">
             <thead>
               <tr>
                 <th>Tanque</th>
@@ -216,7 +216,7 @@
   }
 
   <footer class="jr-jornada-pie jr-cerrada-pie">
-    <a routerLink="/" class="jr-btn jr-btn--ghost">Volver al inicio</a>
-    <a routerLink="/historial" class="jr-btn jr-btn--sec">Historial de jornadas</a>
+    <a routerLink="/" appButton variant="ghost" size="sm">Volver al inicio</a>
+    <a routerLink="/historial" appButton variant="secondary" size="sm">Historial de jornadas</a>
   </footer>
 </div>

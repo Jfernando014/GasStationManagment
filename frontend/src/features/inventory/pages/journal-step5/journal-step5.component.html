@@ -6,15 +6,15 @@
     </div>
     <div class="jr-p5-acciones">
       @if (completed()) {
-      <span class="jr-chip jr-chip--cerrada"><span class="jr-chip-punto"></span>Paso completado</span>
+      <app-tag variant="green" [dot]="true">Paso completado</app-tag>
       } @else if (!editable()) {
-      <span class="jr-chip jr-chip--pendiente"><span class="jr-chip-punto"></span>Solo lectura</span>
+      <app-tag variant="gray" [dot]="true">Solo lectura</app-tag>
       } @else if (!salesCompleted()) {
-      <span class="jr-chip jr-chip--aviso"
-        title="La variación y el stock usan las ventas del paso 2"><span class="jr-chip-punto"></span>Paso 2
-        pendiente</span>
+      <app-tag variant="amber" [dot]="true" style="cursor: help"
+        title="La variación y el stock usan las ventas del paso 2">Paso 2
+        pendiente</app-tag>
       }
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm jr-p2-btn-reset" id="btn-restablecer-inventario"
+      <button type="button" appButton variant="secondary" size="sm" class="jr-p2-btn-reset" id="btn-restablecer-inventario"
         [disabled]="!canReset()" (click)="requestReset()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -23,7 +23,7 @@
         </svg>
         <span>{{ resetting() ? 'Restableciendo...' : 'Restablecer' }}</span>
       </button>
-      <button class="jr-btn jr-btn--pri jr-btn--sm" type="button" [disabled]="!canComplete()"
+      <button appButton variant="primary" size="sm" type="button" [disabled]="!canComplete()"
         [attr.title]="completed() ? 'El paso ya está completado' : (!salesCompleted() ? 'Completa el paso 2 (cierre de vendedores) primero' : (!allMeasured() ? 'Guarda la medición de los 6 tanques primero' : ''))"
         (click)="completeStep()">
         Marcar paso 5 completado
@@ -40,26 +40,14 @@
         ajustes se conservan.</span>
     </div>
     <div class="jr-p2-confirm-acciones">
-      <button type="button" class="jr-btn jr-btn--sec jr-btn--sm" (click)="cancelReset()">Cancelar</button>
-      <button type="button" class="jr-btn jr-btn--sm jr-p2-btn-danger" id="btn-confirmar-restablecer-inventario"
+      <button type="button" appButton variant="secondary" size="sm" (click)="cancelReset()">Cancelar</button>
+      <button type="button" appButton variant="destructive" size="sm" id="btn-confirmar-restablecer-inventario"
         (click)="confirmReset()">Sí, restablecer</button>
     </div>
   </div>
   }
 
-  <div class="jr-tabs" role="tablist" aria-label="Inventario">
-    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'tanques'"
-      [class.is-activa]="tab() === 'tanques'" (click)="tab.set('tanques')">
-      <span [class]="'jr-tab-punto ' + (allMeasured() ? 'jr-tab-punto--ok' : 'jr-tab-punto--aviso')"></span>
-      Tanques
-    </button>
-    <button type="button" class="jr-tab" role="tab" [attr.aria-selected]="tab() === 'lubricantes'"
-      [class.is-activa]="tab() === 'lubricantes'" (click)="tab.set('lubricantes')">
-      <span
-        [class]="'jr-tab-punto ' + (stock().some(product => product.status === 'NEGATIVE_STOCK') ? 'jr-tab-punto--error' : 'jr-tab-punto--ok')"></span>
-      Lubricantes y aditivos
-    </button>
-  </div>
+  <app-tabs idPrefix="step5" label="Inventario" [tabs]="stepTabs()" [active]="tab()" (activeChange)="tab.set($any($event))" />
 
   <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
     <span class="toast-check">✓</span> {{ toastText() }}
@@ -72,13 +60,16 @@
   @if (loadError(); as message) {
   <section class="jr-p5-card jr-p5-vacio">
     <p>{{ message }}</p>
-    <button class="jr-btn jr-btn--sec jr-btn--sm" type="button" (click)="loadError.set(null)">Cerrar</button>
+    <button appButton variant="secondary" size="sm" type="button" (click)="loadError.set(null)">Cerrar</button>
   </section>
   } @else if (loading()) {
   <p class="jr-p5-tenue" aria-live="polite">Cargando inventario de la jornada…</p>
   } @else if (!date()) {
   <p class="jr-p5-tenue">No hay una jornada abierta para hoy.</p>
-  } @else if (tab() === 'tanques') {
+  }
+
+  <div role="tabpanel" id="step5-panel-tanques" aria-labelledby="step5-tab-tanques" [hidden]="tab() !== 'tanques'">
+  @if (!loadError() && !loading() && date() && tab() === 'tanques') {
   <div class="jr-p5-grid">
     <app-tank-measurements [tanks]="tanks()" [heights]="heights()" [gallons]="gallons()" [editable]="canEditHeights()"
       [saving]="savingHeights()" (heightChanged)="onHeightChanged($event)" (heightsPasted)="onHeightsPasted($event)"
@@ -88,7 +79,11 @@
       <app-fuel-autonomy-table [autonomy]="autonomy()" />
     </div>
   </div>
-  } @else {
+  }
+  </div>
+
+  <div role="tabpanel" id="step5-panel-lubricantes" aria-labelledby="step5-tab-lubricantes" [hidden]="tab() !== 'lubricantes'">
+  @if (!loadError() && !loading() && date() && tab() === 'lubricantes') {
   <app-lubricant-stock-table [products]="visibleProducts()" [totalProducts]="stock().length" [filter]="productFilter()"
     [search]="productSearch()" [pendingTransfers]="pendingTransfers()" [editable]="editable()"
     [savingTransfers]="savingTransfers()" [syncing]="syncing()" [hasPendingTransfers]="hasPendingTransfers()"
@@ -96,6 +91,7 @@
     (searchChanged)="setProductSearch($event)" (transferChanged)="onTransferChanged($event)"
     (syncRequested)="syncSales()" (saveRequested)="saveTransfers()" (openMovement)="openMovement($event)" />
   }
+  </div>
 </div>
 
 <app-stock-movement-dialog [saving]="dialogSaving()" [errorMessage]="dialogError()" [fieldErrors]="dialogFieldErrors()"

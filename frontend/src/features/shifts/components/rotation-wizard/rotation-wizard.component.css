@@ -247,3 +247,12 @@
   .rw-foot { flex-wrap: wrap; }
   .rw-foot-note { width: 100%; order: -1; text-align: left; }
 }
+
+/* Teléfono: los pasos no activos muestran solo el número, el pie reparte el ancho y los KPIs van en dos columnas. */
+@media (max-width: 640px) {
+  .rw-steps li:not(.is-on) { font-size: 0; gap: 0; }
+  .rw-foot > .ab { flex: 1 1 140px; }
+  .rw-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 0; }
+  .rw-kpis .jr-indicador { min-width: 0; padding: 0 10px; }
+  .rw-kpis .jr-indicador span { white-space: normal; line-height: 1.2; }
+}

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
@@ -39,7 +40,7 @@ export const FUEL_PRICES: Record<string, number> = {
 @Component({
   selector: 'app-vendor-close-step2',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ActionButtonDirective],
   templateUrl: './vendor-close-step2.component.html',
   styleUrls: ['./vendor-close-step2.component.css']
 })

@@ -25,7 +25,7 @@
 .wp-range { margin: 0; font-size: 12px; color: var(--text-muted); }
 
 /* The table scrolls inside its card on narrow screens */
-.wp-table-wrap { overflow-x: auto; }
+.wp-table-wrap { overflow-x: auto; overscroll-behavior-x: contain; }
 
 .wp-table {
   width: 100%;
@@ -61,4 +61,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .wp-table tbody tr { animation: none; }
+}
+
+/* Tablet and phone: the "Día" column (it spans both header rows) stays visible while the table scrolls. */
+@media (max-width: 1024px) {
+  .wp-table .wp-day-col { position: sticky; left: 0; z-index: 1; background: var(--surface-card); box-shadow: 1px 0 0 var(--border-main), 3px 0 0 rgba(11, 25, 44, 0.05); }
 }

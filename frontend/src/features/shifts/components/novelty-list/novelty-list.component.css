@@ -64,3 +64,11 @@
 @media (max-width: 560px) {
   .nl-inner { flex-wrap: wrap; }
 }
+
+@media (max-width: 640px) {
+  .nl-inner { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
+  .nl-tag { align-self: flex-start; }
+  .nl-ask { flex-wrap: wrap; }
+  .nl-ask > span { flex: 1 1 100%; }
+  .nl-ask .ab { flex: 1 1 120px; }
+}

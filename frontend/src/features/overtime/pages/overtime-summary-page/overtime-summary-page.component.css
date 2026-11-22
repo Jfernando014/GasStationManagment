@@ -66,3 +66,10 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .title-row { animation: none; }
 }
+
+@media (max-width: 640px) {
+  :host { padding: 12px 0 24px; }
+  .controls { width: 100%; }
+  .month { width: 100%; }
+  .params-link { min-height: 44px; padding: 0 8px; }
+}

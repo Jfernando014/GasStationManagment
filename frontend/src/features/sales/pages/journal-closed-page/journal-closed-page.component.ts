@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angul
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { JournalService } from '../../../../core/services/journal.service';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import {
@@ -19,7 +20,7 @@ export type ClosedJournalSubView = 'inicio' | 'rendimiento' | 'inventario';
 @Component({
   selector: 'app-journal-closed-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ActionButtonDirective],
   templateUrl: './journal-closed-page.component.html',
   styleUrls: ['./journal-closed-page.component.css']
 })

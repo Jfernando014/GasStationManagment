@@ -19,7 +19,7 @@ export class FormFieldComponent {
   readonly required = input(false);
   readonly maxLength = input<number | null>(null);
   /** Virtual keyboard to show on phones, e.g. `numeric`. */
-  readonly inputMode = input<'text' | 'numeric'>('text');
+  readonly inputMode = input<'text' | 'numeric' | 'decimal'>('text');
   /**
    * When true, anything that is not a digit is removed as it is typed or pasted. The length limit is then
    * applied after cleaning (the native maxlength would cut a pasted "12.345.678..." before removing the dots).
@@ -27,6 +27,14 @@ export class FormFieldComponent {
   readonly digitsOnly = input(false);
   readonly placeholder = input('');
   readonly hint = input('');
+  /** Lowest and highest value for `date`, `month` and `number` fields. */
+  readonly min = input<string | null>(null);
+  readonly max = input<string | null>(null);
+  /** Marks the field as invalid for an error the control does not know about, e.g. a range between two fields. */
+  readonly invalid = input(false);
+  readonly autocomplete = input<string | null>(null);
+  /** Accessible name of the input when the visible label is shared by several rows, e.g. "Fecha de observación 3". */
+  readonly ariaLabel = input<string | null>(null);
 
   errorMessage(): string | null {
     return getControlErrorMessage(this.control());

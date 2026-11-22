@@ -96,3 +96,10 @@ dd { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; font-w
   .title-row, .versions, .list li, .detail { animation: none; }
   .version { transition: none; }
 }
+
+@media (max-width: 640px) {
+  .title-row .new-version { flex: 1 1 100%; }
+  .version { min-height: 52px; }
+  .line { flex-wrap: wrap; }
+  .row { flex-wrap: wrap; gap: 4px 16px; }
+}

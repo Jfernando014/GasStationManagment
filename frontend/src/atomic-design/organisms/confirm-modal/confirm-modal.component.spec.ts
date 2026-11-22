@@ -36,13 +36,13 @@ describe('ConfirmModalComponent', () => {
     expect(el.textContent).toContain('Eliminar tanque');
     expect(el.textContent).toContain('¿Deseas eliminar T1C1?');
 
-    (el.querySelector('.btn-confirm-danger') as HTMLButtonElement).click();
+    (el.querySelector('.ab--destructive') as HTMLButtonElement).click();
     expect(fixture.componentInstance.confirmCount).toBe(1);
 
     (el.querySelector('.confirm-modal-backdrop') as HTMLElement).click();
     expect(fixture.componentInstance.cancelCount).toBe(1);
 
-    (el.querySelector('.confirm-modal-close') as HTMLButtonElement).click();
+    (el.querySelector('button[aria-label="Cerrar confirmación"]') as HTMLButtonElement).click();
     expect(fixture.componentInstance.cancelCount).toBe(2);
   });
 

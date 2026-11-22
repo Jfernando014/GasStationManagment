@@ -35,10 +35,6 @@
 
 /* The edit form slides in when another worker is chosen */
 .workers-panel { animation: workers-panel-in var(--duration-normal) var(--spring) both; }
-
-/* Primary buttons of this screen with white text, like the modal's GUARDAR */
-.jr-btn--pri { color: #FFFFFF; }
-
 /* "Nuevo vendedor": the plus sign turns a little on hover */
 .workers-nuevo svg { transition: transform var(--duration-normal) var(--spring); }
 .workers-nuevo:hover svg { transform: rotate(90deg); }
@@ -62,6 +58,7 @@
 dialog.apple-dialog-scrim {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -73,3 +70,8 @@ dialog.apple-dialog-scrim::backdrop { background: transparent; }
 
 /* The role menu may open outside the card instead of being cut */
 .apple-dialog-card { overflow: visible; }
+
+/* Phone: the card is a bottom sheet, so it clips again and the form body scrolls inside it. */
+@media (max-width: 640px) {
+  .apple-dialog-card { overflow: hidden; }
+}

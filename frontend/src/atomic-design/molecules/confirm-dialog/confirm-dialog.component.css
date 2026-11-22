@@ -27,29 +27,6 @@ p { margin-top: 8px; font-size: 14px; line-height: 1.5; color: var(--text-muted)
 
 .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-button {
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) ease,
-    border-color var(--duration-fast) ease,
-    transform var(--duration-fast) var(--spring-fast);
-}
-
-button:active { transform: scale(0.97); }
-button:focus-visible { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px #FFE4CC; }
-
-.secondary { border-color: var(--jr-cell-border); background: var(--surface-card); color: var(--text-heading); }
-.secondary:hover { background: var(--surface-subtle); }
-.danger { background: var(--semantic-red); color: #FFFFFF; }
-.danger:hover { background: var(--semantic-red-strong); }
-
 @keyframes confirm-in {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
 }
@@ -60,4 +37,10 @@ button:focus-visible { outline: none; border-color: var(--brand-primary); box-sh
 
 @media (prefers-reduced-motion: reduce) {
   .confirm, .confirm::backdrop { animation: none; }
+}
+
+@media (max-width: 640px) {
+  .confirm { padding: 18px 16px 16px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+  .actions { flex-wrap: wrap; }
+  .actions > * { flex: 1 1 120px; }
 }

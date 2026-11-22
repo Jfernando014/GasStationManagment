@@ -146,13 +146,9 @@
   flex-wrap: wrap;
   gap: 10px 12px;
 }
-
-.inspections-filters .jr-btn {
-  height: 34px;
-}
-
 .inspections-table-scroll {
   overflow: auto;
+  overscroll-behavior-x: contain;
   border: 1px solid var(--border-main);
   border-radius: var(--radius-md);
 }

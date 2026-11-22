@@ -1,16 +1,16 @@
 <div class="rs-seccion">
   <form class="inv-filter-toolbar stats-toolbar" (ngSubmit)="consult()">
     <label class="stats-date">Período:<input type="month" class="flat-input tnum" name="month" [(ngModel)]="month" required></label>
-    <button type="submit" class="btn-action-primary" [disabled]="!validMonth() || loading()">{{ loading() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
-    <button type="button" class="btn-solid-primary btn-flat-secondary" (click)="reset()">Reajustar</button>
+    <button type="submit" appButton variant="primary" size="sm" [disabled]="!validMonth() || loading()">{{ loading() ? 'CONSULTANDO…' : 'CONSULTAR' }}</button>
+    <button type="button" appButton variant="secondary" size="sm" (click)="reset()">Reajustar</button>
   </form>
-  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" class="jr-btn jr-btn--ghost" (click)="consult()">Reintentar</button></p> }
+  @if (error()) { <p class="stats-error" role="alert">{{ error() }} <button type="button" appButton variant="ghost" size="sm" (click)="consult()">Reintentar</button></p> }
   <div class="inv-table-wrapper">
     <div class="stats-table-heading"><div><h2>Canastas por Vendedor · {{ periodLabel() }}</h2>
       <p>Liquidación acumulada de canastilla de aceites y aditivos ordenada por mayor volumen comercial</p></div>
       <span class="sales-kpi-badge neutral">{{ status() === 'AVAILABLE' ? 'Ventas históricas reales · ' + data()?.to : status() === 'NO_DATA' ? 'Sin registros en el período' : 'Último corte: No disponible' }}</span></div>
     <div class="stats-table-scroll" role="region" tabindex="0" aria-label="Canastilla por vendedor">
-      <table class="inv-table stats-basket-table"><thead><tr><th>VENDEDOR</th><th class="right">TURNOS</th><th class="right">VENTA CANASTAS (COP)</th>
+      <table class="inv-table stats-basket-table table-sticky-first"><thead><tr><th>VENDEDOR</th><th class="right">TURNOS</th><th class="right">VENTA CANASTAS (COP)</th>
         <th class="right">PROMEDIO / TURNO (COP)</th><th>PARTICIPACIÓN</th><th>ACCIONES</th></tr></thead>
         <tbody>
           @for (seller of sellers(); track seller.workerId) {

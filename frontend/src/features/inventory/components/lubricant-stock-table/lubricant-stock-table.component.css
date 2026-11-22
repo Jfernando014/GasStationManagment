@@ -35,3 +35,20 @@
   color: var(--text-light);
   cursor: default;
 }
+
+/* Teléfono: barra de filtros apilada, y la tabla como tarjetas (las reglas base viven en components.css). */
+@media (max-width: 640px) {
+  .jr-p5-aviso { overflow-wrap: anywhere; }
+  .jr-p5-lub-barra, .jr-p5-lub-acciones { flex-direction: column; align-items: stretch; }
+  .jr-p5-seg { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .jr-p5-seg::-webkit-scrollbar { display: none; }
+  .jr-p5-seg button { flex-shrink: 0; height: 44px; white-space: nowrap; }
+  .jr-p5-buscar { height: 44px; }
+  .jr-p5-buscar input { flex: 1; width: auto; min-width: 0; font-size: 16px; }
+
+  table.table-cards[class][class] tbody { padding: 10px 10px 0; }
+  table.table-cards[class][class] tr.is-atenuada td.tc-title { color: var(--text-light); }
+  table.table-cards[class][class] td.tc-actions > button { min-height: 36px; }
+  table.table-cards[class][class] .jr-p5-traslado { flex: 1; width: auto !important; }
+}
+

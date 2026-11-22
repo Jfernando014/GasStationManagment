@@ -40,7 +40,7 @@ describe('C-14 annual goals page', () => {
     expect(page.form.getRawValue()).toEqual({ value: '', maximumSale: '' });
     expect(page.form.invalid).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('Sin datos de ventas');
-    const metas = fixture.nativeElement.querySelector('#tab-metas') as HTMLButtonElement;
+    const metas = fixture.nativeElement.querySelector('#goals-tab-metas') as HTMLButtonElement;
     metas.click();
     fixture.detectChanges();
     expect(metas.getAttribute('aria-selected')).toBe('true');

@@ -1,4 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
+import { TagComponent } from '../../atoms/tag/tag.component';
+import { TabItem, TabsComponent } from '../../molecules/tabs/tabs.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -60,7 +63,7 @@ function writeOptimalDismissed(dismissed: boolean): void {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ActionButtonDirective, TagComponent, TabsComponent, EmptyStateComponent],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,6 +86,10 @@ export class HomePageComponent {
   readonly optimalBannerDismissed = signal(readOptimalDismissed());
 
   readonly tab = signal<HomeTab>('resumen');
+  readonly tabs: TabItem[] = [
+    { id: 'resumen', label: 'Resumen', tone: 'green' },
+    { id: 'control', label: 'Control del día', tone: 'amber' }
+  ];
 
   readonly controlDate = signal(todayCalendarDay());
   readonly control = signal<DailyControlResponse | null>(null);
@@ -433,8 +440,8 @@ export class HomePageComponent {
     return product.depleted ? 'Agotado' : 'Normal';
   }
 
-  productStatusTone(product: ProductControlResponse): 'optimal' | 'warning' | 'critical' {
-    if (product.status === 'NEGATIVE_STOCK') return 'critical';
-    return product.depleted ? 'warning' : 'optimal';
+  productStatusTone(product: ProductControlResponse): 'green' | 'amber' | 'red' {
+    if (product.status === 'NEGATIVE_STOCK') return 'red';
+    return product.depleted ? 'amber' : 'green';
   }
 }

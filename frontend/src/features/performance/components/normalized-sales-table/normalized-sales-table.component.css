@@ -33,7 +33,7 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
 .chip.is-on { border-color: var(--brand-primary); background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
 .chip:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 
-.wrap { overflow-x: auto; }
+.wrap { overflow-x: auto; overscroll-behavior-x: contain; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { padding: 8px 10px; border-bottom: 1px solid var(--border-main); font-size: 12px; font-weight: 600; text-align: left; color: var(--text-muted); white-space: nowrap; }
 td { padding: 10px; border-bottom: 1px solid var(--surface-subtle); color: var(--text-body); vertical-align: middle; }

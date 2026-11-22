@@ -9,6 +9,8 @@ import {
   viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -40,7 +42,7 @@ const MAX_NOTE_LENGTH = 200;
 @Component({
   selector: 'app-inventory-alerts-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, EmptyStateComponent],
+  imports: [FormsModule, RouterLink, ActionButtonDirective, TagComponent, EmptyStateComponent],
   templateUrl: './inventory-alerts-page.component.html',
   styleUrl: './inventory-alerts-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

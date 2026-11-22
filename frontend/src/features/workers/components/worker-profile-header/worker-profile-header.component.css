@@ -41,3 +41,9 @@
   .wp-header { animation: none; }
   .wp-edit svg { transition: none; }
 }
+
+@media (max-width: 640px) {
+  .wp-id { min-width: 0; }
+  .wp-title h1 { font-size: 20px; }
+  .wp-edit { width: 100%; justify-content: center; }
+}

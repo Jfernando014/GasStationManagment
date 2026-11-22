@@ -1,4 +1,5 @@
 import { Component, ElementRef, EventEmitter, Output, ViewChild, effect, input } from '@angular/core';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 
 /**
  * Panel lateral no intrusivo (no bloquea el resto de la pantalla como un modal centrado): se desliza desde
@@ -8,6 +9,7 @@ import { Component, ElementRef, EventEmitter, Output, ViewChild, effect, input }
 @Component({
   selector: 'app-side-panel',
   standalone: true,
+  imports: [ActionButtonDirective],
   templateUrl: './side-panel.component.html',
   styleUrl: './side-panel.component.css',
   host: { '(document:keydown.escape)': 'onEscape()' }

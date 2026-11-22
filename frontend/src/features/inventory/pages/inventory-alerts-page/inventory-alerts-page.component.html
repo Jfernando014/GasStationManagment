@@ -12,8 +12,8 @@
       </span>
     </div>
     <div class="inv-header-actions">
-      <a class="btn-flat-secondary" routerLink="/">Volver al panel</a>
-      <button class="btn-action-primary" type="button" [disabled]="loading()" (click)="loadAlerts()">
+      <a appButton variant="secondary" size="sm" routerLink="/">Volver al panel</a>
+      <button appButton variant="primary" size="sm" type="button" [disabled]="loading()" (click)="loadAlerts()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
       </button>
     </div>
@@ -30,7 +30,7 @@
     <div class="kpi-tile-box">
       <div class="kpi-tile-top">
         <span class="kpi-tile-name">Pendientes</span>
-        <span class="state-pill-tag critical">Campana</span>
+        <app-tag variant="red">Campana</app-tag>
       </div>
       <div class="kpi-figure-lead tnum">{{ counts().pending }}</div>
       <div class="kpi-figure-foot">Activas o leídas sin atender</div>
@@ -38,7 +38,7 @@
     <div class="kpi-tile-box">
       <div class="kpi-tile-top">
         <span class="kpi-tile-name">Críticas abiertas</span>
-        <span class="state-pill-tag critical">Prioridad</span>
+        <app-tag variant="red">Prioridad</app-tag>
       </div>
       <div class="kpi-figure-lead tnum">{{ counts().critical }}</div>
       <div class="kpi-figure-foot">Por debajo del umbral crítico</div>
@@ -46,7 +46,7 @@
     <div class="kpi-tile-box">
       <div class="kpi-tile-top">
         <span class="kpi-tile-name">En advertencia</span>
-        <span class="state-pill-tag warning">Vigilar</span>
+        <app-tag variant="amber">Vigilar</app-tag>
       </div>
       <div class="kpi-figure-lead tnum">{{ counts().warning }}</div>
       <div class="kpi-figure-foot">Sobre el umbral crítico</div>
@@ -54,7 +54,7 @@
     <div class="kpi-tile-box">
       <div class="kpi-tile-top">
         <span class="kpi-tile-name">Atendidas / resueltas</span>
-        <span class="state-pill-tag optimal">Historial</span>
+        <app-tag variant="green">Historial</app-tag>
       </div>
       <div class="kpi-figure-lead tnum">{{ counts().attended }} / {{ counts().resolved }}</div>
       <div class="kpi-figure-foot">Con nota o ya cerradas</div>
@@ -102,8 +102,8 @@
               </p>
             </div>
             <div class="alert-card-badges">
-              <span [class]="'state-pill-tag ' + levelTone(alert.level)">{{ levelLabel(alert.level) }}</span>
-              <span [class]="'state-pill-tag ' + statusTone(alert.status)">{{ statusLabel(alert.status) }}</span>
+              <app-tag [variant]="levelTone(alert.level)">{{ levelLabel(alert.level) }}</app-tag>
+              <app-tag [variant]="statusTone(alert.status)">{{ statusLabel(alert.status) }}</app-tag>
             </div>
           </div>
 
@@ -144,13 +144,13 @@
 
           <div class="alert-card-actions">
             @if (alert.status === 'ACTIVE') {
-              <button class="btn-flat-secondary" type="button"
+              <button appButton variant="secondary" size="sm" type="button"
                 [disabled]="savingId() !== null" (click)="markRead(alert)">
                 {{ savingId() === alert.id ? 'Marcando…' : 'Marcar como leída' }}
               </button>
             }
             @if (alert.status !== 'RESOLVED') {
-              <button class="btn-action-primary" type="button"
+              <button appButton variant="primary" size="sm" type="button"
                 [disabled]="savingId() !== null" (click)="openAttend(alert)">
                 Atender
               </button>
@@ -182,10 +182,10 @@
       }
 
       <div class="alert-attend-actions">
-        <button class="btn-flat-secondary" type="button" [disabled]="attendSaving()" (click)="closeAttend()">
+        <button appButton variant="secondary" size="sm" type="button" [disabled]="attendSaving()" (click)="closeAttend()">
           Cancelar
         </button>
-        <button class="btn-action-primary" type="button" [disabled]="attendSaving()" (click)="confirmAttend()">
+        <button appButton variant="primary" size="sm" type="button" [disabled]="attendSaving()" (click)="confirmAttend()">
           {{ attendSaving() ? 'Guardando…' : 'Confirmar atención' }}
         </button>
       </div>

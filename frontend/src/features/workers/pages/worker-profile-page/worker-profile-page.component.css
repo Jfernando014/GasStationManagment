@@ -44,6 +44,7 @@
 dialog.apple-dialog-scrim {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -63,4 +64,13 @@ dialog.apple-dialog-scrim::backdrop { background: transparent; }
   .wp-panel { animation: none; }
   .wp-skel { animation: none; }
   .wp-back svg { transition: none; }
+}
+
+/* Phone: the card is a bottom sheet, so it clips again and the form body scrolls inside it. */
+@media (max-width: 640px) {
+  .apple-dialog-card { overflow: hidden; }
+}
+
+@media (max-width: 640px) {
+  .wp-crumbs [aria-current='page'] { overflow-wrap: anywhere; }
 }

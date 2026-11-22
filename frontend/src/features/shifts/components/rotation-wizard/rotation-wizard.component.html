@@ -135,7 +135,7 @@
                     <option [value]="$index" [selected]="$index === row.value">{{ label }}</option>
                   }
                 </select>
-                <span class="jr-chip" [class.jr-chip--aviso]="row.pending" [class.jr-chip--cuadra]="!row.pending">{{ phaseSourceLabel(row) }}</span>
+                <app-tag [variant]="row.pending ? 'amber' : 'green'" [style.cursor]="row.pending ? 'help' : null">{{ phaseSourceLabel(row) }}</app-tag>
                 @if (row.pending) {
                   <button appButton type="button" variant="secondary" size="sm" (click)="acceptSuggested(row)">Usar esta fase</button>
                 }

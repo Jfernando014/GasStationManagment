@@ -2,6 +2,9 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, catchError, merge, of, startWith, switchMap, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
+import { TagComponent } from '../../../atomic-design/atoms/tag/tag.component';
+import { TabItem, TabsComponent } from '../../../atomic-design/molecules/tabs/tabs.component';
 import { AvatarComponent } from '../../../atomic-design/atoms/avatar/avatar.component';
 import { PercentBarComponent } from '../../../atomic-design/atoms/percent-bar/percent-bar.component';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
@@ -25,7 +28,7 @@ function localToday(): string {
 @Component({
   selector: 'app-annual-goals-page',
   standalone: true,
-  imports: [ReactiveFormsModule, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent, AvatarComponent, PercentBarComponent],
+  imports: [ReactiveFormsModule, ActionButtonDirective, TagComponent, TabsComponent, EmptyStateComponent, SelectFieldComponent, SearchFieldComponent, AnnualGoalFieldComponent, AvatarComponent, PercentBarComponent],
   templateUrl: './annual-goals-page.component.html',
   styleUrl: './annual-goals-page.component.css'
 })
@@ -48,6 +51,10 @@ export class AnnualGoalsPageComponent {
   readonly periodLabel = computed(() => new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric' })
     .format(new Date(this.year(), this.month() - 1, 1)));
   readonly tab = signal<'cumplimiento' | 'metas'>('cumplimiento');
+  readonly tabs: TabItem[] = [
+    { id: 'cumplimiento', label: 'Cumplimiento' },
+    { id: 'metas', label: 'Metas' }
+  ];
   readonly periodMode = signal<'dia' | 'semana' | 'mes'>('mes');
   readonly complianceMonth = new FormControl(this.today.slice(0, 7), { nonNullable: true });
   readonly complianceDate = new FormControl(this.today, { nonNullable: true });

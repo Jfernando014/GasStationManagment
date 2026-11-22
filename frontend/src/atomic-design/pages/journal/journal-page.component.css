@@ -66,11 +66,6 @@
 .jr-jornada-pie {
   margin-top: 14px;
 }
-
-.jr-jornada-pie .jr-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
 .readonly-banner {
   display: flex;
   justify-content: space-between;
@@ -93,4 +88,21 @@
 .readonly-banner-links a {
   color: inherit;
   text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .journal-page-container { padding: 16px; }
+  .step-content-container { padding: 16px; }
+}
+
+/* Teléfono: el body ya aporta su margen, así que el contenedor no suma otro a los lados. */
+@media (max-width: 640px) {
+  .journal-page-container { padding: 8px 0; }
+  .step-content-container { padding: 12px; }
+  .header { flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
+  .header h2 { font-size: 20px; }
+  .journal-info { flex-wrap: wrap; gap: 6px 10px; }
+  .readonly-banner { flex-direction: column; align-items: stretch; }
+  .readonly-banner-links { flex-wrap: wrap; gap: 0 14px; }
+  .readonly-banner-links a { display: inline-flex; align-items: center; min-height: 44px; }
 }

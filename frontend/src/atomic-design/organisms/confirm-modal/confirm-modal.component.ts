@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 
 /** Blurred modal asking for confirmation before a destructive action. */
 @Component({
   selector: 'app-confirm-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ActionButtonDirective],
   templateUrl: './confirm-modal.component.html',
   styleUrl: './confirm-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

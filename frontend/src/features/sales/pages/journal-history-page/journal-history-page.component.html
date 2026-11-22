@@ -71,7 +71,7 @@
               <span class="jr-hist-num">{{ day.dayOfMonth }}</span>
               <span class="jr-hist-estado">
                 <i class="jr-hist-punto" [ngClass]="'jr-hist-punto--' + dayCssKey(day)"></i>
-                {{ dayLabel(day) }}
+                <span class="jr-hist-estado-texto">{{ dayLabel(day) }}</span>
               </span>
               <span class="jr-hist-marcas">
                 @for (marker of day.markers; track $index) {
@@ -111,7 +111,7 @@
               <span class="jr-chip-punto"></span>Cerrada (datos migrados)
             </span>
           </div>
-          <button type="button" class="btn-dialog-close" aria-label="Cerrar" (click)="closeMigratedPanel()">✕</button>
+          <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar" (click)="closeMigratedPanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
         </div>
 
         <p class="jr-hist-nota">
@@ -120,7 +120,8 @@
 
         <h4>Ventas por vendedor</h4>
         @if (detail.vendorSales.length > 0) {
-          <table class="jr-hist-tabla">
+          <div class="table-scroll-x">
+          <table class="jr-hist-tabla table-sticky-first">
             <thead>
               <tr>
                 <th>Vendedor</th>
@@ -158,6 +159,7 @@
               }
             </tbody>
           </table>
+          </div>
         } @else {
           <p class="jr-hist-sin">Sin ventas en los Excel migrados.</p>
         }
@@ -176,7 +178,8 @@
 
         <h4>Variación por combustible</h4>
         @if (detail.fuelVariations.length > 0) {
-          <table class="jr-hist-tabla">
+          <div class="table-scroll-x">
+          <table class="jr-hist-tabla table-sticky-first">
             <thead>
               <tr>
                 <th>Combustible</th>
@@ -198,6 +201,7 @@
               }
             </tbody>
           </table>
+          </div>
         } @else {
           <p class="jr-hist-sin">Sin hoja VARIACIÓN en los Excel migrados.</p>
         }

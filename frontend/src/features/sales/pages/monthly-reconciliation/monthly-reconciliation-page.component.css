@@ -33,7 +33,7 @@
 .monthly-table-heading h2 { margin: 0; color: var(--text-heading); font-size: 14px; font-weight: 750; }
 .monthly-table-heading h2 span { color: var(--brand-primary); }
 .monthly-table-heading p { margin: 4px 0 0; color: var(--text-muted); font-size: 11px; }
-.monthly-table-scroll { max-height: min(58vh, 650px); overflow: auto; overscroll-behavior: contain; }
+.monthly-table-scroll { max-height: min(58vh, 650px); max-height: min(58dvh, 650px); overflow: auto; overscroll-behavior: contain; }
 .monthly-table { min-width: 1120px; }
 .monthly-table thead th { position: sticky; z-index: 2; top: 0; white-space: nowrap; background: var(--surface-subtle); }
 .monthly-table thead th:first-child, .monthly-table tbody th:first-child, .monthly-table tfoot th:first-child { position: sticky; left: 0; z-index: 3; background: var(--surface-main); }
@@ -57,7 +57,7 @@
 .monthly-error p { margin: 4px 0 0; font-size: 12px; }
 .monthly-error strong { font-size: 13px; }
 .monthly-spinner { display: inline-block; flex: 0 0 15px; width: 15px; height: 15px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: monthly-spin .7s linear infinite; }
-.btn-action-primary .monthly-spinner { margin-right: 4px; }
+.monthly-consult .monthly-spinner { margin-right: 4px; }
 @keyframes monthly-spin { to { transform: rotate(360deg); } }
 @media (max-width: 900px) { .monthly-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 768px) {

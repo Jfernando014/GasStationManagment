@@ -11,9 +11,13 @@ import {
   signal
 } from '@angular/core';
 
+import { TagVariant } from '../../atoms/tag/tag.component';
+
 export interface TabItem {
   id: string;
   label: string;
+  /** Optional status dot before the label, with the same tones as `app-tag`. No dot by default. */
+  tone?: TagVariant;
 }
 
 /**
@@ -49,7 +53,12 @@ export class TabsComponent {
     effect(() => {
       this.active();
       this.tabs();
-      requestAnimationFrame(() => this.measure());
+      requestAnimationFrame(() => {
+        this.measure();
+        // Con muchas pestañas la lista hace scroll: la activa debe quedar a la vista.
+        this.host.nativeElement.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+          ?.scrollIntoView?.({ inline: 'nearest', block: 'nearest' });
+      });
     });
     afterNextRender(() => {
       if (typeof ResizeObserver === 'undefined') return;

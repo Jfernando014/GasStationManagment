@@ -3,6 +3,7 @@ import {
   output, signal, viewChild
 } from '@angular/core';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { ConfirmDialogComponent } from '../../../../atomic-design/molecules/confirm-dialog/confirm-dialog.component';
 import { ToastService } from '../../../../core/services/toast.service';
 import { formatCop, formatLongDate, formatShortDate } from '../../../../shared/helpers/format.helpers';
@@ -67,7 +68,7 @@ function appliedOn(row: AdditiveIncentiveRow, day: string): { value: number; sin
   selector: 'app-new-rule-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialogComponent],
+  imports: [ConfirmDialogComponent, ActionButtonDirective],
   templateUrl: './new-rule-panel.component.html',
   styleUrl: './new-rule-panel.component.css'
 })

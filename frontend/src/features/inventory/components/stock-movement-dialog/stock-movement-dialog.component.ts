@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { DialogContext, StockMovementRequest } from '../../models/step5.model';
 
 /** Same as --duration-normal: the dialog is closed once its fade-out has finished. */
@@ -21,7 +22,7 @@ const DIALOG_CLOSE_DELAY_MS = 320;
 @Component({
   selector: 'app-stock-movement-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ActionButtonDirective],
   templateUrl: './stock-movement-dialog.component.html',
   styleUrl: './stock-movement-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

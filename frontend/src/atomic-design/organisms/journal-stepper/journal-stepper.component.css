@@ -150,3 +150,12 @@
     animation: none;
   }
 }
+
+/* Teléfono: los pasos mantienen un ancho mínimo y la barra se desliza; el activo se centra desde el .ts. */
+@media (max-width: 640px) {
+  .stepper-container { margin-bottom: 12px; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .stepper-container::-webkit-scrollbar { display: none; }
+  .stepper { width: max-content; min-width: 100%; }
+  .stepper li { flex: 0 0 auto; min-width: 104px; min-height: 44px; }
+  .step-content { padding: 0 10px; }
+}

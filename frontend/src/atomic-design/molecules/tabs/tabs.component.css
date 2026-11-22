@@ -29,6 +29,14 @@
 .tab.is-active { color: var(--text-heading); }
 .tab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
 
+/* Optional status dot before the label (same colors as the old jr-tab dots) */
+.dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--text-light); vertical-align: middle; }
+.dot[data-tone='green'] { background: var(--semantic-green); }
+.dot[data-tone='amber'] { background: var(--semantic-amber); }
+.dot[data-tone='red'] { background: var(--semantic-red); }
+.dot[data-tone='orange'] { background: var(--brand-primary); }
+.dot[data-tone='blue'] { background: var(--shift-support); }
+
 /* One underline that slides under the active tab instead of one per tab */
 .underline {
   position: absolute;

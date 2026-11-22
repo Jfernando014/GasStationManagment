@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, debounce, defer, forkJoin, map, of, switchMap, timer } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
 import { TabsComponent, TabItem } from '../../../atomic-design/molecules/tabs/tabs.component';
 import { WarningPanelComponent } from '../../../atomic-design/molecules/warning-panel/warning-panel.component';
@@ -65,7 +66,7 @@ const normalize = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, 
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ReactiveFormsModule, RouterLink, EmptyStateComponent, TabsComponent, WarningPanelComponent, DailyDownloadsComponent,
+    ReactiveFormsModule, RouterLink, ActionButtonDirective, EmptyStateComponent, TabsComponent, WarningPanelComponent, DailyDownloadsComponent,
     StatisticsDialogComponent, PerformanceFiltersComponent, DivergentIndexChartComponent, SellerComparisonTableComponent,
     DaySalesCardComponent, NormalizedSalesTableComponent
   ],

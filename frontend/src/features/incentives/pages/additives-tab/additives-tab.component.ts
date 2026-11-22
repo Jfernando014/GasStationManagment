@@ -4,6 +4,7 @@ import {
   input, signal, untracked, viewChild
 } from '@angular/core';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { StatusStepComponent } from '../../../../atomic-design/atoms/status-step/status-step.component';
 import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
@@ -51,7 +52,7 @@ const HIGHLIGHT_MS = 1600;
   selector: 'app-additives-tab',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TagComponent, StatusStepComponent, InfoTooltipComponent, NewRulePanelComponent],
+  imports: [ActionButtonDirective, TagComponent, StatusStepComponent, InfoTooltipComponent, NewRulePanelComponent],
   templateUrl: './additives-tab.component.html',
   styleUrl: './additives-tab.component.css'
 })

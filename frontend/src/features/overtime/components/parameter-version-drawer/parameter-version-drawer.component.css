@@ -41,3 +41,8 @@
 @media (max-width: 520px) {
   .pair { grid-template-columns: minmax(0, 1fr); }
 }
+
+@media (max-width: 640px) {
+  .role { min-height: 44px; }
+  .footer { flex-direction: column-reverse; align-items: stretch; }
+}

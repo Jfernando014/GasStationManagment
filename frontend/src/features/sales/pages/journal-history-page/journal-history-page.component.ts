@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { Router, RouterModule } from '@angular/router';
 import { JournalService } from '../../../../core/services/journal.service';
 import {
@@ -12,7 +13,7 @@ import {
 @Component({
   selector: 'app-journal-history-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ActionButtonDirective],
   templateUrl: './journal-history-page.component.html',
   styleUrls: ['./journal-history-page.component.css']
 })
@@ -118,6 +119,7 @@ export class JournalHistoryPageComponent implements OnInit {
           this.selectedDayDetail = detail;
           this.isLoadingDetail = false;
           this.cdr.detectChanges();
+          this.revealPanelOnNarrowScreens();
         },
         error: () => {
           this.isLoadingDetail = false;
@@ -129,6 +131,12 @@ export class JournalHistoryPageComponent implements OnInit {
 
     this.journalService.setSelectedDate?.(day.date);
     this.router.navigate(['/jornada/personal'], { queryParams: { date: day.date } });
+  }
+
+  /** Hasta tablet el panel queda debajo del calendario: se acerca a la vista una vez pintado. */
+  private revealPanelOnNarrowScreens(): void {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(max-width: 1024px)').matches) return;
+    document.getElementById('jr-hist-panel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   closeMigratedPanel(): void {

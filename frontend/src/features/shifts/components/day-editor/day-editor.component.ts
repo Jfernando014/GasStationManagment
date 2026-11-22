@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, effect, input } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, Validators } from '@angular/forms';
 
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
+import { FormFieldComponent } from '../../../../atomic-design/molecules/form-field/form-field.component';
 import { capitalize, longDateLabel, segmentsLabel } from '../../../../shared/helpers/shift-display.helpers';
 import { ShiftCode } from '../../../../shared/models/dtos/shift-catalog.dto';
 import { GridCell } from '../schedule-grid/schedule-grid.component';
@@ -19,7 +20,7 @@ const NOTE_MAX = 255;
 @Component({
   selector: 'app-day-editor',
   standalone: true,
-  imports: [ReactiveFormsModule, ShiftChipComponent],
+  imports: [FormFieldComponent, ShiftChipComponent],
   templateUrl: './day-editor.component.html',
   styleUrl: './day-editor.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

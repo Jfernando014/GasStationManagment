@@ -2,6 +2,7 @@ import { Component, computed, DestroyRef, effect, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, forkJoin, of, startWith, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-state/empty-state.component';
 import { FormFieldComponent } from '../../../atomic-design/molecules/form-field/form-field.component';
 import { StatisticsDialogComponent } from './statistics-dialog.component';
@@ -14,7 +15,7 @@ import { StatisticsWorkspace } from '../statistics-workspace';
 
 interface MatrixRow { id: string; name: string; brand: string; location: string; own: boolean; prices: Record<FuelType, string | null> }
 
-@Component({ selector: 'app-competition-statistics', standalone: true, imports: [FormsModule, ReactiveFormsModule, EmptyStateComponent, FormFieldComponent, StatisticsDialogComponent],
+@Component({ selector: 'app-competition-statistics', standalone: true, imports: [FormsModule, ReactiveFormsModule, ActionButtonDirective, EmptyStateComponent, FormFieldComponent, StatisticsDialogComponent],
   templateUrl: './competition-statistics.component.html', styleUrls: ['../statistics.css', './competition-statistics.component.css'] })
 export class CompetitionStatisticsComponent {
   private readonly api = inject(CompetitionService);

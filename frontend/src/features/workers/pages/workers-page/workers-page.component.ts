@@ -4,6 +4,7 @@ import { FormControl } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 
+import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { SearchFieldComponent } from '../../../../atomic-design/atoms/search-field/search-field.component';
 import { StatusBadgeComponent } from '../../../../atomic-design/atoms/status-badge/status-badge.component';
@@ -25,6 +26,7 @@ const DIALOG_CLOSE_DELAY_MS = 320;
   selector: 'app-workers-page',
   standalone: true,
   imports: [
+    ActionButtonDirective,
     AvatarComponent,
     SearchFieldComponent,
     StatusBadgeComponent,
@@ -39,6 +41,7 @@ const DIALOG_CLOSE_DELAY_MS = 320;
 export class WorkersPageComponent {
   private readonly workersService = inject(WorkersService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   readonly workers = signal<Worker[]>([]);
@@ -158,6 +161,15 @@ export class WorkersPageComponent {
 
   select(worker: Worker): void {
     this.selected.set(worker);
+    this.revealDetailOnNarrowScreens();
+  }
+
+  /** Up to tablet the detail sits below the list: once painted, it is brought into view. */
+  private revealDetailOnNarrowScreens(): void {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(max-width: 1024px)').matches) return;
+    requestAnimationFrame(() =>
+      this.host.nativeElement.querySelector('.ps-perfil')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    );
   }
 
   onCreated(worker: Worker): void {
