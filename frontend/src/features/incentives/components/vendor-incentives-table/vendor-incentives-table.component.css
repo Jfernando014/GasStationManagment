@@ -254,3 +254,15 @@ tfoot th, tfoot td { border-bottom: 0; font-weight: 700; color: var(--text-headi
   .card, .item, tbody tr { animation: none; }
   .detail, .detail-content, .chevron svg, .item, .seg button { transition: none; }
 }
+
+/* Tablet: la primera columna fija (utilidad compartida) toma el fondo de la fila abierta, no el blanco de respaldo. */
+@media (max-width: 1024px) {
+  .detail-scroll :is(th, td):first-child { background-color: #FAFBFC; }
+}
+
+@media (max-width: 640px) {
+  .search { flex: 1 1 100%; max-width: none; }
+  .seg { width: 100%; }
+  .seg button { flex: 1; height: 44px; }
+  .chevron { width: 44px; height: 44px; }
+}

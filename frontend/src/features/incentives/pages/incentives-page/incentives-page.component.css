@@ -35,6 +35,12 @@ a.incentives-tab:focus-visible { outline: 2px solid var(--border-focus); outline
 .incentives-tab.is-active { color: var(--text-heading); border-bottom-color: var(--brand-primary); }
 .incentives-tab.is-disabled { color: var(--text-light); }
 
+@media (max-width: 1024px) {
+  .incentives-page { padding: 20px 16px 28px; }
+}
+
 @media (max-width: 640px) {
-  .incentives-tabs { gap: 16px; overflow-x: auto; }
+  .incentives-page { gap: 14px; padding: 16px 0 28px; }
+  .incentives-tabs { gap: 16px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .incentives-tabs::-webkit-scrollbar { display: none; }
 }
