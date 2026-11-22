@@ -74,3 +74,9 @@ tfoot tr.foot--total { height: 42px; background: #F8FAFC; font-weight: 800; font
 @media (prefers-reduced-motion: reduce) {
   .card, tbody tr { animation: none; }
 }
+
+/* Tablet y teléfono: la etiqueta del pie abarca tres columnas y también se queda fija. */
+@media (max-width: 1024px) {
+  tfoot th[colspan] { position: sticky; left: 0; z-index: 1; background-color: var(--surface-card); }
+  tfoot tr.foot--total th[colspan] { background-color: #F8FAFC; }
+}

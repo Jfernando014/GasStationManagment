@@ -90,3 +90,11 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
 @media (prefers-reduced-motion: reduce) {
   .card, .form, .item, .confirm { animation: none; }
 }
+
+@media (max-width: 640px) {
+  .actions { flex-direction: column-reverse; align-items: stretch; }
+  .remove-button { min-height: 44px; padding: 0 10px; }
+  .confirm-actions { width: 100%; }
+  .confirm-actions .ab { flex: 1; }
+  .what { flex-wrap: wrap; }
+}

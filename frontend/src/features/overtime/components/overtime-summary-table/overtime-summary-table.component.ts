@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
@@ -50,9 +50,20 @@ export class OvertimeSummaryTableComponent {
   readonly month = input.required<string>();
   readonly fortnight = input.required<number>();
 
+  private readonly router = inject(Router);
+
   protected readonly heads = CATEGORY_HEADS;
   protected readonly skeletonRows = [0, 1, 2, 3];
   protected readonly queryParams = computed(() => ({ mes: this.month(), quincena: this.fortnight() }));
+
+  /**
+   * The link of the name covers the row on wide screens. With the worker column fixed (tablet and phone) the link
+   * only covers its own cell, so a click on any other cell opens the sheet from here.
+   */
+  protected openRow(event: Event, id: string): void {
+    if ((event.target as HTMLElement).closest('a')) return;
+    void this.router.navigate(['/personal/horas-extra/trabajador', id], { queryParams: this.queryParams() });
+  }
 
   protected readonly views = computed<RowView[]>(() => this.rows().map(row => ({
     id: row.worker.id,

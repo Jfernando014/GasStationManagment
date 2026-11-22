@@ -101,3 +101,15 @@ tr.rest th, tr.rest td { color: var(--text-light); }
 @media (prefers-reduced-motion: reduce) {
   .card, .ask { animation: none; }
 }
+
+@media (max-width: 640px) {
+  .page { padding: 12px 0 24px; }
+  .back { min-height: 44px; }
+  .divider { display: none; }
+  .who { padding: 16px 12px 8px; }
+  table { min-width: 0; }
+  th, td { padding-right: 8px; }
+  .num { width: 56px; }
+  .buttons { width: 100%; }
+  .buttons .ab { flex: 1; }
+}

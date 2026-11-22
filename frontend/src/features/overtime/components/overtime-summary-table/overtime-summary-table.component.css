@@ -61,3 +61,17 @@ tfoot th, tfoot td { height: 50px; background: #F8FAFC; font-weight: 700; color:
   .card, .row { animation: none; }
   .row { transition: none; }
 }
+
+/* Tablet y teléfono: la columna del trabajador (por clase, porque el encabezado tiene dos filas) queda fija. */
+@media (max-width: 1024px) {
+  .who-col { position: sticky; left: 0; z-index: 1; background-color: var(--surface-card); box-shadow: 1px 0 0 var(--border-main), 3px 0 0 rgba(11, 25, 44, 0.05); }
+  thead .who-col { z-index: 3; }
+  tfoot .who-col { background-color: #F8FAFC; }
+  .row:hover .who-col, .row:focus-within .who-col { background-color: #FAFBFC; }
+  .row { cursor: pointer; }
+}
+
+@media (max-width: 640px) {
+  .who { min-width: 0; }
+  .who-col { max-width: 150px; padding-left: 12px; }
+}
