@@ -59,3 +59,23 @@ summary { flex-wrap: wrap; }
   .jr-plegable-resumen { margin-left: 24px; }
   .goals-save { height: auto; padding: 12px; }
 }
+
+@media (max-width: 640px) {
+  table.table-cards { min-width: 0; }
+  .compliance-toolbar { flex-direction: column; align-items: stretch; }
+  .compliance-toolbar .ps-segmento { width: 100%; display: flex; }
+  .compliance-toolbar .ps-segmento button { flex: 1; min-height: 40px; }
+  .compliance-toolbar .ps-campo,
+  .compliance-toolbar > .ab { width: 100%; }
+  .compliance-toolbar .ps-campo .flat-input { min-width: 0; width: 100%; }
+  .goals-period-toolbar { flex-direction: column; align-items: stretch; }
+  .goals-period-toolbar app-select-field,
+  .goals-period-toolbar .ps-campo,
+  .goals-period-toolbar select { width: 100%; min-width: 0; }
+  .compliance-progress { flex: 1; justify-content: flex-end; }
+  .compliance-reason { max-width: none; text-align: right; }
+  .confirmation-actions { flex-direction: column-reverse; }
+  .confirmation-actions > * { width: 100%; }
+  .rs-metas-grid .rs-barra { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .rs-metas-grid .rs-nota { margin-left: 0; }
+}

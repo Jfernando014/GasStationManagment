@@ -54,23 +54,23 @@
         }
       }
       <div class="rs-tabla-wrap" [attr.aria-busy]="complianceLoading()">
-        <table class="inv-table" aria-label="Cumplimiento de vendedores">
+        <table class="inv-table table-sticky-first table-cards" aria-label="Cumplimiento de vendedores">
           <thead><tr><th class="rank">#</th><th>Vendedor</th><th class="right">Galones vendidos</th>
             <th class="right">Meta del periodo</th><th class="compliance-column">Cumplimiento</th><th>Estado</th></tr></thead>
           <tbody>
           @for (seller of complianceRows(); track seller.workerId) {
             <tr class="compliance-seller">
-              <td class="rank">{{ seller.rank ?? '—' }}</td>
-              <td><div class="compliance-person"><app-avatar [name]="seller.recordedName" /><b>{{ seller.recordedName }}</b></div></td>
-              <td class="right tnum">{{ formatCompliance(seller.sales) }} gal</td>
-              <td class="right tnum">{{ formatCompliance(seller.applicableTarget) }}{{ seller.applicableTarget !== null ? ' gal' : '' }}</td>
-              <td>
+              <td class="rank" data-label="Posición">{{ seller.rank ?? '—' }}</td>
+              <td class="tc-title"><div class="compliance-person"><app-avatar [name]="seller.recordedName" /><b>{{ seller.recordedName }}</b></div></td>
+              <td class="right tnum" data-label="Galones vendidos">{{ formatCompliance(seller.sales) }} gal</td>
+              <td class="right tnum" data-label="Meta del periodo">{{ formatCompliance(seller.applicableTarget) }}{{ seller.applicableTarget !== null ? ' gal' : '' }}</td>
+              <td data-label="Cumplimiento">
                 <div class="compliance-progress">
                   @if (seller.barValue !== null) { <app-percent-bar [value]="seller.barValue" /> }
                   <span class="tnum">{{ formatCompliance(seller.percent) }}{{ seller.percent !== null ? ' %' : '' }}</span>
                 </div>
               </td>
-              <td><app-tag [variant]="seller.availability === 'AVAILABLE' && seller.reached ? 'green' : 'amber'">
+              <td data-label="Estado"><app-tag [variant]="seller.availability === 'AVAILABLE' && seller.reached ? 'green' : 'amber'">
                 {{ seller.availability === 'AVAILABLE' ? (seller.reached ? 'Meta alcanzada' : 'Por debajo de la meta') : 'No calculable' }}
               </app-tag>@if (seller.reason) { <small class="compliance-reason">{{ reasonText(seller.reason) }}</small> }</td>
             </tr>
@@ -187,8 +187,8 @@
             <div class="goals-confirm-step visible">
               <b>Aviso de Confirmación y Bloqueo</b>
               <p>Al guardar, el periodo {{ year() }} quedará registrado como <strong>PERIODO BLOQUEADO</strong>. La API no permite editar ni eliminar la meta.</p>
-              <div class="confirmation-actions"><button class="btn-flat-secondary" type="button" (click)="confirming.set(false)">Cancelar</button>
-                <button class="btn-solid-primary confirm-button" type="button" (click)="confirmSave()">CONFIRMAR Y BLOQUEAR</button>
+              <div class="confirmation-actions"><button appButton variant="secondary" size="sm" type="button" (click)="confirming.set(false)">Cancelar</button>
+                <button appButton variant="primary" size="sm" class="confirm-button" type="button" (click)="confirmSave()">CONFIRMAR Y BLOQUEAR</button>
               </div>
             </div>
           }
