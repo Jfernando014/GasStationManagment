@@ -3395,14 +3395,15 @@
     .configuration-page h1 { color: var(--text-heading); font-size: 28px; letter-spacing: -.03em; margin-bottom: 6px; }
     .configuration-page .configuration-header p { color: var(--text-muted); font-size: 13px; }
     .configuration-page .configuration-actions,
-    .configuration-page .card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
-    .configuration-page .configuration-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-main); margin-bottom: 18px; }
-    .configuration-page .configuration-tabs a { color: var(--text-muted); padding: 11px 2px; text-decoration: none; font-size: 13px; font-weight: 700; border-bottom: 2px solid transparent; }
+    .configuration-page .card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
+    .configuration-page .configuration-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-main); margin-bottom: 18px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .configuration-page .configuration-tabs::-webkit-scrollbar { display: none; }
+    .configuration-page .configuration-tabs a { color: var(--text-muted); padding: 11px 2px; text-decoration: none; font-size: 13px; font-weight: 700; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
     .configuration-page .configuration-tabs a.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
     .configuration-page .configuration-card { background: var(--surface-card); border: 1px solid var(--border-main); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); margin-bottom: 18px; overflow: hidden; }
     .configuration-page .new-tank-card,
     .configuration-page .tank-editor { padding: 20px 22px; }
-    .configuration-page .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 22px; border-bottom: 1px solid var(--border-hairline); }
+    .configuration-page .card-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 18px; padding: 18px 22px; border-bottom: 1px solid var(--border-hairline); }
     .configuration-page .card-heading h2 { color: var(--text-heading); font-size: 15px; margin-bottom: 4px; }
     .configuration-page .card-heading p { color: var(--text-muted); font-size: 12px; }
     .configuration-page .configuration-empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 54px 24px; text-align: center; }
@@ -3441,10 +3442,24 @@
         .configuration-page .new-tank-card .form-grid { grid-template-columns: 1fr 1fr; }
     }
 
-    @media (max-width:560px) {
+    @media (max-width:640px) {
+        .configuration-page { padding: 12px 4px 28px; }
+        .configuration-page h1 { font-size: 23px; }
+        .configuration-page .configuration-tabs { gap: 18px; }
+        .configuration-page .configuration-tabs a { display: inline-flex; align-items: center; min-height: 44px; }
+        .configuration-page .card-heading,
+        .configuration-page .new-tank-card,
+        .configuration-page .tank-editor,
+        .configuration-page .thresholds-form { padding: 14px 16px; }
+        .configuration-page .thresholds-actions { padding: 0 16px 16px; }
         .configuration-page .form-grid,
         .configuration-page .new-tank-card .form-grid { grid-template-columns: 1fr; }
-        .configuration-page h1 { font-size: 24px; }
+        .configuration-page .form-grid input,
+        .configuration-page .form-grid select { height: 44px; font-size: 16px; }
+        .configuration-page .configuration-header > .ab { width: 100%; }
+        .configuration-page .configuration-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .configuration-page .card-actions { width: 100%; }
+        .configuration-page .card-actions > * { flex: 1 1 120px; }
     }
 
     /* ==========================================================================
