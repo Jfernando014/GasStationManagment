@@ -251,11 +251,11 @@
                 </span>
                 <div class="tank-card-actions">
                   @if (tank.alertLevel === 'CRITICAL' || tank.alertLevel === 'WARNING') {
-                    <button type="button" class="btn-solid-primary btn-tank-action" (click)="openReceptionModal(tank)">
+                    <button type="button" appButton variant="primary" size="sm" class="btn-tank-action" (click)="openReceptionModal(tank)">
                       Reabastecer
                     </button>
                   }
-                  <button type="button" class="btn-solid-primary btn-flat-secondary btn-tank-action"
+                  <button type="button" appButton variant="secondary" size="sm" class="btn-tank-action"
                     (click)="openMeasureModal(tank)">
                     Medir Regla
                   </button>
