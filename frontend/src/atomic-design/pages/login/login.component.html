@@ -26,14 +26,14 @@
   </div>
 
   <!-- Capa Hero Institucional izquierda (Vista dividida) -->
-  <div class="eds-login-hero" [attr.aria-hidden]="isSimplifiedView()">
+  <div class="eds-login-hero" [attr.aria-hidden]="isSimplifiedView() || isCompactViewport() ? 'true' : null">
     <button type="button"
             class="eds-brand-trigger eds-brand-trigger--split"
             id="btn-brand-split"
             title="Cambiar a vista simplificada"
             aria-label="EDS Bellavista · Cambiar a vista simplificada"
-            [tabIndex]="isSimplifiedView() ? -1 : 0"
-            (click)="toggleSimplifiedView()">
+            [tabIndex]="isSimplifiedView() || isCompactViewport() ? -1 : 0"
+            (click)="toggleSimplifiedView($event)">
       <span class="brand-icon-square">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
@@ -64,9 +64,9 @@
               id="btn-brand-simplified"
               title="Volver a vista institucional"
               aria-label="EDS Bellavista · Volver a vista dividida"
-              [attr.aria-hidden]="!isSimplifiedView()"
-              [tabIndex]="isSimplifiedView() ? 0 : -1"
-              (click)="toggleSimplifiedView()">
+              [attr.aria-hidden]="!isSimplifiedView() && !isCompactViewport() ? 'true' : null"
+              [tabIndex]="isSimplifiedView() || isCompactViewport() ? 0 : -1"
+              (click)="toggleSimplifiedView($event)">
         <span class="brand-icon-square">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M3 22V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v17" />
@@ -179,7 +179,7 @@
             </div>
           }
 
-          <button type="submit" class="login-btn-primary eds-submit-btn" [disabled]="isLoading || isAccountLocked">
+          <button type="submit" appButton variant="primary" [block]="true" [loading]="isLoading" [disabled]="isLoading || isAccountLocked">
             @if (!isLoading) {
               <span>Iniciar sesión</span>
             } @else {
@@ -197,7 +197,7 @@
         </div>
       </div>
 
-      <p class="eds-simplified-caption" [attr.aria-hidden]="!isSimplifiedView()">
+      <p class="eds-simplified-caption" [attr.aria-hidden]="!isSimplifiedView() && !isCompactViewport() ? 'true' : null">
         Control confiable para cada jornada · Sede Popayán, Cauca · Colombia
       </p>
     </div>
@@ -229,7 +229,9 @@
             <p class="eds-modal-subtitle">Asistencia administrativa y acceso · EDS Bellavista</p>
           </div>
         </div>
-        <button type="button" class="eds-modal-btn-close" aria-label="Cerrar modal" (click)="closeSupportModal()">&#10005;</button>
+        <button type="button" appButton variant="ghost" size="sm" [icon]="true" aria-label="Cerrar modal" (click)="closeSupportModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
       </div>
 
       <div class="eds-modal-body">
@@ -242,7 +244,7 @@
             <span class="eds-modal-label">Correo electrónico</span>
             <div class="eds-modal-contact-field">
               <a class="eds-contact-link" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
-              <button type="button" class="eds-copy-btn" (click)="copyContact(supportEmail, 'email')">
+              <button type="button" appButton variant="secondary" size="sm" class="eds-copy-btn" (click)="copyContact(supportEmail, 'email')">
                 {{ copiedField() === 'email' ? 'Copiado' : 'Copiar' }}
               </button>
             </div>
@@ -252,7 +254,7 @@
             <span class="eds-modal-label">Teléfono / WhatsApp</span>
             <div class="eds-modal-contact-field">
               <a class="eds-contact-link" [href]="supportPhoneHref">{{ supportPhone }}</a>
-              <button type="button" class="eds-copy-btn" (click)="copyContact(supportPhone, 'phone')">
+              <button type="button" appButton variant="secondary" size="sm" class="eds-copy-btn" (click)="copyContact(supportPhone, 'phone')">
                 {{ copiedField() === 'phone' ? 'Copiado' : 'Copiar' }}
               </button>
             </div>
@@ -269,7 +271,9 @@
 
       <div class="eds-modal-footer">
         <button type="button"
-                class="eds-modal-btn-submit"
+                appButton
+                variant="primary"
+                size="sm"
                 id="btn-support-understood"
                 (click)="closeSupportModal()">
           Entendido

@@ -1,13 +1,16 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { AuthService } from '../../../core/services/auth.service';
+
+const COMPACT_LOGIN_QUERY = '(max-width: 900px)';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ActionButtonDirective],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -17,6 +20,7 @@ export class LoginPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly supportEmail = 'jfportilla@unicauca.edu.co';
   readonly supportPhone = '+57 3128883241';
@@ -34,11 +38,27 @@ export class LoginPageComponent implements OnInit {
   isLoading = false;
 
   readonly isSimplifiedView = signal(false);
+  readonly isCompactViewport = signal(false);
   readonly isSupportModalOpen = signal(false);
   readonly showPassword = signal(false);
   readonly copiedField = signal<'email' | 'phone' | null>(null);
 
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    const media = typeof window === 'undefined' ? null : window.matchMedia?.(COMPACT_LOGIN_QUERY) ?? null;
+    if (media) {
+      const sync = () => this.isCompactViewport.set(media.matches);
+      sync();
+      media.addEventListener('change', sync);
+      this.destroyRef.onDestroy(() => media.removeEventListener('change', sync));
+    }
+    this.destroyRef.onDestroy(() => {
+      if (this.copyResetTimer) {
+        clearTimeout(this.copyResetTimer);
+      }
+    });
+  }
 
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('expired') === 'true') {
@@ -46,7 +66,8 @@ export class LoginPageComponent implements OnInit {
     }
   }
 
-  toggleSimplifiedView(): void {
+  toggleSimplifiedView(event?: Event): void {
+    (event?.currentTarget as HTMLElement | null)?.blur?.();
     this.isSimplifiedView.update(current => !current);
   }
 
