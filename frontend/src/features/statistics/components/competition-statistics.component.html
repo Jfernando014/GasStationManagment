@@ -18,7 +18,7 @@
     <div class="inv-panel-card-title stats-table-heading"><h2><span class="stats-orange" aria-hidden="true">◎</span> Matriz Comparativa de Precios en Popayán (Área de Influencia)</h2>
       <span class="sales-kpi-badge neutral">{{ activeStations().length }} estaciones registradas + Bellavista</span></div>
     <div class="inv-table-wrapper"><div class="stats-table-scroll" role="region" tabindex="0" aria-label="Precios de estaciones competidoras">
-      <table class="inv-table stats-market-table"><thead><tr><th>ESTACIÓN DE SERVICIO</th><th>BANDERA</th><th>UBICACIÓN / DIRECCIÓN</th>
+      <table class="inv-table stats-market-table table-sticky-first"><thead><tr><th>ESTACIÓN DE SERVICIO</th><th>BANDERA</th><th>UBICACIÓN / DIRECCIÓN</th>
         @for (item of fuels; track item.value) { <th class="right" [class.stats-priority]="fuel() === item.value">{{ item.label }}</th> }
         <th>DIFERENCIAL MEDIO</th></tr></thead>
         <tbody>
