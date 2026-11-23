@@ -246,6 +246,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .alert-card-left {
@@ -411,6 +413,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 16px;
       margin-top: 6px;
     }
 
@@ -1848,6 +1852,10 @@
   table.table-cards[class][class] tfoot > tr > td:empty { display: none; }
 }
 
+@media (max-width: 1024px) {
+  .kpis-quad-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* ==========================================================================
    Componentes compartidos en teléfono (≤ 640px)
    ========================================================================== */
@@ -1888,4 +1896,21 @@
   td .ab--icon.ab--sm, th .ab--icon.ab--sm { width: 36px; }
   .btn-table-action { min-height: 36px; padding: 5px 12px; }
   .jr-btn--sm { min-height: 36px; padding: 0 12px; }
+
+  /* ---- Inventario y alertas: cabeceras, KPIs, banners y barras de filtros ---- */
+  .inv-header-bar { padding: 14px 16px; align-items: stretch; }
+  .inv-header-actions { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+  .inv-header-actions > * { flex: 1 1 140px; }
+
+  .critical-alert-card { padding: 14px 16px; flex-direction: column; align-items: stretch; }
+  .critical-alert-card > .ab { width: 100%; }
+
+  .kpis-quad-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi-tile-box { padding: 14px; min-height: 0; }
+  .kpi-tile-top { flex-wrap: wrap; gap: 6px; }
+  .kpi-figure-lead { font-size: 22px; }
+
+  .inv-filter-toolbar { flex-direction: column; align-items: stretch; padding: 12px 14px; }
+  .inv-filter-toolbar .filter-item-group { width: 100%; }
+  .inv-filter-toolbar > .ab { width: 100%; }
 }
