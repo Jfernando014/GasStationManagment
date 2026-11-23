@@ -156,7 +156,7 @@
       </p>
     } @else {
       <div class="receptions-table-scroll">
-        <table class="receptions-table table-sticky-first">
+        <table class="receptions-table table-sticky-first table-cards">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -169,11 +169,11 @@
           <tbody>
             @for (reception of receptions(); track reception.id) {
               <tr>
-                <td class="tnum">{{ reception.receptionDate }}</td>
-                <td>{{ tankName(reception.tankId) }}</td>
-                <td>{{ reception.supplier }}</td>
-                <td class="num tnum"><b>{{ formatGallons(reception.gallons) }}</b></td>
-                <td class="tnum">{{ reception.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td class="tnum" data-label="Fecha">{{ reception.receptionDate }}</td>
+                <td class="tc-title"><strong>{{ tankName(reception.tankId) }}</strong></td>
+                <td data-label="Proveedor">{{ reception.supplier }}</td>
+                <td class="num tnum" data-label="Galones"><b>{{ formatGallons(reception.gallons) }}</b></td>
+                <td class="tnum" data-label="Registrada">{{ reception.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               </tr>
             }
           </tbody>
