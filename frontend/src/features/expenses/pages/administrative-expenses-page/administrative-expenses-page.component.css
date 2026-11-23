@@ -22,3 +22,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .gs-lista .ps-barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gs-lista .ps-campo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .gs-lista .ps-campo .flat-input,
+  .gs-lista .ps-campo .flat-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .gs-exportar {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .gs-tabla-wrap {
+    max-height: none;
+  }
+}
