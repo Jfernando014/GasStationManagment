@@ -189,3 +189,28 @@
   color: var(--semantic-red-strong);
   font-size: 12.5px;
 }
+
+@media (max-width: 900px) {
+  .receptions-page { padding: 18px 16px 36px; }
+  .receptions-header { flex-direction: column; align-items: stretch; gap: 14px; }
+}
+
+@media (max-width: 640px) {
+  .receptions-page { padding: 12px 4px 28px; }
+  .receptions-header h1 { font-size: 23px; }
+  .receptions-card { padding: 14px; }
+  .receptions-form-grid { grid-template-columns: 1fr; }
+  .receptions-form-grid input,
+  .receptions-form-grid select,
+  .receptions-filter input,
+  .receptions-filter select { height: 44px; font-size: 16px; width: 100%; }
+  .receptions-actions > * { width: 100%; }
+  .receptions-card-head .jr-indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; width: 100%; }
+  .receptions-card-head .jr-indicador { padding: 0; border-left: 0; min-width: 0; }
+  .receptions-filters { flex-direction: column; align-items: stretch; }
+  .receptions-filter,
+  .receptions-filters > .ab { width: 100%; }
+  .receptions-alert { flex-direction: column; align-items: stretch; }
+  .receptions-alert > .ab { width: 100%; }
+  .receptions-table-scroll { border: 0; overflow: visible; }
+}

@@ -35,6 +35,10 @@
   .rs-cabecera { flex-wrap: wrap; gap: 12px; }
 }
 
+@media (max-width: 640px) {
+  .performance-actions > * { flex: 1 1 140px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .panel { transition: none; }
   .info { animation: none; }

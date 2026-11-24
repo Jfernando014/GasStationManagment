@@ -242,7 +242,7 @@
       </p>
     } @else {
       <div class="inspections-table-scroll">
-        <table class="inspections-table table-sticky-first">
+        <table class="inspections-table table-sticky-first table-cards">
           <thead>
             <tr>
               <th>Código</th>
@@ -260,20 +260,20 @@
           <tbody>
             @for (inspection of visibleInspections(); track inspection.id) {
               <tr [class.is-expired]="inspection.status === 'VENCIDO'">
-                <td class="tnum"><b>{{ inspection.code }}</b></td>
-                <td><span class="inspections-category">{{ categoryLabels[inspection.category] }}</span></td>
-                <td>{{ inspection.target }}</td>
-                <td class="tnum">{{ formatDate(inspection.dateExecuted) }}</td>
-                <td class="tnum"><b>{{ formatDate(inspection.dateDue) }}</b></td>
-                <td>{{ inspection.certifier }}</td>
-                <td>{{ inspection.toleranceMeasured }}</td>
-                <td>
+                <td class="tnum" data-label="Código"><b>{{ inspection.code }}</b></td>
+                <td data-label="Categoría"><span class="inspections-category">{{ categoryLabels[inspection.category] }}</span></td>
+                <td class="tc-title"><strong>{{ inspection.target }}</strong></td>
+                <td class="tnum" data-label="Ejecución">{{ formatDate(inspection.dateExecuted) }}</td>
+                <td class="tnum" data-label="Vencimiento"><b>{{ formatDate(inspection.dateDue) }}</b></td>
+                <td data-label="Entidad">{{ inspection.certifier }}</td>
+                <td data-label="Tolerancia">{{ inspection.toleranceMeasured }}</td>
+                <td data-label="Estado">
                   <app-tag [variant]="inspection.status === 'VIGENTE' ? 'green' : inspection.status === 'PROXIMO' ? 'amber' : inspection.status === 'VENCIDO' ? 'red' : 'gray'">
                     {{ statusLabels[inspection.status] }}
                   </app-tag>
                 </td>
-                <td>{{ inspection.certDoc ?? '—' }}</td>
-                <td class="num">
+                <td data-label="Documento">{{ inspection.certDoc ?? '—' }}</td>
+                <td class="num tc-actions">
                   <button class="inspections-action" type="button" (click)="openEdit(inspection)">Editar</button>
                 </td>
               </tr>

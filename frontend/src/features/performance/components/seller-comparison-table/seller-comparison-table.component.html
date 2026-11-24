@@ -63,12 +63,12 @@
                       @for (line of view.titular; track line.key) {
                         <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
                           <span class="lname">{{ line.label }}</span>
-                          <span class="num">{{ line.observations }}</span>
-                          <span class="num">{{ line.sellerAverage }}</span>
-                          <span class="num">{{ line.stationAverage }}</span>
+                          <span class="num lmetric" data-label="Turnos">{{ line.observations }}</span>
+                          <span class="num lmetric" data-label="Vendedor">{{ line.sellerAverage }}</span>
+                          <span class="num lmetric" data-label="Estación">{{ line.stationAverage }}</span>
                           <app-comparison-line class="hide-sm" [seller]="line.sellerValue" [station]="line.stationValue" [maximum]="maximum()"
                             [muted]="line.few || line.percentText === null" [description]="lineSentence(line)" />
-                          <span class="num">
+                          <span class="num lidx">
                             @if (line.percentText !== null) {
                               <span class="pill small" [class.is-up]="tone(line.percentValue) === 'up'" [class.is-down]="tone(line.percentValue) === 'down'" [class.is-few]="line.few">{{ sign(line.percentValue) }} {{ line.percentText }}</span>
                             } @else {
@@ -100,12 +100,12 @@
                         @for (line of view.support; track line.key) {
                           <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
                             <span class="lname">{{ line.label }}</span>
-                            <span class="num">{{ line.observations }}</span>
-                            <span class="num">{{ line.sellerAverage }}</span>
-                            <span class="num">{{ line.stationAverage }}</span>
+                            <span class="num lmetric" data-label="Turnos">{{ line.observations }}</span>
+                            <span class="num lmetric" data-label="Vendedor">{{ line.sellerAverage }}</span>
+                            <span class="num lmetric" data-label="Estación">{{ line.stationAverage }}</span>
                             <app-comparison-line class="hide-sm" [seller]="line.sellerValue" [station]="line.stationValue" [maximum]="maximum()"
                               [muted]="line.few || line.percentText === null" [description]="lineSentence(line)" />
-                            <span class="num">
+                            <span class="num lidx">
                               @if (line.percentText !== null) {
                                 <span class="pill small" [class.is-up]="tone(line.percentValue) === 'up'" [class.is-down]="tone(line.percentValue) === 'down'" [class.is-few]="line.few">{{ sign(line.percentValue) }} {{ line.percentText }}</span>
                               } @else {

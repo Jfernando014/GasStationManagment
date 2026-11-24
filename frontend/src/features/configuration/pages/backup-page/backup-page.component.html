@@ -154,7 +154,7 @@
       <p class="backup-empty">Todavía no hay operaciones de respaldo registradas.</p>
     } @else {
       <div class="backup-table-scroll">
-        <table class="backup-table table-sticky-first">
+        <table class="backup-table table-sticky-first table-cards">
           <thead>
             <tr>
               <th scope="col">Fecha</th>
@@ -168,12 +168,12 @@
           <tbody>
             @for (entry of audit(); track entry.id) {
               <tr>
-                <td>{{ formatDate(entry.startedAt) }}</td>
-                <td>{{ actionLabel(entry.action) }}</td>
-                <td class="backup-file-cell" [attr.title]="entry.fileName ?? 'Sin archivo'">{{ entry.fileName ?? '—' }}</td>
-                <td>{{ formatSize(entry.sizeBytes) }}</td>
-                <td>{{ entry.username }}</td>
-                <td>
+                <td data-label="Fecha">{{ formatDate(entry.startedAt) }}</td>
+                <td class="tc-title"><strong>{{ actionLabel(entry.action) }}</strong></td>
+                <td class="backup-file-cell" data-label="Archivo" [attr.title]="entry.fileName ?? 'Sin archivo'">{{ entry.fileName ?? '—' }}</td>
+                <td data-label="Tamaño">{{ formatSize(entry.sizeBytes) }}</td>
+                <td data-label="Usuario">{{ entry.username }}</td>
+                <td data-label="Estado">
                   <span class="backup-status"
                     [class.backup-status--succeeded]="entry.status === 'SUCCEEDED'"
                     [class.backup-status--failed]="entry.status === 'FAILED'"

@@ -190,4 +190,18 @@ describe('LoginPageComponent (HU-1, S1-12, S2-06)', () => {
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
   });
+
+  it('should expose accessible appButton actions and keep simplified brand visible on compact viewports', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const submitBtn = compiled.querySelector('button[type="submit"]') as HTMLButtonElement;
+    expect(submitBtn.classList.contains('ab--primary')).toBe(true);
+    expect(submitBtn.classList.contains('ab--block')).toBe(true);
+
+    component.isCompactViewport.set(true);
+    fixture.detectChanges();
+
+    const simplifiedBrandBtn = compiled.querySelector('#btn-brand-simplified') as HTMLButtonElement;
+    expect(simplifiedBrandBtn.getAttribute('aria-hidden')).toBeNull();
+    expect(simplifiedBrandBtn.tabIndex).toBe(0);
+  });
 });
