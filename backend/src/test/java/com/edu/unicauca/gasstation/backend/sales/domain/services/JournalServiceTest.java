@@ -190,4 +190,75 @@ class JournalServiceTest {
         assertThatThrownBy(() -> journalService.updateObservations(999L, "Nota"))
                 .isInstanceOf(JournalNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("Should save trimmed observations on a specific step of an open journal")
+    void updatesStepObservationsOnOpenJournal() {
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .name("Cierre por vendedor")
+                .status(StepStatus.PENDING)
+                .build();
+        Journal openJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .steps(List.of(step2))
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(openJournal));
+        when(journalRepository.save(any(Journal.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Journal saved = journalService.updateStepObservations(10L, 2, "  Turno de apoyo entró a las 10:00.  ");
+
+        assertThat(saved.getSteps().get(0).getObservations()).isEqualTo("Turno de apoyo entró a las 10:00.");
+        verify(journalRepository).save(openJournal);
+    }
+
+    @Test
+    @DisplayName("Should clear step observations to null when blank text is sent")
+    void clearsStepObservationsWhenBlank() {
+        JournalStep step3 = JournalStep.builder()
+                .id(30L)
+                .stepNumber(3)
+                .name("Medios electrónicos")
+                .status(StepStatus.PENDING)
+                .observations("Nota previa")
+                .build();
+        Journal openJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .steps(List.of(step3))
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(openJournal));
+        when(journalRepository.save(any(Journal.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Journal saved = journalService.updateStepObservations(10L, 3, "   ");
+
+        assertThat(saved.getSteps().get(0).getObservations()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should reject step observations on closed journal or out-of-range step")
+    void rejectsStepObservationsWhenClosedOrInvalidStep() {
+        Journal closedJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.CLOSED)
+                .steps(List.of())
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(closedJournal));
+
+        assertThatThrownBy(() -> journalService.updateStepObservations(10L, 2, "Nota tardía"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cerrada");
+
+        assertThatThrownBy(() -> journalService.updateStepObservations(10L, 7, "Nota"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("1 y 6");
+    }
 }
