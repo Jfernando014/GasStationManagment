@@ -8,14 +8,17 @@ import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.WorkerSc
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ShiftSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
  * Converts the results of the shift schedule use cases into the DTOs returned by the REST API.
- * Each assignment becomes a day with its shift code as text.
+ * Each assignment becomes a day with its shift code as text and the hours of that code.
  */
 @Mapper(componentModel = "spring")
 public interface ShiftScheduleMapper {
@@ -29,7 +32,15 @@ public interface ShiftScheduleMapper {
 
     @Mapping(target = "date", source = "workDate")
     @Mapping(target = "shiftCode", source = "shiftCode.code")
+    @Mapping(target = "custom", source = "shiftCode.custom")
+    @Mapping(target = "segments", expression = "java(toSegments(assignment.getShiftCode()))")
     ScheduleDay toScheduleDay(ShiftAssignment assignment);
+
+    default List<ShiftSchedule.Segment> toSegments(ShiftCode shiftCode) {
+        return shiftCode.segments().stream()
+                .map(segment -> new ShiftSchedule.Segment(segment.startHour(), segment.endHour()))
+                .toList();
+    }
 
     @Mapping(target = "covered", expression = "java(coverage.covered())")
     DayCoverage toDayCoverage(DailyCoverage coverage);

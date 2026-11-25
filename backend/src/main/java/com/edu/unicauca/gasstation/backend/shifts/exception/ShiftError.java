@@ -19,6 +19,9 @@ public enum ShiftError {
     ROLE_MISMATCH(HttpStatus.CONFLICT, "El turno %s es para el rol %s y no corresponde al rol del vendedor"),
     ROTATION_NOT_ALLOWED(HttpStatus.CONFLICT,
             "La rotación solo se genera para vendedores titulares; al apoyo se le asignan los días uno a uno"),
+    INVALID_SHIFT_HOURS(HttpStatus.BAD_REQUEST, "%s"),
+    HOURS_ONLY_FOR_SUPPORT(HttpStatus.CONFLICT,
+            "Solo a un vendedor de apoyo se le puede asignar un horario por horas"),
 
     // Day staff
     JOURNAL_NOT_FOUND(HttpStatus.NOT_FOUND, "No existe una jornada para la fecha %s"),

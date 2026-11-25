@@ -2,6 +2,10 @@ package com.edu.unicauca.gasstation.backend.shifts.api.dtos;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.edu.unicauca.gasstation.backend.shifts.daystaff.DayStaffQuery;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.HoursRequest;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -182,9 +186,12 @@ public final class RotationDtos {
     /**
      * Body of {@code PUT /api/shifts/schedule/assignments/range}.
      *
-     * @param leaveSundaysAsRest put DESCANSO on the Sundays of the range instead of the code
+     * @param shiftCode          code of the catalog; null when segments is sent
+     * @param leaveSundaysAsRest put DESCANSO on the Sundays of the range instead of the shift
+     * @param segments           hours of a support worker, instead of a code; null when shiftCode is sent
      */
-    @Schema(description = "Same code for a worker on every day of a range. Every day is saved as manual.")
+    @Schema(description = "Same shift for a worker on every day of a range, as a code or, for a support worker, as "
+            + "hours. Send exactly one of shiftCode and segments. Every day is saved as manual.")
     public record AssignRangeRequest(
             @Schema(description = "Worker to schedule", example = "d3c8c22b-9a86-4678-a326-ac90b26057cb")
             @NotNull(message = "El vendedor es obligatorio")
@@ -199,9 +206,8 @@ public final class RotationDtos {
             @NotNull(message = "La fecha final es obligatoria")
             LocalDate to,
 
-            @Schema(description = "Active code of the role of the worker; DESCANSO is valid for every role",
-                    example = "6-9y5-9")
-            @NotBlank(message = "El código de turno es obligatorio")
+            @Schema(description = "Active code of the role of the worker; DESCANSO is valid for every role. Omit it "
+                    + "when segments is sent.", example = "6-9y5-9", nullable = true)
             String shiftCode,
 
             @Schema(description = "Optional note for every day, up to 255 characters", example = "Horario de noviembre")
@@ -209,6 +215,19 @@ public final class RotationDtos {
             String note,
 
             @Schema(description = "Put DESCANSO on the Sundays of the range", example = "true")
-            boolean leaveSundaysAsRest) {
+            boolean leaveSundaysAsRest,
+
+            @Schema(description = "Only for a support worker, instead of shiftCode: one or two blocks of whole hours "
+                    + "of the same day, in order. Hours equal to a standard support code are saved with that code.",
+                    nullable = true)
+            @Size(min = 1, max = 2, message = "Indique uno o dos rangos de horas")
+            List<@NotNull(message = "El rango de horas es obligatorio") @Valid HoursRequest> segments) {
+
+        @JsonIgnore
+        @Schema(hidden = true)
+        @AssertTrue(message = "Indique el código de turno o el horario, uno de los dos")
+        public boolean isShiftChoice() {
+            return segments == null ? shiftCode != null && !shiftCode.isBlank() : shiftCode == null;
+        }
     }
 }
