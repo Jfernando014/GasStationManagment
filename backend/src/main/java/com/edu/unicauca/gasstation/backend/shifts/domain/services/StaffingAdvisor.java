@@ -50,10 +50,12 @@ final class StaffingAdvisor {
         if (codes.stream().noneMatch(code -> isTitular(code, ShiftPeriod.NIGHT))) {
             warnings.add(new StaffingWarning(Type.NIGHT_TITULAR_MISSING, "Falta titular de noche"));
         }
+        // A custom support schedule is set by hand and is never paired, so it does not count as a missing pairing
+        boolean customSupport = codes.stream().anyMatch(ShiftCode::isCustom);
         for (DayLineup.Line line : working) {
             ShiftCode code = line.workedCode();
             boolean paired = codes.stream().anyMatch(other -> code.getId().equals(other.getPairedWithId()));
-            if (code.isRequiresSupport() && !paired) {
+            if (code.isRequiresSupport() && !paired && !customSupport) {
                 warnings.add(new StaffingWarning(Type.PAIRING_INCOMPLETE, "Acople incompleto: "
                         + workers.get(line.workerId()).fullName() + " en " + code.getCode()
                         + " sin su apoyo acoplado"));
