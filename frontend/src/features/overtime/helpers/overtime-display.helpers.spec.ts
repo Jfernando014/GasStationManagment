@@ -1,7 +1,7 @@
 import { convertToParamMap } from '@angular/router';
 
 import {
-  CATEGORY_HEADS,
+  CATEGORY_HELP,
   dayLabel,
   formatHours,
   formatSignedHours,
@@ -22,10 +22,10 @@ import {
 
 describe('overtime-display.helpers', () => {
   it('exposes the seven overtime categories with descriptions', () => {
-    expect(CATEGORY_HEADS.map(head => head.category)).toEqual([
+    expect(Object.keys(CATEGORY_HELP)).toEqual([
       'RDF', 'RNO', 'RNF', 'HEDO', 'HENO', 'HEDF', 'HENF'
     ]);
-    expect(CATEGORY_HEADS.every(head => head.tooltip.length > 0)).toBe(true);
+    expect(Object.values(CATEGORY_HELP).every(help => !!help.name && !!help.title && !!help.short)).toBe(true);
   });
 
   it('formats weekdays, hours and signed adjustments', () => {

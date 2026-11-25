@@ -1,0 +1,58 @@
+<section class="card" aria-labelledby="account-title">
+  <div class="head">
+    <h2 id="account-title">Cuenta de la quincena</h2>
+    @if (partial()) {
+      <app-tag variant="amber">Parcial</app-tag>
+    }
+  </div>
+
+  <dl>
+    <div class="line">
+      <dt>Horas trabajadas</dt>
+      <dd>{{ worked() }}</dd>
+    </div>
+    <div class="line">
+      <dt>
+        Recargos
+        @if (surcharges().adjusted) {
+          <small>(con ajustes)</small>
+        }
+      </dt>
+      <dd [class.none]="!surcharges().items.length" [class.negative]="surcharges().negative">{{ surcharges().total }}</dd>
+      @if (surcharges().items.length) {
+        <dd class="detail"><app-dot-value-list [items]="surcharges().items" emptyText="Ninguno" /></dd>
+      }
+    </div>
+    <div class="line">
+      <dt>Extra de los días</dt>
+      <dd>{{ dayExtras() }}</dd>
+    </div>
+    @if (fixed(); as line) {
+      <div class="line">
+        <dt>
+          + {{ line.label }}
+          <app-info-tooltip class="what" [inline]="true" [help]="true" [text]="line.help">
+            <span class="mark" aria-hidden="true">?</span><span class="jr-sr">Qué son las horas fijas</span>
+          </app-info-tooltip>
+        </dt>
+        <dd>{{ line.hours }}</dd>
+      </div>
+    }
+  </dl>
+
+  <app-adjustments-panel [adjustments]="sheet().adjustments" [workerId]="sheet().worker.id"
+    [month]="sheet().fortnight.month" [fortnight]="sheet().fortnight.number" [canManage]="canManage()"
+    (changed)="changed.emit()" />
+
+  <p class="total">
+    <span>Horas extra a pagar</span>
+    <b [class.negative]="toPay().negative">{{ toPay().total }}</b>
+  </p>
+  @if (toPay().parts.length) {
+    <p class="breakdown">
+      @for (part of toPay().parts; track part.category) {
+        <span [class.negative]="part.negative">{{ part.text }}</span>
+      }
+    </p>
+  }
+</section>

@@ -1,76 +1,80 @@
 <section class="card" [attr.aria-busy]="loading()">
-  <div class="scroll">
-    <table>
-      <caption class="jr-sr">Horas a pagar por trabajador en la quincena</caption>
-      <thead>
-        <tr class="group">
-          <th class="who-col"></th>
-          <th></th>
-          <th colspan="3" class="group-label">Recargos</th>
-          <th colspan="4" class="group-label">Horas extra</th>
-          <th colspan="2"></th>
-        </tr>
-        <tr>
-          <th scope="col" class="who-col">Trabajador</th>
-          <th scope="col" class="num">Horas</th>
-          @for (head of heads; track head.category) {
-            <th scope="col" class="num category">
-              <app-info-tooltip [inline]="true" [term]="true" [text]="head.tooltip" [label]="head.category">{{ head.category }}</app-info-tooltip>
-            </th>
-          }
-          <th scope="col">Estado</th>
-          <th scope="col"><span class="jr-sr">Abrir la sábana</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          @for (n of skeletonRows; track n) {
-            <tr class="skeleton-row">
-              <td>
-                <app-skeleton width="220px" />
-                <app-skeleton width="90px" height="10px" />
-              </td>
-              <td class="num"><app-skeleton class="end" width="36px" /></td>
-              <td colspan="7"><app-skeleton /></td>
-              <td><app-skeleton width="90px" /></td>
-              <td></td>
-            </tr>
-          }
-        } @else {
-          @for (row of views(); track row.id) {
-            <tr class="row" [style.--i]="$index" (click)="openRow($event, row.id)">
-              <th scope="row" class="who who-col">
-                <a class="stretched" [routerLink]="['/personal/horas-extra/trabajador', row.id]" [queryParams]="queryParams()"
-                  [attr.aria-label]="'Ver la sábana de ' + row.name">{{ row.name }}</a>
-                @if (row.role) {
-                  <span class="role">{{ row.role }}</span>
-                }
-              </th>
-              <td class="num strong">{{ row.hours }}</td>
-              @for (cell of row.cells; track $index) {
-                <td class="num" [class.zero]="cell.zero" [class.negative]="cell.negative">{{ cell.text }}</td>
-              }
-              <td><app-tag [variant]="row.status.variant">{{ row.status.label }}</app-tag></td>
-              <td class="open" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
-                  stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-              </td>
-            </tr>
-          }
-        }
-      </tbody>
-      @if (!loading()) {
-        <tfoot>
-          <tr>
-            <th scope="row" class="who-col">Total de la quincena</th>
-            <td class="num">{{ totalHours() }}</td>
-            @for (cell of totalCells(); track $index) {
-              <td class="num" [class.zero]="cell.zero" [class.negative]="cell.negative">{{ cell.text }}</td>
-            }
-            <td colspan="2"></td>
+  <table role="table">
+    <caption class="jr-sr">Horas por trabajador en la quincena</caption>
+    <thead role="rowgroup">
+      <tr class="line head" role="row">
+        <th scope="col" role="columnheader" class="who">Trabajador</th>
+        <th scope="col" role="columnheader" class="hours">Horas trabajadas</th>
+        <th scope="col" role="columnheader" class="surcharges">
+          <span class="legend legend--surcharge" aria-hidden="true"></span>Recargos
+          <app-info-tooltip class="what" [inline]="true" [help]="true"
+            text="Recargo: pago adicional por horas normales trabajadas de noche, en domingo o en festivo. No son horas de más.">
+            <span class="mark" aria-hidden="true">?</span><span class="jr-sr">Qué es un recargo</span>
+          </app-info-tooltip>
+        </th>
+        <th scope="col" role="columnheader" class="extras">
+          <span class="legend legend--extra" aria-hidden="true"></span>Horas extra
+          <app-info-tooltip class="what" [inline]="true" [help]="true" text="Hora extra: una hora de más.">
+            <span class="mark" aria-hidden="true">?</span><span class="jr-sr">Qué es una hora extra</span>
+          </app-info-tooltip>
+        </th>
+        <th scope="col" role="columnheader" class="go"><span class="jr-sr">Abrir el detalle</span></th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      @if (loading()) {
+        @for (n of skeletonRows; track n) {
+          <tr class="line row row--skeleton" role="row">
+            <td role="cell" class="who"><app-skeleton width="70%" /><app-skeleton width="35%" height="10px" /></td>
+            <td role="cell" class="hours"><app-skeleton width="48px" /></td>
+            <td role="cell" class="surcharges"><app-skeleton width="75%" /></td>
+            <td role="cell" class="extras"><app-skeleton width="60%" /></td>
+            <td role="cell" class="go"></td>
           </tr>
-        </tfoot>
+        }
+      } @else {
+        @for (row of views(); track row.id) {
+          <tr class="line row row--link" role="row" [style.--i]="$index">
+            <th scope="row" role="rowheader" class="who">
+              <a class="stretched" [routerLink]="['/personal/horas-extra/trabajador', row.id]" [queryParams]="queryParams()"
+                [attr.aria-label]="'Ver el detalle de ' + row.name">{{ row.name }}</a>
+              @if (row.role) {
+                <span class="role">{{ row.role }}</span>
+              }
+            </th>
+            <td role="cell" class="hours">{{ row.hours }}<span class="caption"> trabajadas</span></td>
+            <td role="cell" class="surcharges">
+              <span class="caption">Recargos</span>
+              <app-dot-value-list [items]="row.surcharges" emptyText="Sin recargos" />
+            </td>
+            <td role="cell" class="extras">
+              <span class="caption">Horas extra</span>
+              <app-dot-value-list [items]="row.extras" emptyText="Sin horas extra" />
+            </td>
+            <td role="cell" class="go" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+            </td>
+          </tr>
+        }
       }
-    </table>
-  </div>
+    </tbody>
+    @if (!loading()) {
+      <tfoot role="rowgroup">
+        <tr class="line row total" role="row" [style.--i]="views().length">
+          <th scope="row" role="rowheader" class="who">Total de la quincena</th>
+          <td role="cell" class="hours">{{ total().hours }}<span class="caption"> trabajadas</span></td>
+          <td role="cell" class="surcharges">
+            <span class="caption">Recargos</span>
+            <app-dot-value-list [items]="total().surcharges" emptyText="Sin recargos" />
+          </td>
+          <td role="cell" class="extras">
+            <span class="caption">Horas extra</span>
+            <app-dot-value-list [items]="total().extras" emptyText="Sin horas extra" />
+          </td>
+          <td role="cell" class="go"></td>
+        </tr>
+      </tfoot>
+    }
+  </table>
 </section>

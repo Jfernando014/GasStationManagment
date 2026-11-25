@@ -1,7 +1,7 @@
-:host { display: block; min-width: 0; }
+/* The rows adapt to the width of the table, which also depends on the sidebar. */
+:host { display: block; min-width: 0; container-type: inline-size; }
 
 .card {
-  overflow: hidden;
   border: 1px solid var(--border-main);
   border-radius: 14px;
   background: var(--surface-card);
@@ -9,69 +9,147 @@
   animation: rise-in var(--duration-normal) var(--spring) backwards;
 }
 
-.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+table, thead, tbody, tfoot { display: block; width: 100%; }
+table { font-size: 14px; font-variant-numeric: tabular-nums; }
 
-table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 120px minmax(0, 1.3fr) minmax(0, 1.3fr) 28px;
+  grid-template-areas: 'who hours surcharges extras go';
+  align-items: center;
+  column-gap: 20px;
+  padding: 0 22px;
+}
 
-th, td { padding: 0 6px; text-align: left; vertical-align: middle; }
-th:first-child, td:first-child { padding-left: 22px; }
-th:last-child, td:last-child { padding-right: 18px; }
+th, td { display: block; min-width: 0; text-align: left; }
+.who { grid-area: who; }
+.hours { grid-area: hours; text-align: right; }
+.surcharges { grid-area: surcharges; }
+.extras { grid-area: extras; }
+.go { grid-area: go; color: var(--text-light); line-height: 0; }
+.caption { display: none; }
 
-.num { text-align: right; width: 58px; }
+.head { min-height: 44px; border-bottom: 1px solid var(--border-main); }
+.head th { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.legend { display: none; }
+.what { margin-left: 4px; }
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-subtle);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475569;
+}
 
-thead th { height: 36px; border-bottom: 1px solid var(--border-main); font-size: 12px; font-weight: 600; color: var(--text-muted); }
-thead tr.group th { height: 26px; border-bottom: 0; }
-.group-label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-light); box-shadow: inset 0 -2px 0 var(--border-main); }
-.category { text-align: center; }
+.row {
+  position: relative;
+  min-height: 64px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--surface-subtle);
+  animation: row-in 240ms var(--spring) backwards;
+  animation-delay: min(calc(var(--i, 0) * 40ms + 40ms), 160ms);
+}
 
-.row { position: relative; height: 60px; border-bottom: 1px solid var(--surface-subtle); transition: background-color var(--duration-fast) var(--spring-fast); animation: row-in var(--duration-normal) var(--spring) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
-.row:hover,
-.row:focus-within { background: #FAFBFC; }
+.row--link:hover,
+.row--link:focus-within { background: #FAFBFC; }
+.row--link .go svg { transition: transform var(--duration-fast) var(--spring); }
+.row--link:hover .go svg,
+.row--link:focus-within .go svg { transform: translateX(3px); }
 
-.who { font-weight: normal; min-width: 200px; }
+tbody .who { font-weight: normal; }
 .stretched { font-size: 15px; font-weight: 600; color: var(--text-heading); text-decoration: none; }
-/* The link covers the whole row so a click anywhere opens the sheet. */
+/* The link covers the whole row; the figures with a tooltip stay above it. */
 .stretched::after { content: ''; position: absolute; inset: 0; }
 .stretched:focus-visible { outline: none; }
 .stretched:focus-visible::after { outline: 2px solid var(--border-focus); outline-offset: -2px; border-radius: 6px; }
-.role { display: block; font-size: 12.5px; color: var(--text-muted); text-transform: capitalize; }
+.role { display: block; font-size: 12.5px; color: var(--text-muted); }
 
-.strong { font-weight: 600; color: var(--text-heading); }
-td { color: var(--text-heading); }
-.zero { color: #CBD5E1; }
-.negative { color: var(--semantic-red-strong); font-weight: 700; }
-.open { width: 28px; color: var(--text-light); text-align: right; }
+.row .hours { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 700; color: var(--text-heading); }
+.row--skeleton app-skeleton + app-skeleton { margin-top: 6px; }
+.row--skeleton .hours app-skeleton { margin-left: auto; }
 
-tfoot th, tfoot td { height: 50px; background: #F8FAFC; font-weight: 700; color: var(--text-heading); }
-
-.skeleton-row { height: 60px; border-bottom: 1px solid var(--surface-subtle); }
-.skeleton-row td { vertical-align: middle; }
-.skeleton-row app-skeleton + app-skeleton { margin-top: 6px; }
-.skeleton-row .end { margin-left: auto; }
+.total { min-height: 58px; border-bottom: 0; border-radius: 0 0 13px 13px; background: #F8FAFC; }
+.total .who { font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.total .hours { font-weight: 800; }
 
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
 }
 
 @keyframes row-in {
   from { opacity: 0; transform: translateY(6px); }
 }
 
+/* Tabla angosta (tablet o escritorio pequeño): recargos y horas extra se apilan dentro de la fila. */
+@container (max-width: 799px) {
+  .line {
+    grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1.4fr) 20px;
+    grid-template-areas:
+      'who hours surcharges go'
+      'who hours extras go';
+    column-gap: 14px;
+    row-gap: 2px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .head { padding-top: 6px; padding-bottom: 6px; }
+}
+
+/* Teléfono: una tarjeta por trabajador y el total como tarjeta final. */
+@media (max-width: 639.98px) {
+  .card { border: 0; background: none; box-shadow: none; }
+
+  .line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'who hours'
+      'surcharges surcharges'
+      'extras extras';
+  }
+
+  /* The headings stay for screen readers; only the two that explain a concept are shown, as a legend. */
+  .head { display: flex; flex-wrap: wrap; gap: 0 20px; min-height: 0; padding: 0 4px; border: 0; }
+  .head .who, .head .hours, .head .go { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .head .surcharges, .head .extras { display: flex; align-items: center; min-height: 44px; }
+  .legend { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; }
+  .legend--surcharge { background: var(--semantic-sky); }
+  .legend--extra { background: var(--brand-primary); }
+  .what ::ng-deep .trigger { min-width: 44px; min-height: 44px; }
+
+  .row {
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-main);
+    border-radius: 14px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .row .go { display: none; }
+  .row .hours { font-size: 20px; }
+  .row .hours .caption { display: block; font-family: 'Inter', sans-serif; font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+
+  .row .surcharges, .row .extras { display: flex; align-items: baseline; gap: 10px; }
+  .row .surcharges > .caption, .row .extras > .caption {
+    display: block;
+    flex: 0 0 76px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .row app-dot-value-list { flex: 1; min-height: 44px; align-content: center; }
+
+  .total { margin-bottom: 0; background: var(--surface-subtle); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card, .row { animation: none; }
-  .row { transition: none; }
-}
-
-/* Tablet y teléfono: la columna del trabajador (por clase, porque el encabezado tiene dos filas) queda fija. */
-@media (max-width: 1024px) {
-  .who-col { position: sticky; left: 0; z-index: 1; background-color: var(--surface-card); box-shadow: 1px 0 0 var(--border-main), 3px 0 0 rgba(11, 25, 44, 0.05); }
-  thead .who-col { z-index: 3; }
-  tfoot .who-col { background-color: #F8FAFC; }
-  .row:hover .who-col, .row:focus-within .who-col { background-color: #FAFBFC; }
-  .row { cursor: pointer; }
-}
-
-@media (max-width: 640px) {
-  .who { min-width: 0; }
-  .who-col { max-width: 150px; padding-left: 12px; }
+  .row--link .go svg { transition: none; }
 }

@@ -1,9 +1,16 @@
-<section class="card" aria-labelledby="adjustments-title">
+<section class="adjustments" aria-labelledby="adjustments-title">
   <div class="head">
-    <h2 id="adjustments-title">Ajustes manuales</h2>
-    @if (canManage() && !formOpen()) {
-      <button appButton class="add-button" size="sm" type="button" (click)="openForm()">+ Agregar</button>
-    }
+    <h3 id="adjustments-title">+ Ajustes manuales</h3>
+    <span class="figure">
+      @if (net(); as figure) {
+        <b>{{ figure }}</b>
+      }
+      @if (canManage() && !formOpen()) {
+        <button appButton class="add-button" variant="ghost" size="sm" type="button" (click)="openForm()">+ Agregar</button>
+      } @else if (!canManage() && views().length === 0) {
+        <span class="none">Ninguno</span>
+      }
+    </span>
   </div>
 
   @if (formOpen()) {
@@ -30,9 +37,7 @@
     </form>
   }
 
-  @if (views().length === 0) {
-    <p class="empty">Sin ajustes en esta quincena.</p>
-  } @else {
+  @if (views().length > 0) {
     <ul class="list">
       @for (item of views(); track item.id) {
         <li class="item" [attr.data-adjustment]="item.id" [style.--i]="$index">

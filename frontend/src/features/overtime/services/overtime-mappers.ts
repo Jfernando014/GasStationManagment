@@ -62,7 +62,8 @@ export function toSummary(dto: SummaryDto): OvertimeSummary {
       grossHours: row.grossHours,
       totalToPay: toCategoryHours(row.totalToPay),
       incomplete: row.incomplete,
-      noveltiesUnconfirmed: row.noveltiesUnconfirmed
+      noveltiesUnconfirmed: row.noveltiesUnconfirmed,
+      fixedHedo: { applies: row.fixedHedo.applies, hours: row.fixedHedo.hours }
     })),
     affectedDates: dto.affectedDates
   };

@@ -1,0 +1,72 @@
+:host { display: block; min-width: 0; }
+
+.card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  min-height: 48px;
+  padding: 8px 18px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  animation: rise-in var(--duration-normal) var(--spring) backwards;
+}
+
+.count { color: var(--text-heading); }
+.count b { color: var(--semantic-green-strong); }
+.strip { flex: 0 1 260px; min-width: 180px; }
+/* The notes wrap like one sentence. */
+.notes { flex: 1 1 200px; color: var(--text-muted); }
+.open { color: var(--semantic-amber-strong); font-weight: 600; }
+
+.close-link {
+  margin-left: auto;
+  padding: 4px 2px;
+  border-radius: 6px;
+  color: var(--brand-primary-strong);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform var(--duration-fast) var(--spring);
+}
+
+.close-link:hover { text-decoration: underline; }
+.close-link:active { transform: scale(0.97); }
+.close-link:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (max-width: 1023.98px) {
+  .strip { order: 1; flex: 1 1 100%; }
+  .notes, .close-link { order: 2; }
+}
+
+@media (max-width: 639.98px) {
+  .card { padding: 12px 14px; }
+  .count, .notes { flex: 1 1 100%; }
+  /* The grid reaches the edges of the card so eight touch-sized squares fit in each line. */
+  .strip { flex-basis: calc(100% + 28px); margin: 0 -14px; }
+  .notes { display: flex; flex-direction: column; }
+  .notes [aria-hidden] { display: none; }
+  .close-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    border: 1px solid #FDBA74;
+    border-radius: 10px;
+    background: var(--brand-primary-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+  .close-link { transition: none; }
+}

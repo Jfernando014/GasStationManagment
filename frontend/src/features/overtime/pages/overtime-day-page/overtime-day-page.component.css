@@ -1,4 +1,4 @@
-:host { display: block; min-width: 0; }
+:host { display: block; min-width: 0; --press-scale: 0.97; }
 
 .page {
   display: flex;
@@ -18,9 +18,13 @@
   padding: 4px 6px;
   border-radius: 6px;
   color: #475569;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
+  transition: transform var(--duration-fast) var(--spring);
 }
+
+.back:active { transform: scale(0.97); }
 
 .back:hover { color: var(--text-heading); text-decoration: underline; }
 .back:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
@@ -29,7 +33,7 @@
 
 h1 {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-heading);
 }
@@ -100,6 +104,7 @@ tr.rest th, tr.rest td { color: var(--text-light); }
 
 @media (prefers-reduced-motion: reduce) {
   .card, .ask { animation: none; }
+  .back { transition: none; }
 }
 
 @media (max-width: 640px) {
@@ -110,6 +115,7 @@ tr.rest th, tr.rest td { color: var(--text-light); }
   table { min-width: 0; }
   th, td { padding-right: 8px; }
   .num { width: 56px; }
+  tbody th a { display: flex; align-items: center; min-height: 44px; }
   .buttons { width: 100%; }
   .buttons .ab { flex: 1; }
 }

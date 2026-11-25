@@ -2,28 +2,25 @@ import { ParamMap } from '@angular/router';
 
 import { formatShortDate } from '../../../shared/helpers/format.helpers';
 import { capitalize, lastDayOfMonth, shortDateLabel } from '../../../shared/helpers/shift-display.helpers';
-import {
-  CategoryHours, Fortnight, OVERTIME_CATEGORIES, OVERTIME_START_MONTH, OvertimeCategory
-} from '../models/overtime.model';
+import { CategoryHours, Fortnight, OVERTIME_START_MONTH, OvertimeCategory } from '../models/overtime.model';
 
 const MONTH_PARAM = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/** What each sigla means, for the tooltip of its column. */
-export const CATEGORY_HELP: Record<OvertimeCategory, { name: string; help: string }> = {
-  RDF: { name: 'Recargo dominical o festivo', help: 'Horas diurnas trabajadas en domingo o festivo.' },
-  RNO: { name: 'Recargo nocturno ordinario', help: 'Horas de noche trabajadas en un día ordinario.' },
-  RNF: { name: 'Recargo nocturno festivo', help: 'Horas de noche trabajadas en domingo o festivo.' },
-  HEDO: { name: 'Hora extra diurna ordinaria', help: 'Hoy solo cambia con las HEDO fijas de la quincena y con los ajustes.' },
-  HENO: { name: 'Hora extra nocturna ordinaria', help: 'Hoy solo cambia con los ajustes.' },
-  HEDF: { name: 'Hora extra diurna festiva', help: 'Hoy solo cambia con los ajustes.' },
-  HENF: { name: 'Hora extra nocturna festiva', help: 'Hoy solo cambia con los ajustes.' }
+/** What each sigla means: its full name, the name in the glossary and the one written next to its hours. */
+export const CATEGORY_HELP: Record<OvertimeCategory, { name: string; title: string; short: string }> = {
+  RDF: { name: 'Recargo dominical o festivo', title: 'Dominical o festivo', short: 'dominical o festivo' },
+  RNO: { name: 'Recargo nocturno ordinario', title: 'Nocturno', short: 'nocturno' },
+  RNF: { name: 'Recargo nocturno festivo', title: 'Nocturno festivo', short: 'noct. festivo' },
+  HEDO: { name: 'Hora extra diurna ordinaria', title: 'Extra diurna', short: 'diurna' },
+  HENO: { name: 'Hora extra nocturna ordinaria', title: 'Extra nocturna', short: 'nocturna' },
+  HEDF: { name: 'Hora extra diurna festiva', title: 'Extra diurna festiva', short: 'diurna festiva' },
+  HENF: { name: 'Hora extra nocturna festiva', title: 'Extra nocturna festiva', short: 'nocturna festiva' }
 };
 
-/** The sigla of each column with the text of its tooltip. */
-export const CATEGORY_HEADS = OVERTIME_CATEGORIES.map(category => ({
-  category,
-  tooltip: `${CATEGORY_HELP[category].name}. ${CATEGORY_HELP[category].help}`
-}));
+/** Surcharges: additional pay for normal hours at night, on Sundays or holidays. */
+export const SURCHARGE_CATEGORIES: OvertimeCategory[] = ['RNO', 'RDF', 'RNF'];
+/** Overtime: hours on top of the normal ones. */
+export const EXTRA_CATEGORIES: OvertimeCategory[] = ['HEDO', 'HENO', 'HEDF', 'HENF'];
 
 const WEEKDAY_BY_NAME: Record<string, string> = {
   MONDAY: 'lun', TUESDAY: 'mar', WEDNESDAY: 'mié', THURSDAY: 'jue', FRIDAY: 'vie', SATURDAY: 'sáb', SUNDAY: 'dom'

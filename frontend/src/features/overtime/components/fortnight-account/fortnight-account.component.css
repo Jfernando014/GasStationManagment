@@ -1,0 +1,70 @@
+:host { display: block; min-width: 0; }
+
+.card {
+  padding: 14px 18px 16px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  font-variant-numeric: tabular-nums;
+  animation: rise-in var(--duration-normal) var(--spring) 60ms backwards;
+}
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  min-height: 42px;
+  border-bottom: 1px solid var(--surface-subtle);
+  font-size: 14px;
+}
+
+dt small { margin-left: 4px; font-size: 12.5px; color: var(--text-muted); }
+dd { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+dd.none { font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+dd.detail { flex: 1 1 100%; padding: 2px 0 12px; font-family: inherit; font-size: 14px; font-weight: 400; }
+/* Each surcharge on its own line, with room to read it. */
+dd.detail app-dot-value-list { flex-direction: column; align-items: flex-start; gap: 8px; }
+.line:has(.detail) { padding-top: 10px; }
+
+.what { margin-left: 4px; }
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-subtle);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 12px; }
+.total span { font-size: 14px; font-weight: 600; color: var(--text-heading); }
+.total b { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 26px; font-weight: 800; color: var(--brand-primary-strong); }
+
+.breakdown { display: flex; flex-direction: column; align-items: flex-end; font-size: 12.5px; color: var(--text-muted); }
+
+dd.negative, .total b.negative, .breakdown .negative { color: var(--semantic-red-strong); font-weight: 700; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@media (max-width: 639.98px) {
+  .card { padding: 14px 14px 16px; }
+  /* The touch targets already separate the lines. */
+  dd.detail app-dot-value-list { gap: 0; }
+  .what ::ng-deep .trigger { min-width: 44px; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}

@@ -1,0 +1,55 @@
+<div class="columns">
+  <div>
+    <h3>Recargos · pago adicional por horas normales</h3>
+    <ul>
+      @for (row of surcharges(); track row.sigla) {
+        <li class="entry" [class.is-zero]="row.zero">
+          <span class="sigla sigla--surcharge">{{ row.sigla }}</span>
+          <span class="text"><b>{{ row.title }}</b><small>{{ row.help }}</small></span>
+          <span class="total">{{ row.total }}</span>
+        </li>
+      }
+    </ul>
+    <h3>Horas extra · horas de más</h3>
+    <ul>
+      @for (row of extras(); track row.sigla) {
+        <li class="entry" [class.is-zero]="row.zero">
+          <span class="sigla sigla--extra">{{ row.sigla }}</span>
+          <span class="text"><b>{{ row.title }}</b><small>{{ row.help }}</small></span>
+          <span class="total">{{ row.total }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+  <div>
+    <h3>Turnos</h3>
+    <ul>
+      @for (shift of titularShifts(); track shift.code) {
+        <li class="entry entry--shift">
+          <app-shift-chip [code]="shift.code" />
+          <span class="text"><b>{{ shift.name }}</b><small>{{ shift.help }}</small></span>
+        </li>
+      } @empty {
+        <li class="status">{{ catalogLoading() ? 'Cargando los turnos…' : 'No se pudo leer el catálogo de turnos.' }}</li>
+      }
+      <li class="entry entry--shift">
+        <app-shift-chip [code]="supportSample() ?? 'Apoyo'" toneOverride="apoyo" />
+        <span class="text"><b>Apoyo</b><small>el código o sus horas</small></span>
+      </li>
+      <li class="entry entry--shift">
+        <app-shift-chip class="rest" code="–" toneOverride="descanso" />
+        <span class="text"><b>Descanso</b><small>no suma horas</small></span>
+      </li>
+    </ul>
+    @if (fixedText()) {
+      <h3>Otros</h3>
+      <ul>
+        <li class="entry entry--shift">
+          <span class="sigla sigla--fixed">fijas</span>
+          <span class="text"><small class="plain">{{ fixedText() }}</small></span>
+        </li>
+      </ul>
+    }
+  </div>
+</div>
+<p class="foot">El número es el total de horas de esta quincena. El inicio de la noche, el descanso y las extra fijas salen de Configuración › Parámetros; los horarios de los turnos, del catálogo de turnos.</p>

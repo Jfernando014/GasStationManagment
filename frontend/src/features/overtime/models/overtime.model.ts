@@ -89,6 +89,8 @@ export interface OvertimeSummaryRow {
   totalToPay: CategoryHours;
   incomplete: boolean;
   noveltiesUnconfirmed: boolean;
+  /** The fixed HEDO line that is part of `totalToPay`. */
+  fixedHedo?: FixedHedo;
 }
 
 export interface OvertimeSummary {
