@@ -106,7 +106,13 @@ public class JournalWorkbookExporter {
         writeTextRow(sheet, rowIdx++, "Personal en turno", String.valueOf(data.staff().size()), styles);
         writeTextRow(sheet, rowIdx++, "Cierres de vendedor", String.valueOf(data.vendorCloses().size()), styles);
         writeTextRow(sheet, rowIdx++, "Variaciones de combustible", String.valueOf(inv.variations().size()), styles);
-        writeTextRow(sheet, rowIdx, "Alertas nuevas de autonomía", String.valueOf(inv.newAlerts().size()), styles);
+        writeTextRow(sheet, rowIdx++, "Alertas nuevas de autonomía", String.valueOf(inv.newAlerts().size()), styles);
+
+        if (journal.observations() != null && !journal.observations().isBlank()) {
+            rowIdx++;
+            writeSectionRow(sheet, rowIdx++, "Observaciones de la jornada", 2, styles);
+            writeTextRow(sheet, rowIdx, "Notas operativas", journal.observations(), styles);
+        }
 
         finishSheet(sheet, 2, 1);
     }
