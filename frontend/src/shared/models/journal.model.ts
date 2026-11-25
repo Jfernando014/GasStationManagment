@@ -24,6 +24,7 @@ export interface JournalResponse {
     status: JournalStatus;
     steps: JournalStepResponse[];
     closedAt?: string | null;
+    observations?: string | null;
 }
 
 export interface StepSummaryItemDto {

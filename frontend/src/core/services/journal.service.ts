@@ -50,6 +50,12 @@ export class JournalService {
     );
   }
 
+  updateObservations(journalId: number, observations: string | null): Observable<JournalResponse> {
+    return this.http
+      .put<JournalResponse>(`${this.apiUrl}/${journalId}/observations`, { observations })
+      .pipe(tap(updated => this.setCurrentJournal(updated)));
+  }
+
   getJournalHistory(yearMonth: string): Observable<JournalHistoryMonthResponse> {
     return this.http.get<JournalHistoryMonthResponse>(`${this.apiUrl}/history`, {
       params: { yearMonth }
