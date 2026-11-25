@@ -49,10 +49,23 @@ export function formatDateTime(value: string): string {
   return `${Number(parts[3])} ${SHORT_MONTHS[Number(parts[2]) - 1] ?? parts[2]} ${parts[1]}, ${parts[4]}:${parts[5]}`;
 }
 
+function formatCalendarDay(date: Date): string {
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 /** Today's calendar day in the local time zone, as "YYYY-MM-DD". */
-export function todayCalendarDay(): string {
-  const now = new Date();
-  const month = `${now.getMonth() + 1}`.padStart(2, '0');
-  const day = `${now.getDate()}`.padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
+export function todayCalendarDay(referenceDate: Date = new Date()): string {
+  return formatCalendarDay(referenceDate);
+}
+
+/** Yesterday's calendar day in the local time zone, as "YYYY-MM-DD". */
+export function yesterdayCalendarDay(referenceDate: Date = new Date()): string {
+  const yesterday = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    referenceDate.getDate() - 1
+  );
+  return formatCalendarDay(yesterday);
 }

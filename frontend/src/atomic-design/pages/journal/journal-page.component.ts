@@ -5,7 +5,7 @@ import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/ro
 import { filter } from 'rxjs';
 import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { JOURNAL_STEP_ROUTES, JournalService } from '../../../core/services/journal.service';
-import { todayCalendarDay } from '../../../shared/helpers/format.helpers';
+import { yesterdayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse } from '../../../shared/models/journal.model';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
 import { UnsavedStepModalComponent } from '../../organisms/unsaved-step-modal/unsaved-step-modal.component';
@@ -44,12 +44,12 @@ export class JournalPageComponent implements OnInit {
 
     const queryDate = this.route?.snapshot?.queryParamMap?.get('date');
     const selectedDate = (this.journalService as { getSelectedDate?: () => string | null }).getSelectedDate?.();
-    const targetDate = queryDate || selectedDate || todayCalendarDay();
+    const targetDate = queryDate || selectedDate || yesterdayCalendarDay();
     this.journalService.openJournal(targetDate).subscribe({
       next: (res) => this.journalService.setCurrentJournal(res),
       error: (err) => {
         console.error('Error opening journal:', err);
-        this.errorMessage = 'No se pudo cargar la jornada de hoy.';
+        this.errorMessage = 'No se pudo cargar la jornada seleccionada.';
         this.cdr.detectChanges();
       }
     });

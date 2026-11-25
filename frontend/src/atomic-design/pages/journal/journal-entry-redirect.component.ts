@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { filter, take } from 'rxjs';
 
 import { JournalService } from '../../../core/services/journal.service';
-import { todayCalendarDay } from '../../../shared/helpers/format.helpers';
+import { yesterdayCalendarDay } from '../../../shared/helpers/format.helpers';
 
 /** Resolves the landing step when navigating to /jornada without a specific step segment. */
 @Component({
@@ -21,7 +21,7 @@ export class JournalEntryRedirectComponent {
   constructor() {
     const queryDate = this.route.parent?.snapshot?.queryParamMap?.get('date');
     const selectedDate = this.journalService.getSelectedDate?.() ?? null;
-    const expectedDate = queryDate || selectedDate || todayCalendarDay();
+    const expectedDate = queryDate || selectedDate || yesterdayCalendarDay();
 
     this.journalService.currentJournal$
       .pipe(
