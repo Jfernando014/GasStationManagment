@@ -837,11 +837,14 @@ describe('VendorCloseStep2Component', () => {
     chip.click();
     localFixture.detectChanges();
 
-    // Clicking the chip highlights and locates the target row & cell without forcing the dialog open
+    // Clicking the chip highlights the native cell/row and displays the temporary floating note callout
     expect(localComponent.isHighlightedNoteCell('52875796', 'descuadre')).toBe(true);
     expect(localComponent.highlightedNoteFieldKey).toBe('descuadre');
     expect(localFixture.nativeElement.querySelector('td.jr-cell-note-highlight')).toBeTruthy();
     expect(localFixture.nativeElement.querySelector('tr.jr-row-note-highlight')).toBeTruthy();
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-callout')?.textContent).toContain(
+      'Sobrante de $13 verificado en arqueo.'
+    );
     expect(localFixture.nativeElement.querySelector('#jr-p2-note-dialog')).toBeNull();
 
     // Clicking the active corner triangle opens the read-only note dialog even when the journal is closed
