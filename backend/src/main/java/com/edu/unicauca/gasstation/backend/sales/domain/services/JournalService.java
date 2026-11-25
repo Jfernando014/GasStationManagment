@@ -16,6 +16,8 @@ import java.util.Optional;
 @Service
 public class JournalService {
 
+    public static final int MAX_OBSERVATIONS_LENGTH = 2000;
+
     private final JournalRepository journalRepository;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -43,6 +45,33 @@ public class JournalService {
     @Transactional(readOnly = true)
     public Optional<Journal> findJournalByDate(LocalDate date) {
         return journalRepository.findByDate(date);
+    }
+
+    /**
+     * Updates the operational observations of an open journal (SR-08).
+     * Blank input clears the stored observations; closed journals are immutable.
+     */
+    @Transactional
+    public Journal updateObservations(Long journalId, String rawObservations) {
+        Journal journal = journalRepository.findById(journalId)
+                .orElseThrow(() -> new JournalNotFoundException(journalId));
+
+        if (journal.getStatus() == JournalStatus.CLOSED) {
+            throw new IllegalStateException(
+                    "La jornada del " + journal.getDate() + " ya está cerrada y no permite modificar observaciones.");
+        }
+
+        String normalized = rawObservations == null ? null : rawObservations.trim();
+        if (normalized != null && normalized.isEmpty()) {
+            normalized = null;
+        }
+        if (normalized != null && normalized.length() > MAX_OBSERVATIONS_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Las observaciones no pueden superar los " + MAX_OBSERVATIONS_LENGTH + " caracteres.");
+        }
+
+        journal.setObservations(normalized);
+        return journalRepository.save(journal);
     }
 
     /**
