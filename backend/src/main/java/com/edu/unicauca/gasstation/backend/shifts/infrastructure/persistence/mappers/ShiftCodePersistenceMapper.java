@@ -27,6 +27,7 @@ public class ShiftCodePersistenceMapper {
                 .requiresSupport(entity.isRequiresSupport())
                 .pairedWithId(entity.getPairedWithId())
                 .active(entity.isActive())
+                .custom(entity.isCustom())
                 .build();
     }
 
@@ -48,6 +49,7 @@ public class ShiftCodePersistenceMapper {
         entity.setRequiresSupport(shiftCode.isRequiresSupport());
         entity.setPairedWithId(shiftCode.getPairedWithId());
         entity.setActive(shiftCode.isActive());
+        entity.setCustom(shiftCode.isCustom());
         return entity;
     }
 

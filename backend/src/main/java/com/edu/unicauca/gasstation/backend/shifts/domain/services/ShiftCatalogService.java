@@ -32,9 +32,9 @@ public class ShiftCatalogService implements ShiftExternalService {
     private final ShiftCodeRepository shiftCodeRepository;
     private final RoleRepository roleRepository;
 
-    /** Every active shift code, with its role. */
+    /** Active shift codes offered to choose from, with their role; custom schedules are not listed. */
     public List<ShiftCode> listActive() {
-        return shiftCodeRepository.findActive();
+        return shiftCodeRepository.findActive().stream().filter(code -> !code.isCustom()).toList();
     }
 
     /**
@@ -53,7 +53,8 @@ public class ShiftCatalogService implements ShiftExternalService {
 
     @Override
     public List<ShiftCodeInfo> getActiveCatalog() {
-        return listActive().stream().map(ShiftCatalogService::toInfo).toList();
+        // Custom schedules are included: other modules resolve the hours of any code that can be worked
+        return shiftCodeRepository.findActive().stream().map(ShiftCatalogService::toInfo).toList();
     }
 
     @Override

@@ -49,10 +49,13 @@ public class ShiftCode {
 
     private final boolean active;
 
+    /** True for a support schedule typed as free hours, which is not offered as a catalog option. */
+    private final boolean custom;
+
     @Builder
     private ShiftCode(UUID id, String code, String name, Role role, ShiftPeriod period,
                       Short startHour1, Short endHour1, Short startHour2, Short endHour2,
-                      boolean requiresSupport, UUID pairedWithId, boolean active) {
+                      boolean requiresSupport, UUID pairedWithId, boolean active, boolean custom) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -65,6 +68,7 @@ public class ShiftCode {
         this.requiresSupport = requiresSupport;
         this.pairedWithId = pairedWithId;
         this.active = active;
+        this.custom = custom;
         validateSchedule();
     }
 

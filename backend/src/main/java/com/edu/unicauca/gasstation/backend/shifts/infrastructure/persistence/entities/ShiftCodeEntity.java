@@ -65,4 +65,7 @@ public class ShiftCodeEntity {
 
     @Column(nullable = false)
     private boolean active;
+
+    @Column(nullable = false)
+    private boolean custom;
 }
