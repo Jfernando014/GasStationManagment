@@ -39,6 +39,6 @@ public class JournalReadAdapter implements JournalReadPort, JournalDateReadPort 
                         step.getStepNumber(), step.getName(), step.getStatus(), step.getCompletedAt()))
                 .toList();
         return new JournalSnapshot(journal.getId(), journal.getDate(), journal.getConsecutive(),
-                journal.getStatus(), journal.getCreatedAt(), steps);
+                journal.getStatus(), journal.getCreatedAt(), steps, journal.getObservations());
     }
 }

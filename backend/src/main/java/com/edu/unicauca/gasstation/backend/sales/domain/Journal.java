@@ -30,6 +30,9 @@ public class Journal {
     @Column(nullable = false)
     private JournalStatus status;
 
+    @Column(name = "observations", columnDefinition = "TEXT")
+    private String observations;
+
     @OneToMany(mappedBy = "journal", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC")
     @Builder.Default

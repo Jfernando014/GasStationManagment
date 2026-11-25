@@ -10,7 +10,18 @@ public record JournalSnapshot(
         Long consecutive,
         JournalStatus status,
         LocalDateTime createdAt,
-        List<JournalStepSnapshot> steps) {
+        List<JournalStepSnapshot> steps,
+        String observations) {
+
+    public JournalSnapshot(
+            Long id,
+            LocalDate date,
+            Long consecutive,
+            JournalStatus status,
+            LocalDateTime createdAt,
+            List<JournalStepSnapshot> steps) {
+        this(id, date, consecutive, status, createdAt, steps, null);
+    }
 
     public JournalSnapshot {
         steps = List.copyOf(steps);
