@@ -199,4 +199,21 @@ describe('JournalService (S3-07)', () => {
 
     expect(downloadedName).toBe('jornada-289-2026-08-05.xlsx');
   });
+
+  it('should update journal observations and broadcast updated journal to currentJournal$', () => {
+    const updatedJournal: JournalResponse = {
+      ...mockJournal,
+      observations: 'Se ajustó surtidor 2 antes del cierre.'
+    };
+
+    service.updateObservations(10, 'Se ajustó surtidor 2 antes del cierre.').subscribe(res => {
+      expect(res.observations).toBe('Se ajustó surtidor 2 antes del cierre.');
+      expect(service.getCurrentJournalSnapshot()).toEqual(updatedJournal);
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/observations');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ observations: 'Se ajustó surtidor 2 antes del cierre.' });
+    req.flush(updatedJournal);
+  });
 });
