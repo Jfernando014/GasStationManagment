@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angul
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { JournalService } from '../../../../core/services/journal.service';
 import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
@@ -15,8 +16,18 @@ import {
 } from '../../../../shared/models/journal.model';
 import { VendorCloseSummaryDto } from '../../../../shared/models/dtos/vendor-close.dto';
 import { validDate } from '../../../../shared/helpers/sales-statistics.helpers';
+import {
+  DOWNLOAD_ERROR_MESSAGES,
+  getDownloadErrorMessage,
+  saveBlob
+} from '../../../../shared/helpers/file-download.helpers';
 
 export type ClosedJournalSubView = 'inicio' | 'rendimiento' | 'inventario';
+
+interface DownloadFeedback {
+  text: string;
+  isError: boolean;
+}
 
 @Component({
   selector: 'app-journal-closed-page',
@@ -37,6 +48,8 @@ export class JournalClosedPageComponent implements OnInit {
   summary: JournalClosingSummaryResponse | null = null;
   vendorCloses: VendorCloseSummaryDto[] = [];
   viewMode: ClosedJournalSubView = 'inicio';
+  isDownloadingWorkbook = false;
+  downloadFeedback: DownloadFeedback | null = null;
 
   ngOnInit(): void {
     this.journalService.currentJournal$
@@ -89,8 +102,51 @@ export class JournalClosedPageComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  openFullJournalReadOnly(): void {
-    this.router.navigate(['/jornada/personal']);
+  downloadFullJournal(): void {
+    const journalId = this.journal?.id ?? this.summary?.journalId;
+    if (!journalId || this.isDownloadingWorkbook) return;
+
+    this.isDownloadingWorkbook = true;
+    this.downloadFeedback = null;
+    this.cdr.detectChanges();
+
+    this.journalService
+      .downloadFullWorkbook(
+        journalId,
+        this.journal?.date ?? this.summary?.journalDate,
+        this.journal?.consecutive ?? this.summary?.consecutive
+      )
+      .pipe(
+        finalize(() => {
+          this.isDownloadingWorkbook = false;
+          this.cdr.detectChanges();
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: file => {
+          try {
+            saveBlob(file.content, file.fileName);
+            this.downloadFeedback = {
+              text: `Jornada completa descargada (${file.fileName}).`,
+              isError: false
+            };
+          } catch {
+            this.downloadFeedback = {
+              text: DOWNLOAD_ERROR_MESSAGES.save,
+              isError: true
+            };
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err: unknown) => {
+          this.downloadFeedback = {
+            text: getDownloadErrorMessage(err),
+            isError: true
+          };
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   formattedHeaderTitle(): string {

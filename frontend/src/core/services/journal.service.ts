@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable, BehaviorSubject, map, tap } from 'rxjs';
 import { getApiBaseUrl } from '../config/api-base';
+import { DownloadedFile } from '../../shared/models/daily-download.model';
 
 import {
   JournalClosingSummaryResponse,
@@ -57,6 +58,43 @@ export class JournalService {
 
   getJournalHistoryDayDetail(date: string): Observable<JournalHistoryDayDetailResponse> {
     return this.http.get<JournalHistoryDayDetailResponse>(`${this.apiUrl}/history/${date}`);
+  }
+
+  /** Downloads the full consolidated Excel workbook (.xlsx) for a journal. */
+  downloadFullWorkbook(
+    journalId: number,
+    fallbackDate?: string,
+    fallbackConsecutive?: number
+  ): Observable<DownloadedFile> {
+    const fallbackName = fallbackDate
+      ? `jornada-${fallbackConsecutive ?? journalId}-${fallbackDate}.xlsx`
+      : `jornada-${journalId}.xlsx`;
+
+    return this.http
+      .get(`${this.apiUrl}/${journalId}/workbook.xlsx`, {
+        observe: 'response',
+        responseType: 'blob'
+      })
+      .pipe(
+        map((response: HttpResponse<Blob>) => ({
+          content: response.body ?? new Blob(),
+          fileName: this.extractFileName(response.headers.get('Content-Disposition'), fallbackName)
+        }))
+      );
+  }
+
+  private extractFileName(disposition: string | null, fallbackName: string): string {
+    if (!disposition) return fallbackName;
+    const utf8Match = /filename\*=UTF-8''([^;\s]+)/i.exec(disposition);
+    if (utf8Match?.[1]) {
+      try {
+        return decodeURIComponent(utf8Match[1]);
+      } catch {
+        return utf8Match[1];
+      }
+    }
+    const quotedMatch = /filename="([^"]+)"/i.exec(disposition) ?? /filename=([^;\s]+)/i.exec(disposition);
+    return quotedMatch?.[1]?.trim() || fallbackName;
   }
 
   setCurrentJournal(journal: JournalResponse): void {

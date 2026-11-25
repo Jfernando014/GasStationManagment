@@ -9,14 +9,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.edu.unicauca.gasstation.backend.sales.application.JournalFullWorkbookService;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalFile;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalFullWorkbookData;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalSnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
+import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort.AssignedVendor;
+import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.ClosingInventorySnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.JournalFileRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.JournalReadPort;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalFileService;
 import com.edu.unicauca.gasstation.backend.sales.infrastructure.export.JournalWorkbookExporter;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -110,6 +116,35 @@ class JournalFileControllerTest {
             assertEquals("Nombre del paso", workbook.getSheetAt(1).getRow(0).getCell(1).getStringCellValue());
             assertEquals("Medición inicial", workbook.getSheetAt(1).getRow(1).getCell(1).getStringCellValue());
             assertEquals("COMPLETED", workbook.getSheetAt(1).getRow(1).getCell(2).getStringCellValue());
+        }
+    }
+
+    @Test
+    void generatedWorkbookDelegatesToFullWorkbookServiceWhenConfigured() throws Exception {
+        JournalFileService unusedFileService = mock(JournalFileService.class);
+        JournalFullWorkbookService fullWorkbookService = mock(JournalFullWorkbookService.class);
+        when(fullWorkbookService.buildWorkbookData(7L)).thenReturn(new JournalFullWorkbookData(
+                journalSnapshot(),
+                List.of(new AssignedVendor("1001", "Carlos P.", "TITULAR", "DIA6", 1, "V-01")),
+                null,
+                List.of(),
+                null,
+                ClosingInventorySnapshot.empty()));
+
+        MockMvc fullMvc = MockMvcBuilders.standaloneSetup(
+                        new JournalFileController(unusedFileService, new JournalWorkbookExporter(), fullWorkbookService))
+                .setControllerAdvice(new JournalFileExceptionHandler())
+                .build();
+
+        MvcResult result = fullMvc.perform(get("/api/v1/journals/7/workbook.xlsx"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("jornada-42-2026-10-12.xlsx")))
+                .andReturn();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
+            assertEquals(7, workbook.getNumberOfSheets());
+            assertEquals("Carlos P.", workbook.getSheet("Personal").getRow(1).getCell(2).getStringCellValue());
         }
     }
 

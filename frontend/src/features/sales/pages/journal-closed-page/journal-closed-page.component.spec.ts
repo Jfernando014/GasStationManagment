@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { JournalClosedPageComponent } from './journal-closed-page.component';
 import { JournalService } from '../../../../core/services/journal.service';
@@ -11,7 +11,7 @@ import {
   StepStatus
 } from '../../../../shared/models/journal.model';
 
-describe('JournalClosedPageComponent (C-09, S3-07)', () => {
+describe('JournalClosedPageComponent (C-09, S3-07, SR-11)', () => {
   let component: JournalClosedPageComponent;
   let fixture: ComponentFixture<JournalClosedPageComponent>;
   let router: Router;
@@ -19,7 +19,8 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
   const currentJournal$ = new BehaviorSubject<JournalResponse | null>(null);
   const journalServiceMock = {
     currentJournal$: currentJournal$.asObservable(),
-    getClosingSummary: vi.fn()
+    getClosingSummary: vi.fn(),
+    downloadFullWorkbook: vi.fn()
   };
 
   const mockClosedJournal: JournalResponse = {
@@ -52,6 +53,7 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
   beforeEach(async () => {
     journalServiceMock.getClosingSummary.mockReset();
     journalServiceMock.getClosingSummary.mockReturnValue(of(mockSummary));
+    journalServiceMock.downloadFullWorkbook.mockReset();
     currentJournal$.next(mockClosedJournal);
 
     await TestBed.configureTestingModule({
@@ -63,6 +65,10 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
     }).compileComponents();
 
     router = TestBed.inject(Router);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should display closed journal title and three post-close option cards', () => {
@@ -77,8 +83,18 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
     expect(text).toContain('Ver la jornada completa');
   });
 
-  it('opens C-09 for the operational date and preserves inventory and full journal navigation', () => {
+  it('opens C-09 performance and inventory subviews and downloads full Excel workbook without redirecting to step 1', () => {
     const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const createUrlSpy = vi.fn(() => 'blob:test');
+    const revokeUrlSpy = vi.fn();
+    URL.createObjectURL = createUrlSpy;
+    URL.revokeObjectURL = revokeUrlSpy;
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    const fakeBlob = new Blob(['xlsx']);
+    journalServiceMock.downloadFullWorkbook.mockReturnValue(
+      of({ content: fakeBlob, fileName: 'jornada-289-2026-08-05.xlsx' })
+    );
 
     fixture = TestBed.createComponent(JournalClosedPageComponent);
     component = fixture.componentInstance;
@@ -93,7 +109,37 @@ describe('JournalClosedPageComponent (C-09, S3-07)', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Control de inventario del día');
 
-    component.openFullJournalReadOnly();
-    expect(navSpy).toHaveBeenCalledWith(['/jornada/personal']);
+    component.setViewMode('inicio');
+    fixture.detectChanges();
+    navSpy.mockClear();
+
+    const fullJournalButton = fixture.nativeElement.querySelector('#btn-opcion-jornada-completa') as HTMLButtonElement;
+    fullJournalButton.click();
+    fixture.detectChanges();
+
+    expect(journalServiceMock.downloadFullWorkbook).toHaveBeenCalledWith(10, '2026-08-05', 289);
+    expect(createUrlSpy).toHaveBeenCalledWith(fakeBlob);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeUrlSpy).toHaveBeenCalledWith('blob:test');
+    expect(navSpy).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('jornada-289-2026-08-05.xlsx');
+  });
+
+  it('shows error feedback when full journal Excel download fails', () => {
+    journalServiceMock.downloadFullWorkbook.mockReturnValue(
+      throwError(() => new Error('Network failure'))
+    );
+
+    fixture = TestBed.createComponent(JournalClosedPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.downloadFullJournal();
+    fixture.detectChanges();
+
+    expect(component.isDownloadingWorkbook).toBe(false);
+    expect(component.downloadFeedback?.isError).toBe(true);
+    const alert = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert).toBeTruthy();
   });
 });

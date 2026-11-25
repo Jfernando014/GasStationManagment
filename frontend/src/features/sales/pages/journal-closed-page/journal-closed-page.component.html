@@ -59,18 +59,32 @@
           <small>{{ inventorySummaryText() }}</small>
         </button>
 
-        <button type="button" class="jr-cerrada-opcion" id="btn-opcion-jornada-completa" (click)="openFullJournalReadOnly()">
+        <button
+          type="button"
+          class="jr-cerrada-opcion"
+          id="btn-opcion-jornada-completa"
+          [disabled]="isDownloadingWorkbook || (!journal && !summary)"
+          (click)="downloadFullJournal()">
           <span class="jr-cerrada-icono" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <path d="M14 2v6h6M8 13h8M8 17h8"></path>
+              <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"></path>
             </svg>
           </span>
           <b>Ver la jornada completa</b>
-          <span>Los 6 pasos en solo lectura, con sus tablas y el PDF de Dominus con el saldo en caja.</span>
-          <small>Nada se puede editar después del cierre</small>
+          <span>Descarga un archivo Excel (.xlsx) con los 6 pasos: personal, cierres por vendedor, medios electrónicos, saldo en caja e inventario.</span>
+          <small>{{ isDownloadingWorkbook ? 'Generando archivo Excel...' : 'Descarga directa en Excel (.xlsx) · Solo lectura' }}</small>
         </button>
       </div>
+
+      @if (downloadFeedback) {
+        <p
+          class="jr-cerrada-descarga-msg"
+          [class.jr-cerrada-descarga-msg--error]="downloadFeedback.isError"
+          [attr.role]="downloadFeedback.isError ? 'alert' : 'status'">
+          {{ downloadFeedback.text }}
+        </p>
+      }
     }
 
     <!-- Subvista: Rendimiento de los vendedores del día -->
