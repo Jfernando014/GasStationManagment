@@ -7,9 +7,17 @@ import java.util.*;
 
 public final class DistributionCalculation {
     private DistributionCalculation() { }
-    /** Date is the worksheet/calendar row label, not an inferred night-shift operational date. */
-    public record Assignment(LocalDate date, UUID workerId, String shiftCode) {
+    /**
+     * Date is the worksheet/calendar row label, not an inferred night-shift operational date. A support assignment takes
+     * the support share even when the profile does not list its code.
+     */
+    public record Assignment(LocalDate date, UUID workerId, String shiftCode, boolean support) {
         public Assignment { Objects.requireNonNull(date); Objects.requireNonNull(workerId); if (shiftCode == null || shiftCode.isBlank()) throw new IllegalArgumentException("Shift code required"); }
+
+        /** An assignment whose role is not known: only the support codes of the profile make it support. */
+        public Assignment(LocalDate date, UUID workerId, String shiftCode) {
+            this(date, workerId, shiftCode, false);
+        }
     }
     public record Coverage(Assignment assignment, Set<Integer> hours) {
         public Coverage {
