@@ -20,5 +20,6 @@ public class JournalResponse {
     private Long consecutive;
     private JournalStatus status;
     private LocalDateTime closedAt;
+    private String observations;
     private List<JournalStepResponse> steps;
 }

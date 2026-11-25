@@ -4,6 +4,7 @@ import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalClosingSummaryRe
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalStepResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.Step3ReconciliationResponse;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.UpdateJournalObservationsRequest;
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
@@ -15,6 +16,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepServ
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
@@ -113,6 +115,19 @@ public class JournalController {
         return ResponseEntity.ok(JournalClosingSummaryResponse.from(summary));
     }
 
+    @Operation(summary = "Update operational observations of an open journal (SR-08)")
+    @ApiResponse(responseCode = "200", description = "Observations updated")
+    @ApiResponse(responseCode = "400", description = "Observations exceed maximum length")
+    @ApiResponse(responseCode = "404", description = "Journal not found")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and read-only")
+    @PutMapping("/{journalId}/observations")
+    public ResponseEntity<JournalResponse> updateObservations(
+            @PathVariable Long journalId,
+            @Valid @RequestBody UpdateJournalObservationsRequest request) {
+        Journal updated = journalService.updateObservations(journalId, request.observations());
+        return ResponseEntity.ok(mapToResponse(updated));
+    }
+
     /**
      * POST /api/v1/journals/{journalId}/close
      *
@@ -157,6 +172,7 @@ public class JournalController {
                 .consecutive(journal.getConsecutive())
                 .status(journal.getStatus())
                 .closedAt(closedAt)
+                .observations(journal.getObservations())
                 .steps(steps.stream()
                         .sorted(Comparator.comparing(JournalStep::getStepNumber, Comparator.nullsLast(Comparator.naturalOrder())))
                         .map(step -> JournalStepResponse.builder()
