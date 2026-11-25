@@ -988,6 +988,24 @@
     </div>
   }
 
+  <!-- Globito flotante temporal al ubicar una celda desde "Notas en celdas" -->
+  @if (floatingNoteCallout; as callout) {
+    <div
+      class="jr-note-callout"
+      [class.jr-note-callout--below]="callout.placement === 'below'"
+      id="jr-p2-note-callout"
+      role="status"
+      aria-live="polite"
+      [style.left.px]="callout.x"
+      [style.top.px]="callout.y">
+      <span class="jr-note-callout-head">
+        <span class="jr-note-callout-dot" aria-hidden="true"></span>
+        {{ callout.fieldLabel }} &middot; {{ callout.vendorName }}
+      </span>
+      <span class="jr-note-callout-body">{{ callout.note }}</span>
+    </div>
+  }
+
   <!-- Popover / Modal tipo nota de Excel (fuera del fieldset para funcionar también en solo lectura) -->
   @if (activeNoteTarget; as target) {
     <div

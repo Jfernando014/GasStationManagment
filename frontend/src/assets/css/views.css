@@ -3539,51 +3539,123 @@
     }
 
     .jr-grid tr.jr-row-note-highlight > td {
-      background-color: rgba(255, 247, 237, 0.9) !important;
-      transition: background-color 240ms ease;
+      background-color: rgba(255, 247, 237, 0.7) !important;
+      transition: background-color 260ms ease;
     }
 
     .jr-grid tr.jr-row-note-highlight > td.jr-grid-concepto {
-      box-shadow: inset 3px 0 0 rgba(234, 88, 12, 0.65);
+      box-shadow: inset 3px 0 0 rgba(249, 115, 22, 0.55);
       color: #9a3412;
-      font-weight: 600;
     }
 
     .jr-grid td.jr-cell-note-highlight {
-      background-color: rgba(255, 247, 237, 0.95) !important;
-      z-index: 3;
-    }
-
-    .jr-grid td.jr-cell-note-highlight::before {
-      content: '';
-      position: absolute;
-      inset: 2px 5px;
-      border-radius: 8px;
-      border: 1.5px solid rgba(234, 88, 12, 0.5);
-      background: rgba(255, 237, 213, 0.28);
-      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.09);
-      pointer-events: none;
-      animation: jrNoteCellPulse 1100ms ease-out 2;
+      background-color: rgba(255, 247, 237, 0.85) !important;
     }
 
     .jr-grid td.jr-cell-note-highlight .jr-input {
-      border-color: rgba(234, 88, 12, 0.55);
+      border-color: #f97316 !important;
       background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
+      animation: jrNoteNativeGlow 1200ms ease-out 2;
     }
 
-    @keyframes jrNoteCellPulse {
-      0% {
-        border-color: rgba(234, 88, 12, 0.72);
-        box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.16);
-      }
-      100% {
-        border-color: rgba(234, 88, 12, 0.42);
-        box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.06);
-      }
+    .jr-grid td.jr-cell-note-highlight .jr-cell--calc,
+    .jr-grid td.jr-cell-note-highlight .jr-chip {
+      box-shadow: 0 0 0 1.5px rgba(249, 115, 22, 0.55), 0 0 0 4px rgba(249, 115, 22, 0.14);
+      animation: jrNoteNativeGlow 1200ms ease-out 2;
+    }
+
+    .jr-note-callout {
+      position: fixed;
+      transform: translate(-50%, -100%);
+      z-index: 9950;
+      max-width: 260px;
+      padding: 8px 11px;
+      border-radius: 10px;
+      background: #0f172a;
+      color: #f8fafc;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      pointer-events: none;
+      animation: jrNoteCalloutIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .jr-note-callout::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -5px;
+      transform: translateX(-50%) rotate(45deg);
+      width: 10px;
+      height: 10px;
+      background: #0f172a;
+      border-radius: 2px;
+    }
+
+    .jr-note-callout--below {
+      transform: translate(-50%, 0);
+      animation-name: jrNoteCalloutInBelow;
+    }
+
+    .jr-note-callout--below::after {
+      bottom: auto;
+      top: -5px;
+    }
+
+    .jr-note-callout-head {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fdba74;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .jr-note-callout-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f97316;
+      flex-shrink: 0;
+    }
+
+    .jr-note-callout-body {
+      font-size: 12px;
+      line-height: 1.35;
+      color: #f8fafc;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    @keyframes jrNoteNativeGlow {
+      0% { box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.24); }
+      100% { box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.12); }
+    }
+
+    @keyframes jrNoteCalloutIn {
+      from { opacity: 0; transform: translate(-50%, calc(-100% + 6px)) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+    }
+
+    @keyframes jrNoteCalloutInBelow {
+      from { opacity: 0; transform: translate(-50%, -6px) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .jr-grid td.jr-cell-note-highlight::before { animation: none; }
+      .jr-grid td.jr-cell-note-highlight .jr-input,
+      .jr-grid td.jr-cell-note-highlight .jr-cell--calc,
+      .jr-grid td.jr-cell-note-highlight .jr-chip,
+      .jr-note-callout { animation: none; }
     }
 
     .jr-cell-note-btn {

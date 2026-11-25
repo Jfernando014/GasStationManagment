@@ -37,6 +37,15 @@ export interface CellNoteSummaryItem {
   note: string;
 }
 
+export interface FloatingNoteCallout {
+  vendorName: string;
+  fieldLabel: string;
+  note: string;
+  x: number;
+  y: number;
+  placement: 'above' | 'below';
+}
+
 export const STEP2_NOTE_FIELD_LABELS: Record<string, string> = {
   descuadre: 'Descuadre real',
   parciales: 'Parciales',
@@ -136,16 +145,15 @@ export class VendorCloseStep2Component implements OnInit {
   noteErrorMessage = '';
   highlightedNoteCellKey: string | null = null;
   highlightedNoteFieldKey: string | null = null;
+  floatingNoteCallout: FloatingNoteCallout | null = null;
   private highlightTimer: ReturnType<typeof setTimeout> | null = null;
+  private calloutRepositionTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.stepChangesService?.register(this.dirtyHandler);
     this.destroyRef.onDestroy(() => {
       this.stepChangesService?.unregister(this.dirtyHandler);
-      if (this.highlightTimer) {
-        clearTimeout(this.highlightTimer);
-        this.highlightTimer = null;
-      }
+      this.clearNoteHighlightTimers();
     });
 
     this.route.queryParams
@@ -1031,23 +1039,73 @@ export class VendorCloseStep2Component implements OnInit {
 
   locateCellNote(columnKey: string, fieldKey: string): void {
     const key = this.cellNoteKey(columnKey, fieldKey);
+    const noteText = this.getCellNote(columnKey, fieldKey);
+    const vendorName = this.assignedVendors.find(v => v.document === columnKey)?.name ?? columnKey;
+    const fieldLabel = STEP2_NOTE_FIELD_LABELS[fieldKey] ?? fieldKey;
+
+    this.clearNoteHighlightTimers();
     this.highlightedNoteCellKey = key;
     this.highlightedNoteFieldKey = fieldKey;
+
+    const findTargetCell = (): HTMLElement | undefined =>
+      Array.from(document.querySelectorAll<HTMLElement>('[data-note-cell]')).find(
+        el => el.getAttribute('data-note-cell') === key
+      );
+
+    const updateCalloutPosition = (): void => {
+      if (!noteText) return;
+      const cell = findTargetCell();
+      if (!cell) return;
+      const rect = cell.getBoundingClientRect();
+      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1024;
+      const clampedX = Math.min(Math.max(rect.left + rect.width / 2, 136), Math.max(136, viewportWidth - 136));
+      const showBelow = rect.top < 88;
+      this.floatingNoteCallout = {
+        vendorName,
+        fieldLabel,
+        note: noteText,
+        x: clampedX,
+        y: showBelow ? rect.bottom + 8 : rect.top - 8,
+        placement: showBelow ? 'below' : 'above'
+      };
+      this.cdr.detectChanges();
+    };
+
+    const targetCell = findTargetCell();
+    targetCell?.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
+    updateCalloutPosition();
+
+    // Re-align callout once smooth scroll settles
+    this.calloutRepositionTimer = setTimeout(() => {
+      this.calloutRepositionTimer = null;
+      if (this.highlightedNoteCellKey === key) {
+        updateCalloutPosition();
+      }
+    }, 280);
+
+    this.highlightTimer = setTimeout(() => {
+      this.clearNoteHighlight();
+    }, 3000);
+    this.cdr.detectChanges();
+  }
+
+  private clearNoteHighlightTimers(): void {
     if (this.highlightTimer) {
       clearTimeout(this.highlightTimer);
-    }
-    this.highlightTimer = setTimeout(() => {
-      this.highlightedNoteCellKey = null;
-      this.highlightedNoteFieldKey = null;
       this.highlightTimer = null;
-      this.cdr.detectChanges();
-    }, 2800);
-    this.cdr.detectChanges();
+    }
+    if (this.calloutRepositionTimer) {
+      clearTimeout(this.calloutRepositionTimer);
+      this.calloutRepositionTimer = null;
+    }
+  }
 
-    const targetCell = Array.from(document.querySelectorAll<HTMLElement>('[data-note-cell]')).find(
-      el => el.getAttribute('data-note-cell') === key
-    );
-    targetCell?.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
+  private clearNoteHighlight(): void {
+    this.clearNoteHighlightTimers();
+    this.highlightedNoteCellKey = null;
+    this.highlightedNoteFieldKey = null;
+    this.floatingNoteCallout = null;
+    this.cdr.detectChanges();
   }
 
   getCellTooltip(columnKey: string, fieldKey: string, fallback?: string | null): string | null {
@@ -1100,6 +1158,8 @@ export class VendorCloseStep2Component implements OnInit {
   }
 
   openCellNoteByKey(columnKey: string, vendorName: string, fieldKey: string): void {
+    this.clearNoteHighlightTimers();
+    this.floatingNoteCallout = null;
     this.activeNoteTarget = {
       columnKey,
       vendorName,
