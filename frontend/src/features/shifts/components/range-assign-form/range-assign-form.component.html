@@ -12,14 +12,37 @@
     [control]="form.controls.workerId"
     [options]="workerOptions()" />
 
-  <app-select-field
-    fieldId="ra-code"
-    label="Código de turno"
-    placeholder="Elige el código"
-    [required]="true"
-    [control]="form.controls.shiftCode"
-    [options]="codeOptions()"
-    [hint]="selectedWorker() ? 'Solo códigos de su rol y el descanso.' : 'Elige primero el vendedor.'" />
+  @if (isSupport()) {
+    <div class="ra-shift">
+      <span class="item-label">Turno</span>
+      <app-segmented-control
+        class="ra-mode"
+        label="Horario o descanso"
+        [options]="modeOptions"
+        [value]="mode()"
+        [disabled]="saving() || saved()"
+        (valueChange)="setMode($event)" />
+      @if (usesHours()) {
+        <app-support-hours-picker
+          idPrefix="ra-hours"
+          animate.enter="ra-swap-in"
+          [draft]="hours"
+          [catalog]="catalog()"
+          [disabled]="saving() || saved()" />
+      } @else {
+        <p class="ra-rest-note" animate.enter="ra-swap-in">Los días del rango quedan en descanso.</p>
+      }
+    </div>
+  } @else {
+    <app-select-field
+      fieldId="ra-code"
+      label="Código de turno"
+      placeholder="Elige el código"
+      [required]="true"
+      [control]="form.controls.shiftCode"
+      [options]="codeOptions()"
+      [hint]="selectedWorker() ? 'Solo códigos de su rol y el descanso.' : 'Elige primero el vendedor.'" />
+  }
 
   <div class="ra-dates">
     <app-form-field fieldId="ra-from" label="Desde" type="date" [required]="true" [control]="form.controls.from"
@@ -45,22 +68,27 @@
       <p class="ra-summary" aria-live="polite">{{ summary() }}</p>
       <ol class="ra-days" aria-label="Días que se escriben">
         @for (d of preview(); track d.date; let i = $index) {
-          <li class="ra-day" [style.--i]="i" [class.is-rest]="d.rest" [attr.title]="d.date + ' · ' + d.code">
+          <li class="ra-day" [style.--i]="i" [class.is-rest]="d.rest" [attr.title]="d.date + ' · ' + d.text">
             <small>{{ d.weekday }}</small>
             <b>{{ d.day }}</b>
-            <app-shift-chip variant="cell" [code]="d.code" />
+            <app-shift-chip variant="cell" [code]="d.code" [segments]="d.segments" />
           </li>
         }
       </ol>
     } @else {
-      <p class="ps-vacio">Elige vendedor, código y fechas para ver qué días cambian.</p>
+      <p class="ps-vacio">Elige vendedor, {{ usesHours() ? 'horas' : 'código' }} y fechas para ver qué días cambian.</p>
     }
   </section>
 
   <div class="ra-actions">
     <button appButton type="button" variant="ghost" (click)="cancelled.emit()">Cancelar</button>
-    <button appButton type="submit" variant="primary" [disabled]="saving()" [attr.aria-busy]="saving()">
-      {{ saving() ? 'Guardando…' : preview().length ? 'Asignar ' + preview().length + ' días' : 'Asignar al rango' }}
+    <button appButton type="submit" variant="primary" class="ra-submit" [class.is-saved]="saved()" [disabled]="saving() || saved()" [attr.aria-busy]="saving()">
+      @if (saved()) {
+        <svg class="ra-saved-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+        Guardado
+      } @else {
+        {{ saving() ? 'Guardando…' : preview().length ? 'Asignar ' + preview().length + ' días' : 'Asignar al rango' }}
+      }
     </button>
   </div>
 </form>

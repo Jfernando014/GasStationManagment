@@ -1,4 +1,4 @@
-import type { ShiftPeriod } from './shift-catalog.dto';
+import type { ShiftPeriod, ShiftScheduleSegment } from './shift-catalog.dto';
 
 /** Shift of a worker on one day (ScheduleDay). */
 export interface ScheduleDay {
@@ -6,6 +6,10 @@ export interface ScheduleDay {
   shiftCode: string;
   /** Reason for the change; null when there is none. */
   note: string | null;
+  /** Hours of the shift in order; empty for DESCANSO. */
+  segments: ShiftScheduleSegment[];
+  /** True for a support schedule typed as hours that matches no standard code. */
+  custom: boolean;
 }
 
 /** Scheduled days of one worker in the requested range (WorkerSchedule). */
@@ -35,23 +39,26 @@ export interface ScheduleResponse {
   coverage: DailyCoverage[];
 }
 
+/** A catalog code or, for a support worker, the hours: exactly one of the two. */
+export type ShiftChoice =
+  | { shiftCode: string; segments?: never }
+  | { segments: ShiftScheduleSegment[]; shiftCode?: never };
+
 /** Body of PUT /api/shifts/schedule/assignments. */
-export interface AssignShiftRequest {
+export type AssignShiftRequest = ShiftChoice & {
   workerId: string;
   date: string;
-  shiftCode: string;
   note?: string | null;
-}
+};
 
 /** Body of PUT /api/shifts/schedule/assignments/range. At most 62 days, from today on. */
-export interface AssignRangeRequest {
+export type AssignRangeRequest = ShiftChoice & {
   workerId: string;
   from: string;
   to: string;
-  shiftCode: string;
   note?: string | null;
   leaveSundaysAsRest: boolean;
-}
+};
 
 /** Result of changing the schedule (ScheduleUpdateResponse). uncoveredDates is a warning, not an error. */
 export interface ScheduleUpdateResponse {

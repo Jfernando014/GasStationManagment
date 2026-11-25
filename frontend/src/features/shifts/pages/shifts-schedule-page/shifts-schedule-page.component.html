@@ -168,7 +168,8 @@
           [readOnly]="ref.date < today"
           [saving]="!!daySavingCode()"
           [savingCode]="daySavingCode()"
-          [errorMessage]="dayError()"
+          [saved]="saved()"
+          [error]="dayError()"
           (chosen)="chooseCode($event)" />
       }
     }
@@ -184,6 +185,7 @@
         [defaultTo]="rangeDefaultTo()"
         [initialWorkerId]="rangeWorkerId()"
         [saving]="rangeSaving()"
+        [saved]="saved()"
         [submitError]="rangeError()"
         (submitted)="submitRange($event)"
         (cancelled)="closePanel()" />
@@ -200,5 +202,5 @@
 </app-side-panel>
 
 <div class="apple-toast-banner" [class.visible]="toastVisible()" role="status" aria-live="polite">
-  <span class="toast-check">✓</span> {{ toastText() }}
+  <span class="toast-check">{{ toastFailed() ? '!' : '✓' }}</span> {{ toastText() }}
 </div>
