@@ -4,14 +4,15 @@ import { vi } from 'vitest';
 
 import { JournalObservationsPanelComponent } from './journal-observations-panel.component';
 import { JournalService } from '../../../core/services/journal.service';
-import { JournalResponse, JournalStatus } from '../../../shared/models/journal.model';
+import { JournalResponse, JournalStatus, StepStatus } from '../../../shared/models/journal.model';
 
 describe('JournalObservationsPanelComponent (SR-08)', () => {
   let component: JournalObservationsPanelComponent;
   let fixture: ComponentFixture<JournalObservationsPanelComponent>;
 
   const journalServiceMock = {
-    updateObservations: vi.fn()
+    updateObservations: vi.fn(),
+    updateStepObservations: vi.fn()
   };
 
   const openJournal: JournalResponse = {
@@ -20,11 +21,16 @@ describe('JournalObservationsPanelComponent (SR-08)', () => {
     consecutive: 300,
     status: JournalStatus.OPEN,
     observations: null,
-    steps: []
+    steps: [
+      { id: 1, stepNumber: 1, name: 'Personal', status: StepStatus.COMPLETED, completedAt: '2026-11-24T06:00:00', observations: null },
+      { id: 2, stepNumber: 2, name: 'Vendedores', status: StepStatus.PENDING, completedAt: null, observations: null },
+      { id: 6, stepNumber: 6, name: 'Cierre', status: StepStatus.PENDING, completedAt: null, observations: null }
+    ]
   };
 
   beforeEach(async () => {
     journalServiceMock.updateObservations.mockReset();
+    journalServiceMock.updateStepObservations.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [JournalObservationsPanelComponent],
@@ -120,5 +126,89 @@ describe('JournalObservationsPanelComponent (SR-08)', () => {
     expect(component.isSaving()).toBe(false);
     expect(component.feedback()?.isError).toBe(true);
     expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeTruthy();
+  });
+
+  it('targets the active step, saves via updateStepObservations, and switches draft when step changes', () => {
+    const journalWithStep1Note: JournalResponse = {
+      ...openJournal,
+      steps: [
+        {
+          id: 1,
+          stepNumber: 1,
+          name: 'Personal',
+          status: StepStatus.COMPLETED,
+          completedAt: '2026-11-24T06:00:00',
+          observations: 'Turno de apoyo cubrió 10:00-17:00.'
+        },
+        {
+          id: 2,
+          stepNumber: 2,
+          name: 'Vendedores',
+          status: StepStatus.PENDING,
+          completedAt: null,
+          observations: null
+        },
+        {
+          id: 6,
+          stepNumber: 6,
+          name: 'Cierre',
+          status: StepStatus.PENDING,
+          completedAt: null,
+          observations: null
+        }
+      ]
+    };
+
+    const updatedAfterStep2: JournalResponse = {
+      ...journalWithStep1Note,
+      steps: journalWithStep1Note.steps.map(s =>
+        s.stepNumber === 2 ? { ...s, observations: 'Parcial extra verificado con recibo.' } : s
+      )
+    };
+    journalServiceMock.updateStepObservations.mockReturnValue(of(updatedAfterStep2));
+
+    fixture.componentRef.setInput('journal', journalWithStep1Note);
+    fixture.componentRef.setInput('activeStepNumber', 1);
+    fixture.detectChanges();
+
+    expect(component.panelTitle()).toBe('Observaciones · Paso 1: Personal del día');
+    expect(component.draft()).toBe('Turno de apoyo cubrió 10:00-17:00.');
+    expect(component.statusLabel()).toBe('Guardada');
+
+    // Switch to Step 2
+    fixture.componentRef.setInput('activeStepNumber', 2);
+    fixture.detectChanges();
+
+    expect(component.panelTitle()).toBe('Observaciones · Paso 2: Cierre por vendedor');
+    expect(component.draft()).toBe('');
+    expect(component.otherObservations()).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('#jr-obs-other-pill')?.textContent).toContain('+1');
+
+    component.toggleExpanded();
+    component.onDraftChange('  Parcial extra verificado con recibo.  ');
+    fixture.detectChanges();
+    component.saveObservations();
+    fixture.detectChanges();
+
+    expect(journalServiceMock.updateStepObservations).toHaveBeenCalledWith(
+      10,
+      2,
+      'Parcial extra verificado con recibo.'
+    );
+    expect(fixture.nativeElement.textContent).toContain('Observación del Paso 2 guardada.');
+
+    // Switch to Step 6 -> shows consolidated observations of earlier steps automatically
+    fixture.componentRef.setInput('activeStepNumber', 6);
+    fixture.detectChanges();
+    component.toggleExpanded();
+    fixture.detectChanges();
+
+    expect(component.shouldAutoShowOtherObservations()).toBe(true);
+    expect(fixture.nativeElement.querySelector('#jr-obs-others')?.textContent).toContain(
+      'Turno de apoyo cubrió 10:00-17:00.'
+    );
+    expect(fixture.nativeElement.querySelector('#jr-obs-others')?.textContent).toContain(
+      'Parcial extra verificado con recibo.'
+    );
   });
 });
