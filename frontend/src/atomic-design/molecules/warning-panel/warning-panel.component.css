@@ -66,6 +66,10 @@
   from { opacity: 0; transform: translateY(-6px); }
 }
 
+@media (max-width: 640px) {
+  :host(.warning-panel--touch) .toggle { min-height: 44px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :host { animation: none; }
   .details, .toggle svg { transition: none; }

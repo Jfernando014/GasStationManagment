@@ -1,0 +1,111 @@
+:host { display: inline-flex; }
+
+/* White like the other buttons; soft orange while its dialog is open or the mouse is over it. */
+.popover-trigger.ab[aria-expanded='true'] {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-subtle);
+  color: var(--brand-primary-strong);
+}
+
+/* Only with a real pointer: on a touch screen the hover would stay after closing. */
+@media (hover: hover) {
+  .popover-trigger.ab:hover {
+    border-color: var(--brand-primary);
+    background: var(--brand-primary-subtle);
+    color: var(--brand-primary-strong);
+  }
+}
+
+.backdrop { display: none; }
+
+.panel {
+  position: fixed;
+  top: var(--top);
+  left: var(--left);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-width: calc(100vw - 24px);
+  max-height: var(--max-height);
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-popover);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px) scale(0.97);
+  transform-origin: top right;
+  transition:
+    opacity var(--duration-normal) var(--spring),
+    transform var(--duration-normal) var(--spring),
+    visibility 0s linear var(--duration-normal);
+}
+
+.panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.panel:focus { outline: none; }
+.panel:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+.sheet-head { display: none; }
+.body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 20px 14px; }
+
+@media (max-width: 639.98px) {
+  :host { display: flex; }
+  .popover-trigger { width: 100%; }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    padding: 0;
+    border: 0;
+    background: rgba(11, 25, 44, 0.35);
+    cursor: default;
+    animation: backdrop-in var(--duration-normal) var(--spring) both;
+  }
+
+  .panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    max-width: 100%;
+    max-height: 85dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--shadow-modal);
+    transform: translateY(100%);
+    transform-origin: bottom center;
+  }
+
+  .panel.is-open { transform: none; }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 8px 8px 18px;
+    border-bottom: 1px solid var(--border-main);
+    font-size: 15px;
+    color: var(--text-heading);
+  }
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { transition: none; }
+  .backdrop { animation: none; }
+}

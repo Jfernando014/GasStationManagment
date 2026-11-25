@@ -31,11 +31,13 @@ let nextId = 0;
     </div>
   `,
   styleUrl: './warning-panel.component.css',
-  host: { role: 'status' }
+  host: { role: 'status', '[class.warning-panel--touch]': 'touchTarget()' }
 })
 export class WarningPanelComponent {
   /** Adds the button that folds the details. */
   readonly collapsible = input(false);
+  /** On a phone the button that folds the details is at least 44 px high. */
+  readonly touchTarget = input(false);
   /** Whether the details are shown; only matters when `collapsible`. */
   readonly open = model(true);
 

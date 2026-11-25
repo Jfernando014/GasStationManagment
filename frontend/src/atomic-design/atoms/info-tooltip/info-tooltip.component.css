@@ -26,6 +26,9 @@
 .trigger--term:hover,
 .trigger--term:focus-visible { color: var(--brand-primary-strong); border-bottom-color: var(--brand-primary); }
 
+.trigger--help { cursor: help; border-radius: 6px; }
+.trigger--link { cursor: pointer; border-radius: 6px; text-decoration: none; }
+
 .bubble {
   position: fixed;
   z-index: 3000;
@@ -60,6 +63,12 @@
 }
 
 .bubble.is-above.is-open { transform: translateY(-100%); }
+
+/* Only the "help" tooltips also grow as they appear. */
+.bubble.is-help { transform: translateY(-4px) scale(0.97); }
+.bubble.is-help.is-above { transform: translateY(calc(-100% - 4px)) scale(0.97); }
+.bubble.is-help.is-open { transform: translateY(0) scale(1); }
+.bubble.is-help.is-above.is-open { transform: translateY(-100%) scale(1); }
 
 .arrow {
   position: absolute;

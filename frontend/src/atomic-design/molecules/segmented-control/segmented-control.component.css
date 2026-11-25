@@ -36,4 +36,7 @@ button:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2
   :host::-webkit-scrollbar { display: none; }
   button { height: 40px; flex-shrink: 0; white-space: nowrap; }
   button:focus-visible { outline-offset: -2px; }
+  :host(.segmented--stretch) { display: block; width: 100%; }
+  :host(.segmented--stretch) .seg { display: flex; }
+  :host(.segmented--stretch) button { flex: 1; height: 44px; }
 }
