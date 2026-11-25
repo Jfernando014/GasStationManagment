@@ -1,0 +1,112 @@
+@if (journalState(); as currentJournal) {
+  <section
+    class="jr-obs-panel"
+    [class.jr-obs-panel--expanded]="isExpanded()"
+    [class.jr-obs-panel--closed]="isClosed()"
+    aria-label="Observaciones de la jornada">
+    <div class="jr-obs-header">
+      <button
+        type="button"
+        class="jr-obs-summary"
+        id="jr-obs-toggle-summary"
+        [attr.aria-expanded]="isExpanded()"
+        aria-controls="jr-obs-body"
+        (click)="toggleExpanded()">
+        <span class="jr-obs-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 2v6h6M8 13h8M8 17h5"></path>
+          </svg>
+        </span>
+        <span class="jr-obs-meta">
+          <span class="jr-obs-title-row">
+            <strong class="jr-obs-title">Observaciones de la jornada</strong>
+            <app-tag [variant]="statusVariant()">{{ statusLabel() }}</app-tag>
+          </span>
+          @if (!isExpanded()) {
+            <span class="jr-obs-preview" [class.jr-obs-preview--muted]="!hasSavedObservations()">
+              {{ previewText() }}
+            </span>
+          }
+        </span>
+      </button>
+
+      <button
+        type="button"
+        appButton
+        variant="ghost"
+        size="sm"
+        id="jr-obs-toggle-btn"
+        [attr.aria-expanded]="isExpanded()"
+        aria-controls="jr-obs-body"
+        (click)="toggleExpanded()">
+        {{ toggleButtonLabel() }}
+      </button>
+    </div>
+
+    @if (isExpanded()) {
+      <div class="jr-obs-body" id="jr-obs-body">
+        @if (isClosed()) {
+          @if (hasSavedObservations()) {
+            <p class="jr-obs-readonly-text" id="jr-obs-readonly-text">{{ currentJournal.observations }}</p>
+          } @else {
+            <p class="jr-obs-empty">No se registraron observaciones en esta jornada.</p>
+          }
+        } @else {
+          <label class="jr-obs-label" for="jr-obs-textarea">
+            Notas operativas visibles en todos los pasos y en el Excel consolidado de la jornada
+          </label>
+          <textarea
+            id="jr-obs-textarea"
+            class="jr-obs-textarea"
+            rows="3"
+            [maxlength]="maxLength"
+            [disabled]="isSaving()"
+            [ngModel]="draft()"
+            (ngModelChange)="onDraftChange($event)"
+            (keydown)="onKeyDown($event)"
+            placeholder="Ej.: Descuadre justificado por vale pendiente, calibración de surtidor, reemplazo de turno..."></textarea>
+
+          <div class="jr-obs-actions">
+            <span class="jr-obs-counter">
+              {{ draft().length }} / {{ maxLength }} · Ctrl+Enter para guardar
+            </span>
+            <div class="jr-obs-buttons">
+              @if (hasUnsavedChanges()) {
+                <button
+                  type="button"
+                  appButton
+                  variant="ghost"
+                  size="sm"
+                  id="jr-obs-discard-btn"
+                  [disabled]="isSaving()"
+                  (click)="discardChanges()">
+                  Descartar
+                </button>
+              }
+              <button
+                type="button"
+                appButton
+                variant="primary"
+                size="sm"
+                id="jr-obs-save-btn"
+                [disabled]="isSaving() || !hasUnsavedChanges()"
+                (click)="saveObservations()">
+                {{ isSaving() ? 'Guardando...' : 'Guardar observación' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (feedback(); as msg) {
+          <p
+            class="jr-obs-feedback"
+            [class.jr-obs-feedback--error]="msg.isError"
+            [attr.role]="msg.isError ? 'alert' : 'status'">
+            {{ msg.text }}
+          </p>
+        }
+      </div>
+    }
+  </section>
+}

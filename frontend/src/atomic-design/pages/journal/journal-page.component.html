@@ -45,6 +45,8 @@
       <router-outlet></router-outlet>
     </div>
 
+    <app-journal-observations-panel [journal]="journal"></app-journal-observations-panel>
+
     @if (showStepFooter) {
       <footer class="jr-jornada-pie" aria-label="Navegación entre pasos de la jornada">
         <button

@@ -7,6 +7,7 @@ import { ActionButtonDirective } from '../../atoms/action-button/action-button.d
 import { JOURNAL_STEP_ROUTES, JournalService } from '../../../core/services/journal.service';
 import { yesterdayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse } from '../../../shared/models/journal.model';
+import { JournalObservationsPanelComponent } from '../../organisms/journal-observations-panel/journal-observations-panel.component';
 import { JournalStepperComponent } from '../../organisms/journal-stepper/journal-stepper.component';
 import { UnsavedStepModalComponent } from '../../organisms/unsaved-step-modal/unsaved-step-modal.component';
 
@@ -15,7 +16,14 @@ const STEP_ROUTES = JOURNAL_STEP_ROUTES;
 @Component({
   selector: 'app-journal-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, ActionButtonDirective, JournalStepperComponent, UnsavedStepModalComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ActionButtonDirective,
+    JournalStepperComponent,
+    JournalObservationsPanelComponent,
+    UnsavedStepModalComponent
+  ],
   templateUrl: './journal-page.component.html',
   styleUrls: ['./journal-page.component.css']
 })
