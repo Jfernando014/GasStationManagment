@@ -33,4 +33,7 @@ public class JournalStep {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "observations", columnDefinition = "TEXT")
+    private String observations;
 }

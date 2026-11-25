@@ -11,7 +11,8 @@ public record JournalSnapshot(
         JournalStatus status,
         LocalDateTime createdAt,
         List<JournalStepSnapshot> steps,
-        String observations) {
+        String observations,
+        List<JournalCellNote> cellNotes) {
 
     public JournalSnapshot(
             Long id,
@@ -20,17 +21,38 @@ public record JournalSnapshot(
             JournalStatus status,
             LocalDateTime createdAt,
             List<JournalStepSnapshot> steps) {
-        this(id, date, consecutive, status, createdAt, steps, null);
+        this(id, date, consecutive, status, createdAt, steps, null, List.of());
+    }
+
+    public JournalSnapshot(
+            Long id,
+            LocalDate date,
+            Long consecutive,
+            JournalStatus status,
+            LocalDateTime createdAt,
+            List<JournalStepSnapshot> steps,
+            String observations) {
+        this(id, date, consecutive, status, createdAt, steps, observations, List.of());
     }
 
     public JournalSnapshot {
-        steps = List.copyOf(steps);
+        steps = steps == null ? List.of() : List.copyOf(steps);
+        cellNotes = cellNotes == null ? List.of() : List.copyOf(cellNotes);
     }
 
     public record JournalStepSnapshot(
             Integer stepNumber,
             String name,
             StepStatus status,
-            LocalDateTime completedAt) {
+            LocalDateTime completedAt,
+            String observations) {
+
+        public JournalStepSnapshot(
+                Integer stepNumber,
+                String name,
+                StepStatus status,
+                LocalDateTime completedAt) {
+            this(stepNumber, name, status, completedAt, null);
+        }
     }
 }
