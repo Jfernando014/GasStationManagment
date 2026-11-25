@@ -11,6 +11,7 @@ import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffRea
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.ClosingInventorySnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.FuelVariationSummary;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.InventoryAlertSummary;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -149,7 +150,7 @@ public class JournalWorkbookExporter {
                 writeTextCell(row, 1, member.document(), styles.text);
                 writeTextCell(row, 2, member.name(), styles.text);
                 writeTextCell(row, 3, member.role(), styles.text);
-                writeTextCell(row, 4, member.shiftName(), styles.text);
+                writeTextCell(row, 4, CustomShiftCode.displayText(member.shiftName()), styles.text);
                 writeTextCell(row, 5, member.pumpNumber() != null ? member.pumpNumber().toString() : "", styles.text);
             }
             sheet.setAutoFilter(new CellRangeAddress(0, rowNumber - 1, 0, headers.length - 1));
@@ -221,7 +222,7 @@ public class JournalWorkbookExporter {
             Row row = sheet.createRow(rowNumber++);
             writeTextCell(row, 0, close.vendorName(), styles.text);
             writeTextCell(row, 1, close.vendorDocument(), styles.text);
-            writeTextCell(row, 2, close.shiftName(), styles.text);
+            writeTextCell(row, 2, CustomShiftCode.displayText(close.shiftName()), styles.text);
             writeTextCell(row, 3, close.pumpNumber() != null ? close.pumpNumber().toString() : "", styles.text);
             writeDecimalCell(row, 4, motor, styles.gallons);
             writeDecimalCell(row, 5, diesel, styles.gallons);

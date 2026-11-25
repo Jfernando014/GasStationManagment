@@ -81,7 +81,9 @@ class JournalWorkbookExporterTest {
 
         JournalFullWorkbookData fullData = new JournalFullWorkbookData(
                 snapshot,
-                List.of(new AssignedVendor("1001", "Carlos P.", "TITULAR", "DIA6", 1, "V-01")),
+                List.of(
+                        new AssignedVendor("1001", "Carlos P.", "TITULAR", "DIA6", 1, "V-01"),
+                        new AssignedVendor("1002", "Mónica D.", "APOYO", "AP_10-17", 2, "V-02")),
                 daySummary,
                 List.of(carlos),
                 cashBalance,
@@ -101,6 +103,8 @@ class JournalWorkbookExporterTest {
 
             XSSFSheet staffSheet = wb.getSheet("Personal");
             assertEquals("Carlos P.", staffSheet.getRow(1).getCell(2).getStringCellValue());
+            assertEquals("DIA6", staffSheet.getRow(1).getCell(4).getStringCellValue());
+            assertEquals("10:00–17:00", staffSheet.getRow(2).getCell(4).getStringCellValue());
 
             XSSFSheet vendorSheet = wb.getSheet("Cierre Vendedores");
             assertEquals("Carlos P.", vendorSheet.getRow(1).getCell(0).getStringCellValue());
