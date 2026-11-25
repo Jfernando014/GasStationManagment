@@ -11,7 +11,7 @@ import { ShiftHoursService } from '../../../../core/services/shift-hours.service
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
-import { JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
+import { JournalCellNoteResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import {
   AssignedVendorDto,
   CatalogProductItem,
@@ -21,6 +21,39 @@ import {
   VendorShiftCloseBatchRequestDto,
   VendorShiftCloseItemRequestDto
 } from '../../../../shared/models/dtos/vendor-close.dto';
+
+export interface ActiveCellNoteTarget {
+  columnKey: string;
+  vendorName: string;
+  fieldKey: string;
+  fieldLabel: string;
+}
+
+export interface CellNoteSummaryItem {
+  columnKey: string;
+  vendorName: string;
+  fieldKey: string;
+  fieldLabel: string;
+  note: string;
+}
+
+export const STEP2_NOTE_FIELD_LABELS: Record<string, string> = {
+  descuadre: 'Descuadre real',
+  parciales: 'Parciales',
+  pico: 'Pico',
+  efectivo: 'Total efectivo',
+  ga: 'G.A.',
+  credibanco: 'Credibanco',
+  qr: 'QR',
+  redenciones: 'Redenciones Puntos Colombia',
+  totalEntregado: 'Total entregado',
+  galMotor: 'Galones Motor',
+  galDiesel: 'Galones Diésel',
+  galExtra: 'Galones Extra',
+  galMaxpro: 'Galones Max Pro',
+  canastilla: 'Canastilla',
+  tirilla: 'Total (tirilla)'
+};
 
 export const DENOMINATIONS: [keyof DenominationsBreakdown, number][] = [
   ['b100k', 100000],
@@ -92,6 +125,15 @@ export class VendorCloseStep2Component implements OnInit {
   toastVisible = false;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private loadedDate: string | null = null;
+  currentJournalId: number | null = null;
+  private loadedNotesJournalId: number | null = null;
+
+  readonly maxNoteLength = 500;
+  cellNotes: Record<string, string> = {};
+  activeNoteTarget: ActiveCellNoteTarget | null = null;
+  noteDraft = '';
+  isSavingNote = false;
+  noteErrorMessage = '';
 
   ngOnInit(): void {
     this.stepChangesService?.register(this.dirtyHandler);
@@ -103,9 +145,13 @@ export class VendorCloseStep2Component implements OnInit {
         if (params['date']) {
           this.journalDate = params['date'];
         } else {
-          const snapshotDate = this.journalService?.getCurrentJournalSnapshot()?.date;
-          if (snapshotDate) {
-            this.journalDate = snapshotDate;
+          const snapshot = this.journalService?.getCurrentJournalSnapshot?.();
+          if (snapshot?.date) {
+            this.journalDate = snapshot.date;
+          }
+          if (snapshot?.id) {
+            this.currentJournalId = snapshot.id;
+            this.loadCellNotes(snapshot.id);
           }
         }
         this.ensureDataLoadedForDate();
@@ -116,6 +162,7 @@ export class VendorCloseStep2Component implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(journal => {
           if (!journal) return;
+          this.currentJournalId = journal.id;
           const step1 = journal.steps?.find(s => s.stepNumber === 1);
           this.isStep1Complete = step1?.status === StepStatus.COMPLETED;
           const closingStep = journal.steps?.find(s => s.stepNumber === 6);
@@ -124,6 +171,7 @@ export class VendorCloseStep2Component implements OnInit {
             this.journalDate = journal.date;
           }
           this.ensureDataLoadedForDate();
+          this.loadCellNotes(journal.id);
           this.cdr.detectChanges();
         });
     }
@@ -925,6 +973,189 @@ export class VendorCloseStep2Component implements OnInit {
       switchMap(() => of(true)),
       catchError(() => of(false))
     );
+  }
+
+  // --- Excel-style Cell Notes (SR-08) ---
+  private loadCellNotes(journalId: number): void {
+    if (this.loadedNotesJournalId === journalId) return;
+    this.loadedNotesJournalId = journalId;
+    this.cellNotes = {};
+    this.activeNoteTarget = null;
+    const loader = this.journalService?.getCellNotes;
+    if (typeof loader !== 'function') return;
+
+    loader
+      .call(this.journalService, journalId, 2)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (notes: JournalCellNoteResponse[]) => {
+          const mapByCell: Record<string, string> = {};
+          for (const item of notes ?? []) {
+            if (item.columnKey && item.fieldKey && item.note?.trim()) {
+              mapByCell[this.cellNoteKey(item.columnKey, item.fieldKey)] = item.note.trim();
+            }
+          }
+          this.cellNotes = mapByCell;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          // Keep grid usable even if cell notes fail to load.
+        }
+      });
+  }
+
+  private cellNoteKey(columnKey: string, fieldKey: string): string {
+    return `${columnKey}::${fieldKey}`;
+  }
+
+  getCellNote(columnKey: string, fieldKey: string): string | null {
+    return this.cellNotes[this.cellNoteKey(columnKey, fieldKey)] ?? null;
+  }
+
+  hasCellNote(columnKey: string, fieldKey: string): boolean {
+    return Boolean(this.getCellNote(columnKey, fieldKey));
+  }
+
+  getCellTooltip(columnKey: string, fieldKey: string, fallback?: string | null): string | null {
+    const note = this.getCellNote(columnKey, fieldKey);
+    if (note && fallback) {
+      return `${fallback}\nNota: ${note}`;
+    }
+    if (note) {
+      return `Nota: ${note}`;
+    }
+    return fallback ?? null;
+  }
+
+  get cellNotesList(): CellNoteSummaryItem[] {
+    const items: CellNoteSummaryItem[] = [];
+    for (const [compoundKey, note] of Object.entries(this.cellNotes)) {
+      const separatorIndex = compoundKey.indexOf('::');
+      if (separatorIndex <= 0) continue;
+      const columnKey = compoundKey.slice(0, separatorIndex);
+      const fieldKey = compoundKey.slice(separatorIndex + 2);
+      const vendor = this.assignedVendors.find(v => v.document === columnKey);
+      items.push({
+        columnKey,
+        vendorName: vendor?.name ?? columnKey,
+        fieldKey,
+        fieldLabel: STEP2_NOTE_FIELD_LABELS[fieldKey] ?? fieldKey,
+        note
+      });
+    }
+    return items.sort((a, b) =>
+      a.vendorName.localeCompare(b.vendorName, 'es') || a.fieldLabel.localeCompare(b.fieldLabel, 'es')
+    );
+  }
+
+  onCellContextMenu(event: MouseEvent, vendor: AssignedVendorDto, fieldKey: string): void {
+    if (this.isReadOnly && !this.hasCellNote(vendor.document, fieldKey)) {
+      return;
+    }
+    event.preventDefault();
+    this.openCellNote(vendor, fieldKey, event);
+  }
+
+  openCellNote(vendor: AssignedVendorDto, fieldKey: string, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (this.isReadOnly && !this.hasCellNote(vendor.document, fieldKey)) {
+      return;
+    }
+    this.openCellNoteByKey(vendor.document, vendor.name, fieldKey);
+  }
+
+  openCellNoteByKey(columnKey: string, vendorName: string, fieldKey: string): void {
+    this.activeNoteTarget = {
+      columnKey,
+      vendorName,
+      fieldKey,
+      fieldLabel: STEP2_NOTE_FIELD_LABELS[fieldKey] ?? fieldKey
+    };
+    this.noteDraft = this.getCellNote(columnKey, fieldKey) ?? '';
+    this.noteErrorMessage = '';
+    this.isSavingNote = false;
+    this.cdr.detectChanges();
+  }
+
+  closeCellNote(): void {
+    this.activeNoteTarget = null;
+    this.noteDraft = '';
+    this.noteErrorMessage = '';
+    this.isSavingNote = false;
+    this.cdr.detectChanges();
+  }
+
+  onNoteKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeCellNote();
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      this.saveActiveCellNote();
+    }
+  }
+
+  saveActiveCellNote(): void {
+    const target = this.activeNoteTarget;
+    if (!target || this.isReadOnly || this.isSavingNote) return;
+
+    const journalId = this.currentJournalId ?? this.journalService?.getCurrentJournalSnapshot?.()?.id ?? null;
+    const saver = this.journalService?.saveCellNote;
+    if (!journalId || typeof saver !== 'function') {
+      this.noteErrorMessage = 'No se encontró una jornada activa para guardar la nota.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const normalized = this.noteDraft.trim();
+    if (normalized.length > this.maxNoteLength) {
+      this.noteErrorMessage = `La nota no puede superar los ${this.maxNoteLength} caracteres.`;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const payloadNote = normalized.length > 0 ? normalized : null;
+    this.isSavingNote = true;
+    this.noteErrorMessage = '';
+
+    saver
+      .call(this.journalService, journalId, {
+        stepNumber: 2,
+        columnKey: target.columnKey,
+        fieldKey: target.fieldKey,
+        note: payloadNote
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: saved => {
+          const key = this.cellNoteKey(target.columnKey, target.fieldKey);
+          const nextNotes = { ...this.cellNotes };
+          if (saved?.note) {
+            nextNotes[key] = saved.note;
+          } else if (payloadNote) {
+            nextNotes[key] = payloadNote;
+          } else {
+            delete nextNotes[key];
+          }
+          this.cellNotes = nextNotes;
+          this.closeCellNote();
+          this.showToast(payloadNote ? 'Nota guardada en la celda' : 'Nota eliminada');
+        },
+        error: (error: unknown) => {
+          this.isSavingNote = false;
+          this.noteErrorMessage = getErrorMessage(error) || 'No se pudo guardar la nota de la celda.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  deleteActiveCellNote(): void {
+    if (!this.activeNoteTarget || this.isReadOnly || this.isSavingNote) return;
+    this.noteDraft = '';
+    this.saveActiveCellNote();
   }
 
   // --- Dominus Lateral Drawer ---
