@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { lineScale } from '../../helpers/performance-view.helpers';
 import { ScenarioLine, SellerView } from '../../models/performance-view.model';
 import { ComparisonLineComponent } from '../comparison-line/comparison-line.component';
@@ -21,6 +22,8 @@ import { ComparisonLineComponent } from '../comparison-line/comparison-line.comp
   styleUrl: './seller-comparison-table.component.css'
 })
 export class SellerComparisonTableComponent {
+  private readonly shiftHours = inject(ShiftHoursService);
+
   readonly sellers = input.required<SellerView[]>();
   readonly loading = input(false);
   /** Unit written next to the averages: "gal" or "COP". */
@@ -68,7 +71,12 @@ export class SellerComparisonTableComponent {
   }
 
   protected lineSentence(line: ScenarioLine): string {
-    return line.summary;
+    return this.withHours(line.summary);
+  }
+
+  /** A scenario text names the shift code when it needs to; a custom schedule is read as its hours. */
+  protected withHours(text: string): string {
+    return this.shiftHours.inText(text);
   }
 
   protected readonly formula = 'Lo que vendió dividido por lo que habría vendido con el promedio de la estación en esos mismos turnos';

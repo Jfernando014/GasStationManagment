@@ -53,6 +53,26 @@
   animation: de-in var(--duration-normal) var(--spring) both;
 }
 
+/* Apoyo: selector de horas y su botón de guardar */
+.de-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.de-save { min-height: 44px; justify-content: center; }
+
+.de-hours .de-save.is-saved {
+  background: var(--semantic-green-strong);
+  border-color: var(--semantic-green-strong);
+  color: #FFFFFF;
+  opacity: 1;
+}
+
+.de-save-check { animation: de-check-in 200ms var(--spring) both; }
+
+@keyframes de-check-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+
 .de-options {
   margin: 0;
   padding: 0;
@@ -121,7 +141,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .de-option, .de-error { animation: none; transition: none; }
+  .de-option, .de-error, .de-save-check { animation: none; transition: none; }
 }
 
 @media (max-width: 420px) {

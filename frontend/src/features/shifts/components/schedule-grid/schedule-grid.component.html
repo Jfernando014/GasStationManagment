@@ -65,7 +65,7 @@
                   (keydown)="onKeydown($event)"
                   (click)="open(row, col, r, c)">
                   @if (cell.code) {
-                    <app-shift-chip variant="cell" [code]="cell.code" />
+                    <app-shift-chip variant="cell" [code]="cell.code" [segments]="cell.segments" />
                   }
                 </button>
               </td>
@@ -122,7 +122,7 @@
               <app-avatar [name]="row.name" />
               <span class="sg-daycard-name"><b>{{ row.name }}</b><small>{{ row.roleLabel }}{{ cell.note ? ' · con nota' : '' }}</small></span>
               @if (cell.code) {
-                <app-shift-chip [code]="cell.code" />
+                <app-shift-chip [code]="cell.code" [segments]="cell.segments" />
               } @else {
                 <span class="sg-daycard-empty">Sin turno</span>
               }

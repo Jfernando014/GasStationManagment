@@ -11,6 +11,7 @@ import { SidePanelComponent } from '../../../../atomic-design/organisms/side-pan
 import { DayStaffService } from '../../../../core/services/day-staff.service';
 import { JournalService } from '../../../../core/services/journal.service';
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { ShiftsScheduleService } from '../../../../core/services/shifts-schedule.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
 import {
@@ -20,7 +21,8 @@ import {
   segmentOnOperationalDay,
   segmentsLabel
 } from '../../../../shared/helpers/shift-display.helpers';
-import { ShiftCode } from '../../../../shared/models/dtos/shift-catalog.dto';
+import { isCustomShiftCode } from '../../../../shared/helpers/support-hours.helpers';
+import { ShiftCode, ShiftScheduleSegment } from '../../../../shared/models/dtos/shift-catalog.dto';
 import {
   DayStaffNovelty,
   DayStaffStepResponse,
@@ -59,6 +61,8 @@ interface DayPerson {
   code: string;
   gridCode: string;
   changed: boolean;
+  /** Horas del turno que trabaja; no vienen para quien no trabaja. */
+  segments?: ShiftScheduleSegment[];
   hours: string;
   totalHours: number;
   roleLabel: string;
@@ -95,6 +99,7 @@ export class DayStaffPageComponent {
   private readonly dayStaffService = inject(DayStaffService);
   private readonly journalService = inject(JournalService);
   private readonly scheduleService = inject(ShiftsScheduleService);
+  private readonly shiftHours = inject(ShiftHoursService);
   private readonly stepChangesService = inject(JournalStepChangesService, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -172,6 +177,7 @@ export class DayStaffPageComponent {
       code: m.workedCode,
       gridCode: m.gridCode,
       changed: m.workedCode !== m.gridCode,
+      segments: m.segments,
       hours: segmentsLabel(m.segments),
       totalHours: m.totalHours,
       roleLabel: m.dayRole === 'APOYO' ? 'Apoyo' : 'Titular',
@@ -179,7 +185,7 @@ export class DayStaffPageComponent {
       support: m.support,
       bars: m.segments.map((seg, i) => ({
         ...segmentOnOperationalDay(seg),
-        label: i === 0 ? `${m.workedCode} · ${segmentsLabel([seg])}` : segmentsLabel([seg])
+        label: i === 0 && !isCustomShiftCode(m.workedCode) ? `${m.workedCode} · ${segmentsLabel([seg])}` : segmentsLabel([seg])
       })),
       novelty: m.noveltyType === 'NONE' ? '' : NOVELTY_LABELS[m.noveltyType],
       noveltyReason: m.noveltyReason,
@@ -445,6 +451,15 @@ export class DayStaffPageComponent {
       switchMap(() => of(true)),
       catchError(() => of(false))
     );
+  }
+
+  shiftText(code: string): string {
+    return this.shiftHours.text(code);
+  }
+
+  /** Un aviso o error del servidor, con las horas en lugar de los códigos de horarios personalizados. */
+  withHours(message: string): string {
+    return this.shiftHours.inText(message);
   }
 
   noveltyLabel(type: NoveltyType | 'NONE'): string {

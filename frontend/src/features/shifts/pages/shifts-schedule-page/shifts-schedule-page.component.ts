@@ -16,6 +16,7 @@ import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-bu
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
 import { SidePanelComponent } from '../../../../atomic-design/organisms/side-panel/side-panel.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { ShiftsScheduleService } from '../../../../core/services/shifts-schedule.service';
 import { WorkersService } from '../../../../core/services/workers.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
@@ -55,6 +56,8 @@ const TOAST_DURATION_MS = 3500;
 /** Duración del vuelo de la ficha hasta la celda y del barrido de una fila guardada. */
 const FLIGHT_MS = 320;
 const SWEEP_MS = 1400;
+/** Lo que se ve la confirmación de un horario guardado antes de cerrar el panel. */
+const CONFIRM_MS = 220;
 
 /** Leyenda de turnos: también es el filtro de la malla. El código de muestra es el que da el color. */
 const LEGEND_SHIFTS: { tone: ShiftTone; code: string; label: string; hint: string }[] = [
@@ -62,7 +65,7 @@ const LEGEND_SHIFTS: { tone: ShiftTone; code: string; label: string; hint: strin
   { tone: 'dia6', code: 'DIA6', label: 'Día corto', hint: '06–12' },
   { tone: 'nueve-seis', code: '9-6', label: 'Día tarde', hint: '09–18' },
   { tone: 'noche', code: 'NOCHE', label: 'Noche', hint: '18–06' },
-  { tone: 'apoyo', code: '12-7', label: 'Apoyo', hint: 'el código es el horario' },
+  { tone: 'apoyo', code: '12-7', label: 'Apoyo', hint: 'el código o sus horas' },
   { tone: 'descanso', code: 'DESCANSO', label: 'Descanso', hint: '' }
 ];
 
@@ -92,6 +95,7 @@ const LEGEND_SHIFTS: { tone: ShiftTone; code: string; label: string; hint: strin
 export class ShiftsSchedulePageComponent {
   private readonly scheduleService = inject(ShiftsScheduleService);
   private readonly workersService = inject(WorkersService);
+  private readonly shiftHours = inject(ShiftHoursService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly grid = viewChild(ScheduleGridComponent);
@@ -112,15 +116,20 @@ export class ShiftsSchedulePageComponent {
   readonly panel = signal<Panel | null>(null);
   readonly dayRef = signal<GridCellRef | null>(null);
   readonly daySavingCode = signal<string | null>(null);
-  readonly dayError = signal<string | null>(null);
+  readonly dayError = signal<unknown>(null);
+  /** Un horario recién guardado: el panel lo confirma antes de cerrarse. */
+  readonly saved = signal(false);
   readonly rangeSaving = signal(false);
   readonly rangeError = signal<unknown>(null);
+  /** El último rango se envió con horas: su error se muestra junto al selector, no arriba del panel. */
+  private readonly rangeUsedHours = signal(false);
   readonly rangeWorkerId = signal<string | null>(null);
 
   readonly sweep = signal<GridSweep | null>(null);
   readonly updatedKey = signal<string | null>(null);
   readonly toastText = signal('');
   readonly toastVisible = signal(false);
+  readonly toastFailed = signal(false);
 
   /** Familia de turno elegida en la leyenda: la malla deja ver solo esos días. */
   readonly filter = signal<ShiftTone | null>(null);
@@ -177,7 +186,7 @@ export class ShiftsSchedulePageComponent {
     people.sort((a, b) => Number(a.role === 'APOYO') - Number(b.role === 'APOYO') || a.name.localeCompare(b.name, 'es'));
     return people.map(p => {
       const cells: Record<string, GridCell> = {};
-      byWorker.get(p.id)?.days.forEach(d => (cells[d.date] = { code: d.shiftCode, note: d.note }));
+      byWorker.get(p.id)?.days.forEach(d => (cells[d.date] = { code: d.shiftCode, note: d.note, segments: d.segments }));
       Object.entries(local).forEach(([key, cell]) => {
         const [workerId, date] = key.split('|');
         if (workerId === p.id) cells[date] = cell;
@@ -232,7 +241,7 @@ export class ShiftsSchedulePageComponent {
         const ref = this.dayRef();
         return ref ? `${this.dayWorker()?.name ?? ''} · ${shortDateLabel(ref.date)}` : 'Día';
       }
-      case 'range': return 'Asignar un código a un rango';
+      case 'range': return 'Asignar un turno a un rango';
       case 'rotation': return 'Generar la rotación del mes';
       default: return '';
     }
@@ -243,8 +252,9 @@ export class ShiftsSchedulePageComponent {
       case 'day': {
         const ref = this.dayRef();
         const role = this.dayWorker()?.roleLabel ?? '';
-        return ref && ref.date < this.today
-          ? `${role}. Este día ya pasó: solo lectura.`
+        if (ref && ref.date < this.today) return `${role}. Este día ya pasó: solo lectura.`;
+        return this.dayRole() === 'APOYO'
+          ? `${role}. Elige las horas y guarda.`
           : `${role}. Elige un turno y se guarda al instante.`;
       }
       case 'range': return 'Mismo turno para un vendedor en varios días seguidos.';
@@ -265,6 +275,7 @@ export class ShiftsSchedulePageComponent {
   private toastTimer?: ReturnType<typeof setTimeout>;
   private sweepTimer?: ReturnType<typeof setTimeout>;
   private popTimer?: ReturnType<typeof setTimeout>;
+  private confirmTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     this.reload$
@@ -309,6 +320,7 @@ export class ShiftsSchedulePageComponent {
       clearTimeout(this.toastTimer);
       clearTimeout(this.sweepTimer);
       clearTimeout(this.popTimer);
+      clearTimeout(this.confirmTimer);
     });
 
     this.reload$.next({ silent: false });
@@ -345,60 +357,84 @@ export class ShiftsSchedulePageComponent {
   }
 
   openDay(ref: GridCellRef): void {
+    this.cancelConfirmation();
+    this.daySavingCode.set(null);
     this.dayError.set(null);
     this.dayRef.set(ref);
     this.panel.set('day');
   }
 
   openRange(workerId: string | null = null): void {
+    this.cancelConfirmation();
     this.rangeError.set(null);
     this.rangeWorkerId.set(workerId);
     this.panel.set('range');
   }
 
   openRotation(): void {
+    this.cancelConfirmation();
     this.panel.set('rotation');
   }
 
   closePanel(): void {
+    this.cancelConfirmation();
     this.panel.set(null);
     this.daySavingCode.set(null);
   }
 
-  /** Guarda al elegir: la ficha vuela a la celda y la malla la muestra ya; si el servidor la rechaza, se revierte. */
+  /**
+   * Guarda al elegir un código o al pulsar "Guardar horario": la malla muestra el cambio ya; si el servidor lo
+   * rechaza, la celda vuelve a su valor anterior.
+   */
   chooseCode(choice: DayChoice): void {
     const ref = this.dayRef();
-    if (!ref || this.daySavingCode()) return;
+    if (!ref || this.daySavingCode() || this.saved()) return;
     const previous = this.dayCell();
     if (previous.code === choice.code && (previous.note ?? null) === choice.note) {
       this.closePanel();
       return;
     }
     const key = `${ref.workerId}|${ref.date}`;
+    const name = this.dayWorker()?.name ?? '';
+    const segments = choice.segments ?? this.catalog().find(c => c.code === choice.code)?.schedule.segments;
+    /** La respuesta puede llegar cuando el panel ya está cerrado o muestra otro día. */
+    const stillOpen = () => this.panel() === 'day' && this.dayRef() === ref;
     this.dayError.set(null);
     this.daySavingCode.set(choice.code);
-    this.flyChip(choice.origin, ref);
-    this.setLocalCell(key, { code: choice.code, note: choice.note });
+    if (choice.origin) this.flyChip(choice.origin, ref);
+    this.setLocalCell(key, { code: choice.code, note: choice.note, segments });
 
+    const day = { workerId: ref.workerId, date: ref.date, note: choice.note };
     this.scheduleService
-      .assign({ workerId: ref.workerId, date: ref.date, shiftCode: choice.code, note: choice.note })
+      .assign(choice.segments ? { ...day, segments: choice.segments } : { ...day, shiftCode: choice.code })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
-          this.daySavingCode.set(null);
-          this.pop(key);
-          this.closePanel();
-          const name = this.dayWorker()?.name ?? '';
+          if (!stillOpen()) {
+            this.pop(key);
+          } else if (choice.segments) {
+            this.daySavingCode.set(null);
+            this.confirmThenClose(() => this.pop(key));
+          } else {
+            this.pop(key);
+            this.closePanel();
+          }
           const warning = result.uncoveredDates.length
             ? ` Ojo: el ${result.uncoveredDates.map(shortDateLabel).join(', ')} queda sin cobertura completa.`
             : '';
-          this.showToast(`Guardado: ${name} · ${shortDateLabel(ref.date)} → ${choice.code}.${warning}`);
+          const shift = this.shiftHours.text(choice.code, segments);
+          this.showToast(`Guardado: ${name} · ${shortDateLabel(ref.date)} → ${shift}.${warning}`);
           this.reload$.next({ silent: true });
         },
         error: (error: unknown) => {
-          this.daySavingCode.set(null);
           this.setLocalCell(key, previous);
-          this.dayError.set(getErrorMessage(error));
+          if (stillOpen()) {
+            this.daySavingCode.set(null);
+            this.dayError.set(error);
+          } else {
+            const reason = this.shiftHours.inText(getErrorMessage(error));
+            this.showToast(`No se guardó: ${name} · ${shortDateLabel(ref.date)}. ${reason}`, true);
+          }
         }
       });
   }
@@ -407,13 +443,18 @@ export class ShiftsSchedulePageComponent {
     if (this.rangeSaving()) return;
     this.rangeSaving.set(true);
     this.rangeError.set(null);
+    this.rangeUsedHours.set(!!request.segments);
     this.scheduleService
       .assignRange(request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
           this.rangeSaving.set(false);
-          this.closePanel();
+          if (request.segments && this.panel() === 'range') {
+            this.confirmThenClose();
+          } else {
+            this.closePanel();
+          }
           const warning = result.uncoveredDates.length ? ` ${result.uncoveredDates.length} días quedan sin cobertura completa.` : '';
           this.showToast(`Se guardaron ${result.saved} días.${warning}`);
           this.pendingSweep = { workerIds: new Set([request.workerId]), from: request.from, to: request.to };
@@ -442,7 +483,7 @@ export class ShiftsSchedulePageComponent {
 
   rangeErrorMessage(): string | null {
     const error = this.rangeError();
-    return error ? getErrorMessage(error) : null;
+    return error && !this.rangeUsedHours() ? this.shiftHours.inText(getErrorMessage(error)) : null;
   }
 
   rangeDefaultFrom(): string {
@@ -451,6 +492,24 @@ export class ShiftsSchedulePageComponent {
 
   rangeDefaultTo(): string {
     return lastDayOfMonth(this.month());
+  }
+
+  private confirmThenClose(afterClose?: () => void): void {
+    const close = () => {
+      this.closePanel();
+      afterClose?.();
+    };
+    if (prefersReducedMotion()) {
+      close();
+      return;
+    }
+    this.saved.set(true);
+    this.confirmTimer = setTimeout(close, CONFIRM_MS);
+  }
+
+  private cancelConfirmation(): void {
+    clearTimeout(this.confirmTimer);
+    this.saved.set(false);
   }
 
   private setLocalCell(key: string, cell: GridCell): void {
@@ -503,8 +562,9 @@ export class ShiftsSchedulePageComponent {
     flight.oncancel = () => clone.remove();
   }
 
-  private showToast(text: string): void {
+  private showToast(text: string, failed = false): void {
     clearTimeout(this.toastTimer);
+    this.toastFailed.set(failed);
     this.toastText.set(text);
     this.toastVisible.set(true);
     this.toastTimer = setTimeout(() => this.toastVisible.set(false), TOAST_DURATION_MS);

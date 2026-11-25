@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, afterRenderEffect, computed, inject, input } from '@angular/core';
 
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { dayOfMonth, isSunday, prefersReducedMotion, shortDateLabel, weekdayShort } from '../../../../shared/helpers/shift-display.helpers';
 import {
   RotationCoverage,
@@ -64,6 +65,7 @@ export function rotationCoverageTip(date: string, c: RotationCoverage): string {
 })
 export class RotationPreviewGridComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly shiftHours = inject(ShiftHoursService);
 
   readonly preview = input.required<RotationPreviewResponse>();
 
@@ -104,7 +106,7 @@ export class RotationPreviewGridComponent {
       cells: preview.days.map(d => {
         const row = d.rows.find(r => r.workerId === workerId);
         return row
-          ? { code: row.shiftCode, status: row.status, label: `${name}, ${shortDateLabel(d.date)}: ${row.shiftCode}, ${STATUS_TIPS[row.status]}` }
+          ? { code: row.shiftCode, status: row.status, label: `${name}, ${shortDateLabel(d.date)}: ${this.shiftHours.text(row.shiftCode)}, ${STATUS_TIPS[row.status]}` }
           : null;
       })
     }));

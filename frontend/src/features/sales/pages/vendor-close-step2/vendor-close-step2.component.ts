@@ -7,6 +7,7 @@ import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
@@ -52,6 +53,7 @@ export class VendorCloseStep2Component implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly shiftHours = inject(ShiftHoursService);
   private savedInputSnapshot = '';
   private readonly dirtyHandler: StepDirtyHandler = {
     hasUnsavedChanges: () => this.hasUnsavedChanges(),
@@ -952,6 +954,11 @@ export class VendorCloseStep2Component implements OnInit {
       this.cdr.detectChanges();
     }, 3200);
     this.cdr.detectChanges();
+  }
+
+  /** Turno del cierre como se lee: el código, o las horas si es un horario personalizado. */
+  shiftText(shiftName: string): string {
+    return this.shiftHours.text(shiftName);
   }
 
   formatCurrency(amount: number): string {

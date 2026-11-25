@@ -9,6 +9,7 @@ import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleView;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftAssignment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftSegment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.WorkerShifts;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftAssignmentRepository;
 import com.edu.unicauca.gasstation.backend.shifts.domain.repositories.ShiftCodeRepository;
@@ -53,6 +54,7 @@ public class ShiftScheduleService {
     private final ShiftAssignmentRepository shiftAssignmentRepository;
     private final ShiftCodeRepository shiftCodeRepository;
     private final ScheduleWorkerDirectory scheduleWorkerDirectory;
+    private final CustomShiftService customShiftService;
 
     /**
      * Saves the shift code of a worker on one day, replacing the one the day had (code and note).
@@ -68,8 +70,25 @@ public class ShiftScheduleService {
     public ScheduleChange assign(UUID workerId, LocalDate date, String shiftCode, String note) {
         requireNotPast(date);
         ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
-        ShiftCode code = requireCodeForWorker(shiftCode, worker);
+        return saveDay(workerId, date, requireCodeForWorker(shiftCode, worker), note);
+    }
 
+    /**
+     * Same as {@link #assign} for a support worker whose shift is given as hours instead of a code.
+     *
+     * @throws ShiftException {@code PAST_DATE}, {@code WORKER_NOT_FOUND} or {@code WORKER_INACTIVE} as in
+     *                                         {@link #assign}
+     * @throws ShiftException {@code HOURS_ONLY_FOR_SUPPORT} if the worker is not a support worker
+     * @throws ShiftException {@code INVALID_SHIFT_HOURS} if the hours do not make a valid shift
+     */
+    @Transactional
+    public ScheduleChange assignHours(UUID workerId, LocalDate date, List<ShiftSegment> hours, String note) {
+        requireNotPast(date);
+        ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
+        return saveDay(workerId, date, customShiftService.codeFor(worker, hours), note);
+    }
+
+    private ScheduleChange saveDay(UUID workerId, LocalDate date, ShiftCode code, String note) {
         ShiftAssignment assignment = shiftAssignmentRepository.findByWorkerIdAndWorkDate(workerId, date)
                 .orElse(null);
         if (assignment == null) {
@@ -97,13 +116,34 @@ public class ShiftScheduleService {
     @Transactional
     public ScheduleChange assignRange(UUID workerId, LocalDate from, LocalDate to, String shiftCode, String note,
                                       boolean leaveSundaysAsRest) {
+        return saveRange(workerId, from, to, worker -> requireCodeForWorker(shiftCode, worker), note,
+                leaveSundaysAsRest);
+    }
+
+    /**
+     * Same as {@link #assignRange} for a support worker whose shift is given as hours instead of a code.
+     *
+     * @throws ShiftException the range and worker errors of {@link #assignRange}
+     * @throws ShiftException {@code HOURS_ONLY_FOR_SUPPORT} if the worker is not a support worker
+     * @throws ShiftException {@code INVALID_SHIFT_HOURS} if the hours do not make a valid shift
+     */
+    @Transactional
+    public ScheduleChange assignRangeHours(UUID workerId, LocalDate from, LocalDate to, List<ShiftSegment> hours,
+                                           String note, boolean leaveSundaysAsRest) {
+        return saveRange(workerId, from, to, worker -> customShiftService.codeFor(worker, hours), note,
+                leaveSundaysAsRest);
+    }
+
+    private ScheduleChange saveRange(UUID workerId, LocalDate from, LocalDate to,
+                                     Function<ScheduleWorkerInfo, ShiftCode> codeForWorker, String note,
+                                     boolean leaveSundaysAsRest) {
         requireValidRange(from, to);
         if (ChronoUnit.DAYS.between(from, to) + 1 > DayStaffQuery.MAX_RANGE_DAYS) {
             throw new ShiftException(ShiftError.INVALID_RANGE, "El rango no puede superar " + DayStaffQuery.MAX_RANGE_DAYS + " días");
         }
         requireNotPast(from);
         ScheduleWorkerInfo worker = requireAvailableWorker(workerId);
-        ShiftCode code = requireCodeForWorker(shiftCode, worker);
+        ShiftCode code = codeForWorker.apply(worker);
         ShiftCode rest = leaveSundaysAsRest ? requireCodeForWorker(DayLineup.REST_CODE, worker) : null;
 
         Map<LocalDate, ShiftAssignment> existing = shiftAssignmentRepository.findByWorkDateBetween(from, to).stream()

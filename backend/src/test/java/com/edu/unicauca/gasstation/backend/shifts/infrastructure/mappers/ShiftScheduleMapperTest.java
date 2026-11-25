@@ -7,6 +7,7 @@ import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.DayCover
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleDay;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleResponse;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleUpdateResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ShiftSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.WorkerSchedule;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.DailyCoverage;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
@@ -44,8 +45,9 @@ class ShiftScheduleMapperTest {
 
         assertThat(response).isEqualTo(new ScheduleResponse(DAY_1, DAY_2,
                 List.of(new WorkerSchedule(WORKER_ID, "Ana Villamil", List.of(
-                        new ScheduleDay(DAY_1, "NOCHE", null),
-                        new ScheduleDay(DAY_2, "DIA6", "Cita médica")))),
+                        new ScheduleDay(DAY_1, "NOCHE", null, List.of(new ShiftSchedule.Segment(18, 6)), false),
+                        new ScheduleDay(DAY_2, "DIA6", "Cita médica", List.of(new ShiftSchedule.Segment(6, 12)),
+                                false)))),
                 List.of(new DayCoverage(DAY_1, true, true, true, true), new DayCoverage(DAY_2, true, false, true, false))));
     }
 }

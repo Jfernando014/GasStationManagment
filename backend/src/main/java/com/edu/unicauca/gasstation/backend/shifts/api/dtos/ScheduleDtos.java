@@ -1,7 +1,12 @@
 package com.edu.unicauca.gasstation.backend.shifts.api.dtos;
 
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftSegment;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
@@ -22,10 +27,12 @@ public final class ScheduleDtos {
      *
      * @param workerId  worker to schedule
      * @param date      day to schedule; not before today
-     * @param shiftCode code of the catalog (DIA, DIA6, 12-7, DESCANSO...)
+     * @param shiftCode code of the catalog (DIA, DIA6, 12-7, DESCANSO...); null when segments is sent
      * @param note      optional reason for the change, up to 255 characters
+     * @param segments  hours of a support worker, instead of a code; null when shiftCode is sent
      */
-    @Schema(description = "Shift code to save for a worker on a day. Replaces the one the day already had.")
+    @Schema(description = "Shift to save for a worker on a day, as a code or, for a support worker, as hours. Send "
+            + "exactly one of shiftCode and segments. Replaces the one the day already had.")
     public record AssignShiftRequest(
             @Schema(description = "Worker to schedule", example = "d3c8c22b-9a86-4678-a326-ac90b26057cb")
             @NotNull(message = "El vendedor es obligatorio")
@@ -36,15 +43,51 @@ public final class ScheduleDtos {
             LocalDate date,
 
             @Schema(description = "Active code of the catalog. Its role must match the worker's role; DESCANSO is valid "
-                    + "for every role.", example = "DIA6")
-            @NotNull(message = "El código de turno es obligatorio")
-            @NotBlank(message = "El código de turno es obligatorio")
+                    + "for every role. Omit it when segments is sent.", example = "DIA6", nullable = true)
             String shiftCode,
 
             @Schema(description = "Optional reason for the change, up to 255 characters. Leading and trailing spaces are removed; a blank note is stored as null.",
                     example = "Cambio solicitado por el vendedor")
             @Size(max = 255, message = "La nota no puede superar 255 caracteres")
-            String note) {
+            String note,
+
+            @Schema(description = "Only for a support worker, instead of shiftCode: one or two blocks of whole hours "
+                    + "of the same day, in order. Hours equal to a standard support code are saved with that code.",
+                    nullable = true)
+            @Size(min = 1, max = 2, message = "Indique uno o dos rangos de horas")
+            List<@NotNull(message = "El rango de horas es obligatorio") @Valid HoursRequest> segments) {
+
+        @JsonIgnore
+        @Schema(hidden = true)
+        @AssertTrue(message = "Indique el código de turno o el horario, uno de los dos")
+        public boolean isShiftChoice() {
+            return segments == null ? shiftCode != null && !shiftCode.isBlank() : shiftCode == null;
+        }
+    }
+
+    /**
+     * One block of hours typed for a support shift.
+     *
+     * @param startHour hour the block starts (0-23)
+     * @param endHour   hour the block ends (1-24), the same day; 24 is midnight
+     */
+    @Schema(description = "One block of whole hours that does not cross midnight")
+    public record HoursRequest(
+            @Schema(description = "Hour the block starts", example = "14")
+            @NotNull(message = "La hora de inicio es obligatoria")
+            @Min(value = 0, message = "La hora de inicio va de 0 a 23")
+            @Max(value = 23, message = "La hora de inicio va de 0 a 23")
+            Integer startHour,
+
+            @Schema(description = "Hour the block ends, later than startHour; 24 is midnight", example = "24")
+            @NotNull(message = "La hora de fin es obligatoria")
+            @Min(value = 1, message = "La hora de fin va de 1 a 24")
+            @Max(value = 24, message = "La hora de fin va de 1 a 24")
+            Integer endHour) {
+
+        public ShiftSegment toSegment() {
+            return new ShiftSegment(startHour, endHour);
+        }
     }
 
     /**
@@ -110,19 +153,29 @@ public final class ScheduleDtos {
      * Shift of a worker on one day.
      *
      * @param date      day
-     * @param shiftCode code of the catalog
+     * @param shiftCode code of the catalog, or the generated code of a custom schedule
      * @param note      reason for the change; null when there is none
+     * @param segments  hours of the shift; empty for DESCANSO
+     * @param custom    true for a support schedule typed as hours that matches no standard code
      */
     @Schema(description = "Shift of a worker on one day")
     public record ScheduleDay(
             @Schema(description = "Day", example = "2026-11-03")
             LocalDate date,
 
-            @Schema(description = "Shift code of the catalog", example = "NOCHE")
+            @Schema(description = "Shift code of the catalog; a custom schedule has a generated one (AP_10-17)",
+                    example = "NOCHE")
             String shiftCode,
 
             @Schema(description = "Reason for the change; null when there is none", example = "Cambio solicitado por el vendedor")
-            String note) {
+            String note,
+
+            @Schema(description = "Hours of the shift in order; empty for DESCANSO")
+            List<ShiftSchedule.Segment> segments,
+
+            @Schema(description = "True for a support schedule typed as hours that matches no standard code",
+                    example = "false")
+            boolean custom) {
     }
 
     /**

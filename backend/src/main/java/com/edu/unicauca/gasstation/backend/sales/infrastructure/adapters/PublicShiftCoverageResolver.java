@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PublicShiftCoverageResolver {
+    private static final String SUPPORT_ROLE = "APOYO";
+
     private final ShiftExternalService shifts;
     private final ScheduleWorkerDirectory workers;
 
@@ -31,13 +33,16 @@ public class PublicShiftCoverageResolver {
             var hours = new TreeSet<Integer>();
             for (var segment : code.segments()) {
                 int start = segment.startHour(), end = segment.endHour();
-                if (start < 0 || start > 23 || end < 0 || end > 23 || start == end)
+                if (start < 0 || start > 23 || end < 0 || end > 24 || start == end)
                     throw new IllegalArgumentException("Invalid public shift segment");
-                for (int hour = start; hour != end; hour = (hour + 1) % 24) hours.add(hour);
+                // An end of 24 is midnight; a lower end than the start crosses it
+                for (int hour = start; hour != end % 24; hour = (hour + 1) % 24) hours.add(hour);
             }
             // Excel uses the same worksheet date for 00..05 and 18..23 of NOCHE.
             // This is explicitly a workbook-date calculation, not historical night-date attribution.
-            result.add(new Coverage(assignment, hours));
+            boolean support = code.role() != null && SUPPORT_ROLE.equals(code.role().name());
+            result.add(new Coverage(new Assignment(assignment.date(), assignment.workerId(), assignment.shiftCode(),
+                    support), hours));
         }
         return List.copyOf(result);
     }

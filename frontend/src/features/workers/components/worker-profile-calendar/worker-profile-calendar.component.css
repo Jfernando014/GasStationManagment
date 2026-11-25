@@ -91,6 +91,9 @@
 .wp-chips { display: flex; max-width: 100%; transition: opacity var(--duration-fast) ease; }
 .wp-chips.is-absent { opacity: 0.45; }
 .wp-chips > .wp-chip-short.shift-chip { display: none; }
+/* Two blocks of hours do not fit in one line of a day: the compact chip writes one per line */
+.wp-chips > .wp-chip-full.shift-chip--split { display: none; }
+.wp-chips > .wp-chip-short.shift-chip--split { display: flex; height: 28px; }
 
 /* ---- Novelties under the code ---- */
 .wp-nov { font-size: 11px; font-weight: 600; color: var(--text-body); }

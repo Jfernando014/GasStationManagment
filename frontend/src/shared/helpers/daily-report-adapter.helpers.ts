@@ -30,6 +30,8 @@ interface ColumnSpec {
   source: string | null;
   /** True when the prototype uses the opposite sign of the backend. */
   negate?: boolean;
+  /** Width in characters, for a column whose text does not fit in the default one. */
+  width?: number;
 }
 
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -48,7 +50,8 @@ const PROTOTYPE_NOTE = 'Precios provisionales: pendientes de confirmar con el cl
  */
 const SALES_COLUMNS: readonly ColumnSpec[] = [
   { header: 'Vendedor', source: 'Vendedor' },
-  { header: 'Turno', source: 'Turno' },
+  // The longest shift is a support one written as two blocks of hours: "06:00–09:00 y 17:00–24:00"
+  { header: 'Turno', source: 'Turno', width: 27 },
   { header: 'Rol', source: null },
   { header: 'Surtidor', source: 'Bomba' },
   { header: 'Gal. Motor', source: 'Galones Motor' },
@@ -207,8 +210,8 @@ async function buildFile(
   objSheet.addRow([]);
   objSheet.addRow(prmColumns.map((prmColumn) => prmColumn.header));
   [...prmRows, ...prmFooter].forEach((prmRow) => objSheet.addRow(prmRow));
-  prmColumns.forEach((_prmColumn, prmIndex) => {
-    objSheet.getColumn(prmIndex + 1).width = prmIndex === 0 ? 30 : 16;
+  prmColumns.forEach((prmColumn, prmIndex) => {
+    objSheet.getColumn(prmIndex + 1).width = prmColumn.width ?? (prmIndex === 0 ? 30 : 16);
   });
   const objBuffer = await objWorkbook.xlsx.writeBuffer();
   return {

@@ -1,0 +1,91 @@
+@if (quick().length) {
+  <div class="sh-block">
+    <span class="item-label" [id]="idPrefix() + '-quick'">Opciones rápidas</span>
+    <div class="sh-quick" role="group" [attr.aria-labelledby]="idPrefix() + '-quick'">
+      @for (option of quick(); track option.code) {
+        <button
+          type="button"
+          class="sh-option"
+          [class.is-on]="option.selected"
+          [disabled]="disabled()"
+          [attr.aria-pressed]="option.selected"
+          (click)="draft().fill(option.segments)">
+          <b>{{ option.hours }}</b>
+          <small>{{ option.code }}</small>
+          @if (option.selected) {
+            <svg class="sh-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+          }
+        </button>
+      }
+    </div>
+  </div>
+}
+
+@for (group of groups(); track group; let i = $index) {
+  @let problem = draft().problems()[i] || draft().serverRowErrors()[i];
+  <div
+    class="sh-range"
+    role="group"
+    [class.is-invalid]="problem"
+    [attr.aria-label]="i === 0 ? 'Primer tramo' : 'Segundo tramo'"
+    animate.enter="sh-range-in"
+    animate.leave="sh-range-out">
+    <div class="sh-range-inner">
+      @if (groups().length > 1) {
+        <div class="sh-range-head">
+          <span>{{ i === 0 ? 'Primer tramo' : 'Segundo tramo' }}</span>
+          @if (i > 0) {
+            <button appButton type="button" variant="ghost" size="sm" class="sh-remove" [disabled]="disabled()" (click)="draft().removeRange(i)">
+              Quitar<span class="jr-sr"> el segundo tramo</span>
+            </button>
+          }
+        </div>
+      }
+      <div class="sh-fields">
+        <app-select-field
+          [fieldId]="idPrefix() + '-start-' + i"
+          label="Hora de inicio"
+          placeholder="Hora"
+          [required]="true"
+          [control]="group.controls.startHour"
+          [options]="startOptions" />
+        <app-select-field
+          [fieldId]="idPrefix() + '-end-' + i"
+          label="Hora de fin"
+          placeholder="Hora"
+          [required]="true"
+          [control]="group.controls.endHour"
+          [options]="endOptions" />
+      </div>
+      @if (problem) {
+        <p class="field-error sh-message" role="alert" animate.enter="sh-message-in">{{ problem }}</p>
+      }
+    </div>
+  </div>
+}
+
+@if (canAdd()) {
+  <button appButton type="button" variant="secondary" size="sm" class="sh-add" [disabled]="disabled()" (click)="draft().addRange()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+    Agregar segundo tramo
+  </button>
+}
+
+<div class="sh-preview">
+  <p class="sh-preview-head" aria-live="polite">
+    <b>{{ preview().label }}</b>
+    @if (preview().total) { <span>{{ preview().total }} h</span> }
+  </p>
+  <div class="sh-track" aria-hidden="true">
+    @for (bar of preview().bars; track $index) {
+      <span class="sh-bar" [style.left.%]="bar.left" [style.width.%]="bar.width"></span>
+    }
+  </div>
+  <div class="sh-axis" aria-hidden="true">
+    @for (hour of axisHours; track $index) { <span>{{ hour }}</span> }
+  </div>
+</div>
+
+@if (draft().serverError(); as message) {
+  <p class="field-error sh-server" role="alert" animate.enter="sh-message-in">{{ message }}</p>
+}

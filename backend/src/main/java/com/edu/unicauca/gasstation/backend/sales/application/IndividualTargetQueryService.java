@@ -60,7 +60,8 @@ public class IndividualTargetQueryService implements IndividualTargetQuery {
         // The day staff already carries the segments of the code actually worked, so the hours come from it directly
         List<Coverage> covered = staff.getDayStaff(from, to).stream()
                 .flatMap(day -> day.members().stream().map(member -> new Coverage(
-                        new Assignment(day.date(), member.workerId(), member.workedCode()), hoursOf(member.segments()))))
+                        new Assignment(day.date(), member.workerId(), member.workedCode(), member.support()),
+                        hoursOf(member.segments()))))
                 .toList();
         if (covered.isEmpty()) {
             return List.of();
@@ -85,10 +86,11 @@ public class IndividualTargetQueryService implements IndividualTargetQuery {
         for (var segment : segments) {
             int start = segment.startHour();
             int end = segment.endHour();
-            if (start < 0 || start > 23 || end < 0 || end > 23 || start == end) {
+            if (start < 0 || start > 23 || end < 0 || end > 24 || start == end) {
                 throw new IllegalArgumentException("Invalid shift segment");
             }
-            for (int hour = start; hour != end; hour = (hour + 1) % 24) {
+            // An end of 24 is midnight; a lower end than the start crosses it
+            for (int hour = start; hour != end % 24; hour = (hour + 1) % 24) {
                 hours.add(hour);
             }
         }

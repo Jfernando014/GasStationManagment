@@ -32,9 +32,9 @@ public final class SalesTargetDistributionEngine {
                 final int h = hour;
                 var active = coverage.stream().filter(c -> c.assignment().date().equals(date) && c.hours().contains(h)).toList();
                 if (active.isEmpty()) { uncovered.add(new HourKey(date, hour)); continue; }
-                var official = active.stream().map(c -> ExactFraction.of(profile.supportShiftCodes().contains(c.assignment().shiftCode())
+                var official = active.stream().map(c -> ExactFraction.of(isSupport(profile, c.assignment())
                         ? profile.supportShare() : profile.titularShare())).toList();
-                var reference = active.stream().map(c -> ExactFraction.of(profile.supportShiftCodes().contains(c.assignment().shiftCode())
+                var reference = active.stream().map(c -> ExactFraction.of(isSupport(profile, c.assignment())
                         ? profile.referenceSupportShare() : profile.referenceTitularShare())).toList();
                 var sumOfficial = official.stream().reduce(ExactFraction.ZERO, ExactFraction::add);
                 var sumReference = reference.stream().reduce(ExactFraction.ZERO, ExactFraction::add);
@@ -61,5 +61,9 @@ public final class SalesTargetDistributionEngine {
         return new Result(input.target(), input.outputScale(), "EXACT_RATIONAL_LARGEST_REMAINDER_DATE_HOUR_UUID", profile.source(),
                 new Totals(input.target().value(), input.target().value()), allocations, byDate, byHour, byWorker, uncovered,
                 "EXPLICIT_CALLER_SUPPLIED_WORKSHEET_DATE_ASSIGNMENTS");
+    }
+
+    private static boolean isSupport(DistributionProfile profile, Assignment assignment) {
+        return assignment.support() || profile.supportShiftCodes().contains(assignment.shiftCode());
     }
 }

@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { JournalService } from '../../../../core/services/journal.service';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import {
   AutonomyAlertSummaryItemDto,
@@ -41,6 +42,7 @@ export class JournalClosedPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly shiftHours = inject(ShiftHoursService);
 
   journal: JournalResponse | null = null;
   summary: JournalClosingSummaryResponse | null = null;
@@ -196,6 +198,11 @@ export class JournalClosedPageComponent implements OnInit {
 
   autonomyAlerts(): AutonomyAlertSummaryItemDto[] {
     return this.summary?.newAutonomyAlerts ?? [];
+  }
+
+  /** Turno del cierre como se lee: el código, o las horas si es un horario personalizado. */
+  shiftText(shiftName: string): string {
+    return this.shiftHours.text(shiftName);
   }
 
   formatCurrency(amount: number | null | undefined): string {

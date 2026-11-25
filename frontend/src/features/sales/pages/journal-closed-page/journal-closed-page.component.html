@@ -117,7 +117,7 @@
                 <td class="jr-cerrada-pos">{{ idx + 1 }}</td>
                 <td>
                   <b>{{ v.vendorName }}</b>
-                  <small>{{ v.shiftName }} · Surtidor {{ v.pumpNumber || '-' }}</small>
+                  <small>{{ shiftText(v.shiftName) }} · Surtidor {{ v.pumpNumber || '-' }}</small>
                 </td>
                 <td class="num"><b>{{ formatNumber(totalVendorGallons(v), 1) }}</b></td>
                 <td class="num">{{ formatCurrency(v.basketDominusAmount) }}</td>

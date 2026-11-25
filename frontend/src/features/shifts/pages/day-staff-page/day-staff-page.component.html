@@ -52,7 +52,7 @@
         @for (warning of warnings(); track warning.code + warning.message) {
           <li class="ds-warning">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
-            <span>{{ warning.message }}</span>
+            <span>{{ withHours(warning.message) }}</span>
           </li>
         }
       </ul>
@@ -89,8 +89,9 @@
               <div class="ds-person-shift">
                 <app-shift-chip
                   [code]="p.code"
+                  [segments]="p.segments"
                   [changed]="p.changed"
-                  [title]="p.changed ? 'En la malla: ' + p.gridCode : ''" />
+                  [title]="p.changed ? 'En la malla: ' + shiftText(p.gridCode) : ''" />
                 <small>{{ p.hours }}</small>
               </div>
 
@@ -157,7 +158,7 @@
           class="ps-card ds-card"
           [items]="noveltyItems()"
           [editable]="editable()"
-          [errorMessage]="cancelError()"
+          [errorMessage]="cancelError() ? withHours(cancelError()!) : null"
           (askCancel)="askCancel($event)"
           (keep)="keepNovelty()"
           (confirmCancel)="cancelNovelty($event)" />
@@ -168,7 +169,7 @@
   <div class="ds-footer">
     <span class="ds-footer-note" aria-live="polite">
       @if (confirmError(); as message) {
-        <span class="ds-inline-error" role="alert">{{ message }}</span>
+        <span class="ds-inline-error" role="alert">{{ withHours(message) }}</span>
       } @else if (confirmBlockedReason(); as reason) {
         {{ reason }}
       } @else if (status() === 'CONFIRMED') {
@@ -200,7 +201,7 @@
   (closed)="closePanel()">
   @if (panelContext(); as ctx) {
     @if (submitMessage(); as message) {
-      <p class="ds-panel-error" role="alert">{{ message }}</p>
+      <p class="ds-panel-error" role="alert">{{ withHours(message) }}</p>
     }
     @if (step(); as s) {
       <app-novelty-form

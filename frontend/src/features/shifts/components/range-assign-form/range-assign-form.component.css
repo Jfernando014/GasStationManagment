@@ -18,6 +18,40 @@
 
 .ra-rule svg { flex-shrink: 0; margin-top: 1px; }
 
+/* Apoyo: horario o descanso */
+.ra-shift {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ra-mode ::ng-deep .seg { display: flex; }
+.ra-mode ::ng-deep button { flex: 1; height: 36px; }
+
+.ra-rest-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.ra-swap-in { animation: ra-swap-in 180ms var(--spring) both; }
+
+@keyframes ra-swap-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.ra-actions .ra-submit.is-saved {
+  background: var(--semantic-green-strong);
+  border-color: var(--semantic-green-strong);
+  color: #FFFFFF;
+  opacity: 1;
+}
+
+.ra-saved-check { animation: ra-check-in 200ms var(--spring) both; }
+
+@keyframes ra-check-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+
 .ra-dates {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -99,11 +133,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ra-day { animation: none; }
+  .ra-day, .ra-saved-check { animation: none; }
+  .ra-swap-in { animation-duration: 1ms; }
 }
 
 @media (max-width: 640px) {
   .ra-dates { grid-template-columns: 1fr; }
+  .ra-mode ::ng-deep button { height: 44px; }
+  .ra-actions button { min-height: 44px; justify-content: center; }
   .ra-days { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
   .ra-actions { flex-direction: column-reverse; align-items: stretch; padding-bottom: env(safe-area-inset-bottom); }
 }
