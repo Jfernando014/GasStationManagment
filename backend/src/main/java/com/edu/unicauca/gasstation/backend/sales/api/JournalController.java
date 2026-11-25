@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,7 +62,7 @@ public class JournalController {
             JournalStep3ValidationService journalStep3ValidationService,
             JournalClosingSummaryService journalClosingSummaryService,
             CashBalanceStepService cashBalanceStepService,
-            JournalCellNoteService journalCellNoteService) {
+            @Nullable JournalCellNoteService journalCellNoteService) {
         this.journalService = journalService;
         this.journalStepService = journalStepService;
         this.journalStep3ValidationService = journalStep3ValidationService;
