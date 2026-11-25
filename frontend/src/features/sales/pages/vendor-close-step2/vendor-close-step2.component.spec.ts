@@ -837,6 +837,25 @@ describe('VendorCloseStep2Component', () => {
     chip.click();
     localFixture.detectChanges();
 
+    // Clicking the chip highlights and locates the target row & cell without forcing the dialog open
+    expect(localComponent.isHighlightedNoteCell('52875796', 'descuadre')).toBe(true);
+    expect(localComponent.highlightedNoteFieldKey).toBe('descuadre');
+    expect(localFixture.nativeElement.querySelector('td.jr-cell-note-highlight')).toBeTruthy();
+    expect(localFixture.nativeElement.querySelector('tr.jr-row-note-highlight')).toBeTruthy();
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-dialog')).toBeNull();
+
+    // Clicking the active corner triangle opens the read-only note dialog even when the journal is closed
+    const cornerTrigger = localFixture.nativeElement.querySelector(
+      '[data-note-cell="52875796::descuadre"] .jr-cell-note-btn.is-active'
+    ) as HTMLElement;
+    expect(cornerTrigger).toBeTruthy();
+    expect(cornerTrigger.tagName).toBe('SPAN');
+    cornerTrigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    localFixture.detectChanges();
+
+    const dialogText = localFixture.nativeElement.querySelector('#jr-p2-note-dialog')?.textContent ?? '';
+    expect(dialogText).toContain('Nota de celda');
+    expect(dialogText).not.toContain('tipo Excel');
     expect(localFixture.nativeElement.querySelector('#jr-p2-note-readonly')?.textContent).toContain(
       'Sobrante de $13 verificado en arqueo.'
     );
