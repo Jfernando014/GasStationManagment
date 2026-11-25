@@ -32,17 +32,23 @@
   .header-trail .trail-root, .header-trail .trail-sep { display: none; }
   .trail-active { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .header-action-tray { gap: 8px; }
-  .admin-profile-text { display: none; }
+  /* Solo el avatar. Los selectores nombran al padre para ganar a las reglas base, que están más abajo. */
+  .admin-profile-trigger .admin-profile-text, .admin-profile-trigger .admin-chevron { display: none; }
+  .admin-profile-wrapper .admin-profile-trigger { justify-content: center; width: 44px; height: 44px; padding: 0; }
   .admin-profile-dropdown { width: min(280px, calc(100vw - 24px)); max-width: calc(100vw - 24px); }
   .profile-modal-backdrop { align-items: flex-end; padding: 0; }
   .profile-modal-card { max-width: none; max-height: 90vh; max-height: 90dvh; overflow-y: auto; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
   .profile-modal-actions { flex-wrap: wrap; }
   .profile-modal-actions > * { flex: 1 1 140px; }
-  .admin-profile-trigger { height: 44px; gap: 6px; padding: 3px 8px 3px 4px; }
   .bell-icon-btn { width: 44px; height: 44px; }
   .mobile-menu-toggle, .mobile-menu-close { min-width: 44px; min-height: 44px; }
   .sidebar-action-btn, .sub-item-link { min-height: 44px; display: flex; align-items: center; }
   .dashboard-scroll-viewport { padding-right: 0; }
+}
+
+/* Donde "Sección / Página" ya no cabe, queda solo la página actual. */
+@media (max-width: 480px) {
+  .trail-section { display: none; }
 }
 
 .trail-root {
