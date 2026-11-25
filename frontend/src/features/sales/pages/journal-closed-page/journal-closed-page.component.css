@@ -19,3 +19,24 @@
   justify-content: center;
   gap: 10px;
 }
+
+.jr-cerrada-opcion:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.jr-cerrada-descarga-msg {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-success, #16a34a) 35%, transparent);
+  background: color-mix(in srgb, var(--color-success, #16a34a) 10%, var(--surface-card));
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.jr-cerrada-descarga-msg--error {
+  border-color: color-mix(in srgb, var(--color-danger, #dc2626) 40%, transparent);
+  background: color-mix(in srgb, var(--color-danger, #dc2626) 10%, var(--surface-card));
+  color: var(--color-danger, #b91c1c);
+}
