@@ -28,7 +28,9 @@ describe('JournalService (S3-07)', () => {
   };
 
   beforeEach(() => {
-    localStorage.clear();
+    if (typeof localStorage !== 'undefined' && typeof localStorage.clear === 'function') {
+      localStorage.clear();
+    }
     TestBed.configureTestingModule({
       providers: [JournalService, provideHttpClient(), provideHttpClientTesting()]
     });
@@ -37,7 +39,9 @@ describe('JournalService (S3-07)', () => {
   });
 
   afterEach(() => {
-    localStorage.clear();
+    if (typeof localStorage !== 'undefined' && typeof localStorage.clear === 'function') {
+      localStorage.clear();
+    }
     httpMock.verify();
   });
 
@@ -157,5 +161,42 @@ describe('JournalService (S3-07)', () => {
 
     expect(service.getRememberedStep('2026-08-05')).toBe('inventario');
     expect(service.resolveLandingStep(mockJournal)).toBe('inventario');
+  });
+
+  it('should download the full journal workbook and parse Content-Disposition filename', () => {
+    const blob = new Blob(['xlsx-data'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    let downloadedName = '';
+    let downloadedBlob: Blob | null = null;
+
+    service.downloadFullWorkbook(10, '2026-08-05', 289).subscribe(file => {
+      downloadedName = file.fileName;
+      downloadedBlob = file.content;
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/workbook.xlsx');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(blob, {
+      headers: { 'Content-Disposition': 'attachment; filename="jornada-289-2026-08-05.xlsx"' }
+    });
+
+    expect(downloadedName).toBe('jornada-289-2026-08-05.xlsx');
+    expect(downloadedBlob).toBe(blob);
+  });
+
+  it('should fall back to generated filename when Content-Disposition header is missing', () => {
+    const blob = new Blob(['xlsx-data']);
+    let downloadedName = '';
+
+    service.downloadFullWorkbook(10, '2026-08-05', 289).subscribe(file => {
+      downloadedName = file.fileName;
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/workbook.xlsx');
+    req.flush(blob);
+
+    expect(downloadedName).toBe('jornada-289-2026-08-05.xlsx');
   });
 });
