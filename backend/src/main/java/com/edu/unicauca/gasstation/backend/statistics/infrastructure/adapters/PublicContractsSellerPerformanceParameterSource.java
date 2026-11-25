@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.statistics.infrastructure.adapters;
 
 import com.edu.unicauca.gasstation.backend.sales.IndividualTargetQuery;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import com.edu.unicauca.gasstation.backend.shifts.holidays.HolidayQuery;
 import com.edu.unicauca.gasstation.backend.statistics.domain.calculation.SellerPerformance.DayType;
 import com.edu.unicauca.gasstation.backend.statistics.domain.calculation.SellerPerformance.IndividualTarget;
@@ -31,7 +32,8 @@ import org.springframework.stereotype.Component;
  *
  * <ul>
  *   <li>Classification: the period comes from the shift code that was actually worked and is stored with each close,
- *       never from today's shift catalog; the day type comes from the public holiday query for the operational date.</li>
+ *       never from today's shift catalog (a custom schedule is classified by the hours its code carries); the day type
+ *       comes from the public holiday query for the operational date.</li>
  *   <li>Targets: the individual targets of sales for exactly the requested period; none when it has none.</li>
  *   <li>Multipliers: one per period, calculated from the confirmed history of the queried window itself: the average of
  *       all its classified shifts divided by the average of the shifts of the period. A period with fewer than
@@ -42,8 +44,8 @@ import org.springframework.stereotype.Component;
 public class PublicContractsSellerPerformanceParameterSource implements SellerPerformanceParameterSource {
 
     static final String CLASSIFICATION_SOURCE =
-            "WORKED_SHIFT_CODE(NOCHE=NIGHT;DIA,DIA6,9-6,12-7,6-9y5-9,2-9pm,6-9am,2-6pm,6-9y2-6=DAY)"
-                    + "+HOLIDAY_QUERY(shifts.holidays)";
+            "WORKED_SHIFT_CODE(NOCHE=NIGHT;DIA,DIA6,9-6,12-7,6-9y5-9,2-9pm,6-9am,2-6pm,6-9y2-6=DAY;"
+                    + "AP_*=NIGHT_WHEN_MOST_HOURS_ARE_18_TO_06,ELSE_DAY)+HOLIDAY_QUERY(shifts.holidays)";
 
     /** Fewest shifts of a period in the window for its multiplier to be calculated. */
     static final int MIN_SHIFTS_PER_PERIOD = 5;
@@ -154,6 +156,11 @@ public class PublicContractsSellerPerformanceParameterSource implements SellerPe
         if (NIGHT_CODE.equals(workedCode)) {
             return Optional.of(ShiftPeriod.NIGHT);
         }
-        return DAY_CODES.contains(workedCode) ? Optional.of(ShiftPeriod.DAY) : Optional.empty();
+        if (DAY_CODES.contains(workedCode)) {
+            return Optional.of(ShiftPeriod.DAY);
+        }
+        // A custom schedule carries its hours in the stored code
+        return CustomShiftCode.segmentsOf(workedCode)
+                .map(segments -> CustomShiftCode.isNight(segments) ? ShiftPeriod.NIGHT : ShiftPeriod.DAY);
     }
 }
