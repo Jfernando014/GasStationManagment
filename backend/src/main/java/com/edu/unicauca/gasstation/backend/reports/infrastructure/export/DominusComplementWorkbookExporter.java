@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.reports.infrastructure.export;
 import com.edu.unicauca.gasstation.backend.reports.domain.models.DominusComplementReport;
 import com.edu.unicauca.gasstation.backend.reports.domain.models.ReportDay;
 import com.edu.unicauca.gasstation.backend.reports.infrastructure.export.ReportWorkbookSupport.Styles;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.apache.poi.ss.usermodel.Row;
@@ -38,7 +39,7 @@ public class DominusComplementWorkbookExporter {
                 Row row = sheet.createRow(rowIndex++);
                 ReportWorkbookSupport.text(row, 0, vendor.vendorName(), styles.text());
                 ReportWorkbookSupport.text(row, 1, vendor.vendorDocument(), styles.text());
-                ReportWorkbookSupport.text(row, 2, vendor.shiftName(), styles.text());
+                ReportWorkbookSupport.text(row, 2, CustomShiftCode.displayText(vendor.shiftName()), styles.text());
                 ReportWorkbookSupport.number(row, 3, vendor.gallons(), styles.number());
                 ReportWorkbookSupport.number(row, 4, vendor.basketAmount(), styles.number());
                 ReportWorkbookSupport.number(row, 5, vendor.totalDelivered(), styles.number());

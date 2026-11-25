@@ -3,6 +3,7 @@ package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.ProductSaleSummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
+import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -78,7 +79,7 @@ public class DailyDownloadWorkbookExporter {
     private static void writeVendorRow(Row prmRow, VendorCloseSummary prmVendor, Styles prmStyles) {
         text(prmRow, 0, prmVendor.vendorName(), prmStyles.atrText());
         text(prmRow, 1, prmVendor.vendorDocument(), prmStyles.atrText());
-        text(prmRow, 2, prmVendor.shiftName(), prmStyles.atrText());
+        text(prmRow, 2, CustomShiftCode.displayText(prmVendor.shiftName()), prmStyles.atrText());
         if (prmVendor.pumpNumber() != null) {
             whole(prmRow, 3, prmVendor.pumpNumber(), prmStyles.atrInteger());
         }
