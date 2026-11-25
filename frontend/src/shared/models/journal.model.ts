@@ -15,6 +15,24 @@ export interface JournalStepResponse {
     name: string;
     status: StepStatus;
     completedAt: string | null;
+    observations?: string | null;
+}
+
+export interface JournalCellNoteResponse {
+    id: number;
+    journalId: number;
+    stepNumber: number;
+    columnKey: string;
+    fieldKey: string;
+    note: string;
+    updatedAt: string;
+}
+
+export interface UpsertJournalCellNoteRequest {
+    stepNumber: number;
+    columnKey: string;
+    fieldKey: string;
+    note: string | null;
 }
 
 export interface JournalResponse {
