@@ -42,7 +42,8 @@ class JournalWorkbookExporterTest {
                 LocalDateTime.of(2026, 8, 5, 6, 0),
                 List.of(
                         new JournalSnapshot.JournalStepSnapshot(1, "Personal", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 7, 0)),
-                        new JournalSnapshot.JournalStepSnapshot(6, "Cierre", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 19, 0))));
+                        new JournalSnapshot.JournalStepSnapshot(6, "Cierre", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 19, 0))),
+                "Surtidor 2 presentó reinicio breve en la tarde.");
 
         ProductSaleSummary product = new ProductSaleSummary(
                 "ADD-01", "Aditivo Ruta 75", "ADITIVO", 3, new BigDecimal("12000"), new BigDecimal("36000"));
@@ -122,6 +123,11 @@ class JournalWorkbookExporterTest {
             XSSFSheet invSheet = wb.getSheet("Inventario y Variación");
             assertEquals("CORRIENTE", invSheet.getRow(1).getCell(0).getStringCellValue());
             assertEquals(59.90, invSheet.getRow(1).getCell(6).getNumericCellValue(), 0.01);
+
+            XSSFSheet summarySheet = wb.getSheet("Jornada");
+            assertEquals(
+                    "Surtidor 2 presentó reinicio breve en la tarde.",
+                    summarySheet.getRow(summarySheet.getLastRowNum()).getCell(1).getStringCellValue());
         }
     }
 

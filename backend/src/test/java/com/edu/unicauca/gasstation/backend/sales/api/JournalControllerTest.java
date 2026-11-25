@@ -36,8 +36,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.http.MediaType;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -303,5 +305,55 @@ class JournalControllerTest {
                 .andExpect(jsonPath("$.newAlertsCount").value(1))
                 .andExpect(jsonPath("$.newAutonomyAlerts[0].fuelName").value("Diésel"))
                 .andExpect(jsonPath("$.newAutonomyAlerts[0].severity").value("CRITICAL"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should persist and return updated observations")
+    void updatesJournalObservationsSuccessfully() throws Exception {
+        Journal updated = Journal.builder()
+                .id(1L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .observations("Descuadre de $500 justificado por bono.")
+                .steps(List.of())
+                .build();
+        when(journalService.updateObservations(1L, "Descuadre de $500 justificado por bono."))
+                .thenReturn(updated);
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"Descuadre de $500 justificado por bono.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.observations").value("Descuadre de $500 justificado por bono."));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should return 409 Conflict when journal is closed")
+    void rejectsObservationsUpdateWhenClosed() throws Exception {
+        when(journalService.updateObservations(1L, "Nota tardía"))
+                .thenThrow(new IllegalStateException("La jornada ya está cerrada y no permite modificar observaciones."));
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"Nota tardía\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("JOURNAL_STATE_CONFLICT"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should return 400 Bad Request when observations exceed 2000 chars")
+    void rejectsOversizedObservationsWithBadRequest() throws Exception {
+        String tooLong = "x".repeat(2001);
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"" + tooLong + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 }

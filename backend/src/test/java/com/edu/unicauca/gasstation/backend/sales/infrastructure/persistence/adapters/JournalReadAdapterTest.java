@@ -43,6 +43,7 @@ class JournalReadAdapterTest {
                 .date(DAY)
                 .consecutive(288L)
                 .status(JournalStatus.OPEN)
+                .observations("Revisión de manguera 3.")
                 .createdAt(LocalDateTime.of(2026, 8, 5, 7, 0))
                 .steps(new ArrayList<>(List.of(step(2, "Second"), step(1, "First"))))
                 .build();
@@ -54,6 +55,7 @@ class JournalReadAdapterTest {
         assertEquals(DAY, snapshot.date());
         assertEquals(288L, snapshot.consecutive());
         assertEquals(JournalStatus.OPEN, snapshot.status());
+        assertEquals("Revisión de manguera 3.", snapshot.observations());
         assertEquals(List.of(1, 2), snapshot.steps().stream().map(JournalSnapshot.JournalStepSnapshot::stepNumber).toList());
     }
 

@@ -5,10 +5,10 @@ import com.edu.unicauca.gasstation.backend.sales.domain.JournalRepository;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
+import com.edu.unicauca.gasstation.backend.sales.exception.JournalNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -108,5 +109,85 @@ class JournalServiceTest {
         verify(journalRepository).findByDate(date);
         verify(journalRepository, never()).findMaxConsecutive();
         verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should save trimmed observations on an open journal")
+    void updatesObservationsOnOpenJournal() {
+        Journal openJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(openJournal));
+        when(journalRepository.save(any(Journal.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Journal saved = journalService.updateObservations(10L, "  Surtidor 2 calibrado en la mañana.  ");
+
+        assertThat(saved.getObservations()).isEqualTo("Surtidor 2 calibrado en la mañana.");
+        verify(journalRepository).save(openJournal);
+    }
+
+    @Test
+    @DisplayName("Should clear observations to null when blank text is sent")
+    void clearsObservationsWhenBlank() {
+        Journal openJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .observations("Nota previa")
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(openJournal));
+        when(journalRepository.save(any(Journal.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Journal saved = journalService.updateObservations(10L, "   ");
+
+        assertThat(saved.getObservations()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should reject updating observations on a closed journal")
+    void rejectsObservationsUpdateOnClosedJournal() {
+        Journal closedJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.CLOSED)
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(closedJournal));
+
+        assertThatThrownBy(() -> journalService.updateObservations(10L, "Intento tardío"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("cerrada");
+        verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject observations exceeding 2000 characters")
+    void rejectsTooLongObservations() {
+        Journal openJournal = Journal.builder()
+                .id(10L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .build();
+        when(journalRepository.findById(10L)).thenReturn(Optional.of(openJournal));
+
+        String oversized = "a".repeat(JournalService.MAX_OBSERVATIONS_LENGTH + 1);
+        assertThatThrownBy(() -> journalService.updateObservations(10L, oversized))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2000");
+        verify(journalRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw JournalNotFoundException when updating observations of unknown journal")
+    void rejectsUnknownJournalOnObservationsUpdate() {
+        when(journalRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> journalService.updateObservations(999L, "Nota"))
+                .isInstanceOf(JournalNotFoundException.class);
     }
 }
