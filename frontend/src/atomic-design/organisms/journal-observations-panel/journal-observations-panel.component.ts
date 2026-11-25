@@ -15,10 +15,26 @@ interface PanelFeedback {
   isError: boolean;
 }
 
+export interface ObservationSummaryItem {
+  key: string;
+  label: string;
+  stepNumber: number | null;
+  text: string;
+}
+
 const MAX_OBSERVATIONS_LENGTH = 2000;
 
+const STEP_DISPLAY_NAMES: Record<number, string> = {
+  1: 'Personal del día',
+  2: 'Cierre por vendedor',
+  3: 'Medios electrónicos',
+  4: 'Saldo en caja',
+  5: 'Tanques e inventario',
+  6: 'Cierre de jornada'
+};
+
 /**
- * Reusable collapsible panel for operational observations across every step of a journal (SR-08).
+ * Reusable collapsible panel for per-step operational observations (Steps 1–6) and consolidated view (SR-08).
  * Editable while the journal is OPEN; read-only once CLOSED.
  */
 @Component({
@@ -35,53 +51,124 @@ export class JournalObservationsPanelComponent {
   readonly maxLength = MAX_OBSERVATIONS_LENGTH;
 
   readonly journalState = signal<JournalResponse | null>(null);
+  readonly activeStepState = signal<number | null>(null);
   readonly isExpanded = signal(false);
+  readonly showOtherNotes = signal(false);
   readonly isSaving = signal(false);
   readonly draft = signal('');
   readonly feedback = signal<PanelFeedback | null>(null);
 
-  private lastJournalId: number | null = null;
+  private lastContextKey = '';
   private lastSavedText = '';
 
   @Input()
   set journal(value: JournalResponse | null) {
     this.journalState.set(value);
-    const savedText = (value?.observations ?? '').trim();
-    const journalSwitched = (value?.id ?? null) !== this.lastJournalId;
+    this.syncDraftWithContext();
+  }
 
-    if (journalSwitched) {
-      this.lastJournalId = value?.id ?? null;
-      this.lastSavedText = savedText;
-      this.draft.set(value?.observations ?? '');
-      this.feedback.set(null);
-      this.isExpanded.set(value?.status === JournalStatus.CLOSED && savedText.length > 0);
-      return;
-    }
-
-    if (savedText !== this.lastSavedText && !this.hasUnsavedChanges()) {
-      this.lastSavedText = savedText;
-      this.draft.set(value?.observations ?? '');
-    }
+  @Input()
+  set activeStepNumber(value: number | null | undefined) {
+    const normalized = typeof value === 'number' && value >= 1 && value <= 6 ? value : null;
+    this.activeStepState.set(normalized);
+    this.syncDraftWithContext();
   }
 
   readonly isClosed = computed(() => this.journalState()?.status === JournalStatus.CLOSED);
-  readonly savedObservations = computed(() => (this.journalState()?.observations ?? '').trim());
+  readonly isStepScoped = computed(() => {
+    const step = this.activeStepState();
+    return step !== null && step >= 1 && step <= 6;
+  });
+
+  readonly activeStepLabel = computed(() => {
+    const step = this.activeStepState();
+    if (!step) return '';
+    return STEP_DISPLAY_NAMES[step] ?? `Paso ${step}`;
+  });
+
+  readonly panelTitle = computed(() => {
+    const step = this.activeStepState();
+    if (step !== null) {
+      return `Observaciones · Paso ${step}: ${this.activeStepLabel()}`;
+    }
+    return 'Observaciones de la jornada';
+  });
+
+  readonly rawSavedObservations = computed(() => {
+    const journal = this.journalState();
+    if (!journal) return '';
+    const stepNumber = this.activeStepState();
+    if (stepNumber !== null) {
+      const step = journal.steps?.find(item => item.stepNumber === stepNumber);
+      return step?.observations ?? '';
+    }
+    return journal.observations ?? '';
+  });
+
+  readonly savedObservations = computed(() => this.rawSavedObservations().trim());
   readonly hasSavedObservations = computed(() => this.savedObservations().length > 0);
   readonly normalizedDraft = computed(() => this.draft().trim());
   readonly hasUnsavedChanges = computed(() => this.normalizedDraft() !== this.savedObservations());
 
-  readonly previewText = computed(() => {
-    if (!this.hasSavedObservations()) {
-      return this.isClosed()
-        ? 'No se registraron observaciones en esta jornada.'
-        : 'Registra novedades, aclaraciones de descuadres o notas operativas del día.';
+  readonly allObservationsSummary = computed<ObservationSummaryItem[]>(() => {
+    const journal = this.journalState();
+    if (!journal) return [];
+    const items: ObservationSummaryItem[] = [];
+    const orderedSteps = [...(journal.steps ?? [])].sort((a, b) => a.stepNumber - b.stepNumber);
+    for (const step of orderedSteps) {
+      const text = (step.observations ?? '').trim();
+      if (text.length > 0) {
+        items.push({
+          key: `step-${step.stepNumber}`,
+          label: `Paso ${step.stepNumber} · ${STEP_DISPLAY_NAMES[step.stepNumber] ?? step.name}`,
+          stepNumber: step.stepNumber,
+          text
+        });
+      }
     }
-    return this.savedObservations().replace(/\s+/g, ' ');
+    const general = (journal.observations ?? '').trim();
+    if (general.length > 0) {
+      items.push({
+        key: 'general',
+        label: 'Observación general de la jornada',
+        stepNumber: null,
+        text: general
+      });
+    }
+    return items;
+  });
+
+  readonly otherObservations = computed<ObservationSummaryItem[]>(() => {
+    const active = this.activeStepState();
+    return this.allObservationsSummary().filter(item => item.stepNumber !== active);
+  });
+
+  readonly hasAnyObservations = computed(() => this.allObservationsSummary().length > 0);
+
+  readonly shouldAutoShowOtherObservations = computed(
+    () => (this.isClosed() || this.activeStepState() === 6 || !this.isStepScoped()) && this.otherObservations().length > 0
+  );
+
+  readonly previewText = computed(() => {
+    if (this.hasSavedObservations()) {
+      return this.savedObservations().replace(/\s+/g, ' ');
+    }
+    const othersCount = this.otherObservations().length;
+    if (this.isClosed()) {
+      if (othersCount > 0) {
+        return `${othersCount} ${othersCount === 1 ? 'observación registrada' : 'observaciones registradas'} en esta jornada.`;
+      }
+      return 'No se registraron observaciones en esta jornada.';
+    }
+    if (this.isStepScoped()) {
+      return `Agrega novedades o aclaraciones propias del Paso ${this.activeStepState()}.`;
+    }
+    return 'Registra novedades, aclaraciones de descuadres o notas operativas del día.';
   });
 
   readonly statusLabel = computed(() => {
     if (this.isClosed()) {
-      return this.hasSavedObservations() ? 'Solo lectura' : 'Sin notas';
+      return this.hasAnyObservations() ? 'Solo lectura' : 'Sin notas';
     }
     if (this.hasUnsavedChanges()) {
       return 'Sin guardar';
@@ -118,6 +205,10 @@ export class JournalObservationsPanelComponent {
     }
   }
 
+  toggleOtherNotes(): void {
+    this.showOtherNotes.update(current => !current);
+  }
+
   onDraftChange(value: string): void {
     this.draft.set(value);
     if (this.feedback()) {
@@ -126,7 +217,7 @@ export class JournalObservationsPanelComponent {
   }
 
   discardChanges(): void {
-    this.draft.set(this.journalState()?.observations ?? '');
+    this.draft.set(this.rawSavedObservations());
     this.feedback.set(null);
   }
 
@@ -152,11 +243,15 @@ export class JournalObservationsPanelComponent {
       return;
     }
 
+    const stepNumber = this.activeStepState();
     this.isSaving.set(true);
     this.feedback.set(null);
 
-    this.journalService
-      .updateObservations(current.id, payload)
+    const request$ = stepNumber !== null
+      ? this.journalService.updateStepObservations(current.id, stepNumber, payload)
+      : this.journalService.updateObservations(current.id, payload);
+
+    request$
       .pipe(
         finalize(() => this.isSaving.set(false)),
         takeUntilDestroyed(this.destroyRef)
@@ -164,12 +259,17 @@ export class JournalObservationsPanelComponent {
       .subscribe({
         next: updated => {
           this.journalState.set(updated);
-          this.lastSavedText = (updated.observations ?? '').trim();
-          this.draft.set(updated.observations ?? '');
+          const freshRaw = this.rawSavedObservations();
+          this.lastSavedText = freshRaw.trim();
+          this.draft.set(freshRaw);
           this.feedback.set({
-            text: payload
-              ? 'Observaciones de la jornada guardadas.'
-              : 'Observaciones eliminadas.',
+            text: stepNumber !== null
+              ? (payload
+                ? `Observación del Paso ${stepNumber} guardada.`
+                : `Observación del Paso ${stepNumber} eliminada.`)
+              : (payload
+                ? 'Observaciones de la jornada guardadas.'
+                : 'Observaciones eliminadas.'),
             isError: false
           });
         },
@@ -180,5 +280,28 @@ export class JournalObservationsPanelComponent {
           });
         }
       });
+  }
+
+  private syncDraftWithContext(): void {
+    const journal = this.journalState();
+    const stepNumber = this.activeStepState();
+    const contextKey = `${journal?.id ?? ''}:${stepNumber ?? 'general'}`;
+    const rawSaved = this.rawSavedObservations();
+    const trimmedSaved = rawSaved.trim();
+
+    if (contextKey !== this.lastContextKey) {
+      this.lastContextKey = contextKey;
+      this.lastSavedText = trimmedSaved;
+      this.draft.set(rawSaved);
+      this.feedback.set(null);
+      this.showOtherNotes.set(false);
+      this.isExpanded.set(journal?.status === JournalStatus.CLOSED && this.hasAnyObservations());
+      return;
+    }
+
+    if (trimmedSaved !== this.lastSavedText && !this.hasUnsavedChanges()) {
+      this.lastSavedText = trimmedSaved;
+      this.draft.set(rawSaved);
+    }
   }
 }

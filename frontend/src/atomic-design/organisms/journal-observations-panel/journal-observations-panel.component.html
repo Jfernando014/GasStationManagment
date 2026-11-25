@@ -3,7 +3,7 @@
     class="jr-obs-panel"
     [class.jr-obs-panel--expanded]="isExpanded()"
     [class.jr-obs-panel--closed]="isClosed()"
-    aria-label="Observaciones de la jornada">
+    [attr.aria-label]="panelTitle()">
     <div class="jr-obs-header">
       <button
         type="button"
@@ -20,11 +20,16 @@
         </span>
         <span class="jr-obs-meta">
           <span class="jr-obs-title-row">
-            <strong class="jr-obs-title">Observaciones de la jornada</strong>
+            <strong class="jr-obs-title">{{ panelTitle() }}</strong>
             <app-tag [variant]="statusVariant()">{{ statusLabel() }}</app-tag>
+            @if (otherObservations().length > 0) {
+              <span class="jr-obs-other-pill" id="jr-obs-other-pill">
+                +{{ otherObservations().length }} en {{ otherObservations().length === 1 ? 'otro paso' : 'otros pasos' }}
+              </span>
+            }
           </span>
           @if (!isExpanded()) {
-            <span class="jr-obs-preview" [class.jr-obs-preview--muted]="!hasSavedObservations()">
+            <span class="jr-obs-preview" [class.jr-obs-preview--muted]="!hasSavedObservations() && otherObservations().length === 0">
               {{ previewText() }}
             </span>
           }
@@ -47,14 +52,26 @@
     @if (isExpanded()) {
       <div class="jr-obs-body" id="jr-obs-body">
         @if (isClosed()) {
-          @if (hasSavedObservations()) {
-            <p class="jr-obs-readonly-text" id="jr-obs-readonly-text">{{ currentJournal.observations }}</p>
+          @if (isStepScoped()) {
+            @if (hasSavedObservations()) {
+              <p class="jr-obs-readonly-text" id="jr-obs-readonly-text">{{ rawSavedObservations() }}</p>
+            } @else {
+              <p class="jr-obs-empty">Sin observación registrada en el Paso {{ activeStepState() }}.</p>
+            }
           } @else {
-            <p class="jr-obs-empty">No se registraron observaciones en esta jornada.</p>
+            @if (hasSavedObservations()) {
+              <p class="jr-obs-readonly-text" id="jr-obs-readonly-text">{{ currentJournal.observations }}</p>
+            } @else if (!hasAnyObservations()) {
+              <p class="jr-obs-empty">No se registraron observaciones en esta jornada.</p>
+            }
           }
         } @else {
           <label class="jr-obs-label" for="jr-obs-textarea">
-            Notas operativas visibles en todos los pasos y en el Excel consolidado de la jornada
+            @if (isStepScoped()) {
+              Nota operativa del Paso {{ activeStepState() }} ({{ activeStepLabel() }}) · se incluye en el Excel consolidado
+            } @else {
+              Notas operativas visibles en todos los pasos y en el Excel consolidado de la jornada
+            }
           </label>
           <textarea
             id="jr-obs-textarea"
@@ -65,7 +82,7 @@
             [ngModel]="draft()"
             (ngModelChange)="onDraftChange($event)"
             (keydown)="onKeyDown($event)"
-            placeholder="Ej.: Descuadre justificado por vale pendiente, calibración de surtidor, reemplazo de turno..."></textarea>
+            placeholder="Ej.: Novedad en turno, aclaración de valor, calibración de surtidor, vale o soporte pendiente..."></textarea>
 
           <div class="jr-obs-actions">
             <span class="jr-obs-counter">
@@ -105,6 +122,36 @@
             [attr.role]="msg.isError ? 'alert' : 'status'">
             {{ msg.text }}
           </p>
+        }
+
+        @if (otherObservations().length > 0) {
+          <div class="jr-obs-others" id="jr-obs-others">
+            @if (shouldAutoShowOtherObservations()) {
+              <p class="jr-obs-others-heading">
+                {{ isStepScoped() ? 'Observaciones de otros pasos de esta jornada' : 'Observaciones registradas por paso' }}
+              </p>
+            } @else {
+              <button
+                type="button"
+                class="jr-obs-others-toggle"
+                id="jr-obs-others-toggle"
+                [attr.aria-expanded]="showOtherNotes()"
+                (click)="toggleOtherNotes()">
+                {{ showOtherNotes() ? 'Ocultar notas de otros pasos' : 'Ver notas de otros pasos (' + otherObservations().length + ')' }}
+              </button>
+            }
+
+            @if (shouldAutoShowOtherObservations() || showOtherNotes()) {
+              <ul class="jr-obs-others-list">
+                @for (item of otherObservations(); track item.key) {
+                  <li class="jr-obs-others-item">
+                    <span class="jr-obs-others-label">{{ item.label }}</span>
+                    <p class="jr-obs-others-text">{{ item.text }}</p>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
         }
       </div>
     }
