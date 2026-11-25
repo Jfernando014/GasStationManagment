@@ -62,7 +62,7 @@
                     <ul class="lines">
                       @for (line of view.titular; track line.key) {
                         <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
-                          <span class="lname">{{ line.label }}</span>
+                          <span class="lname">{{ withHours(line.label) }}</span>
                           <span class="num lmetric" data-label="Turnos">{{ line.observations }}</span>
                           <span class="num lmetric" data-label="Vendedor">{{ line.sellerAverage }}</span>
                           <span class="num lmetric" data-label="Estación">{{ line.stationAverage }}</span>
@@ -99,7 +99,7 @@
                       <ul class="lines" [id]="'support-' + view.workerId">
                         @for (line of view.support; track line.key) {
                           <li class="line" [class.is-few]="line.few" [attr.aria-label]="lineSentence(line)">
-                            <span class="lname">{{ line.label }}</span>
+                            <span class="lname">{{ withHours(line.label) }}</span>
                             <span class="num lmetric" data-label="Turnos">{{ line.observations }}</span>
                             <span class="num lmetric" data-label="Vendedor">{{ line.sellerAverage }}</span>
                             <span class="num lmetric" data-label="Estación">{{ line.stationAverage }}</span>

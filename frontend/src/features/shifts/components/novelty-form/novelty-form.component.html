@@ -25,7 +25,7 @@
       <span class="item-label">Vendedor</span>
       <b>{{ mainWorkerName() }}</b>
       @if (gridCode(); as code) {
-        <app-shift-chip [code]="code" />
+        <app-shift-chip [code]="code" [segments]="gridSegments()" />
       }
     </div>
   } @else {
@@ -57,7 +57,7 @@
     <app-select-field
       fieldId="novelty-code"
       label="Turno que cubre"
-      [placeholder]="gridCode() ? 'El mismo turno (' + gridCode() + ')' : 'El mismo turno de la malla'"
+      [placeholder]="gridText() ? 'El mismo turno (' + gridText() + ')' : 'El mismo turno de la malla'"
       [control]="form.controls.shiftCode"
       [options]="codeOptions()" />
   }

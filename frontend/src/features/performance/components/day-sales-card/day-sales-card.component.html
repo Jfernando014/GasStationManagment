@@ -40,7 +40,7 @@
             </div>
             @if (row.empty) {
               <app-warning-panel>
-                <b>{{ row.name }} no tiene ventas registradas en su turno {{ row.shiftCode }}.</b> Puede ser un cierre sin datos.
+                <b>{{ row.name }} no tiene ventas registradas en su turno {{ shiftText(row.shiftCode) }}.</b> Puede ser un cierre sin datos.
                 <a class="link" routerLink="/jornada/cerrada" [queryParams]="{ date: date() }">Revisar el cierre del día</a>
               </app-warning-panel>
             }

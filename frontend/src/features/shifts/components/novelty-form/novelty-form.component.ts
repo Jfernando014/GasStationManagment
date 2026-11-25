@@ -6,6 +6,7 @@ import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-bu
 import { FormFieldComponent } from '../../../../atomic-design/molecules/form-field/form-field.component';
 import { SelectFieldComponent, SelectOption } from '../../../../atomic-design/molecules/select-field/select-field.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { applyFieldErrors, isApiError } from '../../../../shared/helpers/problem-details.helpers';
 import { segmentsLabel } from '../../../../shared/helpers/shift-display.helpers';
 import { ShiftCode } from '../../../../shared/models/dtos/shift-catalog.dto';
@@ -44,6 +45,7 @@ const REASON_MAX = 255;
 })
 export class NoveltyFormComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly shiftHours = inject(ShiftHoursService);
 
   readonly step = input.required<DayStaffStepResponse>();
   readonly catalog = input<ShiftCode[]>([]);
@@ -85,7 +87,7 @@ export class NoveltyFormComponent {
   readonly memberOptions = computed<SelectOption<string>[]>(() =>
     this.step().members
       .filter(m => m.noveltyType === 'NONE')
-      .map(m => ({ value: m.workerId, label: `${m.fullName} · ${m.workedCode}` }))
+      .map(m => ({ value: m.workerId, label: `${m.fullName} · ${this.shiftHours.text(m.workedCode, m.segments)}` }))
   );
 
   readonly swapOptions = computed<SelectOption<string>[]>(() =>
@@ -103,8 +105,15 @@ export class NoveltyFormComponent {
       .map(c => ({ value: c.code, label: `${c.code} · ${segmentsLabel(c.schedule?.segments ?? [])}` }))
   );
 
+  private readonly mainMember = computed(() => this.step().members.find(m => m.workerId === this.selectedWorkerId()) ?? null);
   /** Código de la malla de la persona principal: el reemplazo lo hereda si no se elige otro. */
-  readonly gridCode = computed(() => this.step().members.find(m => m.workerId === this.selectedWorkerId())?.workedCode ?? null);
+  readonly gridCode = computed(() => this.mainMember()?.workedCode ?? null);
+  readonly gridSegments = computed(() => this.mainMember()?.segments);
+  /** Cómo se lee ese turno: el código, o las horas si es un horario personalizado. */
+  readonly gridText = computed(() => {
+    const member = this.mainMember();
+    return member ? this.shiftHours.text(member.workedCode, member.segments) : null;
+  });
 
   /** El servidor pide marcar la cobertura excepcional: se resalta la casilla para que se vea qué falta. */
   readonly needsExceptional = computed(() => {

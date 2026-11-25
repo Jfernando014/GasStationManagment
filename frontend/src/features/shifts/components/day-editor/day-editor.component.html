@@ -2,7 +2,7 @@
   <div class="de-now">
     <span class="item-label">{{ dateLabel() }}</span>
     <div class="de-now-row">
-      <app-shift-chip [code]="cell().code" />
+      <app-shift-chip [code]="cell().code" [segments]="cell().segments" />
       <span>{{ cell().code ? currentHours() : 'Sin turno asignado' }}</span>
     </div>
     @if (cell().note) {
@@ -23,14 +23,37 @@
       [maxLength]="noteMax"
       placeholder="Ej. Cambio pedido por el vendedor"
       autocomplete="off"
-      hint="Se guarda junto con el turno que elijas. Escríbela antes de elegir." />
+      [hint]="isSupport() ? 'Se guarda junto con el horario o el descanso.' : 'Se guarda junto con el turno que elijas. Escríbela antes de elegir.'" />
+
+    @if (isSupport()) {
+      <section class="de-hours" aria-label="Horario de apoyo">
+        <app-support-hours-picker idPrefix="de-hours" [draft]="hours" [catalog]="catalog()" [disabled]="saving() || saved()" />
+        <button
+          appButton
+          type="button"
+          variant="primary"
+          [block]="true"
+          class="de-save"
+          [class.is-saved]="saved()"
+          [disabled]="saving() || saved()"
+          [attr.aria-busy]="saving()"
+          (click)="saveHours()">
+          @if (saved()) {
+            <svg class="de-save-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+            Guardado
+          } @else {
+            {{ saving() ? 'Guardando…' : 'Guardar horario' }}
+          }
+        </button>
+      </section>
+    }
 
     @if (errorMessage(); as message) {
       <p class="de-error" role="alert">{{ message }}</p>
     }
 
     <fieldset class="de-options">
-      <legend class="item-label">Elige el turno · se guarda al tocarlo</legend>
+      <legend class="item-label">{{ isSupport() ? 'O deja el día en descanso · se guarda al tocarlo' : 'Elige el turno · se guarda al tocarlo' }}</legend>
       <div class="de-grid">
         @for (option of options(); track option.code; let i = $index) {
           <button
@@ -53,7 +76,9 @@
           <p class="ps-vacio">No hay turnos activos para este rol en el catálogo.</p>
         }
       </div>
-      <p class="field-hint">Solo se muestran los turnos de {{ roleLabel() }} y el descanso.</p>
+      @if (!isSupport()) {
+        <p class="field-hint">Solo se muestran los turnos de {{ roleLabel() }} y el descanso.</p>
+      }
     </fieldset>
   }
 </div>

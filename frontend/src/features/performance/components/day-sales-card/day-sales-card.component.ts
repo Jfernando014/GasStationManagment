@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
 import { WarningPanelComponent } from '../../../../atomic-design/molecules/warning-panel/warning-panel.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { DaySaleView } from '../../models/performance-view.model';
 
 /**
@@ -21,6 +22,8 @@ import { DaySaleView } from '../../models/performance-view.model';
   styleUrl: './day-sales-card.component.css'
 })
 export class DaySalesCardComponent {
+  private readonly shiftHours = inject(ShiftHoursService);
+
   readonly rows = input.required<DaySaleView[]>();
   /** "Viernes 20 nov 2026". */
   readonly dayLabel = input.required<string>();
@@ -32,6 +35,10 @@ export class DaySalesCardComponent {
   readonly version = input(0);
 
   protected readonly skeletonRows = [0, 1, 2];
+
+  protected shiftText(code: string | null): string {
+    return code ? this.shiftHours.text(code) : '';
+  }
 
   protected shiftName(row: DaySaleView): string {
     return row.period === 'NIGHT' ? 'turno de noche' : row.period === 'DAY' ? 'turno de día' : '';

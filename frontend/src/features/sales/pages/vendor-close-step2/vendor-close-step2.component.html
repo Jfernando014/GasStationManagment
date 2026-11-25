@@ -137,7 +137,7 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <th class="jr-grid-vendor-col">
                   <div class="th-vendor-title">{{ vendor.name }}</div>
-                  <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ vendor.shiftName }}</small>
+                  <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ shiftText(vendor.shiftName) }}</small>
                 </th>
               }
               <th class="jr-grid-total">
@@ -663,7 +663,7 @@
 
         @for (vendor of assignedVendors; track vendor.document) {
           <section class="jr-p2-panel-vendedor">
-            <h4>{{ vendor.name }} <small>({{ vendor.shiftName }})</small></h4>
+            <h4>{{ vendor.name }} <small>({{ shiftText(vendor.shiftName) }})</small></h4>
 
             <div class="jr-p2-panel-fila">
               <span>Efectivo reportado en la isla</span>

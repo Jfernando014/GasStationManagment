@@ -1,0 +1,178 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sh-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---- Standard shifts ---- */
+.sh-quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 6px;
+}
+
+.sh-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 4px;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--spring-fast), background-color var(--duration-fast) var(--spring-fast),
+    box-shadow var(--duration-fast) var(--spring-fast), transform var(--duration-fast) var(--spring-fast);
+}
+
+.sh-option b { font-size: 12.5px; color: var(--text-heading); }
+.sh-option small { font-size: 10.5px; color: var(--text-muted); }
+.sh-option:active:not(:disabled) { transform: scale(0.97); }
+.sh-option:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+.sh-option:disabled { cursor: progress; }
+
+.sh-option.is-on {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-subtle);
+  box-shadow: inset 0 0 0 1px var(--brand-primary);
+}
+
+.sh-option.is-on b,
+.sh-option.is-on small { color: var(--brand-primary-strong); }
+
+/* Only with a pointer, and quieter than the chosen one: after a tap, a phone would keep it looking chosen */
+@media (hover: hover) {
+  .sh-option:hover:not(:disabled):not(.is-on) { background: var(--surface-subtle); }
+}
+
+.sh-check {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  color: var(--brand-primary-strong);
+}
+
+/* ---- Blocks of hours ---- */
+.sh-range { display: grid; grid-template-rows: 1fr; }
+.sh-range-inner { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+
+.sh-range-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.sh-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sh-range.is-invalid ::ng-deep .select-trigger { border-color: var(--semantic-red); }
+
+.sh-message,
+.sh-server { margin: 0; }
+
+.sh-server {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--semantic-red-subtle);
+}
+
+.sh-add { align-self: flex-start; }
+
+/* ---- Live preview on the operational day ---- */
+.sh-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+
+.sh-preview-head {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.sh-preview-head span { color: var(--text-muted); font-weight: 600; }
+
+.sh-track {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+}
+
+.sh-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-primary);
+  transition: left 200ms var(--spring), width 200ms var(--spring);
+  animation: sh-bar-in 200ms var(--spring) both;
+  transform-origin: left center;
+}
+
+.sh-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Motion ---- */
+.sh-range-in { animation: sh-range-in 200ms var(--spring) both; }
+.sh-range-out { animation: sh-range-out 160ms ease both; pointer-events: none; }
+/* Only while it collapses or grows: at rest the menu of a selector must be able to leave the block */
+.sh-range-in .sh-range-inner,
+.sh-range-out .sh-range-inner { overflow: hidden; }
+.sh-message-in { animation: sh-message-in 180ms var(--spring) both; }
+
+@keyframes sh-range-in { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+@keyframes sh-range-out { from { grid-template-rows: 1fr; opacity: 1; } to { grid-template-rows: 0fr; opacity: 0; margin-top: -12px; } }
+@keyframes sh-message-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes sh-bar-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* The entry and exit classes keep a 1ms animation, so Angular still sees it end and removes the element */
+@media (prefers-reduced-motion: reduce) {
+  .sh-option, .sh-bar { transition: none; }
+  .sh-bar { animation: none; }
+  .sh-range-in, .sh-range-out, .sh-message-in { animation-duration: 1ms; }
+}
+
+/* Phone: bigger targets */
+@media (max-width: 640px) {
+  .sh-option { min-height: 56px; }
+  .sh-option b { font-size: 13.5px; }
+  :host ::ng-deep .select-trigger { height: 48px; font-size: 15px; }
+  :host ::ng-deep .select-menu .dropdown-menu-opt { min-height: 44px; }
+  .sh-remove { min-height: 44px; }
+  .sh-add { align-self: stretch; justify-content: center; min-height: 44px; }
+}

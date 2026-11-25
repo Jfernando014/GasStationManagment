@@ -11,7 +11,10 @@ import com.edu.unicauca.gasstation.backend.shifts.api.dtos.RotationDtos.Rotation
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleResponse;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.ScheduleUpdateResponse;
 import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.WorkerMonthResponse;
+import com.edu.unicauca.gasstation.backend.shifts.api.dtos.ScheduleDtos.HoursRequest;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ScheduleChange;
 import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftPeriod;
+import com.edu.unicauca.gasstation.backend.shifts.domain.models.ShiftSegment;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftRotationService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftScheduleService;
 import com.edu.unicauca.gasstation.backend.shifts.domain.services.ShiftWorkerMonthService;
@@ -27,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -148,8 +152,12 @@ public class ShiftScheduleController {
                     schema = @Schema(implementation = ProblemDetail.class)))
     @PutMapping("/assignments/range")
     public ScheduleUpdateResponse assignRange(@Valid @RequestBody AssignRangeRequest request) {
-        return shiftScheduleMapper.toResponse(shiftScheduleService.assignRange(request.workerId(), request.from(),
-                request.to(), request.shiftCode(), request.note(), request.leaveSundaysAsRest()));
+        ScheduleChange change = request.segments() == null
+                ? shiftScheduleService.assignRange(request.workerId(), request.from(), request.to(),
+                        request.shiftCode(), request.note(), request.leaveSundaysAsRest())
+                : shiftScheduleService.assignRangeHours(request.workerId(), request.from(), request.to(),
+                        toSegments(request.segments()), request.note(), request.leaveSundaysAsRest());
+        return shiftScheduleMapper.toResponse(change);
     }
 
     @Operation(summary = "Save or edit the shift of a worker on one day",
@@ -170,8 +178,15 @@ public class ShiftScheduleController {
                     schema = @Schema(implementation = ProblemDetail.class)))
     @PutMapping("/assignments")
     public ScheduleUpdateResponse assign(@Valid @RequestBody AssignShiftRequest request) {
-        return shiftScheduleMapper.toResponse(
-                shiftScheduleService.assign(request.workerId(), request.date(), request.shiftCode(), request.note()));
+        ScheduleChange change = request.segments() == null
+                ? shiftScheduleService.assign(request.workerId(), request.date(), request.shiftCode(), request.note())
+                : shiftScheduleService.assignHours(request.workerId(), request.date(),
+                        toSegments(request.segments()), request.note());
+        return shiftScheduleMapper.toResponse(change);
+    }
+
+    private static List<ShiftSegment> toSegments(List<HoursRequest> hours) {
+        return hours.stream().map(HoursRequest::toSegment).toList();
     }
 
     @Operation(summary = "Get the schedule of a date range with its coverage",

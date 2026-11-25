@@ -15,6 +15,7 @@ import {
 
 import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import {
   dayOfMonth,
   shortName,
@@ -25,11 +26,15 @@ import {
   shiftTone,
   ShiftTone
 } from '../../../../shared/helpers/shift-display.helpers';
+import { isCustomShiftCode } from '../../../../shared/helpers/support-hours.helpers';
+import { ShiftScheduleSegment } from '../../../../shared/models/dtos/shift-catalog.dto';
 import { DailyCoverage } from '../../../../shared/models/dtos/shift-schedule.dto';
 
 export interface GridCell {
   code: string | null;
   note: string | null;
+  /** Horas del turno según la malla; vacías en DESCANSO. */
+  segments?: ShiftScheduleSegment[];
 }
 
 export interface GridRow {
@@ -95,6 +100,7 @@ interface RowGroup {
 })
 export class ScheduleGridComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly shiftHours = inject(ShiftHoursService);
 
   readonly rows = input.required<GridRow[]>();
   readonly days = input.required<string[]>();
@@ -210,7 +216,7 @@ export class ScheduleGridComponent {
   /** Explica la celda señalada: turno, horario, de quién es y la nota si la tiene. */
   showTip(row: GridRow, col: DayColumn, event: Event): void {
     const cell = this.cellOf(row, col.date);
-    const info = cell.code ? this.codeInfo()[cell.code] : null;
+    const info = cell.code ? this.codeInfo()[cell.code] ?? this.customInfo(cell) : null;
     const day = col.label.split(' de ')[0];
     const parts = [`${row.name}, ${day}.`];
     if (cell.note) parts.push(cell.note);
@@ -256,7 +262,9 @@ export class ScheduleGridComponent {
 
   cellLabel(row: GridRow, col: DayColumn): string {
     const cell = this.cellOf(row, col.date);
-    const parts = [`${row.name}, ${col.label}`, cell.code ? `turno ${cell.code}` : 'sin turno asignado'];
+    const custom = this.customInfo(cell);
+    const shift = custom ? `turno de apoyo de ${custom.hours}` : `turno ${cell.code}`;
+    const parts = [`${row.name}, ${col.label}`, cell.code ? shift : 'sin turno asignado'];
     if (cell.note) parts.push(`nota: ${cell.note}`);
     if (col.past) parts.push('ya pasó, solo lectura');
     return parts.join('. ');
@@ -312,6 +320,12 @@ export class ScheduleGridComponent {
     const r = this.rows().findIndex(row => row.workerId === workerId);
     const c = this.days().indexOf(date);
     if (r >= 0 && c >= 0) this.moveFocus(r, c);
+  }
+
+  /** Un horario personalizado no está en la lista del catálogo: se describe con sus horas. */
+  private customInfo(cell: GridCell): { name: string; hours: string } | null {
+    if (!cell.code || !isCustomShiftCode(cell.code)) return null;
+    return { name: 'Apoyo', hours: this.shiftHours.fullText(cell.code, cell.segments).replace(/–/g, ' a ') };
   }
 
   private moveFocus(r: number, c: number): void {

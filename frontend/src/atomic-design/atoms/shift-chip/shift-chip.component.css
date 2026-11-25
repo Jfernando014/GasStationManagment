@@ -34,3 +34,12 @@
 :host(.shift-chip--vacio) { background: transparent; border: 1px dashed var(--jr-cell-border); color: var(--text-light); }
 
 :host(.shift-chip--changed) { box-shadow: inset 0 0 0 1.5px var(--brand-primary); }
+
+/* Hours of a custom support shift inside a narrow cell: one block per line */
+:host(.shift-chip--cell.shift-chip--hours) {
+  font-size: 9.5px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  white-space: pre;
+  text-align: center;
+}

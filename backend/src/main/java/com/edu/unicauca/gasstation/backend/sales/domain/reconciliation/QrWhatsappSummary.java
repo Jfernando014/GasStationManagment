@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.sales.domain.reconciliation;
 
+import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -23,7 +24,9 @@ public final class QrWhatsappSummary {
         StringBuilder text = new StringBuilder();
         text.append("*Cierre QR ").append(DATE.format(date)).append("*\n");
         text.append("Vendedor: ").append(vendor.workerName() == null ? "-" : vendor.workerName()).append('\n');
-        text.append("Turno: ").append(vendor.shiftCode() == null ? "-" : vendor.shiftCode()).append('\n');
+        text.append("Turno: ")
+                .append(vendor.shiftCode() == null ? "-" : CustomShiftCode.displayText(vendor.shiftCode()))
+                .append('\n');
         text.append("Total QR: ").append(cop(vendor.redeban())).append('\n');
         if (vendor.matches()) {
             text.append("Estado: Cuadra");
