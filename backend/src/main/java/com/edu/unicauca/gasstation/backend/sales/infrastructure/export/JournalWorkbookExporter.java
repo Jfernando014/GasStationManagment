@@ -5,6 +5,7 @@ import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpenseIte
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.ProductSaleSummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalCellNote;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalFullWorkbookData;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalSnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort.AssignedVendor;
@@ -20,10 +21,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -40,6 +46,50 @@ public class JournalWorkbookExporter {
 
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final Map<String, Integer> STEP2_FIELD_TO_VENDOR_SHEET_COLUMN = Map.ofEntries(
+            Map.entry("galMotor", 4),
+            Map.entry("galDiesel", 5),
+            Map.entry("galExtra", 6),
+            Map.entry("galMaxpro", 7),
+            Map.entry("totalGalones", 8),
+            Map.entry("canastilla", 9),
+            Map.entry("parciales", 10),
+            Map.entry("pico", 10),
+            Map.entry("efectivo", 10),
+            Map.entry("ga", 11),
+            Map.entry("credibanco", 12),
+            Map.entry("qr", 13),
+            Map.entry("redenciones", 14),
+            Map.entry("totalEntregado", 15),
+            Map.entry("tirilla", 16),
+            Map.entry("descuadre", 17));
+
+    private static final Map<String, String> FIELD_LABELS = Map.ofEntries(
+            Map.entry("parciales", "Parciales"),
+            Map.entry("pico", "Pico"),
+            Map.entry("efectivo", "Total efectivo"),
+            Map.entry("ga", "G.A."),
+            Map.entry("credibanco", "Credibanco"),
+            Map.entry("qr", "QR"),
+            Map.entry("redenciones", "Redenciones Puntos Colombia"),
+            Map.entry("totalEntregado", "Total entregado"),
+            Map.entry("galMotor", "Galones Motor"),
+            Map.entry("galDiesel", "Galones Diésel"),
+            Map.entry("galExtra", "Galones Extra"),
+            Map.entry("galMaxpro", "Galones Max Pro"),
+            Map.entry("totalGalones", "Total galones"),
+            Map.entry("canastilla", "Canastilla"),
+            Map.entry("tirilla", "Total (tirilla)"),
+            Map.entry("descuadre", "Descuadre real"));
+
+    private static final Map<Integer, String> STEP_LABELS = Map.of(
+            1, "Paso 1 · Personal del día",
+            2, "Paso 2 · Cierre por vendedor",
+            3, "Paso 3 · Medios electrónicos",
+            4, "Paso 4 · Saldo en caja",
+            5, "Paso 5 · Tanques e inventario",
+            6, "Paso 6 · Cierre de jornada");
+
     public byte[] export(JournalSnapshot journal) throws IOException {
         return export(JournalFullWorkbookData.fromSnapshot(journal));
     }
@@ -50,10 +100,13 @@ public class JournalWorkbookExporter {
             createSummarySheet(workbook, data, styles);
             createStepsSheet(workbook, data.journal(), styles);
             createStaffSheet(workbook, data.staff(), styles);
-            createVendorClosesSheet(workbook, data.vendorCloses(), styles);
+            createVendorClosesSheet(workbook, data.vendorCloses(), data.journal().cellNotes(), styles);
             createProductsSheet(workbook, data, styles);
             createCashBalanceSheet(workbook, data.cashBalance(), styles);
             createInventorySheet(workbook, data.inventory(), styles);
+            if (hasNotesOrStepObservations(data.journal())) {
+                createNotesSheet(workbook, data, styles);
+            }
             workbook.write(output);
             return output.toByteArray();
         }
@@ -124,6 +177,7 @@ public class JournalWorkbookExporter {
         writeHeaderCell(header, 1, "Nombre del paso", styles);
         writeHeaderCell(header, 2, "Estado", styles);
         writeHeaderCell(header, 3, "Completado el", styles);
+        writeHeaderCell(header, 4, "Observaciones", styles);
 
         int rowNumber = 1;
         for (JournalSnapshot.JournalStepSnapshot step : journal.steps()) {
@@ -132,9 +186,10 @@ public class JournalWorkbookExporter {
             writeTextCell(row, 1, step.name(), styles.text);
             writeTextCell(row, 2, step.status().name(), styles.text);
             writeTextCell(row, 3, format(step.completedAt()), styles.text);
+            writeTextCell(row, 4, step.observations(), styles.text);
         }
-        sheet.setAutoFilter(new CellRangeAddress(0, Math.max(0, rowNumber - 1), 0, 3));
-        finishSheet(sheet, 4, 1);
+        sheet.setAutoFilter(new CellRangeAddress(0, Math.max(0, rowNumber - 1), 0, 4));
+        finishSheet(sheet, 5, 1);
     }
 
     private static void createStaffSheet(Workbook workbook, List<AssignedVendor> staff, Styles styles) {
@@ -167,6 +222,7 @@ public class JournalWorkbookExporter {
     private static void createVendorClosesSheet(
             Workbook workbook,
             List<VendorCloseSummary> vendorCloses,
+            List<JournalCellNote> cellNotes,
             Styles styles) {
         Sheet sheet = workbook.createSheet("Cierre Vendedores");
         String[] headers = {
@@ -187,6 +243,20 @@ public class JournalWorkbookExporter {
             finishSheet(sheet, headers.length, 1);
             return;
         }
+
+        Map<String, List<JournalCellNote>> step2NotesByVendor = cellNotes == null
+                ? Map.of()
+                : cellNotes.stream()
+                        .filter(note -> Integer.valueOf(2).equals(note.stepNumber())
+                                && note.columnKey() != null
+                                && note.note() != null
+                                && !note.note().isBlank())
+                        .collect(Collectors.groupingBy(
+                                JournalCellNote::columnKey,
+                                LinkedHashMap::new,
+                                Collectors.toList()));
+        Drawing<?> drawing = step2NotesByVendor.isEmpty() ? null : sheet.createDrawingPatriarch();
+        CreationHelper creationHelper = workbook.getCreationHelper();
 
         BigDecimal sumMotor = BigDecimal.ZERO;
         BigDecimal sumDiesel = BigDecimal.ZERO;
@@ -245,6 +315,14 @@ public class JournalWorkbookExporter {
             writeDecimalCell(row, 16, nz(close.dominusTirilla()), styles.currency);
             writeDecimalCell(row, 17, nz(close.realDiscrepancy()), styles.currency);
             writeTextCell(row, 18, close.resultStatus(), styles.text);
+
+            if (drawing != null && close.vendorDocument() != null) {
+                attachVendorRowComments(
+                        drawing,
+                        creationHelper,
+                        row,
+                        step2NotesByVendor.getOrDefault(close.vendorDocument(), List.of()));
+            }
         }
 
         Row totalRow = sheet.createRow(rowNumber);
@@ -449,6 +527,146 @@ public class JournalWorkbookExporter {
         finishSheet(sheet, varHeaders.length, 1);
     }
 
+    private static boolean hasNotesOrStepObservations(JournalSnapshot journal) {
+        if (journal.cellNotes() != null && !journal.cellNotes().isEmpty()) {
+            return true;
+        }
+        return journal.steps().stream()
+                .anyMatch(step -> step.observations() != null && !step.observations().isBlank());
+    }
+
+    private static void attachVendorRowComments(
+            Drawing<?> drawing,
+            CreationHelper creationHelper,
+            Row row,
+            List<JournalCellNote> vendorNotes) {
+        if (vendorNotes.isEmpty()) {
+            return;
+        }
+        Map<Integer, List<JournalCellNote>> notesByColumn = new LinkedHashMap<>();
+        for (JournalCellNote note : vendorNotes) {
+            Integer colIndex = STEP2_FIELD_TO_VENDOR_SHEET_COLUMN.get(note.fieldKey());
+            if (colIndex != null) {
+                notesByColumn.computeIfAbsent(colIndex, ignored -> new ArrayList<>()).add(note);
+            }
+        }
+        for (Map.Entry<Integer, List<JournalCellNote>> entry : notesByColumn.entrySet()) {
+            int colIndex = entry.getKey();
+            Cell targetCell = row.getCell(colIndex);
+            if (targetCell == null) {
+                continue;
+            }
+            List<JournalCellNote> cellGroup = entry.getValue();
+            String commentText = cellGroup.size() == 1 && !"parciales".equals(cellGroup.get(0).fieldKey())
+                    && !"pico".equals(cellGroup.get(0).fieldKey())
+                    ? cellGroup.get(0).note()
+                    : cellGroup.stream()
+                            .map(item -> "[" + fieldLabel(item.fieldKey()) + "] " + item.note())
+                            .collect(Collectors.joining("\n"));
+
+            ClientAnchor anchor = creationHelper.createClientAnchor();
+            anchor.setCol1(colIndex);
+            anchor.setCol2(colIndex + 3);
+            anchor.setRow1(row.getRowNum());
+            anchor.setRow2(row.getRowNum() + 4);
+            Comment comment = drawing.createCellComment(anchor);
+            comment.setAuthor("EDS Bellavista");
+            comment.setString(creationHelper.createRichTextString(commentText));
+            targetCell.setCellComment(comment);
+        }
+    }
+
+    private static void createNotesSheet(Workbook workbook, JournalFullWorkbookData data, Styles styles) {
+        Sheet sheet = workbook.createSheet("Notas y Observaciones");
+        JournalSnapshot journal = data.journal();
+        int rowIdx = 0;
+
+        writeSectionRow(sheet, rowIdx++, "Observaciones por paso y generales", 3, styles);
+        Row obsHeader = sheet.createRow(rowIdx++);
+        writeHeaderCell(obsHeader, 0, "Alcance", styles);
+        writeHeaderCell(obsHeader, 1, "Estado", styles);
+        writeHeaderCell(obsHeader, 2, "Observación", styles);
+
+        boolean wroteAnyObservation = false;
+        if (journal.observations() != null && !journal.observations().isBlank()) {
+            Row row = sheet.createRow(rowIdx++);
+            writeTextCell(row, 0, "Jornada general", styles.text);
+            writeTextCell(row, 1, journal.status().name(), styles.text);
+            writeTextCell(row, 2, journal.observations(), styles.text);
+            wroteAnyObservation = true;
+        }
+        for (JournalSnapshot.JournalStepSnapshot step : journal.steps()) {
+            if (step.observations() != null && !step.observations().isBlank()) {
+                Row row = sheet.createRow(rowIdx++);
+                writeTextCell(row, 0, stepLabel(step.stepNumber(), step.name()), styles.text);
+                writeTextCell(row, 1, step.status().name(), styles.text);
+                writeTextCell(row, 2, step.observations(), styles.text);
+                wroteAnyObservation = true;
+            }
+        }
+        if (!wroteAnyObservation) {
+            Row empty = sheet.createRow(rowIdx++);
+            writeTextCell(empty, 0, "Sin observaciones por paso registradas", styles.muted);
+        }
+
+        rowIdx++;
+        writeSectionRow(sheet, rowIdx++, "Notas en celdas (tipo Excel)", 5, styles);
+        Row notesHeader = sheet.createRow(rowIdx++);
+        writeHeaderCell(notesHeader, 0, "Paso", styles);
+        writeHeaderCell(notesHeader, 1, "Vendedor / Columna", styles);
+        writeHeaderCell(notesHeader, 2, "Campo", styles);
+        writeHeaderCell(notesHeader, 3, "Nota", styles);
+        writeHeaderCell(notesHeader, 4, "Actualizado el", styles);
+
+        Map<String, String> vendorNamesByDoc = buildVendorNameLookup(data);
+        List<JournalCellNote> cellNotes = journal.cellNotes();
+        if (cellNotes.isEmpty()) {
+            Row empty = sheet.createRow(rowIdx);
+            writeTextCell(empty, 0, "Sin notas en celdas registradas", styles.muted);
+        } else {
+            for (JournalCellNote note : cellNotes) {
+                Row row = sheet.createRow(rowIdx++);
+                String vendorName = vendorNamesByDoc.get(note.columnKey());
+                String columnDisplay = vendorName != null
+                        ? vendorName + " (" + note.columnKey() + ")"
+                        : note.columnKey();
+                writeTextCell(row, 0, stepLabel(note.stepNumber(), null), styles.text);
+                writeTextCell(row, 1, columnDisplay, styles.text);
+                writeTextCell(row, 2, fieldLabel(note.fieldKey()), styles.text);
+                writeTextCell(row, 3, note.note(), styles.text);
+                writeTextCell(row, 4, format(note.updatedAt()), styles.text);
+            }
+        }
+
+        finishSheet(sheet, 5, 0);
+    }
+
+    private static Map<String, String> buildVendorNameLookup(JournalFullWorkbookData data) {
+        Map<String, String> lookup = new LinkedHashMap<>();
+        for (AssignedVendor member : data.staff()) {
+            if (member.document() != null && member.name() != null) {
+                lookup.putIfAbsent(member.document(), member.name());
+            }
+        }
+        for (VendorCloseSummary close : data.vendorCloses()) {
+            if (close.vendorDocument() != null && close.vendorName() != null) {
+                lookup.putIfAbsent(close.vendorDocument(), close.vendorName());
+            }
+        }
+        return lookup;
+    }
+
+    private static String fieldLabel(String fieldKey) {
+        return FIELD_LABELS.getOrDefault(fieldKey, fieldKey == null ? "" : fieldKey);
+    }
+
+    private static String stepLabel(Integer stepNumber, String fallbackName) {
+        if (stepNumber != null && STEP_LABELS.containsKey(stepNumber)) {
+            return STEP_LABELS.get(stepNumber);
+        }
+        return fallbackName != null ? fallbackName : (stepNumber != null ? "Paso " + stepNumber : "");
+    }
+
     private static void writeTextRow(Sheet sheet, int rowNumber, String label, String value, Styles styles) {
         Row row = sheet.createRow(rowNumber);
         writeTextCell(row, 0, label, styles.text);
@@ -511,7 +729,9 @@ public class JournalWorkbookExporter {
     }
 
     private static void finishSheet(Sheet sheet, int columns, int frozenRows) {
-        sheet.createFreezePane(0, frozenRows);
+        if (frozenRows > 0) {
+            sheet.createFreezePane(0, frozenRows);
+        }
         for (int column = 0; column < columns; column++) {
             sheet.autoSizeColumn(column);
             sheet.setColumnWidth(column, Math.min(Math.max(sheet.getColumnWidth(column) + 512, 12 * 256), 60 * 256));
