@@ -14,4 +14,5 @@ public class JournalStepResponse {
     private String name;
     private StepStatus status;
     private LocalDateTime completedAt;
+    private String observations;
 }

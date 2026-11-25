@@ -689,4 +689,179 @@ describe('VendorCloseStep2Component', () => {
     expect(component.hasUnsavedChanges()).toBe(false);
     expect(salesServiceMock.getLastSavedRequest()).toBeTruthy();
   });
+
+  it('loads Step 2 Excel-style cell notes, saves edits via popover, and deletes blank notes (SR-08)', async () => {
+    const journal: JournalResponse = {
+      id: 45,
+      date: '2026-11-24',
+      consecutive: 320,
+      status: JournalStatus.OPEN,
+      steps: [
+        { id: 1, stepNumber: 1, name: 'Personal', status: StepStatus.COMPLETED, completedAt: '2026-11-24T06:00:00' },
+        { id: 2, stepNumber: 2, name: 'Vendedores', status: StepStatus.PENDING, completedAt: null }
+      ]
+    };
+    const journalSubject = new BehaviorSubject<JournalResponse | null>(journal);
+    const savedCalls: unknown[] = [];
+
+    const journalServiceStub = {
+      currentJournal$: journalSubject.asObservable(),
+      getCurrentJournalSnapshot: () => journalSubject.value,
+      completeStep: () => of(journal.steps[1]),
+      updateCurrentStep: () => undefined,
+      getCellNotes: () =>
+        of([
+          {
+            id: 1,
+            journalId: 45,
+            stepNumber: 2,
+            columnKey: '52875796',
+            fieldKey: 'parciales',
+            note: 'Sobre #3 con billete deteriorado',
+            updatedAt: '2026-11-24T14:00:00'
+          }
+        ]),
+      saveCellNote: (_journalId: number, req: { note: string | null }) => {
+        savedCalls.push(req);
+        if (!req.note) return of(null);
+        return of({
+          id: 2,
+          journalId: 45,
+          stepNumber: 2,
+          columnKey: '1061696674',
+          fieldKey: 'credibanco',
+          note: req.note,
+          updatedAt: '2026-11-24T15:00:00'
+        });
+      }
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: salesServiceMock },
+        { provide: JournalService, useValue: journalServiceStub },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.hasCellNote('52875796', 'parciales')).toBe(true);
+    expect(localComponent.getCellNote('52875796', 'parciales')).toBe('Sobre #3 con billete deteriorado');
+    expect(localFixture.nativeElement.querySelector('#jr-p2-cell-notes-bar')?.textContent).toContain(
+      'Sobre #3 con billete deteriorado'
+    );
+
+    // Open popover for Carlos -> Credibanco and save a new note
+    localComponent.openCellNote(mockStaff[1], 'credibanco');
+    localFixture.detectChanges();
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-dialog')).toBeTruthy();
+
+    localComponent.noteDraft = '  Pasado por datafono alterno  ';
+    localComponent.saveActiveCellNote();
+    localFixture.detectChanges();
+
+    expect(localComponent.getCellNote('1061696674', 'credibanco')).toBe('Pasado por datafono alterno');
+    expect(localComponent.activeNoteTarget).toBeNull();
+    expect(savedCalls[0]).toEqual({
+      stepNumber: 2,
+      columnKey: '1061696674',
+      fieldKey: 'credibanco',
+      note: 'Pasado por datafono alterno'
+    });
+
+    // Delete existing note
+    localComponent.openCellNote(mockStaff[0], 'parciales');
+    localComponent.deleteActiveCellNote();
+    localFixture.detectChanges();
+
+    expect(localComponent.hasCellNote('52875796', 'parciales')).toBe(false);
+    expect(savedCalls[1]).toEqual({
+      stepNumber: 2,
+      columnKey: '52875796',
+      fieldKey: 'parciales',
+      note: null
+    });
+  });
+
+  it('displays saved cell notes in read-only mode outside the disabled fieldset when journal is closed', async () => {
+    const closedJournal: JournalResponse = {
+      id: 46,
+      date: '2026-11-24',
+      consecutive: 321,
+      status: JournalStatus.CLOSED,
+      steps: [
+        { id: 1, stepNumber: 1, name: 'Personal', status: StepStatus.COMPLETED, completedAt: '2026-11-24T06:00:00' },
+        { id: 6, stepNumber: 6, name: 'Cierre', status: StepStatus.COMPLETED, completedAt: '2026-11-24T22:00:00' }
+      ]
+    };
+    const journalSubject = new BehaviorSubject<JournalResponse | null>(closedJournal);
+    const journalServiceStub = {
+      currentJournal$: journalSubject.asObservable(),
+      getCurrentJournalSnapshot: () => journalSubject.value,
+      getCellNotes: () =>
+        of([
+          {
+            id: 7,
+            journalId: 46,
+            stepNumber: 2,
+            columnKey: '52875796',
+            fieldKey: 'descuadre',
+            note: 'Sobrante de $13 verificado en arqueo.',
+            updatedAt: '2026-11-24T18:00:00'
+          }
+        ])
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: salesServiceMock },
+        { provide: JournalService, useValue: journalServiceStub },
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    expect(localComponent.isReadOnly).toBe(true);
+    const chip = localFixture.nativeElement.querySelector('.jr-cell-note-chip') as HTMLButtonElement;
+    expect(chip).toBeTruthy();
+    chip.click();
+    localFixture.detectChanges();
+
+    // Clicking the chip highlights the native cell/row and displays the temporary floating note callout
+    expect(localComponent.isHighlightedNoteCell('52875796', 'descuadre')).toBe(true);
+    expect(localComponent.highlightedNoteFieldKey).toBe('descuadre');
+    expect(localFixture.nativeElement.querySelector('td.jr-cell-note-highlight')).toBeTruthy();
+    expect(localFixture.nativeElement.querySelector('tr.jr-row-note-highlight')).toBeTruthy();
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-callout')?.textContent).toContain(
+      'Sobrante de $13 verificado en arqueo.'
+    );
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-dialog')).toBeNull();
+
+    // Clicking the active corner triangle opens the read-only note dialog even when the journal is closed
+    const cornerTrigger = localFixture.nativeElement.querySelector(
+      '[data-note-cell="52875796::descuadre"] .jr-cell-note-btn.is-active'
+    ) as HTMLElement;
+    expect(cornerTrigger).toBeTruthy();
+    expect(cornerTrigger.tagName).toBe('SPAN');
+    cornerTrigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    localFixture.detectChanges();
+
+    const dialogText = localFixture.nativeElement.querySelector('#jr-p2-note-dialog')?.textContent ?? '';
+    expect(dialogText).toContain('Nota de celda');
+    expect(dialogText).not.toContain('tipo Excel');
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-readonly')?.textContent).toContain(
+      'Sobrante de $13 verificado en arqueo.'
+    );
+    expect(localFixture.nativeElement.querySelector('#jr-p2-note-textarea')).toBeNull();
+  });
 });

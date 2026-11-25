@@ -5,13 +5,15 @@ import { getApiBaseUrl } from '../config/api-base';
 import { DownloadedFile } from '../../shared/models/daily-download.model';
 
 import {
+  JournalCellNoteResponse,
   JournalClosingSummaryResponse,
   JournalHistoryDayDetailResponse,
   JournalHistoryMonthResponse,
   JournalResponse,
   JournalStatus,
   JournalStepResponse,
-  StepStatus
+  StepStatus,
+  UpsertJournalCellNoteRequest
 } from '../../shared/models/journal.model';
 
 export const JOURNAL_STEP_ROUTES = ['personal', 'vendedores', 'electronicos', 'caja', 'inventario', 'cierre'] as const;
@@ -48,6 +50,34 @@ export class JournalService {
     return this.http.post<JournalResponse>(`${this.apiUrl}/${journalId}/close`, {}).pipe(
       tap(closed => this.setCurrentJournal(closed))
     );
+  }
+
+  updateObservations(journalId: number, observations: string | null): Observable<JournalResponse> {
+    return this.http
+      .put<JournalResponse>(`${this.apiUrl}/${journalId}/observations`, { observations })
+      .pipe(tap(updated => this.setCurrentJournal(updated)));
+  }
+
+  updateStepObservations(
+    journalId: number,
+    stepNumber: number,
+    observations: string | null
+  ): Observable<JournalResponse> {
+    return this.http
+      .put<JournalResponse>(`${this.apiUrl}/${journalId}/steps/${stepNumber}/observations`, { observations })
+      .pipe(tap(updated => this.setCurrentJournal(updated)));
+  }
+
+  getCellNotes(journalId: number, stepNumber?: number): Observable<JournalCellNoteResponse[]> {
+    const options = stepNumber !== undefined ? { params: { stepNumber: String(stepNumber) } } : {};
+    return this.http.get<JournalCellNoteResponse[]>(`${this.apiUrl}/${journalId}/notes`, options);
+  }
+
+  saveCellNote(
+    journalId: number,
+    request: UpsertJournalCellNoteRequest
+  ): Observable<JournalCellNoteResponse | null> {
+    return this.http.put<JournalCellNoteResponse | null>(`${this.apiUrl}/${journalId}/notes`, request);
   }
 
   getJournalHistory(yearMonth: string): Observable<JournalHistoryMonthResponse> {

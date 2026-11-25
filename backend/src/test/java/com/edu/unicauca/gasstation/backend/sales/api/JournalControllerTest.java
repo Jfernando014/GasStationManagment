@@ -1,10 +1,12 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalCellNote;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
 import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.InventoryAlertSummary;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalCellNoteService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService.ClosingSummaryResult;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
@@ -36,8 +38,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.http.MediaType;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,6 +70,9 @@ class JournalControllerTest {
 
     @MockBean
     private CashBalanceStepService cashBalanceStepService;
+
+    @MockBean
+    private JournalCellNoteService journalCellNoteService;
 
     @MockBean
     private UserDetailsService userDetailsService;
@@ -303,5 +310,150 @@ class JournalControllerTest {
                 .andExpect(jsonPath("$.newAlertsCount").value(1))
                 .andExpect(jsonPath("$.newAutonomyAlerts[0].fuelName").value("Diésel"))
                 .andExpect(jsonPath("$.newAutonomyAlerts[0].severity").value("CRITICAL"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should persist and return updated observations")
+    void updatesJournalObservationsSuccessfully() throws Exception {
+        Journal updated = Journal.builder()
+                .id(1L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .observations("Descuadre de $500 justificado por bono.")
+                .steps(List.of())
+                .build();
+        when(journalService.updateObservations(1L, "Descuadre de $500 justificado por bono."))
+                .thenReturn(updated);
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"Descuadre de $500 justificado por bono.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.observations").value("Descuadre de $500 justificado por bono."));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should return 409 Conflict when journal is closed")
+    void rejectsObservationsUpdateWhenClosed() throws Exception {
+        when(journalService.updateObservations(1L, "Nota tardía"))
+                .thenThrow(new IllegalStateException("La jornada ya está cerrada y no permite modificar observaciones."));
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"Nota tardía\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("JOURNAL_STATE_CONFLICT"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/observations should return 400 Bad Request when observations exceed 2000 chars")
+    void rejectsOversizedObservationsWithBadRequest() throws Exception {
+        String tooLong = "x".repeat(2001);
+
+        mockMvc.perform(put("/api/v1/journals/1/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"" + tooLong + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/steps/{stepNumber}/observations should return updated step observations")
+    void updatesStepObservationsSuccessfully() throws Exception {
+        JournalStep step2 = JournalStep.builder()
+                .id(20L)
+                .stepNumber(2)
+                .name("Cierre por vendedor")
+                .status(StepStatus.PENDING)
+                .observations("Revisión de parciales completada.")
+                .build();
+        Journal updated = Journal.builder()
+                .id(1L)
+                .date(LocalDate.of(2026, 11, 24))
+                .consecutive(300L)
+                .status(JournalStatus.OPEN)
+                .steps(List.of(step2))
+                .build();
+        when(journalService.updateStepObservations(1L, 2, "Revisión de parciales completada."))
+                .thenReturn(updated);
+
+        mockMvc.perform(put("/api/v1/journals/1/steps/2/observations")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"observations\":\"Revisión de parciales completada.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.steps[0].stepNumber").value(2))
+                .andExpect(jsonPath("$.steps[0].observations").value("Revisión de parciales completada."));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/journals/{id}/notes should return cell notes filtered by step")
+    void listsCellNotesForStepSuccessfully() throws Exception {
+        JournalCellNote note = new JournalCellNote(
+                5L, 1L, 2, "1001", "credibanco", "Datafono 2 sin señal, pasado en datafono 1",
+                LocalDateTime.of(2026, 11, 24, 14, 30));
+        when(journalCellNoteService.listNotes(1L, 2)).thenReturn(List.of(note));
+
+        mockMvc.perform(get("/api/v1/journals/1/notes")
+                        .header("Authorization", getBearerToken())
+                        .param("stepNumber", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(5))
+                .andExpect(jsonPath("$[0].columnKey").value("1001"))
+                .andExpect(jsonPath("$[0].fieldKey").value("credibanco"))
+                .andExpect(jsonPath("$[0].note").value("Datafono 2 sin señal, pasado en datafono 1"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/notes should return 200 OK when saved and 204 No Content when cleared")
+    void upsertsAndDeletesCellNoteSuccessfully() throws Exception {
+        JournalCellNote saved = new JournalCellNote(
+                9L, 1L, 2, "1001", "parciales", "Sobre #3 con novedad",
+                LocalDateTime.of(2026, 11, 24, 15, 0));
+        when(journalCellNoteService.upsertOrDelete(1L, 2, "1001", "parciales", "Sobre #3 con novedad"))
+                .thenReturn(java.util.Optional.of(saved));
+        when(journalCellNoteService.upsertOrDelete(1L, 2, "1001", "parciales", ""))
+                .thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(put("/api/v1/journals/1/notes")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stepNumber\":2,\"columnKey\":\"1001\",\"fieldKey\":\"parciales\",\"note\":\"Sobre #3 con novedad\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.note").value("Sobre #3 con novedad"));
+
+        mockMvc.perform(put("/api/v1/journals/1/notes")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stepNumber\":2,\"columnKey\":\"1001\",\"fieldKey\":\"parciales\",\"note\":\"\"}"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/journals/{id}/notes should return 409 Conflict when journal is closed and 400 when note too long")
+    void rejectsCellNoteWhenClosedOrOversized() throws Exception {
+        when(journalCellNoteService.upsertOrDelete(1L, 2, "1001", "qr", "Nota tardía"))
+                .thenThrow(new IllegalStateException("La jornada ya está cerrada y no permite modificar notas de celdas."));
+
+        mockMvc.perform(put("/api/v1/journals/1/notes")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stepNumber\":2,\"columnKey\":\"1001\",\"fieldKey\":\"qr\",\"note\":\"Nota tardía\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("JOURNAL_STATE_CONFLICT"));
+
+        String tooLong = "x".repeat(501);
+        mockMvc.perform(put("/api/v1/journals/1/notes")
+                        .header("Authorization", getBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stepNumber\":2,\"columnKey\":\"1001\",\"fieldKey\":\"qr\",\"note\":\"" + tooLong + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 }

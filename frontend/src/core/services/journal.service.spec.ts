@@ -199,4 +199,109 @@ describe('JournalService (S3-07)', () => {
 
     expect(downloadedName).toBe('jornada-289-2026-08-05.xlsx');
   });
+
+  it('should update journal observations and broadcast updated journal to currentJournal$', () => {
+    const updatedJournal: JournalResponse = {
+      ...mockJournal,
+      observations: 'Se ajustó surtidor 2 antes del cierre.'
+    };
+
+    service.updateObservations(10, 'Se ajustó surtidor 2 antes del cierre.').subscribe(res => {
+      expect(res.observations).toBe('Se ajustó surtidor 2 antes del cierre.');
+      expect(service.getCurrentJournalSnapshot()).toEqual(updatedJournal);
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/observations');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ observations: 'Se ajustó surtidor 2 antes del cierre.' });
+    req.flush(updatedJournal);
+  });
+
+  it('should update observations for a specific step and broadcast updated journal', () => {
+    const updatedJournal: JournalResponse = {
+      ...mockJournal,
+      steps: [
+        {
+          id: 1,
+          stepNumber: 1,
+          name: 'Personal',
+          status: StepStatus.COMPLETED,
+          completedAt: '2026-08-05T08:00:00Z',
+          observations: 'Apoyo ingresó a las 10:00.'
+        },
+        { id: 6, stepNumber: 6, name: 'Cierre', status: StepStatus.PENDING, completedAt: null }
+      ]
+    };
+
+    service.updateStepObservations(10, 1, 'Apoyo ingresó a las 10:00.').subscribe(res => {
+      expect(res.steps[0].observations).toBe('Apoyo ingresó a las 10:00.');
+      expect(service.getCurrentJournalSnapshot()).toEqual(updatedJournal);
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/steps/1/observations');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ observations: 'Apoyo ingresó a las 10:00.' });
+    req.flush(updatedJournal);
+  });
+
+  it('should fetch cell notes filtered by stepNumber and save/delete cell notes', () => {
+    service.getCellNotes(10, 2).subscribe(notes => {
+      expect(notes).toHaveLength(1);
+      expect(notes[0].fieldKey).toBe('parciales');
+    });
+
+    const getReq = httpMock.expectOne(
+      r => r.url === 'http://localhost:8080/api/v1/journals/10/notes' && r.params.get('stepNumber') === '2'
+    );
+    expect(getReq.request.method).toBe('GET');
+    getReq.flush([
+      {
+        id: 1,
+        journalId: 10,
+        stepNumber: 2,
+        columnKey: '1001',
+        fieldKey: 'parciales',
+        note: 'Sobre #2 verificado',
+        updatedAt: '2026-08-05T14:00:00'
+      }
+    ]);
+
+    service
+      .saveCellNote(10, {
+        stepNumber: 2,
+        columnKey: '1001',
+        fieldKey: 'parciales',
+        note: 'Sobre #2 verificado'
+      })
+      .subscribe(saved => {
+        expect(saved?.note).toBe('Sobre #2 verificado');
+      });
+
+    const putReq = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/notes');
+    expect(putReq.request.method).toBe('PUT');
+    putReq.flush({
+      id: 1,
+      journalId: 10,
+      stepNumber: 2,
+      columnKey: '1001',
+      fieldKey: 'parciales',
+      note: 'Sobre #2 verificado',
+      updatedAt: '2026-08-05T14:00:00'
+    });
+
+    service
+      .saveCellNote(10, {
+        stepNumber: 2,
+        columnKey: '1001',
+        fieldKey: 'parciales',
+        note: null
+      })
+      .subscribe(deleted => {
+        expect(deleted).toBeNull();
+      });
+
+    const deleteReq = httpMock.expectOne('http://localhost:8080/api/v1/journals/10/notes');
+    expect(deleteReq.request.method).toBe('PUT');
+    deleteReq.flush(null, { status: 204, statusText: 'No Content' });
+  });
 });

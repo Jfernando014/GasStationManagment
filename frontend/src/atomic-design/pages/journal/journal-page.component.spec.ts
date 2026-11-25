@@ -66,8 +66,9 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     expect(text).toContain('2026-08-05');
     expect(text).toContain('Abierta');
 
-    // Stepper component and router-outlet are present
+    // Stepper component, observations panel and router-outlet are present
     expect(fixture.nativeElement.querySelector('app-journal-stepper')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-journal-observations-panel')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
   });
 

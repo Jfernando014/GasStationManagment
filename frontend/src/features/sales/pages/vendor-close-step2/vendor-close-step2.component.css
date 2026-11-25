@@ -560,6 +560,8 @@
 .jr-chip--falta { background: #fee2e2; color: #b91c1c; }
 .jr-chip--pendiente { background: #eef2f6; color: #64748b; }
 
+/* Los estilos de notas tipo Excel en celdas (jr-muestra--nota, jr-cell-notable*, jr-cell-note-*, jr-note-*) están en views.css */
+
 /* ---- Tarjetas de Consolidación Diaria ---- */
 .jr-consolidado-card {
   display: grid;

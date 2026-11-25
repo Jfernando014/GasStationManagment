@@ -1,12 +1,16 @@
 package com.edu.unicauca.gasstation.backend.sales.api;
 
+import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalCellNoteResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalClosingSummaryResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.JournalStepResponse;
 import com.edu.unicauca.gasstation.backend.sales.api.dto.Step3ReconciliationResponse;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.UpdateJournalObservationsRequest;
+import com.edu.unicauca.gasstation.backend.sales.api.dto.UpsertJournalCellNoteRequest;
 import com.edu.unicauca.gasstation.backend.sales.application.CashBalanceStepService;
 import com.edu.unicauca.gasstation.backend.sales.domain.Journal;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStep;
+import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalCellNoteService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalClosingSummaryService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalService;
 import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStep3ValidationService;
@@ -15,7 +19,10 @@ import com.edu.unicauca.gasstation.backend.sales.domain.services.JournalStepServ
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +43,7 @@ public class JournalController {
     private final JournalStep3ValidationService journalStep3ValidationService;
     private final JournalClosingSummaryService journalClosingSummaryService;
     private final CashBalanceStepService cashBalanceStepService;
+    private final JournalCellNoteService journalCellNoteService;
 
     public JournalController(
             JournalService journalService,
@@ -43,11 +51,24 @@ public class JournalController {
             JournalStep3ValidationService journalStep3ValidationService,
             JournalClosingSummaryService journalClosingSummaryService,
             CashBalanceStepService cashBalanceStepService) {
+        this(journalService, journalStepService, journalStep3ValidationService,
+                journalClosingSummaryService, cashBalanceStepService, null);
+    }
+
+    @Autowired
+    public JournalController(
+            JournalService journalService,
+            JournalStepService journalStepService,
+            JournalStep3ValidationService journalStep3ValidationService,
+            JournalClosingSummaryService journalClosingSummaryService,
+            CashBalanceStepService cashBalanceStepService,
+            @Nullable JournalCellNoteService journalCellNoteService) {
         this.journalService = journalService;
         this.journalStepService = journalStepService;
         this.journalStep3ValidationService = journalStep3ValidationService;
         this.journalClosingSummaryService = journalClosingSummaryService;
         this.cashBalanceStepService = cashBalanceStepService;
+        this.journalCellNoteService = journalCellNoteService;
     }
 
     @Operation(summary = "Open or retrieve an operational daily journal by date")
@@ -82,6 +103,7 @@ public class JournalController {
                 .name(step.getName())
                 .status(step.getStatus())
                 .completedAt(step.getCompletedAt())
+                .observations(step.getObservations())
                 .build());
     }
 
@@ -111,6 +133,67 @@ public class JournalController {
     public ResponseEntity<JournalClosingSummaryResponse> getClosingSummary(@PathVariable Long journalId) {
         var summary = journalClosingSummaryService.getClosingSummary(journalId);
         return ResponseEntity.ok(JournalClosingSummaryResponse.from(summary));
+    }
+
+    @Operation(summary = "Update operational observations of an open journal (SR-08)")
+    @ApiResponse(responseCode = "200", description = "Observations updated")
+    @ApiResponse(responseCode = "400", description = "Observations exceed maximum length")
+    @ApiResponse(responseCode = "404", description = "Journal not found")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and read-only")
+    @PutMapping("/{journalId}/observations")
+    public ResponseEntity<JournalResponse> updateObservations(
+            @PathVariable Long journalId,
+            @Valid @RequestBody UpdateJournalObservationsRequest request) {
+        Journal updated = journalService.updateObservations(journalId, request.observations());
+        return ResponseEntity.ok(mapToResponse(updated));
+    }
+
+    @Operation(summary = "Update operational observations for a specific journal step 1..6 (SR-08)")
+    @ApiResponse(responseCode = "200", description = "Step observations updated")
+    @ApiResponse(responseCode = "400", description = "Invalid step number or observations exceed maximum length")
+    @ApiResponse(responseCode = "404", description = "Journal not found")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and read-only")
+    @PutMapping("/{journalId}/steps/{stepNumber}/observations")
+    public ResponseEntity<JournalResponse> updateStepObservations(
+            @PathVariable Long journalId,
+            @PathVariable Integer stepNumber,
+            @Valid @RequestBody UpdateJournalObservationsRequest request) {
+        Journal updated = journalService.updateStepObservations(journalId, stepNumber, request.observations());
+        return ResponseEntity.ok(mapToResponse(updated));
+    }
+
+    @Operation(summary = "List Excel-style cell notes of a journal, optionally filtered by step number (SR-08)")
+    @ApiResponse(responseCode = "200", description = "Cell notes listed")
+    @ApiResponse(responseCode = "400", description = "Invalid step number")
+    @ApiResponse(responseCode = "404", description = "Journal not found")
+    @GetMapping("/{journalId}/notes")
+    public ResponseEntity<List<JournalCellNoteResponse>> listCellNotes(
+            @PathVariable Long journalId,
+            @RequestParam(required = false) Integer stepNumber) {
+        List<JournalCellNoteResponse> notes = journalCellNoteService.listNotes(journalId, stepNumber).stream()
+                .map(JournalCellNoteResponse::from)
+                .toList();
+        return ResponseEntity.ok(notes);
+    }
+
+    @Operation(summary = "Create, update, or delete (when blank) an Excel-style cell note on an open journal (SR-08)")
+    @ApiResponse(responseCode = "200", description = "Cell note saved")
+    @ApiResponse(responseCode = "204", description = "Cell note deleted because text was blank")
+    @ApiResponse(responseCode = "400", description = "Invalid step, keys, or note length")
+    @ApiResponse(responseCode = "404", description = "Journal not found")
+    @ApiResponse(responseCode = "409", description = "Journal is closed and read-only")
+    @PutMapping("/{journalId}/notes")
+    public ResponseEntity<JournalCellNoteResponse> upsertCellNote(
+            @PathVariable Long journalId,
+            @Valid @RequestBody UpsertJournalCellNoteRequest request) {
+        return journalCellNoteService.upsertOrDelete(
+                        journalId,
+                        request.stepNumber(),
+                        request.columnKey(),
+                        request.fieldKey(),
+                        request.note())
+                .map(saved -> ResponseEntity.ok(JournalCellNoteResponse.from(saved)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     /**
@@ -157,6 +240,7 @@ public class JournalController {
                 .consecutive(journal.getConsecutive())
                 .status(journal.getStatus())
                 .closedAt(closedAt)
+                .observations(journal.getObservations())
                 .steps(steps.stream()
                         .sorted(Comparator.comparing(JournalStep::getStepNumber, Comparator.nullsLast(Comparator.naturalOrder())))
                         .map(step -> JournalStepResponse.builder()
@@ -165,6 +249,7 @@ public class JournalController {
                                 .name(step.getName())
                                 .status(step.getStatus())
                                 .completedAt(step.getCompletedAt())
+                                .observations(step.getObservations())
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

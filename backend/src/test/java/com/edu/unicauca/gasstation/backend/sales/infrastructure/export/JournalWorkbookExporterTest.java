@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
@@ -10,6 +11,7 @@ import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.SavingsFun
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.ProductSaleSummary;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
+import com.edu.unicauca.gasstation.backend.sales.domain.JournalCellNote;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalFullWorkbookData;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalSnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalStatus;
@@ -42,7 +44,8 @@ class JournalWorkbookExporterTest {
                 LocalDateTime.of(2026, 8, 5, 6, 0),
                 List.of(
                         new JournalSnapshot.JournalStepSnapshot(1, "Personal", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 7, 0)),
-                        new JournalSnapshot.JournalStepSnapshot(6, "Cierre", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 19, 0))));
+                        new JournalSnapshot.JournalStepSnapshot(6, "Cierre", StepStatus.COMPLETED, LocalDateTime.of(2026, 8, 5, 19, 0))),
+                "Surtidor 2 presentó reinicio breve en la tarde.");
 
         ProductSaleSummary product = new ProductSaleSummary(
                 "ADD-01", "Aditivo Ruta 75", "ADITIVO", 3, new BigDecimal("12000"), new BigDecimal("36000"));
@@ -122,6 +125,11 @@ class JournalWorkbookExporterTest {
             XSSFSheet invSheet = wb.getSheet("Inventario y Variación");
             assertEquals("CORRIENTE", invSheet.getRow(1).getCell(0).getStringCellValue());
             assertEquals(59.90, invSheet.getRow(1).getCell(6).getNumericCellValue(), 0.01);
+
+            XSSFSheet summarySheet = wb.getSheet("Jornada");
+            assertEquals(
+                    "Surtidor 2 presentó reinicio breve en la tarde.",
+                    summarySheet.getRow(summarySheet.getLastRowNum()).getCell(1).getStringCellValue());
         }
     }
 
@@ -137,6 +145,79 @@ class JournalWorkbookExporterTest {
             assertEquals("2026-10-12", wb.getSheet("Jornada").getRow(2).getCell(1).getStringCellValue());
             assertEquals("Sin personal registrado para esta jornada", wb.getSheet("Personal").getRow(1).getCell(0).getStringCellValue());
             assertEquals("Sin registro de saldo en caja para esta jornada", wb.getSheet("Saldo en Caja").getRow(1).getCell(0).getStringCellValue());
+        }
+    }
+
+    @Test
+    void exportsStepObservationsNativeExcelCommentsAndNotesSheet() throws Exception {
+        LocalDate date = LocalDate.of(2026, 11, 24);
+        JournalSnapshot snapshot = new JournalSnapshot(
+                22L,
+                date,
+                305L,
+                JournalStatus.CLOSED,
+                LocalDateTime.of(2026, 11, 24, 6, 0),
+                List.of(
+                        new JournalSnapshot.JournalStepSnapshot(
+                                1, "Personal", StepStatus.COMPLETED, LocalDateTime.of(2026, 11, 24, 7, 0),
+                                "Turno de apoyo inició a las 10:00."),
+                        new JournalSnapshot.JournalStepSnapshot(
+                                2, "Cierre por vendedor", StepStatus.COMPLETED, LocalDateTime.of(2026, 11, 24, 15, 0),
+                                "Se verificó bono en efectivo con recibo.")),
+                "Jornada cerrada sin novedades críticas.",
+                List.of(
+                        new JournalCellNote(1L, 22L, 2, "1001", "parciales", "Sobre #2 con novedad de billete.", LocalDateTime.of(2026, 11, 24, 13, 15)),
+                        new JournalCellNote(2L, 22L, 2, "1001", "pico", "Cambio entregado en monedas.", LocalDateTime.of(2026, 11, 24, 13, 20)),
+                        new JournalCellNote(3L, 22L, 2, "1001", "credibanco", "Pasado en datafono alterno.", LocalDateTime.of(2026, 11, 24, 14, 0))));
+
+        VendorCloseSummary carlos = new VendorCloseSummary(
+                date, "1001", "Carlos P.", "DIA6", 1,
+                new BigDecimal("4000000"), new BigDecimal("50000"), new BigDecimal("2500000"),
+                new BigDecimal("400000"), new BigDecimal("20000"), new BigDecimal("6970000"),
+                new BigDecimal("300.50"), new BigDecimal("150.25"), new BigDecimal("50.00"), new BigDecimal("30.67"),
+                new BigDecimal("36000"), new BigDecimal("6970000"), BigDecimal.ZERO, "CUADRA", List.of());
+
+        JournalFullWorkbookData fullData = new JournalFullWorkbookData(
+                snapshot,
+                List.of(new AssignedVendor("1001", "Carlos P.", "TITULAR", "DIA6", 1, "V-01")),
+                null,
+                List.of(carlos),
+                null,
+                ClosingInventorySnapshot.empty());
+
+        byte[] bytes = exporter.export(fullData);
+
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            assertEquals(8, wb.getNumberOfSheets());
+            assertEquals("Notas y Observaciones", wb.getSheetAt(7).getSheetName());
+
+            XSSFSheet stepsSheet = wb.getSheet("Pasos");
+            assertEquals("Observaciones", stepsSheet.getRow(0).getCell(4).getStringCellValue());
+            assertEquals("Turno de apoyo inició a las 10:00.", stepsSheet.getRow(1).getCell(4).getStringCellValue());
+            assertEquals("Se verificó bono en efectivo con recibo.", stepsSheet.getRow(2).getCell(4).getStringCellValue());
+
+            XSSFSheet vendorSheet = wb.getSheet("Cierre Vendedores");
+            var cashComment = vendorSheet.getRow(1).getCell(10).getCellComment();
+            assertNotNull(cashComment);
+            assertTrue(cashComment.getString().getString().contains("[Parciales] Sobre #2 con novedad de billete."));
+            assertTrue(cashComment.getString().getString().contains("[Pico] Cambio entregado en monedas."));
+
+            var credibancoComment = vendorSheet.getRow(1).getCell(12).getCellComment();
+            assertNotNull(credibancoComment);
+            assertEquals("Pasado en datafono alterno.", credibancoComment.getString().getString());
+
+            XSSFSheet notesSheet = wb.getSheet("Notas y Observaciones");
+            boolean foundVendorNoteRow = false;
+            for (int r = 0; r <= notesSheet.getLastRowNum(); r++) {
+                var row = notesSheet.getRow(r);
+                if (row != null && row.getCell(1) != null
+                        && "Carlos P. (1001)".equals(row.getCell(1).getStringCellValue())
+                        && "Credibanco".equals(row.getCell(2).getStringCellValue())) {
+                    assertEquals("Pasado en datafono alterno.", row.getCell(3).getStringCellValue());
+                    foundVendorNoteRow = true;
+                }
+            }
+            assertTrue(foundVendorNoteRow);
         }
     }
 }
