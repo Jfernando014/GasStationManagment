@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { ShiftChipComponent } from '../../../../atomic-design/atoms/shift-chip/shift-chip.component';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
+import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
 import { formatLongDate } from '../../../../shared/helpers/format.helpers';
 import { dayOfMonth, ShiftTone } from '../../../../shared/helpers/shift-display.helpers';
+import { isCustomShiftCode } from '../../../../shared/helpers/support-hours.helpers';
 import { ShiftCode } from '../../../../shared/models/dtos/shift-catalog.dto';
 import {
   WorkerMonth,
@@ -63,6 +65,8 @@ const SKELETON_CELLS = Array.from({ length: 35 }, (_, index) => index);
   styleUrl: './worker-profile-calendar.component.css'
 })
 export class WorkerProfileCalendarComponent {
+  private readonly shiftHours = inject(ShiftHoursService);
+
   /** yyyy-MM. */
   readonly month = input.required<string>();
   readonly data = input<WorkerMonth | null>(null);
@@ -152,6 +156,7 @@ export class WorkerProfileCalendarComponent {
   }
 
   private codeName(code: string): string {
+    if (isCustomShiftCode(code)) return `apoyo de ${this.shiftHours.fullText(code)}`;
     return this.catalog()[code]?.name ?? code;
   }
 }
