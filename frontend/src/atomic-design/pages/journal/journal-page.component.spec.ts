@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { JournalPageComponent } from './journal-page.component';
 import { JournalService } from '../../../core/services/journal.service';
+import { yesterdayCalendarDay } from '../../../shared/helpers/format.helpers';
 import { JournalResponse, JournalStatus, StepStatus } from '../../../shared/models/journal.model';
 
 describe('JournalPageComponent (C-02, S1-15)', () => {
@@ -49,7 +50,7 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     }).compileComponents();
   });
 
-  it('should fetch today journal on init and display header and open status badge', () => {
+  it('should fetch yesterday journal by default on init and display header and open status badge', () => {
     journalService.openJournal.mockReturnValue(of(mockJournal));
 
     fixture = TestBed.createComponent(JournalPageComponent);
@@ -57,7 +58,7 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     fixture.detectChanges();
 
     expect(component.journal).toEqual(mockJournal);
-    expect(journalService.openJournal).toHaveBeenCalled();
+    expect(journalService.openJournal).toHaveBeenCalledWith(yesterdayCalendarDay());
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Jornada Diaria');
@@ -68,6 +69,26 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     // Stepper component and router-outlet are present
     expect(fixture.nativeElement.querySelector('app-journal-stepper')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should open explicit query param date instead of yesterday when provided', async () => {
+    TestBed.resetTestingModule();
+    journalService.openJournal.mockReturnValue(of(mockJournal));
+
+    await TestBed.configureTestingModule({
+      imports: [JournalPageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: JournalService, useValue: journalService },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({ date: '2026-08-05' }) } } }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(JournalPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(journalService.openJournal).toHaveBeenCalledWith('2026-08-05');
   });
 
   it('should display closed status badge when journal is closed', () => {
@@ -89,10 +110,10 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    expect(component.errorMessage).toBe('No se pudo cargar la jornada de hoy.');
+    expect(component.errorMessage).toBe('No se pudo cargar la jornada seleccionada.');
     const errorAlert = fixture.nativeElement.querySelector('.error-alert');
     expect(errorAlert).toBeTruthy();
-    expect(errorAlert.textContent).toContain('No se pudo cargar la jornada de hoy.');
+    expect(errorAlert.textContent).toContain('No se pudo cargar la jornada seleccionada.');
   });
 
   it('should show Anterior and Siguiente footer buttons on middle steps and navigate between them', () => {
