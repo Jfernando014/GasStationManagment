@@ -24,7 +24,7 @@
         </span>
         <span class="jr-leyenda-sep" aria-hidden="true"></span>
         <span class="jr-leyenda-grupo">
-          <span class="jr-leyenda-item" title="Haz clic en la esquina superior derecha de cualquier celda o clic derecho para agregar una nota tipo Excel">
+          <span class="jr-leyenda-item" title="Haz clic en la esquina superior derecha de cualquier celda o clic derecho para agregar una nota">
             <i class="jr-muestra jr-muestra--nota"></i> Nota en celda (clic esquina o clic derecho)
           </span>
         </span>
@@ -153,7 +153,7 @@
             </tr>
 
             <!-- Fila de Descuadre Real Fija en Cabecera -->
-            <tr class="jr-grid-fila--resultado">
+            <tr class="jr-grid-fila--resultado" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'descuadre'">
               <td class="jr-grid-concepto">
                 <strong>Descuadre real</strong>
                 <small>Entregado &minus; Dominus</small>
@@ -161,16 +161,29 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::descuadre'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'descuadre')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'descuadre')"
                   [attr.title]="getCellTooltip(vendor.document, 'descuadre')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'descuadre')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'descuadre')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'descuadre') ? 'Editar nota en ' : 'Agregar nota en ') + 'Descuadre real para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'descuadre', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'descuadre')) {
+                    <span
+                      role="button"
+                      tabindex="0"
+                      class="jr-cell-note-btn is-active"
+                      [attr.aria-label]="'Ver nota en Descuadre real para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'descuadre', $event)"
+                      (keydown.enter)="openCellNote(vendor, 'descuadre', $event)"
+                      (keydown.space)="openCellNote(vendor, 'descuadre', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'descuadre')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'descuadre') ? 'Editar nota en ' : 'Agregar nota en ') + 'Descuadre real para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'descuadre', $event)"></button>
+                  }
                   @if (captures[vendor.document]?.estadoResultado === 'vacio') {
                     <span class="jr-chip jr-chip--pendiente">Sin datos</span>
                   }
@@ -222,21 +235,31 @@
               </td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'parciales'">
               <td class="jr-grid-concepto">Parciales <small>sobres de $200.000</small></td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::parciales'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'parciales')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'parciales')"
                   [attr.title]="getCellTooltip(vendor.document, 'parciales')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'parciales')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'parciales')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'parciales') ? 'Editar nota en ' : 'Agregar nota en ') + 'Parciales para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'parciales', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'parciales')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Parciales para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'parciales', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'parciales', $event)"
+                          (keydown.space)="openCellNote(vendor, 'parciales', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'parciales')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'parciales') ? 'Editar nota en ' : 'Agregar nota en ') + 'Parciales para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'parciales', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].parciales"
                          type="number" min="0" step="1"
                          data-fila="parciales" [attr.data-col]="vendor.document"
@@ -252,21 +275,31 @@
               </td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'pico'">
               <td class="jr-grid-concepto">Pico</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::pico'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'pico')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'pico')"
                   [attr.title]="getCellTooltip(vendor.document, 'pico')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'pico')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'pico')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'pico') ? 'Editar nota en ' : 'Agregar nota en ') + 'Pico para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'pico', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'pico')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Pico para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'pico', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'pico', $event)"
+                          (keydown.space)="openCellNote(vendor, 'pico', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'pico')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'pico') ? 'Editar nota en ' : 'Agregar nota en ') + 'Pico para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'pico', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].pico"
                          type="number" min="0" step="1000"
                          data-fila="pico" [attr.data-col]="vendor.document"
@@ -282,21 +315,31 @@
               </td>
             </tr>
 
-            <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <tr class="jr-grid-fila jr-grid-fila--destacada" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'efectivo'">
               <td class="jr-grid-concepto">Total efectivo</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::efectivo'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'efectivo')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'efectivo')"
                   [attr.title]="getCellTooltip(vendor.document, 'efectivo')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'efectivo')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'efectivo')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'efectivo') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total efectivo para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'efectivo', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'efectivo')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Total efectivo para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'efectivo', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'efectivo', $event)"
+                          (keydown.space)="openCellNote(vendor, 'efectivo', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'efectivo')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'efectivo') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total efectivo para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'efectivo', $event)"></button>
+                  }
                   <span class="jr-cell--calc" [class.is-zero]="!(captures[vendor.document]?.efectivo)">
                     {{ formatCurrency(captures[vendor.document]?.efectivo || 0) }}
                   </span>
@@ -314,21 +357,31 @@
               </td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'ga'">
               <td class="jr-grid-concepto">G.A. <small>gastos administrativos</small></td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::ga'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'ga')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'ga')"
                   [attr.title]="getCellTooltip(vendor.document, 'ga')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'ga')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'ga')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'ga') ? 'Editar nota en ' : 'Agregar nota en ') + 'G.A. para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'ga', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'ga')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en G.A. para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'ga', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'ga', $event)"
+                          (keydown.space)="openCellNote(vendor, 'ga', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'ga')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'ga') ? 'Editar nota en ' : 'Agregar nota en ') + 'G.A. para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'ga', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].ga"
                          type="number" min="0" step="1000"
                          data-fila="ga" [attr.data-col]="vendor.document"
@@ -342,21 +395,31 @@
               <td class="jr-grid-total">{{ formatCurrency(totalGa()) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'credibanco'">
               <td class="jr-grid-concepto">Credibanco</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::credibanco'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'credibanco')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'credibanco')"
                   [attr.title]="getCellTooltip(vendor.document, 'credibanco')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'credibanco')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'credibanco')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'credibanco') ? 'Editar nota en ' : 'Agregar nota en ') + 'Credibanco para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'credibanco', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'credibanco')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Credibanco para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'credibanco', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'credibanco', $event)"
+                          (keydown.space)="openCellNote(vendor, 'credibanco', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'credibanco')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'credibanco') ? 'Editar nota en ' : 'Agregar nota en ') + 'Credibanco para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'credibanco', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].credibanco"
                          type="number" min="0" step="100"
                          data-fila="credibanco" [attr.data-col]="vendor.document"
@@ -370,21 +433,31 @@
               <td class="jr-grid-total">{{ formatCurrency(totalCredibanco()) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'qr'">
               <td class="jr-grid-concepto">QR</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::qr'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'qr')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'qr')"
                   [attr.title]="getCellTooltip(vendor.document, 'qr')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'qr')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'qr')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'qr') ? 'Editar nota en ' : 'Agregar nota en ') + 'QR para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'qr', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'qr')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en QR para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'qr', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'qr', $event)"
+                          (keydown.space)="openCellNote(vendor, 'qr', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'qr')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'qr') ? 'Editar nota en ' : 'Agregar nota en ') + 'QR para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'qr', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].qr"
                          type="number" min="0" step="100"
                          data-fila="qr" [attr.data-col]="vendor.document"
@@ -398,21 +471,31 @@
               <td class="jr-grid-total">{{ formatCurrency(totalQr()) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'redenciones'">
               <td class="jr-grid-concepto">Redenciones Puntos Colombia</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::redenciones'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'redenciones')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'redenciones')"
                   [attr.title]="getCellTooltip(vendor.document, 'redenciones')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'redenciones')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'redenciones')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'redenciones') ? 'Editar nota en ' : 'Agregar nota en ') + 'Redenciones para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'redenciones', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'redenciones')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Redenciones para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'redenciones', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'redenciones', $event)"
+                          (keydown.space)="openCellNote(vendor, 'redenciones', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'redenciones')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'redenciones') ? 'Editar nota en ' : 'Agregar nota en ') + 'Redenciones para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'redenciones', $event)"></button>
+                  }
                   <input class="jr-input" [class.is-zero]="!captures[vendor.document].redenciones"
                          type="number" min="0" step="100"
                          data-fila="redenciones" [attr.data-col]="vendor.document"
@@ -426,21 +509,31 @@
               <td class="jr-grid-total">{{ formatCurrency(totalRedenciones()) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <tr class="jr-grid-fila jr-grid-fila--destacada" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'totalEntregado'">
               <td class="jr-grid-concepto">Total entregado</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::totalEntregado'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'totalEntregado')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'totalEntregado')"
                   [attr.title]="getCellTooltip(vendor.document, 'totalEntregado')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'totalEntregado')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'totalEntregado')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'totalEntregado') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total entregado para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'totalEntregado', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'totalEntregado')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Total entregado para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'totalEntregado', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'totalEntregado', $event)"
+                          (keydown.space)="openCellNote(vendor, 'totalEntregado', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'totalEntregado')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'totalEntregado') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total entregado para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'totalEntregado', $event)"></button>
+                  }
                   <span class="jr-cell--calc" [class.is-zero]="!(captures[vendor.document]?.totalEntregado)">
                     {{ formatCurrency(captures[vendor.document]?.totalEntregado || 0) }}
                   </span>
@@ -459,7 +552,7 @@
               </td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'galMotor'">
               <td class="jr-grid-concepto">
                 <i class="jr-grid-color" style="background: #22c55e;"></i>
                 Galones Motor <small>corriente</small>
@@ -467,16 +560,26 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::galMotor'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'galMotor')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'galMotor')"
                   [attr.title]="getCellTooltip(vendor.document, 'galMotor')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'galMotor')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'galMotor')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'galMotor') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Motor para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'galMotor', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'galMotor')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Galones Motor para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'galMotor', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'galMotor', $event)"
+                          (keydown.space)="openCellNote(vendor, 'galMotor', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'galMotor')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'galMotor') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Motor para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'galMotor', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].galMotor"
                            type="number" step="0.001" min="0"
@@ -492,7 +595,7 @@
               <td class="jr-grid-total">{{ formatNumber(totalGalMotor(), 3) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'galDiesel'">
               <td class="jr-grid-concepto">
                 <i class="jr-grid-color" style="background: #3b82f6;"></i>
                 Galones Diésel
@@ -500,16 +603,26 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::galDiesel'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'galDiesel')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'galDiesel')"
                   [attr.title]="getCellTooltip(vendor.document, 'galDiesel')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'galDiesel')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'galDiesel')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'galDiesel') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Diésel para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'galDiesel', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'galDiesel')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Galones Diésel para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'galDiesel', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'galDiesel', $event)"
+                          (keydown.space)="openCellNote(vendor, 'galDiesel', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'galDiesel')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'galDiesel') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Diésel para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'galDiesel', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].galDiesel"
                            type="number" step="0.001" min="0"
@@ -525,7 +638,7 @@
               <td class="jr-grid-total">{{ formatNumber(totalGalDiesel(), 3) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'galExtra'">
               <td class="jr-grid-concepto">
                 <i class="jr-grid-color" style="background: #f59e0b;"></i>
                 Galones Extra
@@ -533,16 +646,26 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::galExtra'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'galExtra')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'galExtra')"
                   [attr.title]="getCellTooltip(vendor.document, 'galExtra')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'galExtra')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'galExtra')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'galExtra') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Extra para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'galExtra', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'galExtra')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Galones Extra para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'galExtra', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'galExtra', $event)"
+                          (keydown.space)="openCellNote(vendor, 'galExtra', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'galExtra')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'galExtra') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Extra para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'galExtra', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].galExtra"
                            type="number" step="0.001" min="0"
@@ -558,7 +681,7 @@
               <td class="jr-grid-total">{{ formatNumber(totalGalExtra(), 3) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'galMaxpro'">
               <td class="jr-grid-concepto">
                 <i class="jr-grid-color" style="background: #8b5cf6;"></i>
                 Galones Max Pro
@@ -566,16 +689,26 @@
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::galMaxpro'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'galMaxpro')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'galMaxpro')"
                   [attr.title]="getCellTooltip(vendor.document, 'galMaxpro')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'galMaxpro')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'galMaxpro')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'galMaxpro') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Max Pro para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'galMaxpro', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'galMaxpro')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Galones Max Pro para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'galMaxpro', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'galMaxpro', $event)"
+                          (keydown.space)="openCellNote(vendor, 'galMaxpro', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'galMaxpro')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'galMaxpro') ? 'Editar nota en ' : 'Agregar nota en ') + 'Galones Max Pro para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'galMaxpro', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].galMaxpro"
                            type="number" step="0.001" min="0"
@@ -591,21 +724,31 @@
               <td class="jr-grid-total">{{ formatNumber(totalGalMaxpro(), 3) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila">
+            <tr class="jr-grid-fila" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'canastilla'">
               <td class="jr-grid-concepto">Canastilla</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::canastilla'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'canastilla')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'canastilla')"
                   [attr.title]="getCellTooltip(vendor.document, 'canastilla')"
                   (contextmenu)="onCellContextMenu($event, vendor, 'canastilla')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'canastilla')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'canastilla') ? 'Editar nota en ' : 'Agregar nota en ') + 'Canastilla para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'canastilla', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'canastilla')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Canastilla para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'canastilla', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'canastilla', $event)"
+                          (keydown.space)="openCellNote(vendor, 'canastilla', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'canastilla')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'canastilla') ? 'Editar nota en ' : 'Agregar nota en ') + 'Canastilla para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'canastilla', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].canastilla"
                            type="number" step="100" min="0"
@@ -621,21 +764,31 @@
               <td class="jr-grid-total">{{ formatCurrency(totalCanastilla()) }}</td>
             </tr>
 
-            <tr class="jr-grid-fila jr-grid-fila--destacada">
+            <tr class="jr-grid-fila jr-grid-fila--destacada" [class.jr-row-note-highlight]="highlightedNoteFieldKey === 'tirilla'">
               <td class="jr-grid-concepto">Total (tirilla)</td>
               @for (vendor of assignedVendors; track vendor.document) {
                 <td
                   class="jr-grid-vendor-col jr-cell-notable"
+                  [attr.data-note-cell]="vendor.document + '::tirilla'"
                   [class.jr-cell-notable--has-note]="hasCellNote(vendor.document, 'tirilla')"
+                  [class.jr-cell-note-highlight]="isHighlightedNoteCell(vendor.document, 'tirilla')"
                   [attr.title]="getCellTooltip(vendor.document, 'tirilla', captures[vendor.document]?.avisoTirilla)"
                   (contextmenu)="onCellContextMenu($event, vendor, 'tirilla')">
-                  <button
-                    type="button"
-                    class="jr-cell-note-btn"
-                    [class.is-active]="hasCellNote(vendor.document, 'tirilla')"
-                    tabindex="-1"
-                    [attr.aria-label]="(hasCellNote(vendor.document, 'tirilla') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total tirilla para ' + vendor.name"
-                    (click)="openCellNote(vendor, 'tirilla', $event)"></button>
+                  @if (isReadOnly && hasCellNote(vendor.document, 'tirilla')) {
+                    <span role="button" tabindex="0" class="jr-cell-note-btn is-active"
+                          [attr.aria-label]="'Ver nota en Total tirilla para ' + vendor.name"
+                          (click)="openCellNote(vendor, 'tirilla', $event)"
+                          (keydown.enter)="openCellNote(vendor, 'tirilla', $event)"
+                          (keydown.space)="openCellNote(vendor, 'tirilla', $event)"></span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="jr-cell-note-btn"
+                      [class.is-active]="hasCellNote(vendor.document, 'tirilla')"
+                      tabindex="-1"
+                      [attr.aria-label]="(hasCellNote(vendor.document, 'tirilla') ? 'Editar nota en ' : 'Agregar nota en ') + 'Total tirilla para ' + vendor.name"
+                      (click)="openCellNote(vendor, 'tirilla', $event)"></button>
+                  }
                   <div class="jr-cell jr-cell--dominus" [class.jr-cell--aviso]="captures[vendor.document]?.avisoTirilla">
                     <input class="jr-input" [class.is-zero]="!captures[vendor.document].tirilla"
                            type="number" step="0.01" min="0"
@@ -773,20 +926,22 @@
     </div>
   </fieldset>
 
-  <!-- Resumen interactivo de notas tipo Excel (fuera del fieldset para consulta en modo solo lectura y móvil) -->
+  <!-- Resumen interactivo de notas (fuera del fieldset para consulta en modo solo lectura y móvil) -->
   @if (cellNotesList.length > 0) {
     <section class="jr-cell-notes-bar" id="jr-p2-cell-notes-bar" aria-label="Notas registradas en celdas">
       <div class="jr-cell-notes-bar-title">
         <span class="jr-muestra jr-muestra--nota" aria-hidden="true"></span>
         <strong>Notas en celdas ({{ cellNotesList.length }})</strong>
-        <small>Se exportan como comentarios nativos en Excel</small>
+        <small>Haz clic en una nota para ubicarla en la tabla &middot; se exportan como comentarios nativos en Excel</small>
       </div>
       <div class="jr-cell-notes-chips">
         @for (item of cellNotesList; track item.columnKey + '::' + item.fieldKey) {
           <button
             type="button"
             class="jr-cell-note-chip"
-            (click)="openCellNoteByKey(item.columnKey, item.vendorName, item.fieldKey)">
+            [class.is-active]="isHighlightedNoteCell(item.columnKey, item.fieldKey)"
+            title="Ir a la celda en la tabla"
+            (click)="locateCellNote(item.columnKey, item.fieldKey)">
             <span class="jr-cell-note-chip-head">{{ item.vendorName }} &middot; {{ item.fieldLabel }}</span>
             <span class="jr-cell-note-chip-body">{{ item.note }}</span>
           </button>
@@ -851,7 +1006,7 @@
       [attr.aria-label]="'Nota en ' + target.fieldLabel + ' de ' + target.vendorName">
       <div class="jr-note-dialog-header">
         <div>
-          <span class="jr-note-dialog-kicker">Nota de celda &middot; tipo Excel</span>
+          <span class="jr-note-dialog-kicker">Nota de celda</span>
           <h3>{{ target.vendorName }} &middot; {{ target.fieldLabel }}</h3>
         </div>
         <button

@@ -134,10 +134,19 @@ export class VendorCloseStep2Component implements OnInit {
   noteDraft = '';
   isSavingNote = false;
   noteErrorMessage = '';
+  highlightedNoteCellKey: string | null = null;
+  highlightedNoteFieldKey: string | null = null;
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.stepChangesService?.register(this.dirtyHandler);
-    this.destroyRef.onDestroy(() => this.stepChangesService?.unregister(this.dirtyHandler));
+    this.destroyRef.onDestroy(() => {
+      this.stepChangesService?.unregister(this.dirtyHandler);
+      if (this.highlightTimer) {
+        clearTimeout(this.highlightTimer);
+        this.highlightTimer = null;
+      }
+    });
 
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1014,6 +1023,31 @@ export class VendorCloseStep2Component implements OnInit {
 
   hasCellNote(columnKey: string, fieldKey: string): boolean {
     return Boolean(this.getCellNote(columnKey, fieldKey));
+  }
+
+  isHighlightedNoteCell(columnKey: string, fieldKey: string): boolean {
+    return this.highlightedNoteCellKey === this.cellNoteKey(columnKey, fieldKey);
+  }
+
+  locateCellNote(columnKey: string, fieldKey: string): void {
+    const key = this.cellNoteKey(columnKey, fieldKey);
+    this.highlightedNoteCellKey = key;
+    this.highlightedNoteFieldKey = fieldKey;
+    if (this.highlightTimer) {
+      clearTimeout(this.highlightTimer);
+    }
+    this.highlightTimer = setTimeout(() => {
+      this.highlightedNoteCellKey = null;
+      this.highlightedNoteFieldKey = null;
+      this.highlightTimer = null;
+      this.cdr.detectChanges();
+    }, 2800);
+    this.cdr.detectChanges();
+
+    const targetCell = Array.from(document.querySelectorAll<HTMLElement>('[data-note-cell]')).find(
+      el => el.getAttribute('data-note-cell') === key
+    );
+    targetCell?.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
   }
 
   getCellTooltip(columnKey: string, fieldKey: string, fallback?: string | null): string | null {

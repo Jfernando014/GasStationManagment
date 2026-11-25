@@ -3538,6 +3538,54 @@
       background-color: #fffdf5;
     }
 
+    .jr-grid tr.jr-row-note-highlight > td {
+      background-color: rgba(255, 247, 237, 0.9) !important;
+      transition: background-color 240ms ease;
+    }
+
+    .jr-grid tr.jr-row-note-highlight > td.jr-grid-concepto {
+      box-shadow: inset 3px 0 0 rgba(234, 88, 12, 0.65);
+      color: #9a3412;
+      font-weight: 600;
+    }
+
+    .jr-grid td.jr-cell-note-highlight {
+      background-color: rgba(255, 247, 237, 0.95) !important;
+      z-index: 3;
+    }
+
+    .jr-grid td.jr-cell-note-highlight::before {
+      content: '';
+      position: absolute;
+      inset: 2px 5px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(234, 88, 12, 0.5);
+      background: rgba(255, 237, 213, 0.28);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.09);
+      pointer-events: none;
+      animation: jrNoteCellPulse 1100ms ease-out 2;
+    }
+
+    .jr-grid td.jr-cell-note-highlight .jr-input {
+      border-color: rgba(234, 88, 12, 0.55);
+      background-color: #ffffff;
+    }
+
+    @keyframes jrNoteCellPulse {
+      0% {
+        border-color: rgba(234, 88, 12, 0.72);
+        box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.16);
+      }
+      100% {
+        border-color: rgba(234, 88, 12, 0.42);
+        box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.06);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .jr-grid td.jr-cell-note-highlight::before { animation: none; }
+    }
+
     .jr-cell-note-btn {
       position: absolute;
       top: 0;
@@ -3638,9 +3686,11 @@
       transition: border-color 120ms ease, box-shadow 120ms ease;
     }
 
-    .jr-cell-note-chip:hover {
+    .jr-cell-note-chip:hover,
+    .jr-cell-note-chip.is-active {
       border-color: #ea580c;
-      box-shadow: 0 2px 6px rgba(234, 88, 12, 0.12);
+      background: #fff7ed;
+      box-shadow: 0 2px 6px rgba(234, 88, 12, 0.14);
     }
 
     .jr-cell-note-chip-head {
@@ -3663,8 +3713,11 @@
     .jr-note-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.4);
-      z-index: 940;
+      background: rgba(13, 27, 42, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9998;
+      animation: jrNoteBackdropIn 0.18s ease-out;
     }
 
     .jr-note-dialog {
@@ -3672,14 +3725,30 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: min(460px, calc(100vw - 24px));
+      width: min(460px, calc(100vw - 32px));
       background: #ffffff;
       border: 1px solid #fcd34d;
       border-top: 4px solid #ea580c;
-      border-radius: 12px;
-      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.24);
-      z-index: 950;
+      border-radius: 16px;
+      box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.05);
+      z-index: 9999;
       overflow: hidden;
+      animation: jrNoteDialogIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes jrNoteBackdropIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes jrNoteDialogIn {
+      from { opacity: 0; transform: translate(-50%, calc(-50% + 10px)) scale(0.98); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .jr-note-backdrop,
+      .jr-note-dialog { animation: none; }
     }
 
     .jr-note-dialog-header {
