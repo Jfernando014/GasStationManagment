@@ -1,0 +1,65 @@
+<div class="box strip enter">
+  <ul class="counts" aria-label="Combustibles por estado">
+    @for (count of view().counts; track count.level) {
+      <li><app-alert-chip size="large" [level]="count.level" [text]="count.text" /></li>
+    }
+  </ul>
+  <p class="headline">
+    {{ view().headline.before }}@if (view().headline.fuel) {<b>{{ view().headline.fuel }}</b>}{{ view().headline.after }}
+  </p>
+  @if (view().headline.slug; as slug) {
+    <button type="button" class="link strip-link" (click)="fuelChosen.emit(slug)">
+      Ver {{ view().headline.fuel }} →
+    </button>
+  }
+</div>
+
+<ul class="cards">
+  @for (card of view().cards; track card.type) {
+    <li class="box card enter" [style.--i]="$index" [attr.data-level]="card.level">
+      <div class="card-head">
+        <h2><i class="swatch" [style.background]="card.color" aria-hidden="true"></i>{{ card.name }}</h2>
+        <app-alert-chip [level]="card.level" />
+      </div>
+      <div class="figures">
+        <div class="figure">
+          <span class="percentage" [attr.data-tone]="card.tone">
+            @if (card.percentage === null) {
+              —
+            } @else {
+              <app-animated-number [value]="card.percentage" [format]="percent" />
+            }
+          </span>
+          <span class="detail">{{ card.detail }}</span>
+        </div>
+        <app-trend-band-chart class="line" [style.--trend-delay.ms]="$index * 80 + 250" [points]="card.line"
+          [slots]="card.slots" [limit]="card.limit" [level]="card.level" [label]="card.lineLabel" />
+      </div>
+      <div class="foot">
+        <span class="inventory">Último inventario <b>{{ card.inventory }}</b></span>
+        <span>{{ card.inventoryDate }}</span>
+      </div>
+      <!-- Its hit area covers the whole card. -->
+      <button type="button" class="link open" [attr.aria-label]="'Ver detalle de ' + card.name"
+        (click)="fuelChosen.emit(card.slug)">Ver detalle →</button>
+    </li>
+  }
+</ul>
+
+<!-- Always open on a wide screen; on a phone it starts folded. -->
+<details class="box legend enter" [attr.open]="phone() ? null : ''">
+  <summary [attr.tabindex]="phone() ? null : -1">
+    <span class="legend-title">Qué significa cada estado</span>
+    <span class="legend-intro">{{ view().legendIntro }}</span>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </summary>
+  <dl>
+    @for (meaning of view().legend; track meaning.level) {
+      <div>
+        <dt><app-alert-chip [level]="meaning.level" /></dt>
+        <dd>{{ meaning.text }}</dd>
+      </div>
+    }
+  </dl>
+</details>

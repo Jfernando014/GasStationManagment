@@ -1,0 +1,117 @@
+<div class="head">
+  <h2 id="variation-days-title">Día por día</h2>
+  <div class="tools">
+    <span class="key"><i class="key-out" aria-hidden="true"></i>fuera de tolerancia</span>
+    <span class="key"><i class="key-gap" aria-hidden="true"></i>sin datos (no es una alerta)</span>
+    <button type="button" appButton size="sm" [attr.aria-expanded]="accumulated()"
+      (click)="accumulated.set(!accumulated())">
+      {{ accumulated() ? 'Ocultar acumulado' : 'Mostrar acumulado' }}
+    </button>
+  </div>
+</div>
+
+<div class="scroll" tabindex="0" role="region" aria-labelledby="variation-days-title">
+  <table [class.has-accumulated]="accumulated()">
+    <caption class="jr-sr">Variación diaria de {{ fuel() }}, en galones</caption>
+    <thead>
+      <tr class="groups">
+        <th scope="col" rowspan="2" class="day">Día</th>
+        <th scope="colgroup" colspan="9" class="left">Ese día</th>
+        @if (accumulated()) {
+          <th scope="colgroup" colspan="4" class="left accumulated first">Acumulado del mes hasta ese día</th>
+        }
+      </tr>
+      <tr class="columns">
+        <th scope="col" class="left">Estado del día</th>
+        <th scope="col">Inicial</th>
+        <th scope="col">Entradas</th>
+        <th scope="col">Vendido</th>
+        <th scope="col">Teórico</th>
+        <th scope="col">Medido</th>
+        <th scope="col">Diferencia</th>
+        <th scope="col">%</th>
+        <th scope="col">Tolerancia</th>
+        @if (accumulated()) {
+          <th scope="col" class="accumulated first">Vendido</th>
+          <th scope="col" class="accumulated">Diferencia</th>
+          <th scope="col" class="accumulated">%</th>
+          <th scope="col" class="accumulated left">Estado</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.date) {
+        <tr [style.--i]="$index" [class.is-out]="row.outOfTolerance" [class.is-empty]="!row.calculated">
+          <th scope="row" class="day">{{ row.day }} <small>{{ row.weekday }}</small></th>
+          @if (row.cells; as cells) {
+            <td class="left">
+              <app-alert-chip [level]="row.outOfTolerance ? 'ALARMA' : 'OK'"
+                [text]="row.outOfTolerance ? 'Fuera' : 'Dentro'"
+                [title]="row.outOfTolerance ? 'Fuera de tolerancia' : 'Dentro de tolerancia'" />
+            </td>
+            <td>{{ cells.initial }}</td>
+            <td [class.dim]="!cells.hasEntries">{{ cells.entries }}</td>
+            <td>{{ cells.sold }}</td>
+            <td>{{ cells.theoretical }}</td>
+            <td>{{ cells.measured }}</td>
+            <td class="difference" [attr.data-tone]="cells.variance.tone">{{ cells.variance.text }}</td>
+            <td [attr.data-tone]="cells.percentage.tone">{{ cells.percentage.text }}</td>
+            <td class="muted">{{ cells.tolerance }}</td>
+          } @else {
+            <td colspan="9" class="left">
+              <div class="why">
+                <app-alert-chip level="SIN_DATOS" />
+                <b>{{ row.reason }}</b>
+                <span>{{ row.known }}</span>
+                @if (row.link; as link) {
+                  <a [routerLink]="link.route" [queryParams]="{ date: link.date }">{{ link.label }} →</a>
+                }
+              </div>
+            </td>
+          }
+          @if (accumulated()) {
+            @if (row.accumulated; as sum) {
+              <td class="accumulated first">{{ sum.sold }}</td>
+              <td class="accumulated" [attr.data-tone]="sum.variance.tone">{{ sum.variance.text }}</td>
+              <td class="accumulated" [attr.data-tone]="sum.percentage.tone">{{ sum.percentage.text }}</td>
+            } @else {
+              <td class="accumulated first dim">—</td>
+              <td class="accumulated dim">—</td>
+              <td class="accumulated dim">—</td>
+            }
+            <td class="accumulated left">
+              @if (row.level) {
+                <app-alert-chip [level]="row.level" [muted]="row.carried"
+                  [title]="row.carried ? 'Un día sin datos no corta la racha' : ''" />
+              } @else {
+                <span class="dim">—</span>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      @if (totals(); as total) {
+        <tr>
+          <th scope="row" class="day">{{ total.month }}</th>
+          <td class="left">{{ total.calculatedDays }} calculados</td>
+          <td></td>
+          <td><b>{{ total.entries }}</b></td>
+          <td><b>{{ total.sold }}</b></td>
+          <td></td>
+          <td></td>
+          <td><b>{{ total.variance.text }}</b></td>
+          <td><b>{{ total.percentage.text }}</b></td>
+          <td class="footnote">{{ total.outOfToleranceDays }} fuera</td>
+          @if (accumulated()) {
+            <td class="first">{{ total.accumulatedSold }}</td>
+            <td><b>{{ total.variance.text }}</b></td>
+            <td><b>{{ total.percentage.text }}</b></td>
+            <td class="left"><app-alert-chip [level]="total.level" /></td>
+          }
+        </tr>
+      }
+    </tfoot>
+  </table>
+</div>

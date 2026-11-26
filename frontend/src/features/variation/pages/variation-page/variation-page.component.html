@@ -1,0 +1,91 @@
+<div class="page">
+  <header class="title-row">
+    <div class="titles">
+      <h1>Variación de combustible</h1>
+      <p>¿Lo que hay en los tanques coincide con lo que debería haber según lo vendido?</p>
+    </div>
+    <div class="controls">
+      @if (rules(); as rule) {
+        <app-popover class="rules" [label]="rule.button" [width]="380">
+          <svg popoverIcon viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
+          </svg>
+          <div class="rules-body">
+            <b>{{ rule.title }}</b>
+            <dl>
+              @for (row of rule.rows; track row.name) {
+                <dt>{{ row.name }}</dt>
+                <dd>{{ row.value }}</dd>
+              }
+            </dl>
+            <p>{{ rule.note }}
+              <a routerLink="/configuracion/umbrales" [queryParams]="{ tab: 'variacion' }">Cambiar en Umbrales →</a>
+            </p>
+          </div>
+        </app-popover>
+      }
+      <app-month-stepper [month]="month()" [max]="currentMonth" (monthChange)="selectMonth($event)" />
+    </div>
+  </header>
+
+  <app-tabs idPrefix="variation" label="Combustibles" [chipsOnPhone]="true" [tabs]="tabs()" [active]="tab()"
+    (activeChange)="selectTab($event)" />
+
+  <div class="panel" role="tabpanel" [id]="'variation-panel-' + tab()"
+    [attr.aria-labelledby]="'variation-tab-' + tab()" [attr.aria-busy]="status() === 'loading'">
+    @switch (status()) {
+      @case ('loading') {
+        <div class="stack">
+          <span class="jr-sr" role="status">Cargando la variación del mes…</span>
+          <div class="skeleton-cards">
+            @for (card of skeletonCards; track card) {
+              <div class="box skeleton-card">
+                <app-skeleton width="40%" />
+                <app-skeleton width="60%" height="32px" />
+                <app-skeleton height="46px" />
+                <app-skeleton width="70%" height="12px" />
+              </div>
+            }
+          </div>
+          <div class="box skeleton-card">
+            <app-skeleton width="25%" />
+            <app-skeleton height="120px" />
+          </div>
+        </div>
+      }
+      @case ('empty') {
+        <div class="box state">
+          <app-empty-state [heading]="emptyHeading()"
+            description="La variación se calcula comparando la medición de los tanques de cada día con lo vendido. Cuando cierres jornadas y registres las mediciones (Paso 5), aparecerá aquí.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 2.5C9.6 5 5 11 5 15a7 7 0 0 0 14 0c0-4-4.6-10-7-12.5Z" /><path d="M8 15h8" />
+            </svg>
+            <a appButton variant="primary" routerLink="/jornada">Ir a la jornada del día</a>
+          </app-empty-state>
+        </div>
+      }
+      @case ('error') {
+        <div class="box state">
+          <app-empty-state tone="error" [heading]="errorHeading()"
+            description="Revisa tu conexión. Tus datos están guardados; solo falló la consulta.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+              <path d="m2 2 20 20" />
+            </svg>
+            <button type="button" appButton variant="primary" (click)="load()">Intentar de nuevo</button>
+          </app-empty-state>
+        </div>
+      }
+      @default {
+        @if (detail(); as fuel) {
+          <app-variation-fuel-detail [view]="fuel" [phone]="phone()" />
+        } @else if (summary(); as overview) {
+          <app-variation-summary [view]="overview" [phone]="phone()" (fuelChosen)="selectTab($event)" />
+        }
+      }
+    }
+  </div>
+</div>

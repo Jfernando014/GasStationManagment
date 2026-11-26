@@ -1,0 +1,74 @@
+:host {
+  --band: transparent;
+  --advice-bg: var(--surface-subtle);
+  --advice-text: var(--text-body);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 20px;
+  overflow: hidden;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+:host([data-level='OK']) { --band: var(--semantic-green); }
+:host([data-level='REVISAR']) { --band: var(--semantic-amber); }
+:host([data-level='AYUDA']) { --band: var(--brand-primary); --advice-bg: var(--brand-primary-subtle); --advice-text: #7C2D12; }
+:host([data-level='ALARMA']) { --band: #DC2626; --advice-bg: var(--semantic-red-subtle); --advice-text: #7F1D1D; }
+
+:host::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--band); }
+
+.head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.as-of { font-size: 13px; color: var(--text-muted); }
+
+h2 { margin: 0; font-size: 21px; font-weight: 700; line-height: 1.3; color: var(--text-heading); }
+p { margin: 0; }
+.text { font-size: 14px; line-height: 1.5; color: var(--text-body); }
+
+.advice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--advice-bg);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--advice-text);
+}
+
+.track { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: auto; }
+
+ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+li { display: flex; align-items: center; }
+li + li::before { content: ''; width: 24px; height: 2px; margin: 0 6px; background: var(--border-main); }
+
+/* The current level is bold, underlined and colored. */
+li.is-current { font-weight: 800; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+li.is-current[data-level='OK'] { color: var(--semantic-green-strong); }
+li.is-current[data-level='REVISAR'] { color: var(--semantic-amber-strong); }
+li.is-current[data-level='AYUDA'] { color: var(--brand-primary-strong); }
+li.is-current[data-level='ALARMA'] { color: var(--semantic-red-strong); }
+
+.streak { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+
+@media (max-width: 640px) {
+  :host { gap: 8px; padding: 14px 14px 14px 16px; }
+  h2 { font-size: 17px; }
+  .text { font-size: 13px; }
+  .advice { padding: 9px 11px; font-size: 12.5px; }
+  li + li::before { width: 10px; }
+  .streak { margin-left: 0; }
+}

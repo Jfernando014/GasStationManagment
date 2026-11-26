@@ -1,0 +1,64 @@
+<div class="head">
+  <h2>Día por día</h2>
+  <span>toca un día para ver más</span>
+</div>
+
+<ul>
+  @for (row of shown(); track row.date) {
+    <li [style.--i]="$index" [class.is-out]="row.outOfTolerance" [class.is-empty]="!row.calculated">
+      @if (row.cells; as cells) {
+        <button type="button" class="summary" [attr.aria-expanded]="open() === row.date" (click)="toggle(row.date)">
+          <span class="day">{{ row.day }}<small>{{ row.weekday }}</small></span>
+          <span class="middle">
+            <span>Vendido <b>{{ cells.sold }}</b></span>
+            <span class="state">
+              @if (row.level) {
+                <app-alert-chip [level]="row.level" />
+              }
+              @if (row.outOfTolerance) {
+                <span class="out-note">Fuera de tolerancia</span>
+              }
+            </span>
+          </span>
+          <span class="difference">
+            <b [attr.data-tone]="cells.variance.tone">{{ cells.variance.text }}</b>
+            <small>{{ cells.percentage.text }}</small>
+          </span>
+        </button>
+        @if (open() === row.date) {
+          <dl>
+            <div><dt>Estado del día</dt><dd>{{ row.outOfTolerance ? 'Fuera' : 'Dentro' }}</dd></div>
+            <div><dt>Inicial</dt><dd>{{ cells.initial }}</dd></div>
+            <div><dt>Entradas</dt><dd>{{ cells.entries }}</dd></div>
+            <div><dt>Teórico</dt><dd>{{ cells.theoretical }}</dd></div>
+            <div><dt>Medido</dt><dd>{{ cells.measured }}</dd></div>
+            <div><dt>Tolerancia</dt><dd>{{ cells.tolerance }}</dd></div>
+            @if (row.accumulated; as sum) {
+              <div><dt>Acum. vendido</dt><dd>{{ sum.sold }}</dd></div>
+              <div><dt>Acum. diferencia</dt><dd [attr.data-tone]="sum.variance.tone">{{ sum.variance.text }}</dd></div>
+              <div><dt>Acum. %</dt><dd [attr.data-tone]="sum.percentage.tone">{{ sum.percentage.text }}</dd></div>
+            }
+          </dl>
+        }
+      } @else {
+        <div class="summary">
+          <span class="day">{{ row.day }}<small>{{ row.weekday }}</small></span>
+          <span class="middle">
+            <b class="reason">{{ row.reason }}</b>
+            <span>{{ row.known }}</span>
+            @if (row.link; as link) {
+              <a [routerLink]="link.route" [queryParams]="{ date: link.date }">{{ link.label }} →</a>
+            }
+          </span>
+          <app-alert-chip level="SIN_DATOS" />
+        </div>
+      }
+    </li>
+  }
+</ul>
+
+@if (remaining() > 0) {
+  <button type="button" class="more" (click)="showAll()">
+    {{ remaining() === 1 ? 'Ver el día restante' : 'Ver los ' + remaining() + ' días restantes' }}
+  </button>
+}
