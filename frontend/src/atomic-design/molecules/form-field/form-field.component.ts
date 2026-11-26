@@ -30,6 +30,8 @@ export class FormFieldComponent {
   readonly digitsOnly = input(false);
   readonly placeholder = input('');
   readonly hint = input('');
+  /** Unit written inside the field, at its right end, e.g. "%". The label should name it too. */
+  readonly suffix = input('');
   /** Lowest and highest value for `date`, `month` and `number` fields. */
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);

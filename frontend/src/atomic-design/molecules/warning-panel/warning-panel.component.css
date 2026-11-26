@@ -24,6 +24,11 @@
 .message { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
 .message ::ng-deep b { color: var(--text-heading); }
 
+:host(.warning-panel--danger) { border-color: #FECACA; background: var(--semantic-red-subtle); box-shadow: none; }
+:host(.warning-panel--danger) .dot { background: var(--semantic-red); box-shadow: 0 0 0 4px #FEE2E2; }
+:host(.warning-panel--danger) .message,
+:host(.warning-panel--danger) .message ::ng-deep b { color: #7F1D1D; }
+
 .toggle {
   display: inline-flex;
   align-items: center;
