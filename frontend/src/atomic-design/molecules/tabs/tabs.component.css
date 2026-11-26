@@ -51,6 +51,29 @@
   transition: transform var(--duration-normal) var(--spring), width var(--duration-normal) var(--spring);
 }
 
+@media (max-width: 640px) {
+  :host(.chips-on-phone) .tablist { gap: 6px; padding: 2px; border-bottom: 0; }
+
+  :host(.chips-on-phone) .tab {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-pill);
+    background: var(--surface-card);
+    font-size: 13.5px;
+    color: var(--text-body);
+  }
+
+  :host(.chips-on-phone) .tab.is-active {
+    border-color: var(--surface-navy);
+    background: var(--surface-navy);
+    color: #FFFFFF;
+  }
+
+  :host(.chips-on-phone) .underline { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .underline.is-ready { transition: none; }
 }

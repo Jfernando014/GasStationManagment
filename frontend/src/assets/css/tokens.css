@@ -60,6 +60,12 @@
       --semantic-blue-strong: #1D4ED8;
       --semantic-sky: #0EA5E9;           /* Punto de los recargos de horas extra */
 
+      /* Variación de combustible: faltante y sobrante, texto y barra */
+      --shortage: #BE123C;
+      --shortage-bar: #E11D48;
+      --surplus: #0369A1;
+      --surplus-bar: #0284C7;
+
       /* Jornada: tipos de celda de la rejilla de captura */
       --jr-cell-border: #CBD5E1;         /* Campo que se digita */
       --jr-dominus-bg: #F3F6FC;          /* Campo pegado desde Dominus */
