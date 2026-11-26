@@ -1,4 +1,11 @@
-<div class="parameters-page">
+<div class="inv-subview active cf-vista parameters-page">
+  <header class="cf-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Parámetros</h1>
+      <p>Reglas y valores base del sistema agrupados por módulo.</p>
+    </div>
+  </header>
+
   <nav class="parameters-tabs" aria-label="Grupos de parámetros">
     @for (tab of tabs; track tab.path) {
       <a class="parameters-tab" [routerLink]="tab.path" routerLinkActive="is-active"

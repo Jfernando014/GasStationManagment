@@ -80,7 +80,7 @@ describe('MonthlyReconciliationPageComponent', () => {
     const rows = root.querySelectorAll('tbody tr');
 
     expect(service.getMonthly).toHaveBeenCalledWith('2026-08');
-    expect(root.textContent).toContain('Conciliaciones del mes');
+    expect(root.querySelector('#monthly-reconciliation-title')?.textContent?.trim()).toBe('Conciliaciones');
     expect(root.textContent).toContain('Agosto de 2026');
     expect(rows).toHaveLength(31);
     expect(rows[4].textContent).toContain('5.691.312');

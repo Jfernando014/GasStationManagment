@@ -61,7 +61,7 @@ describe('JournalPageComponent (C-02, S1-15)', () => {
     expect(journalService.openJournal).toHaveBeenCalledWith(yesterdayCalendarDay());
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Jornada Diaria');
+    expect(text).toContain('Jornada del día');
     expect(text).toContain('Planilla #289');
     expect(text).toContain('2026-08-05');
     expect(text).toContain('Abierta');

@@ -1,13 +1,6 @@
-/* Layout of the worker profile: breadcrumb, back link, header, tabs and panels. */
+/* Layout of the worker profile: back link, header, tabs and panels. */
 
 .wp-page { gap: 14px; min-width: 0; }
-
-.wp-crumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--text-muted); }
-.wp-crumbs li + li::before { content: '/'; margin-right: 8px; color: var(--text-light); }
-.wp-crumbs a { color: var(--text-muted); text-decoration: none; }
-.wp-crumbs a:hover { color: var(--text-heading); text-decoration: underline; }
-.wp-crumbs a:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 4px; }
-.wp-crumbs [aria-current='page'] { font-weight: 700; color: var(--text-heading); }
 
 .wp-back {
   display: inline-flex;
@@ -69,8 +62,4 @@ dialog.apple-dialog-scrim::backdrop { background: transparent; }
 /* Phone: the card is a bottom sheet, so it clips again and the form body scrolls inside it. */
 @media (max-width: 640px) {
   .apple-dialog-card { overflow: hidden; }
-}
-
-@media (max-width: 640px) {
-  .wp-crumbs [aria-current='page'] { overflow-wrap: anywhere; }
 }

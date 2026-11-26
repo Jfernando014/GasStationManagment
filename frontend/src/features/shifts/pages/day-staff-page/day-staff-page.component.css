@@ -10,10 +10,8 @@
 
 /* ---- Cabecera ---- */
 .ds-head { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; }
-.ds-title { display: flex; flex-direction: column; gap: 2px; }
-.ds-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-primary-strong); }
-.ds-title h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-heading); }
-.ds-date { margin: 0; font-size: 13px; color: var(--text-muted); }
+.ds-title { display: flex; flex-direction: column; }
+.ds-date { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
 
 .ds-state {
   display: inline-flex; align-items: center; gap: 6px;
