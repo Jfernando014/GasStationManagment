@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
+import { ColorThemeService } from '../../../../core/services/color-theme.service';
 import { IndexChartModel } from '../../models/performance-view.model';
 
 /**
@@ -18,6 +19,8 @@ import { IndexChartModel } from '../../models/performance-view.model';
   styleUrl: './divergent-index-chart.component.css'
 })
 export class DivergentIndexChartComponent {
+  private readonly colorTheme = inject(ColorThemeService, { optional: true });
+
   readonly model = input.required<IndexChartModel>();
   /** There is no data yet: the chart is drawn with skeletons. */
   readonly loading = input(false);
@@ -26,4 +29,8 @@ export class DivergentIndexChartComponent {
 
   protected readonly skeletonRows = [0, 1, 2, 3];
   protected readonly formula = 'Lo que vendió dividido por lo que habría vendido con el promedio de la estación en esos mismos turnos';
+
+  protected sellerDotColor(workerId: string, name: string): string | null {
+    return this.colorTheme?.resolveWorkerColor({ workerId, name })?.background ?? null;
+  }
 }

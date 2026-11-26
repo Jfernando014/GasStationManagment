@@ -7,6 +7,7 @@ import { EmptyStateComponent } from '../../../atomic-design/molecules/empty-stat
 import { FormFieldComponent } from '../../../atomic-design/molecules/form-field/form-field.component';
 import { StatisticsDialogComponent } from './statistics-dialog.component';
 import { CompetitionService } from '../../../core/services/competition.service';
+import { ColorThemeService } from '../../../core/services/color-theme.service';
 import { Competitor, FUELS, FuelType, PriceComparison, PriceSimulation } from '../../../shared/models/dtos/competition.dto';
 import { difference, formatStatistics, validDate } from '../../../shared/helpers/sales-statistics.helpers';
 import { priceValidator } from '../../../shared/helpers/statistics-contracts.helpers';
@@ -19,6 +20,7 @@ interface MatrixRow { id: string; name: string; brand: string; location: string;
   templateUrl: './competition-statistics.component.html', styleUrls: ['../statistics.css', './competition-statistics.component.css'] })
 export class CompetitionStatisticsComponent {
   private readonly api = inject(CompetitionService);
+  private readonly colorTheme = inject(ColorThemeService, { optional: true });
   private readonly workspace = inject(StatisticsWorkspace);
   private readonly destroyRef = inject(DestroyRef);
   private readonly reload$ = new Subject<void>();
@@ -98,11 +100,13 @@ export class CompetitionStatisticsComponent {
     effect(() => {
       const type = this.fuel() === 'ALL' ? 'MOTOR' : this.fuel() as FuelType;
       const rows = this.rows().filter(row => row.prices[type] !== null);
-      this.workspace.competitionBars.set(rows.map((row, index) => ({ label: row.name, color: row.own ? '#FF6B00' : index % 2 ? '#0284C7' : '#0B192C', points: [{ label: row.name, value: row.prices[type]! }] })));
+      const customFuel = this.colorTheme?.theme().fuels.find(entry => entry.key === type && entry.customized)?.colorHex;
+      const peerColor = (index: number) => index % 2 ? (customFuel ?? '#0284C7') : '#0B192C';
+      this.workspace.competitionBars.set(rows.map((row, index) => ({ label: row.name, color: row.own ? '#FF6B00' : peerColor(index), points: [{ label: row.name, value: row.prices[type]! }] })));
       this.workspace.competitionLines.set(rows.map((row, index) => {
         const record = this.comparison()?.fuels.find(f => f.fuelType === type);
         const date = row.own ? record?.bellavistaValidFrom : record?.observations.find(o => o.competitorId === row.id)?.observedAt.slice(0, 10);
-        return { label: row.name, color: row.own ? '#FF6B00' : index % 2 ? '#0284C7' : '#0B192C', points: date ? [{ label: date, value: row.prices[type]! }] : [] };
+        return { label: row.name, color: row.own ? '#FF6B00' : peerColor(index), points: date ? [{ label: date, value: row.prices[type]! }] : [] };
       }));
     });
   }

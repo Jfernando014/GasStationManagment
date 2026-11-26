@@ -78,7 +78,7 @@
         <ul class="ds-list">
           @for (p of working(); track p.workerId; let i = $index) {
             <li class="ds-person" [style.--i]="i" [class.is-flash]="isFlashing(p.workerId)">
-              <app-avatar [name]="p.fullName" />
+              <app-avatar [name]="p.fullName" [workerId]="p.workerId" />
 
               <div class="ds-person-who">
                 <b>{{ p.fullName }}</b>
@@ -127,7 +127,7 @@
             <ul class="ds-off-list">
               @for (p of notWorking(); track p.workerId) {
                 <li class="ds-off-person" [class.is-flash]="isFlashing(p.workerId)">
-                  <app-avatar [name]="p.fullName" />
+                  <app-avatar [name]="p.fullName" [workerId]="p.workerId" />
                   <span class="ds-off-who">
                     <b>{{ p.fullName }}</b>
                     <small>

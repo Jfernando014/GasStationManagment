@@ -93,7 +93,7 @@ app-novelty-list.ds-card { padding: 14px 16px; }
   animation: ds-grow var(--duration-normal) var(--spring) both;
   animation-delay: calc(var(--i, 0) * 40ms);
 }
-.ds-bar--support { background: var(--brand-primary); }
+.ds-bar--support { background: var(--shift-apoyo); }
 
 .ds-person-end { display: flex; justify-content: flex-end; }
 

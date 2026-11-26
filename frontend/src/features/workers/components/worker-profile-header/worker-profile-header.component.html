@@ -1,5 +1,5 @@
 <section class="ps-card wp-header" aria-label="Datos del vendedor">
-  <app-avatar class="wp-avatar" [name]="worker().fullName" size="lg" />
+  <app-avatar class="wp-avatar" [name]="worker().fullName" [workerId]="worker().id" [document]="worker().document" size="lg" />
   <div class="wp-id">
     <div class="wp-title">
       <h1>{{ worker().fullName }}</h1>

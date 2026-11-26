@@ -25,7 +25,11 @@
       <ul class="bars">
         @for (bar of model().bars; track bar.workerId) {
           <li class="row" [style.--i]="$index">
-            <span class="name">{{ bar.name }}</span>
+            @let dot = sellerDotColor(bar.workerId, bar.name);
+            <span class="name">
+              @if (dot) { <i class="seller-dot" [style.background]="dot" aria-hidden="true"></i> }
+              <span class="name-text">{{ bar.name }}</span>
+            </span>
             <span class="track" role="img" [attr.aria-label]="bar.ariaLabel">
               <span class="mid"></span>
               <span class="bar" [class.is-up]="bar.up" [class.is-down]="!bar.up" [style.width.%]="bar.width"></span>

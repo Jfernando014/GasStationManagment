@@ -31,7 +31,7 @@
             <button type="button" class="row" [class.is-empty]="!view.hasData" [attr.aria-expanded]="isOpen(view.workerId)"
               [attr.aria-controls]="'detail-' + view.workerId" [attr.aria-label]="sentence(view)" (click)="toggle(view.workerId)">
               <span class="who">
-                <app-avatar [name]="view.name" />
+                <app-avatar [name]="view.name" [workerId]="view.workerId" />
                 <span class="who-text">
                   <span class="name">{{ view.name }}</span>
                   @if (view.roleLabel) { <span class="role">{{ view.roleLabel }}</span> }

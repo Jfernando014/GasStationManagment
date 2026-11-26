@@ -14,7 +14,7 @@
         <th class="right">PROMEDIO / TURNO (COP)</th><th>PARTICIPACIÓN</th><th>ACCIONES</th></tr></thead>
         <tbody>
           @for (seller of sellers(); track seller.workerId) {
-            <tr><td><div class="stats-seller"><app-avatar [name]="seller.name.slice(0, 1)" /><div><b>{{ seller.name }}</b><small>{{ seller.document ? 'C.C. ' + seller.document : 'Documento no disponible' }}</small></div></div></td>
+            <tr><td><div class="stats-seller"><app-avatar [name]="seller.name.slice(0, 1)" [workerId]="seller.workerId" [document]="seller.document" /><div><b>{{ seller.name }}</b><small>{{ seller.document ? 'C.C. ' + seller.document : 'Documento no disponible' }}</small></div></div></td>
               <td class="right tnum">{{ seller.workedShifts === null ? '—' : seller.workedShifts + ' Turnos' }}</td>
               <td class="right tnum"><strong>$ {{ format(seller.amount) }}</strong></td>
               <td class="right tnum">{{ seller.average === null ? '—' : '$ ' + format(seller.average) }}</td>

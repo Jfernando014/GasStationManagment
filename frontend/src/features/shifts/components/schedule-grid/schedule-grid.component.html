@@ -35,7 +35,7 @@
           @let r = item.index;
           <tr class="sg-row" [style.--r]="r">
             <th scope="row" class="sg-name">
-              <span class="sg-name-in" [attr.title]="row.name"><app-avatar [name]="row.name" /><b>{{ shortNameOf(row.name) }}</b></span>
+              <span class="sg-name-in" [attr.title]="row.name"><app-avatar [name]="row.name" [workerId]="row.workerId" /><b>{{ shortNameOf(row.name) }}</b></span>
             </th>
             @for (col of columns(); track col.date; let c = $index) {
               @let cell = cellOf(row, col.date);
@@ -119,7 +119,7 @@
           @let cell = cellOf(row, col.date);
           <li>
             <button type="button" class="sg-daycard-row" [class.is-past]="col.past" [class.is-dim]="dimmed(cell)" [class.is-hit]="matched(cell)" [attr.aria-label]="cellLabel(row, col)" (click)="open(row, col, r, c)">
-              <app-avatar [name]="row.name" />
+              <app-avatar [name]="row.name" [workerId]="row.workerId" />
               <span class="sg-daycard-name"><b>{{ row.name }}</b><small>{{ row.roleLabel }}{{ cell.note ? ' · con nota' : '' }}</small></span>
               @if (cell.code) {
                 <app-shift-chip [code]="cell.code" [segments]="cell.segments" />
