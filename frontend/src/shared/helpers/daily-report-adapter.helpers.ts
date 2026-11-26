@@ -145,11 +145,6 @@ function resultStatusOf(prmValue: CellOut): string | null {
   return typeof prmValue === 'string' && prmValue.trim() !== '' ? prmValue.trim() : null;
 }
 
-/** True when the record corresponds to the day-total row. */
-function isResultRow(prmRecord: RowRecord): boolean {
-  return prmRecord['Vendedor'] === BACKEND_SALES_TOTAL;
-}
-
 async function openSheet(prmContent: Blob, prmSheetName: string): Promise<Worksheet> {
   const objExcelJs = await loadExcelJs();
   const objWorkbook = new objExcelJs.Workbook();
