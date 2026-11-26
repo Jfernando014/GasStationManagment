@@ -1,17 +1,17 @@
 <div class="configuration-page">
   <header class="configuration-header">
     <div>
-      <div class="configuration-breadcrumb">Configuración <span>/</span> Umbrales de autonomía</div>
-      <h1>Umbrales de autonomía</h1>
-      <p>Define desde qué días de autonomía se genera una advertencia y desde cuándo una alerta crítica.</p>
+      <h1>Umbrales</h1>
+      <p>Cuándo el sistema te avisa. Cada configuración rige desde su fecha hasta que crees otra.</p>
     </div>
   </header>
 
-  <nav class="configuration-tabs" aria-label="Configuración">
-    <a routerLink="/configuracion/aforo">Tabla de aforo</a>
-    <a routerLink="/configuracion/tanques">Tanques</a>
-    <a routerLink="/configuracion/umbrales" class="active">Umbrales</a>
-  </nav>
+  <app-tabs class="thresholds-tabs" idPrefix="thresholds" label="Umbrales" [tabs]="tabs" [active]="tab()"
+    (activeChange)="changeTab($event)" />
+
+  <div role="tabpanel" id="thresholds-panel-autonomia" aria-labelledby="thresholds-tab-autonomia"
+    [hidden]="tab() !== 'autonomia'">
+  <p class="tab-intro">Define desde qué días de autonomía se genera una advertencia y desde cuándo una alerta crítica.</p>
 
   @if (error()) {
     <div class="alert-box-danger" role="alert">
@@ -114,6 +114,14 @@
       </div>
     }
   </section>
+  </div>
+
+  <div role="tabpanel" id="thresholds-panel-variacion" aria-labelledby="thresholds-tab-variacion"
+    [hidden]="tab() !== 'variacion'">
+    @if (variationOpened()) {
+      <app-variation-alert-settings-panel />
+    }
+  </div>
 </div>
 
 <app-confirm-modal

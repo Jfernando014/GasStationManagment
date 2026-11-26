@@ -1,0 +1,31 @@
+<fieldset aria-describedby="shortage-limits-help">
+  <legend>Días con faltante permitidos al mes, por tamaño</legend>
+  <p class="help" id="shortage-limits-help">Cuántos días puede faltar combustible en cada rango antes de alertar. Deben
+    ir de mayor a menor (o iguales): más galones, menos días permitidos.</p>
+
+  <div class="stair" aria-hidden="true">
+    @for (height of bars(); track $index) {
+      <i [style.--i]="$index" [style.height.%]="height" [class.is-bad]="order().invalid[$index]"></i>
+    }
+  </div>
+
+  <div class="ranges">
+    @for (range of ranges; track range.field) {
+      <app-form-field [fieldId]="'variation-' + range.field" [label]="range.label"
+        [ariaLabel]="'Días permitidos con faltante de ' + range.label" inputMode="numeric" autocomplete="off"
+        [digitsOnly]="true" [maxLength]="6" [control]="form().controls[range.field]"
+        [invalid]="order().invalid[$index]"
+        [describedBy]="order().invalid[$index] ? 'shortage-limits-order' : null" />
+    }
+  </div>
+
+  <div id="shortage-limits-order" aria-live="polite">
+    @if (order().message; as message) {
+      <p class="order-error">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+        <span>{{ message }}.</span>
+      </p>
+    }
+  </div>
+</fieldset>

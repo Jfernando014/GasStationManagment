@@ -1,0 +1,76 @@
+:host { display: block; min-width: 0; }
+
+.content { container-type: inline-size; }
+
+.layout {
+  display: grid;
+  grid-template-columns: clamp(300px, 34%, 400px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.box {
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.skeleton-list { display: flex; flex-direction: column; gap: 10px; }
+.skeleton-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.skeleton-editor { display: flex; flex-direction: column; gap: 18px; padding: 18px 22px; }
+
+.editor { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 18px 22px; }
+
+.editor-title { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+.editor-title h2 { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-heading); }
+
+.editor-actions { padding-top: 14px; border-top: 1px solid var(--surface-subtle); }
+
+.setting-form { display: flex; flex-direction: column; gap: 16px; }
+
+.banner { box-shadow: none; }
+
+.banner-link {
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-primary-strong);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.banner-link:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 4px; }
+
+.actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+
+/* Delete, or the note of the base, stay on the left of "Cancelar" and "Guardar". */
+.delete,
+.base-note { margin-right: auto; }
+
+.base-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); }
+
+.cancel,
+.save { min-width: 96px; justify-content: center; }
+
+@container (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Bottom sheet of the phone. */
+.sheet-content { display: flex; flex-direction: column; gap: 12px; }
+.sheet-content .recommended { align-self: flex-end; min-height: 44px; }
+.sheet-footer { width: 100%; }
+
+@media (max-width: 640px) {
+  .actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+  .delete,
+  .base-note { grid-column: 1 / -1; justify-content: center; margin-right: 0; }
+  .delete { min-height: 44px; }
+  .cancel,
+  .save { min-height: 46px; font-size: 15px; }
+  .banner-link { min-height: 44px; display: block; }
+}

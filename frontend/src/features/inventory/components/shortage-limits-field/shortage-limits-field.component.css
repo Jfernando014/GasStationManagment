@@ -1,0 +1,88 @@
+:host { display: block; container-type: inline-size; }
+
+fieldset { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+
+legend { margin-bottom: 4px; padding: 0; font-size: 13.5px; font-weight: 600; color: var(--text-heading); }
+
+.help { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
+
+.stair,
+.ranges {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stair { align-items: end; height: 48px; margin-top: 4px; }
+
+.stair i {
+  display: block;
+  border-radius: 6px 6px 2px 2px;
+  background: #FFD5B5;
+  transform-origin: bottom;
+  transition: height var(--duration-normal) var(--spring), background-color var(--duration-fast) ease;
+  animation: stair-grow 600ms var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms + 200ms);
+}
+
+.stair i.is-bad { background: #FCA5A5; }
+
+/* The name of each range goes under its field. */
+app-form-field { min-width: 0; gap: 4px; }
+app-form-field ::ng-deep .item-label { order: 1; justify-content: center; font-size: 12px; color: var(--text-body); }
+app-form-field ::ng-deep .field-error { order: 2; text-align: center; }
+
+app-form-field ::ng-deep .flat-input {
+  padding: 0 6px;
+  border-color: var(--jr-cell-border);
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+app-form-field ::ng-deep .flat-input:focus { border-color: var(--brand-primary); }
+
+app-form-field ::ng-deep .flat-input.is-invalid {
+  border-color: var(--semantic-red);
+  box-shadow: 0 0 0 3px #FEE2E2;
+  animation: range-shake 300ms var(--spring-fast);
+}
+
+.order-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--semantic-red-strong);
+}
+
+.order-error svg { flex-shrink: 0; margin-top: 2px; }
+
+@keyframes stair-grow {
+  from { transform: scaleY(0); }
+}
+
+@keyframes range-shake {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Narrow: three fields per row; the bars would no longer sit over their field. */
+@container (max-width: 480px) {
+  .stair { display: none; }
+  .ranges { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  app-form-field ::ng-deep .flat-input { height: 46px; font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stair i { animation: none; transition: none; }
+  app-form-field ::ng-deep .flat-input.is-invalid { animation: none; }
+}

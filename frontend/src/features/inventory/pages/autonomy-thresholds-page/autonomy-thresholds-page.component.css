@@ -1,0 +1,23 @@
+.thresholds-tabs { margin-bottom: 16px; }
+
+.tab-intro { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); }
+
+/* Teléfono: la barra superior ya dice dónde se está, y todo lo que se toca mide al menos 44 px. */
+@media (max-width: 640px) {
+  .configuration-page .configuration-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .configuration-page { position: relative; }
+  .thresholds-tabs { margin-bottom: 12px; }
+  /* Las dos pestañas caben completas sin desplazarse. */
+  .thresholds-tabs ::ng-deep .tab { flex: 1 0 auto; padding: 0 6px; font-size: 13.5px; }
+  .tab-intro { padding: 0 4px; }
+  .configuration-page .table-action { min-width: 44px; min-height: 44px; }
+  .configuration-page .card-actions .ab { min-height: 44px; }
+}

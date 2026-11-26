@@ -1,0 +1,51 @@
+<div class="top">
+  @if (base()) {
+    <div class="form-item">
+      <span class="item-label" id="variation-base-date-label">Rige desde</span>
+      <div class="locked" role="group" aria-labelledby="variation-base-date-label"
+        aria-describedby="variation-base-date-note">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Bloqueada">
+          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span>{{ formatDate(value().validFrom) }}</span>
+      </div>
+      <p class="field-hint" id="variation-base-date-note">Debe existir una configuración que cubra todos los meses: la
+        fecha de la base no se cambia; solo sus valores.</p>
+    </div>
+  } @else {
+    <app-form-field fieldId="variation-valid-from" label="Rige desde" type="date"
+      [control]="form().controls.validFrom" [invalid]="dateTaken()" describedBy="variation-valid-from-note">
+      @if (!errorOf('validFrom')) {
+        <p id="variation-valid-from-note" [class]="dateTaken() ? 'field-error' : 'field-hint'">
+          {{ dateTaken() ? 'Esa fecha ya tiene una vigencia.' : dateNote() }}
+        </p>
+      }
+    </app-form-field>
+  }
+
+  <app-form-field fieldId="variation-percentage" label="Límite del % acumulado" inputMode="decimal" autocomplete="off"
+    suffix="%" [maxLength]="9" [control]="form().controls.cumulativeLimitPercentage"
+    describedBy="variation-percentage-help" (focusout)="tidyPercentage()">
+    <p class="field-hint" id="variation-percentage-help">Si la diferencia acumulada del mes pasa este %, el estado sube
+      a <b class="review">Revisar</b>.</p>
+  </app-form-field>
+
+  <div class="form-item">
+    <span class="item-label" aria-hidden="true">Días seguidos para escalar</span>
+    <app-number-stepper label="Días seguidos para escalar" [value]="value().escalationDays" [min]="minDays"
+      [max]="maxDays" [class.is-invalid]="errorOf('escalationDays')" (valueChange)="setDays($event)" />
+    <p class="chain" aria-live="polite">
+      <span class="step step--review">{{ value().escalationDays }} Revisar</span>
+      <span class="arrow">→</span>
+      <span class="step step--help">{{ value().escalationDays }} Ayuda</span>
+      <span class="arrow">→</span>
+      <span class="step step--alarm">Alarma</span>
+    </p>
+    @if (errorOf('escalationDays'); as message) {
+      <p class="field-error">{{ message }}</p>
+    }
+  </div>
+</div>
+
+<app-shortage-limits-field [form]="form()" [value]="value()" />
