@@ -1,0 +1,24 @@
+<section class="card" aria-label="Avance de la quincena" [attr.aria-busy]="loading()">
+  @if (loading()) {
+    <app-skeleton width="170px" />
+    <app-skeleton class="strip" height="8px" />
+  } @else {
+    <span class="count"><b>{{ closed() }} de {{ days().length }}</b> jornadas cerradas</span>
+    <app-status-strip class="strip" label="Estado de cada día de la quincena" [items]="items()"
+      [linkParams]="queryParams()" />
+    <p class="notes">
+      @if (open() > 0) {
+        <span class="open">{{ open() }} sin cerrar</span>
+        <span aria-hidden="true">&ngsp;·&ngsp;</span>
+      }
+      @if (withoutHours() > 0) {
+        <span class="open">{{ withoutHours() }} {{ withoutHours() === 1 ? 'cerrada' : 'cerradas' }} sin horas</span>
+        <span aria-hidden="true">&ngsp;·&ngsp;</span>
+      }
+      <span>los totales cuentan las jornadas con horas calculadas</span>
+    </p>
+    @if (oldestOpen(); as date) {
+      <a class="close-link" routerLink="/jornada/personal" [queryParams]="{ date: date }">Cerrar pendientes →</a>
+    }
+  }
+</section>

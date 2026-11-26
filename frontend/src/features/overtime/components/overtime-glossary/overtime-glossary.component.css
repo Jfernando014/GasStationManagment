@@ -1,0 +1,79 @@
+:host { display: block; }
+
+.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+
+h3 {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+ul + h3 { margin-top: 12px; }
+ul { list-style: none; }
+
+.entry {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 40px;
+  padding: 2px 0;
+}
+
+.entry--shift { grid-template-columns: 66px minmax(0, 1fr); }
+.entry--shift > :first-child { justify-self: start; }
+
+.sigla {
+  justify-self: start;
+  padding: 3px 7px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.sigla--surcharge { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
+.sigla--extra { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
+.sigla--fixed { background: var(--surface-card); color: var(--brand-primary-strong); box-shadow: inset 0 0 0 1px #FDBA74; }
+
+.rest { color: #475569; }
+
+.text { min-width: 0; }
+.text b { display: block; font-size: 14px; font-weight: 600; color: var(--text-heading); }
+.text small { display: block; font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+.text small.plain { font-size: 13px; color: var(--text-body); }
+
+.total {
+  justify-self: end;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A category without hours steps back without losing contrast. */
+.is-zero .sigla { background: var(--surface-subtle); color: #475569; }
+.is-zero .text b { font-weight: 500; color: var(--text-muted); }
+.is-zero .total { background: transparent; font-weight: 500; color: var(--text-muted); }
+
+.status { padding: 6px 0; font-size: 13px; color: var(--text-muted); }
+
+.foot {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--surface-subtle);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 639.98px) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .columns > div + div { margin-top: 14px; }
+}

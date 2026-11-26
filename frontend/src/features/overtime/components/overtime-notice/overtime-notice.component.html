@@ -1,5 +1,5 @@
 @if (rows().length > 0) {
-  <app-warning-panel [collapsible]="true" [open]="open()" (openChange)="open.set($event)">
+  <app-warning-panel [collapsible]="true" [touchTarget]="true" [open]="open()" (openChange)="open.set($event)">
     @if (rows().length === 1) {
       <b>1 día con datos incompletos</b>
     } @else {

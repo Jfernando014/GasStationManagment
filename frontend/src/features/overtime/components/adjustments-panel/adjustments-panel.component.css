@@ -1,24 +1,21 @@
 :host { display: block; min-width: 0; }
 
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 18px;
-  border: 1px solid var(--border-main);
-  border-radius: 14px;
-  background: var(--surface-card);
-  box-shadow: var(--shadow-card);
-  animation: rise-in var(--duration-normal) var(--spring) 80ms backwards;
-}
+/* A line of the account of the fortnight, with its form and its list under it. */
+.adjustments { display: flex; flex-direction: column; border-bottom: 1px solid var(--surface-subtle); font-size: 14px; }
 
-.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; min-height: 42px; }
+h3 { font-size: 14px; font-weight: 400; color: var(--text-body); }
+.figure { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.figure b { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.add-button { padding: 0 6px; color: var(--brand-primary-strong); }
+.add-button:hover:not([disabled]) { color: var(--brand-primary-strong); }
+.none { font-weight: 600; color: var(--text-muted); }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 10px;
   padding: 12px;
   border: 1px solid var(--border-main);
   border-radius: 10px;
@@ -31,8 +28,6 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
 .actions { display: flex; justify-content: flex-end; gap: 6px; }
 .error { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--semantic-red-strong); }
 
-.empty { padding: 6px 0; font-size: 13px; color: var(--text-muted); }
-
 .list { list-style: none; }
 
 .item {
@@ -42,8 +37,8 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
   padding: 10px 0;
   border-top: 1px solid var(--surface-subtle);
   font-size: 13px;
-  animation: rise-in var(--duration-normal) var(--spring) backwards;
-  animation-delay: calc(var(--i, 0) * 40ms);
+  animation: rise-in 240ms var(--spring) backwards;
+  animation-delay: min(calc(var(--i, 0) * 40ms), 160ms);
 }
 
 .line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -62,9 +57,11 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--spring);
 }
 
 .remove-button:hover { text-decoration: underline; }
+.remove-button:active { transform: scale(0.97); }
 .remove-button:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
 
 .confirm {
@@ -74,7 +71,7 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--semantic-red-subtle);
   color: #991B1B;
   font-size: 12.5px;
@@ -88,11 +85,13 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .form, .item, .confirm { animation: none; }
+  .form, .item, .confirm { animation: none; }
+  .remove-button { transition: none; }
 }
 
 @media (max-width: 640px) {
   .actions { flex-direction: column-reverse; align-items: stretch; }
+  .add-button { min-height: 44px; }
   .remove-button { min-height: 44px; padding: 0 10px; }
   .confirm-actions { width: 100%; }
   .confirm-actions .ab { flex: 1; }

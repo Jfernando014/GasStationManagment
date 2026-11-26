@@ -29,6 +29,37 @@ function usesMobileLayout(url: string): boolean {
   return MOBILE_READY_ROUTES.includes(url.split(/[?#]/)[0]);
 }
 
+/** Título de la barra superior según el comienzo de la dirección: ruta, sección y página. */
+const TRAILS: [path: string, section: string, page: string][] = [
+  ['/jornada', '', 'Jornada del día'],
+  ['/historial', '', 'Historial de jornadas'],
+  ['/gastos', '', 'Gastos'],
+  ['/alertas', '', 'Alertas de inventario'],
+  ['/personal/vendedores', 'Personal', 'Vendedores'],
+  ['/personal/turnos', 'Personal', 'Malla de turnos'],
+  ['/personal/horas-extra', 'Personal', 'Horas extra'],
+  ['/resultados/metas', 'Resultados', 'Metas y cumplimiento'],
+  ['/resultados/conciliaciones', 'Resultados', 'Conciliaciones'],
+  ['/resultados/estadisticas', 'Resultados', 'Estadísticas'],
+  ['/resultados/rendimiento', 'Resultados', 'Rendimiento'],
+  ['/resultados/incentivos', 'Resultados', 'Incentivos'],
+  ['/configuracion/aforo', 'Configuración', 'Tabla de aforo'],
+  ['/configuracion/tanques', 'Configuración', 'Tanques'],
+  ['/configuracion/umbrales', 'Configuración', 'Umbrales'],
+  ['/configuracion/recepciones', 'Configuración', 'Recepciones'],
+  ['/configuracion/inspecciones', 'Configuración', 'Inspecciones'],
+  ['/configuracion/productos', 'Configuración', 'Productos'],
+  ['/configuracion/parametros', 'Configuración', 'Parámetros'],
+  ['/configuracion/backup', 'Configuración', 'Respaldos']
+];
+
+/** Una dirección que no está en la lista es la del panel principal. */
+function trailFor(url: string): { section: string; page: string } {
+  const path = url.split(/[?#]/)[0];
+  const match = TRAILS.find(([base]) => path === base || path.startsWith(`${base}/`));
+  return match ? { section: match[1], page: match[2] } : { section: '', page: 'Panel principal' };
+}
+
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
@@ -67,6 +98,7 @@ export class DashboardLayoutComponent {
   );
   /** Alerts the administrator has not attended yet; it feeds the bell and the sidebar badge. */
   readonly pendingAlerts = signal(0);
+  readonly trail = signal(trailFor(this.router.url));
   readonly statisticsActive = signal(usesMobileLayout(this.router.url));
   readonly performanceActive = signal(this.router.url.split(/[?#]/)[0] === '/resultados/rendimiento');
   /** Preferencia del usuario; en pantallas angostas no se aplica porque ahí la barra es un cajón. */
@@ -98,6 +130,7 @@ export class DashboardLayoutComponent {
 
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(event => {
+        this.trail.set(trailFor(event.urlAfterRedirects));
         this.statisticsActive.set(usesMobileLayout(event.urlAfterRedirects));
         this.performanceActive.set(event.urlAfterRedirects.split(/[?#]/)[0] === '/resultados/rendimiento');
         this.alertsService.refreshPending();

@@ -1,4 +1,4 @@
-<nav class="top" aria-label="Sábana del trabajador">
+<nav class="top" aria-label="Detalle del trabajador">
   <div class="who">
     <a class="back" routerLink="/personal/horas-extra" [queryParams]="queryParams()">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -8,29 +8,48 @@
     @if (sheet(); as current) {
       <span class="divider" aria-hidden="true"></span>
       <h1 #heading tabindex="-1">{{ current.worker.name }}</h1>
-      <span class="period">
-        @if (current.worker.role) {<span class="role">{{ current.worker.role }}</span> · }{{ periodText() }}
-      </span>
+      <span class="period">{{ role() ? role() + ' · ' : '' }}{{ periodText() }}</span>
     }
   </div>
   <div class="side">
     @if (!canManage()) {
       <app-tag variant="gray">Solo lectura</app-tag>
     }
+    @if (sheet(); as current) {
+      <app-popover #glossary class="glossary" label="Qué significa cada sigla">
+        <svg popoverIcon viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+        @if (glossary.opened()) {
+          <app-overtime-glossary [totals]="totals()" [until]="current.fortnight.to" />
+        }
+      </app-popover>
+    }
     @if (neighbours(); as nav) {
       <div class="pager">
-        @if (nav.previous) {
-          <a appButton size="sm" [routerLink]="['/personal/horas-extra/trabajador', nav.previous]" [queryParams]="queryParams()"
-            aria-label="Trabajador anterior">‹</a>
+        @if (nav.previous; as worker) {
+          <a appButton size="sm" [icon]="true" [routerLink]="['/personal/horas-extra/trabajador', worker.id]"
+            [queryParams]="queryParams()" [attr.aria-label]="'Trabajador anterior: ' + worker.name">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </a>
         } @else {
-          <button appButton size="sm" type="button" disabled aria-label="Trabajador anterior">‹</button>
+          <button appButton size="sm" [icon]="true" type="button" disabled aria-label="Trabajador anterior">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
         }
         <span class="position">{{ nav.position }}</span>
-        @if (nav.next) {
-          <a appButton size="sm" [routerLink]="['/personal/horas-extra/trabajador', nav.next]" [queryParams]="queryParams()"
-            aria-label="Trabajador siguiente">›</a>
+        @if (nav.next; as worker) {
+          <a appButton size="sm" [icon]="true" [routerLink]="['/personal/horas-extra/trabajador', worker.id]"
+            [queryParams]="queryParams()" [attr.aria-label]="'Trabajador siguiente: ' + worker.name">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </a>
         } @else {
-          <button appButton size="sm" type="button" disabled aria-label="Trabajador siguiente">›</button>
+          <button appButton size="sm" [icon]="true" type="button" disabled aria-label="Trabajador siguiente">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
         }
       </div>
     }
@@ -39,12 +58,19 @@
 
 @switch (state()) {
   @case ('loading') {
-    <section class="card loading" aria-busy="true">
-      <span class="jr-sr" aria-live="polite">Cargando la sábana…</span>
-      @for (n of [0, 1, 2, 3, 4, 5, 6, 7]; track n) {
-        <app-skeleton height="18px" />
-      }
-    </section>
+    <div class="layout" aria-busy="true">
+      <span class="jr-sr" aria-live="polite">Cargando el detalle…</span>
+      <section class="card loading">
+        @for (n of [0, 1, 2, 3, 4, 5, 6]; track n) {
+          <app-skeleton height="18px" />
+        }
+      </section>
+      <section class="card loading aside">
+        @for (n of [0, 1, 2, 3]; track n) {
+          <app-skeleton height="18px" />
+        }
+      </section>
+    </div>
   }
   @case ('missing') {
     <section class="card">
@@ -58,7 +84,7 @@
   }
   @case ('error') {
     <section class="card">
-      <app-empty-state tone="error" heading="No pudimos cargar la sábana" [description]="errorMessage()">
+      <app-empty-state tone="error" heading="No pudimos cargar el detalle" [description]="errorMessage()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
         <button appButton type="button" (click)="retry()">Reintentar</button>
@@ -83,25 +109,24 @@
       }
 
       <div class="layout">
-        <app-overtime-sheet-table [sheet]="current" [versionNumbers]="versionNumbers()" />
+        <app-overtime-sheet-table [sheet]="current" [versionNumbers]="versionNumbers()" [closedDays]="closedDays()"
+          [queryParams]="queryParams()" />
 
         <div class="aside">
-          @if (stretches().length > 0) {
-            <section class="card note" aria-labelledby="parameter-change-title">
-              <span id="parameter-change-title" class="note-title">
-                @if (versionNumbers()[newestVersionFrom()]; as number) {
-                  <span class="ver">v{{ number }}</span>
-                }
-                Cambio de parámetros en la quincena
-              </span>
-              <span>
-                {{ changeText() }}
-                <a [routerLink]="['/configuracion/parametros/horas-extra']" [queryParams]="{ desde: newestVersionFrom() }">Ver qué cambió</a>
-              </span>
-            </section>
+          <app-fortnight-account [sheet]="current" [canManage]="canManage()"
+            [partial]="current.incomplete || openDays().count > 0" (changed)="refresh()" />
+          @if (openDays(); as open) {
+            @if (open.count > 0) {
+              <p class="pending-note">
+                <span class="dot" aria-hidden="true"></span>
+                <span>
+                  <b>{{ open.count }} {{ open.count === 1 ? 'jornada' : 'jornadas' }} sin cerrar.</b>
+                  Cuando se {{ open.count === 1 ? 'cierre' : 'cierren' }},
+                  {{ open.withHours ? 'las horas que falten' : 'sus horas' }} aparecerán aquí solas.
+                </span>
+              </p>
+            }
           }
-          <app-adjustments-panel [adjustments]="current.adjustments" [workerId]="current.worker.id"
-            [month]="month()" [fortnight]="fortnight()" [canManage]="canManage()" (changed)="refresh()" />
         </div>
       </div>
     }

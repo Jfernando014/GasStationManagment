@@ -1,71 +1,89 @@
-<section class="card">
-  <div class="scroll">
-    <table class="table-sticky-first">
-      <caption class="jr-sr">Horas de cada día de la quincena</caption>
-      <thead>
-        <tr>
-          <th scope="col">Fecha</th>
-          <th scope="col">Día</th>
-          <th scope="col">Turno</th>
-          <th scope="col" class="num">Horas</th>
-          @if (mixed()) {
-            <th scope="col" class="version">
-              <app-info-tooltip [inline]="true" [term]="true" text="Versión de los parámetros con la que se calculó el día" label="Parám.">Parám.</app-info-tooltip>
-            </th>
-          }
-          @for (head of heads; track head.category) {
-            <th scope="col" class="num category">
-              <app-info-tooltip [inline]="true" [term]="true" [text]="head.tooltip" [label]="head.category">{{ head.category }}</app-info-tooltip>
-            </th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (day of days(); track day.date) {
-          <tr [class.rest]="day.rest" [class.holiday]="day.holiday" [style.--i]="$index">
-            <th scope="row" class="date">{{ day.date }}</th>
-            <td [class.sunday]="day.sunday">
-              {{ day.day }}
-              @if (day.holidayTag) {
-                <app-tag variant="orange" class="holiday-tag">Festivo</app-tag>
-              }
-            </td>
-            <td>
-              @if (day.code) {
-                <app-shift-chip [code]="day.code" />
-              } @else {
-                <span aria-hidden="true">—</span>
-                <span class="jr-sr">Sin turno trabajado</span>
-              }
-            </td>
-            <td class="num" [class.zero]="day.hours === 0">{{ day.hours }}</td>
-            @if (mixed()) {
-              <td class="version">
-                <span class="ver" [class.is-new]="day.isNewVersion" [attr.title]="day.versionTitle">{{ day.version }}</span>
-              </td>
-            }
-            @for (cell of day.cells; track $index) {
-              <td class="num" [class.zero]="cell.zero">{{ cell.text }}</td>
-            }
-          </tr>
-        }
-      </tbody>
-      <tfoot>
-        @for (line of footer(); track line.kind) {
-          <tr [class]="'foot foot--' + line.kind">
-            <th scope="row" colspan="3">{{ line.label }}</th>
-            <td class="num">{{ line.hours === null ? '' : line.hours }}</td>
-            @if (mixed()) {
-              <td></td>
-            }
-            @for (cell of line.cells; track $index) {
-              <td class="num" [class.zero]="cell.zero">
-                <span [class.negative]="cell.negative">{{ cell.text }}</span>
-              </td>
-            }
-          </tr>
-        }
-      </tfoot>
-    </table>
+<section class="card" aria-labelledby="days-title">
+  <div class="card-head">
+    <h2 id="days-title">Día por día</h2>
+    @if (canExpand()) {
+      <button type="button" class="toggle" [attr.aria-expanded]="expanded()" aria-controls="days-rows"
+        (click)="expanded.set(!expanded())">
+        {{ expanded() ? 'Agrupar los días' : 'Ver los ' + dayCount() + ' días por separado' }}
+      </button>
+    }
   </div>
+  <table role="table">
+    <caption class="jr-sr">Horas de cada día de la quincena</caption>
+    <thead role="rowgroup">
+      <tr class="line head" role="row">
+        <th scope="col" role="columnheader" class="date">Fecha</th>
+        <th scope="col" role="columnheader" class="shift">Turno</th>
+        <th scope="col" role="columnheader" class="hours">Horas</th>
+        <th scope="col" role="columnheader" class="surcharges">Recargos</th>
+        <th scope="col" role="columnheader" class="extras">Horas extra</th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup" id="days-rows">
+      @for (row of rows(); track row.key) {
+        @if (row.kind === 'version') {
+          <tr class="version" role="row" [style.--i]="$index">
+            <td role="cell" colspan="5">
+              @if (row.badge) {
+                <span class="badge">{{ row.badge }}</span>
+              }
+              <span>Desde el {{ row.since }} se calcula con los parámetros nuevos.</span>
+              <a routerLink="/configuracion/parametros/horas-extra" [queryParams]="{ desde: row.from }">Ver qué cambió</a>
+            </td>
+          </tr>
+        } @else {
+          <tr class="line row" role="row" [style.--i]="$index"
+            [class.is-waiting]="row.kind === 'waiting'" [class.is-future]="row.kind === 'waiting' && row.state === 'future'">
+            <th scope="row" role="rowheader" class="date" [class.sunday]="row.sunday">
+              {{ row.label }}
+              @if (row.holidayTag) {
+                <app-tag variant="orange" class="holiday">Festivo</app-tag>
+              }
+            </th>
+            @if (row.kind === 'day') {
+              <td role="cell" class="shift">
+                @if (row.code) {
+                  <app-shift-chip [code]="row.code" />
+                } @else {
+                  <app-tag variant="gray">Sin turno</app-tag>
+                }
+              </td>
+              <td role="cell" class="hours">{{ row.hours }}</td>
+              <td role="cell" class="surcharges">
+                <span class="caption">Recargos</span>
+                <app-dot-value-list [items]="row.surcharges" emptyText="Ninguno" />
+              </td>
+              <td role="cell" class="extras">
+                <span class="caption">Extra</span>
+                <app-dot-value-list [items]="row.extras" emptyText="Ninguna" />
+              </td>
+              @if (row.note) {
+                <td role="cell" class="note">
+                  {{ row.note }}
+                  @if (row.link) {
+                    <span aria-hidden="true">·</span>
+                    <a [routerLink]="['/personal/horas-extra/dia', row.link]" [queryParams]="queryParams()"
+                      [attr.aria-label]="'Ver el día ' + row.label">Ver el día</a>
+                  }
+                </td>
+              }
+            } @else {
+              <td role="cell" class="shift">
+                <app-tag [variant]="row.chip.variant" [class.today]="row.state === 'today'">{{ row.chip.text }}</app-tag>
+              </td>
+              <td role="cell" class="hours"><span aria-hidden="true">—</span><span class="jr-sr">Sin horas</span></td>
+              <td role="cell" class="waiting">
+                {{ row.message }}
+                @if (row.link) {
+                  <span aria-hidden="true">·</span>
+                  <a [routerLink]="['/personal/horas-extra/dia', row.link]" [queryParams]="queryParams()"
+                    [attr.aria-label]="'Ver el día ' + row.label">Ver el día</a>
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
 </section>

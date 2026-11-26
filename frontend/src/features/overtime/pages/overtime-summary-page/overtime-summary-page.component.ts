@@ -1,23 +1,28 @@
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { startWith, Subscription, switchMap } from 'rxjs';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
+import { PopoverComponent } from '../../../../atomic-design/molecules/popover/popover.component';
 import { SegmentedControlComponent } from '../../../../atomic-design/molecules/segmented-control/segmented-control.component';
 import { SelectFieldComponent } from '../../../../atomic-design/molecules/select-field/select-field.component';
 import { monthName, monthOptions } from '../../../../shared/helpers/month-options.helpers';
 import { monthOf, stationToday } from '../../../../shared/helpers/shift-display.helpers';
+import { FortnightProgressComponent } from '../../components/fortnight-progress/fortnight-progress.component';
+import { OvertimeGlossaryComponent } from '../../components/overtime-glossary/overtime-glossary.component';
 import { OvertimeNoticeComponent } from '../../components/overtime-notice/overtime-notice.component';
 import { OvertimeSummaryTableComponent } from '../../components/overtime-summary-table/overtime-summary-table.component';
 import {
   fortnightButtonLabel, fortnightEnd, fortnightFromQuery, fortnightOf
 } from '../../helpers/overtime-display.helpers';
+import { addCategoryHours, journalDays } from '../../helpers/overtime-view.helpers';
 import { LoadResult, OvertimeSummary, OVERTIME_START_MONTH } from '../../models/overtime.model';
+import { JournalStatesService } from '../../services/journal-states.service';
 import { OvertimeSheetService } from '../../services/overtime-sheet.service';
 
 type SummaryView = 'loading' | 'error' | 'empty' | 'ready';
@@ -28,14 +33,16 @@ type SummaryView = 'loading' | 'error' | 'empty' | 'ready';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, ActionButtonDirective, EmptyStateComponent, SegmentedControlComponent, SelectFieldComponent,
-    OvertimeNoticeComponent, OvertimeSummaryTableComponent
+    RouterLink, ActionButtonDirective, EmptyStateComponent, PopoverComponent, SegmentedControlComponent,
+    SelectFieldComponent, FortnightProgressComponent, OvertimeGlossaryComponent, OvertimeNoticeComponent,
+    OvertimeSummaryTableComponent
   ],
   templateUrl: './overtime-summary-page.component.html',
   styleUrl: './overtime-summary-page.component.css'
 })
 export class OvertimeSummaryPageComponent {
   private readonly service = inject(OvertimeSheetService);
+  private readonly journalStates = inject(JournalStatesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -74,10 +81,27 @@ export class OvertimeSummaryPageComponent {
     return result && result.outcome !== 'OK' ? result.message : '';
   });
 
+  protected readonly periodEnd = computed(() => fortnightEnd(this.month(), this.fortnight()));
+  /** Closed journals of the month: undefined while they load, null when they could not be read. */
+  protected readonly closedDays = toSignal(toObservable(this.month).pipe(
+    switchMap(month => this.journalStates.closedDays(month).pipe(startWith(undefined)))));
+  /** Every day of the fortnight with the state of its journal; empty until the summary and the history arrive. */
+  protected readonly days = computed(() => {
+    const summary = this.summary();
+    const closed = this.closedDays();
+    return summary && closed
+      ? journalDays(summary.fortnight.from, summary.fortnight.to, summary.affectedDates, this.today, closed) : [];
+  });
+  protected readonly queryParams = computed(() => ({ mes: this.month(), quincena: this.fortnight() }));
+  /** Hours of the fortnight per category, all workers together, for the glossary. */
+  protected readonly totals = computed(() => {
+    const summary = this.summary();
+    return summary ? addCategoryHours(summary.workers.map(row => row.totalToPay)) : null;
+  });
+
   /** "del 16 al 30 de noviembre": the days whose journals will bring hours to an empty fortnight. */
   protected readonly periodText = computed(() => `del ${fortnightButtonLabel(this.month(), this.fortnight())} de ${monthName(this.month())}`);
-  protected readonly isFuture = computed(() =>
-    fortnightEnd(this.month(), this.fortnight()) >= this.today);
+  protected readonly isFuture = computed(() => this.periodEnd() >= this.today);
 
   constructor() {
     this.monthControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(month => {

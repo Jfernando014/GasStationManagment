@@ -106,9 +106,10 @@ describe('overtime components', () => {
     expect((fixture.componentInstance as unknown as { open: () => boolean }).open()).toBe(false);
   });
 
-  it('computes mixed-version rows, fixed HEDO line, and negative cells in OvertimeSheetTableComponent', async () => {
+  it('shows each day with its surcharges and the parameter version change in OvertimeSheetTableComponent', async () => {
     await TestBed.configureTestingModule({
-      imports: [OvertimeSheetTableComponent]
+      imports: [OvertimeSheetTableComponent],
+      providers: [provideRouter([])]
     }).compileComponents();
 
     const fixture = TestBed.createComponent(OvertimeSheetTableComponent);
@@ -117,15 +118,17 @@ describe('overtime components', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('HEDO fijas de la quincena');
-    expect(text).toContain('+6');
-    expect(text).toContain('−2');
-    expect(text).toContain('v1');
+    expect(text).toContain('dom 2 ago');
+    expect(text).toContain('10 h');
+    expect(text).toContain('dominical o festivo');
+    expect(text).toContain('Sin turno');
+    expect(text).toContain('Festivo');
+    expect(text).toContain('Desde el 3 ago se calcula con los parámetros nuevos.');
     expect(text).toContain('v2');
-    expect(text).toContain('−1');
+    expect(text).not.toContain('v1');
   });
 
-  it('aggregates column totals and worker statuses in OvertimeSummaryTableComponent', async () => {
+  it('aggregates the totals of the fortnight in OvertimeSummaryTableComponent', async () => {
     await TestBed.configureTestingModule({
       imports: [OvertimeSummaryTableComponent],
       providers: [provideRouter([])]
@@ -156,9 +159,11 @@ describe('overtime components', () => {
 
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Ana');
-    expect(text).toContain('Completa');
-    expect(text).toContain('Incompleta');
-    expect(text).toContain('76');
+    expect(text).toContain('Total de la quincena');
+    expect(text).toContain('76 h');
+    expect(text).toContain('6 h');
+    expect(text).toContain('dominical o festivo');
+    expect(text).toContain('Sin horas extra');
   });
 
   it('creates and removes adjustments in AdjustmentsPanelComponent and reports server field errors', async () => {

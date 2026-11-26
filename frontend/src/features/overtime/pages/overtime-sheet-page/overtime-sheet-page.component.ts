@@ -1,49 +1,47 @@
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, computed, effect, inject,
   input, signal, untracked, viewChild
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { startWith, Subscription, switchMap } from 'rxjs';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
 import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
 import { EmptyStateComponent } from '../../../../atomic-design/molecules/empty-state/empty-state.component';
+import { PopoverComponent } from '../../../../atomic-design/molecules/popover/popover.component';
 import { ToastComponent } from '../../../../atomic-design/molecules/toast/toast.component';
-import { formatShortDate } from '../../../../shared/helpers/format.helpers';
-import { addDays, stationToday } from '../../../../shared/helpers/shift-display.helpers';
-import { AdjustmentsPanelComponent } from '../../components/adjustments-panel/adjustments-panel.component';
+import { stationToday } from '../../../../shared/helpers/shift-display.helpers';
+import { FortnightAccountComponent } from '../../components/fortnight-account/fortnight-account.component';
+import { OvertimeGlossaryComponent } from '../../components/overtime-glossary/overtime-glossary.component';
 import { OvertimeNoticeComponent } from '../../components/overtime-notice/overtime-notice.component';
 import { OvertimeSheetTableComponent } from '../../components/overtime-sheet-table/overtime-sheet-table.component';
 import {
   fortnightFromQuery, fortnightLabel, formatHours, negativeCategories
 } from '../../helpers/overtime-display.helpers';
+import { addCategoryHours, journalDays, lacksHours, roleLabel } from '../../helpers/overtime-view.helpers';
 import { LoadResult, OvertimeSheet, OvertimeSummary } from '../../models/overtime.model';
+import { JournalStatesService } from '../../services/journal-states.service';
 import { OvertimeParametersService } from '../../services/overtime-parameters.service';
 import { OvertimeSheetService } from '../../services/overtime-sheet.service';
 
-/** A stretch of the fortnight calculated with one version of the parameters. */
-interface VersionStretch {
-  from: string;
-  to: string;
-  label: string;
-}
-
-/** Personal › Horas extra › one worker: the sheet of the fortnight day by day, with its adjustments. */
+/** Personal › Horas extra › one worker: the fortnight day by day and how its overtime adds up. */
 @Component({
   selector: 'app-overtime-sheet-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink, ActionButtonDirective, SkeletonComponent, TagComponent, EmptyStateComponent, ToastComponent,
-    AdjustmentsPanelComponent, OvertimeNoticeComponent, OvertimeSheetTableComponent
+    RouterLink, ActionButtonDirective, SkeletonComponent, TagComponent, EmptyStateComponent, PopoverComponent,
+    ToastComponent, FortnightAccountComponent, OvertimeGlossaryComponent, OvertimeNoticeComponent,
+    OvertimeSheetTableComponent
   ],
   templateUrl: './overtime-sheet-page.component.html',
   styleUrl: './overtime-sheet-page.component.css'
 })
 export class OvertimeSheetPageComponent {
   private readonly sheets = inject(OvertimeSheetService);
+  private readonly journalStates = inject(JournalStatesService);
   private readonly parameters = inject(OvertimeParametersService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -89,6 +87,27 @@ export class OvertimeSheetPageComponent {
     return sheet ? fortnightLabel(sheet.fortnight) : '';
   });
 
+  protected readonly role = computed(() => roleLabel(this.sheet()?.worker.role ?? null));
+
+  /** Closed journals of the month; null while they load or when they could not be read. */
+  protected readonly closedDays = toSignal(toObservable(this.month).pipe(
+    switchMap(month => this.journalStates.closedDays(month).pipe(startWith(null)))), { initialValue: null });
+
+  /** Journals of past days that are still open, and whether any of them already has its hours. */
+  protected readonly openDays = computed(() => {
+    const sheet = this.sheet();
+    if (!sheet) return { count: 0, withHours: false };
+    const open = journalDays(sheet.fortnight.from, sheet.fortnight.to, sheet.affectedDates, stationToday(),
+      this.closedDays()).filter(day => day.state === 'open');
+    return { count: open.length, withHours: open.some(day => !lacksHours(day.reason)) };
+  });
+
+  /** Hours of the fortnight per category, all workers together, for the glossary. */
+  protected readonly totals = computed(() => {
+    const summary = this.summary();
+    return summary ? addCategoryHours(summary.workers.map(row => row.totalToPay)) : null;
+  });
+
   /** Previous and next worker of the fortnight and the position "2 de 4"; null when the worker is not in the summary. */
   protected readonly neighbours = computed(() => {
     const workers = this.summary()?.workers ?? [];
@@ -96,8 +115,8 @@ export class OvertimeSheetPageComponent {
     if (index < 0) return null;
     return {
       position: `${index + 1} de ${workers.length}`,
-      previous: index > 0 ? workers[index - 1].worker.id : null,
-      next: index < workers.length - 1 ? workers[index + 1].worker.id : null
+      previous: index > 0 ? workers[index - 1].worker : null,
+      next: index < workers.length - 1 ? workers[index + 1].worker : null
     };
   });
 
@@ -111,32 +130,6 @@ export class OvertimeSheetPageComponent {
     }).join(' y ');
   });
   protected readonly hasNegative = computed(() => this.negativeText() !== '');
-
-  /** Which version covered which days, when the fortnight used more than one. */
-  protected readonly stretches = computed<VersionStretch[]>(() => {
-    const sheet = this.sheet();
-    if (!sheet || sheet.parameterVersions.length < 2) return [];
-    const versions = sheet.parameterVersions;
-    return versions.map((start, index) => ({
-      from: index === 0 ? sheet.fortnight.from : start,
-      to: index === versions.length - 1 ? sheet.fortnight.to : addDays(versions[index + 1], -1),
-      label: this.versionNumbers()[start] ? `v${this.versionNumbers()[start]}` : `los parámetros del ${formatShortDate(start, false)}`
-    }));
-  });
-  protected readonly changeText = computed(() => {
-    const stretches = this.stretches();
-    const day = (date: string) => formatShortDate(date, false);
-    return stretches.map((stretch, index) => {
-      if (index === 0) return `Del ${Number(stretch.from.slice(8, 10))} al ${day(stretch.to)} se calculó con ${stretch.label}`;
-      if (index === stretches.length - 1) return `desde el ${day(stretch.from)}, con ${stretch.label}`;
-      return `del ${Number(stretch.from.slice(8, 10))} al ${day(stretch.to)}, con ${stretch.label}`;
-    }).join('; ') + '.';
-  });
-  /** First day of the newest version: "Ver qué cambió" opens it in the parameters. */
-  protected readonly newestVersionFrom = computed(() => {
-    const versions = this.sheet()?.parameterVersions ?? [];
-    return versions[versions.length - 1] ?? '';
-  });
 
   constructor() {
     effect(() => {

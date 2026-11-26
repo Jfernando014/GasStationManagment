@@ -1732,7 +1732,7 @@
     }
     .ab--destructive:active:not([disabled]) { background: var(--semantic-red-strong-hover); }
 
-    .ab:active:not([disabled]) { transform: scale(0.98); }
+    .ab:active:not([disabled]) { transform: scale(var(--press-scale, 0.98)); }
     .ab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
     .ab[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
     .ab[aria-busy='true'] { cursor: progress; }

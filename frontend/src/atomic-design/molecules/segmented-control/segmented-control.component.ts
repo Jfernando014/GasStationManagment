@@ -21,7 +21,8 @@ export interface SegmentOption<T> {
       }
     </div>
   `,
-  styleUrl: './segmented-control.component.css'
+  styleUrl: './segmented-control.component.css',
+  host: { '[class.segmented--stretch]': 'stretch()' }
 })
 export class SegmentedControlComponent<T extends string | number> {
   readonly options = input.required<SegmentOption<T>[]>();
@@ -29,6 +30,8 @@ export class SegmentedControlComponent<T extends string | number> {
   /** Accessible name of the group. */
   readonly label = input.required<string>();
   readonly disabled = input(false);
+  /** On a phone the control takes the whole width, with touch-sized buttons. */
+  readonly stretch = input(false);
   readonly valueChange = output<T>();
 
   protected select(value: T): void {

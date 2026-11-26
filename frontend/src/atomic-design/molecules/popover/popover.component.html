@@ -1,0 +1,21 @@
+<button #trigger appButton size="sm" type="button" class="popover-trigger" aria-haspopup="dialog"
+  [attr.aria-expanded]="open()" [attr.aria-controls]="id" (click)="toggle()">
+  <ng-content select="[popoverIcon]" />
+  {{ label() }}
+</button>
+@if (open()) {
+  <button type="button" class="backdrop" tabindex="-1" aria-label="Cerrar" (click)="close(true)"></button>
+}
+<div #panel class="panel" role="dialog" tabindex="-1" [id]="id" [class.is-open]="open()" [attr.aria-label]="label()"
+  [attr.aria-modal]="sheet()" [attr.inert]="open() ? null : ''" (keydown)="keepFocus($event)"
+  [style.width.px]="width()" [style.--top]="position().top + 'px'" [style.--left]="position().left + 'px'"
+  [style.--max-height]="position().maxHeight + 'px'">
+  <div class="sheet-head">
+    <b>{{ label() }}</b>
+    <button appButton variant="ghost" [icon]="true" type="button" aria-label="Cerrar" (click)="close(true)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+    </button>
+  </div>
+  <div class="body"><ng-content /></div>
+</div>

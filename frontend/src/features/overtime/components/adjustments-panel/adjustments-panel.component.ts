@@ -14,7 +14,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { formatShortDate } from '../../../../shared/helpers/format.helpers';
 import { SERVER_ERROR_KEY } from '../../../../shared/helpers/form-control.helpers';
 import { stationToday } from '../../../../shared/helpers/shift-display.helpers';
-import { CATEGORY_HELP } from '../../helpers/overtime-display.helpers';
+import { CATEGORY_HELP, EXTRA_CATEGORIES, formatSignedHours } from '../../helpers/overtime-display.helpers';
 import {
   MAX_REASON_LENGTH, MIN_REASON_LENGTH, OVERTIME_CATEGORIES, OvertimeAdjustment, OvertimeCategory
 } from '../../models/overtime.model';
@@ -94,6 +94,14 @@ export class AdjustmentsPanelComponent {
     category: new FormControl<OvertimeCategory | null>(null, Validators.required),
     hours: new FormControl('', { nonNullable: true, validators: [Validators.required, positiveWholeNumber] }),
     reason: new FormControl('', { nonNullable: true, validators: [Validators.required, reasonLength] })
+  });
+
+  /** What the adjustments add to or take from the overtime; empty when none of them is about overtime. */
+  protected readonly net = computed(() => {
+    const overtime = this.adjustments().filter(item => EXTRA_CATEGORIES.includes(item.category));
+    if (overtime.length === 0) return '';
+    const total = overtime.reduce((sum, item) => sum + (item.direction === 'ADD' ? item.hours : -item.hours), 0);
+    return `${formatSignedHours(total)} h`;
   });
 
   protected readonly views = computed<AdjustmentView[]>(() => this.adjustments().map(item => ({

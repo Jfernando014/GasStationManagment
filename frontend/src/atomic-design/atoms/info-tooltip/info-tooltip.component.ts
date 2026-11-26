@@ -1,4 +1,6 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 const BUBBLE_WIDTH = 260;
 const ARROW_SIZE = 10;
@@ -18,6 +20,7 @@ let nextId = 0;
   selector: 'app-info-tooltip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet, RouterLink],
   templateUrl: './info-tooltip.component.html',
   styleUrl: './info-tooltip.component.css',
   host: {
@@ -41,6 +44,14 @@ export class InfoTooltipComponent {
   readonly inline = input(false);
   /** With `inline`: the content is a term (a sigla) with a dotted underline and a help cursor. */
   readonly term = input(false);
+  /**
+   * With `inline`: the content explains itself on request, with a help cursor and no underline. Its bubble grows as
+   * it appears and a second tap closes it.
+   */
+  readonly help = input(false);
+  /** Makes the trigger a link to this route: hover and focus show the bubble, a click or a tap follows it. */
+  readonly link = input<string[] | null>(null);
+  readonly linkParams = input<Record<string, string | number>>({});
 
   readonly id = `info-tooltip-${nextId++}`;
   protected readonly hovered = signal(false);
@@ -57,6 +68,11 @@ export class InfoTooltipComponent {
   }
 
   protected toggle(): void {
+    // A "help" bubble closes with a second tap, although the button keeps the focus and the hover of a touch screen.
+    if (this.help() && this.pinned()) {
+      this.close();
+      return;
+    }
     this.pinned.update(pinned => !pinned);
     this.place();
   }

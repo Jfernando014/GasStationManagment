@@ -1,4 +1,5 @@
-:host { display: block; min-width: 0; }
+/* The rows adapt to the width of the card, which also depends on what sits beside it. */
+:host { display: block; min-width: 0; container-type: inline-size; }
 
 .card {
   overflow: hidden;
@@ -9,74 +10,138 @@
   animation: rise-in var(--duration-normal) var(--spring) backwards;
 }
 
-.scroll { overflow-x: auto; overscroll-behavior-x: contain; }
-
-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
-
-th, td { padding: 0 5px; text-align: left; vertical-align: middle; }
-th:first-child, td:first-child { padding-left: 16px; }
-th:last-child, td:last-child { padding-right: 16px; }
-
-.num { text-align: right; width: 44px; }
-.category { text-align: right; }
-
-thead th { height: 38px; border-bottom: 1px solid var(--border-main); font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-
-tbody tr {
-  height: 30px;
-  border-bottom: 1px solid #F5F7FA;
-  animation: row-in var(--duration-normal) var(--spring) backwards;
-  animation-delay: calc(var(--i, 0) * 18ms);
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 48px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--surface-subtle);
 }
 
-tbody th.date { font-weight: 600; color: var(--text-heading); white-space: nowrap; }
-tbody td { color: var(--text-heading); }
-tr.rest td, tr.rest th { color: var(--text-light); }
-tr.holiday { background: #FFF8F1; }
+h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
 
-/* El festivo pinta el color en la fila, no en las celdas: la primera columna,
-   que queda fija en pantallas angostas, tiene que heredarlo. */
-@media (max-width: 1024px) {
-  tr.holiday > :first-child { background-color: inherit; }
-}
-.sunday { color: var(--brand-primary-strong); font-weight: 600; }
-.holiday-tag { margin-left: 4px; padding: 1px 7px; font-size: 11px; }
-.zero { color: #CBD5E1; }
-
-.version { text-align: center; white-space: nowrap; }
-.ver { padding: 1px 6px; border-radius: 5px; background: var(--surface-subtle); color: var(--text-muted); font-size: 11px; font-weight: 700; }
-.ver.is-new { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
-
-tfoot tr { height: 34px; border-top: 1px solid var(--border-main); font-weight: 600; }
-tfoot th, tfoot td { color: var(--text-heading); }
-tfoot th { text-align: left; }
-tfoot tr.foot--total { height: 42px; background: #F8FAFC; font-weight: 800; font-size: 14.5px; }
-.negative {
-  display: inline-block;
-  min-width: 34px;
-  padding: 2px 6px;
+.toggle {
+  padding: 4px 6px;
+  border: 0;
   border-radius: 6px;
-  background: var(--semantic-red-subtle);
-  box-shadow: inset 0 0 0 1.5px #FCA5A5;
-  color: var(--semantic-red-strong);
-  font-weight: 800;
-  text-align: right;
+  background: transparent;
+  color: var(--brand-primary-strong);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--spring);
 }
+
+.toggle:hover { text-decoration: underline; }
+.toggle:active { transform: scale(0.97); }
+.toggle:focus-visible, a:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+table, thead, tbody { display: block; width: 100%; }
+table { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.line {
+  display: grid;
+  /* The surcharges have the longest names: their column gets more of the room. */
+  grid-template-columns: 138px 108px 48px minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  padding: 0 16px;
+}
+
+/* A long name wraps inside its column instead of running over the next one. */
+.row ::ng-deep app-dot-value { white-space: normal; }
+
+th, td { display: block; min-width: 0; text-align: left; }
+.hours { text-align: right; }
+.caption { display: none; }
+
+.head { min-height: 40px; border-bottom: 1px solid var(--border-main); }
+.head th { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+
+.row {
+  min-height: 48px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--surface-subtle);
+  animation: row-in 240ms var(--spring) backwards;
+  animation-delay: min(calc(var(--i, 0) * 28ms), 160ms);
+}
+
+tbody tr:last-child { border-bottom: 0; }
+
+.row .date { font-weight: 600; color: var(--text-heading); }
+.row .date.sunday { color: var(--brand-primary-strong); }
+.holiday { margin-left: 4px; padding: 1px 7px; font-size: 11px; }
+.row .hours { font-weight: 700; color: var(--text-heading); }
+
+.is-waiting .date { font-weight: 400; color: var(--text-muted); }
+.is-waiting .hours { font-weight: 400; color: var(--text-muted); }
+.waiting { grid-column: 4 / -1; color: var(--text-muted); }
+.shift app-tag { font-weight: 700; }
+.shift app-tag.tag--gray { color: #475569; }
+/* Today is outlined, like its square in the progress of the fortnight. */
+.shift app-tag.today { background: var(--surface-card); box-shadow: inset 0 0 0 1.5px var(--brand-primary); }
+
+/* Days to come step back; their text is dark so it stays readable at that opacity. */
+.row.is-future { opacity: 0.6; animation-name: row-in-future; }
+.row.is-future .date, .row.is-future .hours, .row.is-future .waiting { color: var(--text-heading); }
+.is-future .shift app-tag { background: transparent; box-shadow: inset 0 0 0 1px var(--jr-cell-border); color: var(--text-heading); }
+
+.note { grid-column: 4 / -1; padding-top: 2px; font-size: 12.5px; color: var(--semantic-amber-strong); }
+
+a { border-radius: 4px; color: var(--brand-primary-strong); font-weight: 600; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.version { display: block; border-bottom: 1px solid var(--surface-subtle); background: #F8FAFC; animation: row-in 240ms var(--spring) backwards; animation-delay: min(calc(var(--i, 0) * 28ms), 160ms); }
+.version td { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 8px 20px; font-size: 13px; color: #475569; }
+.badge { padding: 1px 7px; border-radius: 6px; background: var(--shift-support-subtle); color: var(--shift-support-strong); font-size: 11.5px; font-weight: 700; }
 
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
 }
 
 @keyframes row-in {
   from { opacity: 0; transform: translateY(6px); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .card, tbody tr { animation: none; }
+@keyframes row-in-future {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 0.6; }
 }
 
-/* Tablet y teléfono: la etiqueta del pie abarca tres columnas y también se queda fija. */
-@media (max-width: 1024px) {
-  tfoot th[colspan] { position: sticky; left: 0; z-index: 1; background-color: var(--surface-card); }
-  tfoot tr.foot--total th[colspan] { background-color: #F8FAFC; }
+/*
+ * Tarjeta angosta (teléfono, o junto a la cuenta en un escritorio pequeño): fecha, turno y horas en una línea;
+ * recargos y extra debajo.
+ */
+@container (max-width: 619px) {
+  .card-head { padding: 6px 14px; }
+  .head { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .line {
+    grid-template-columns: minmax(0, 1fr) auto 46px;
+    column-gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .row .surcharges, .row .extras { display: flex; align-items: baseline; gap: 10px; grid-column: 1 / -1; }
+  .caption { display: block; flex: 0 0 64px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  app-dot-value-list { flex: 1; }
+  .waiting, .note { grid-column: 1 / -1; }
+  .version td { padding-left: 14px; padding-right: 14px; }
+}
+
+/* Teléfono: objetivos táctiles. */
+@media (max-width: 639.98px) {
+  .toggle { min-height: 44px; padding: 0; }
+  .waiting a, .note a { display: inline-flex; align-items: center; min-height: 44px; }
+  .version a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .row, .version { animation: none; }
+  .toggle { transition: none; }
 }

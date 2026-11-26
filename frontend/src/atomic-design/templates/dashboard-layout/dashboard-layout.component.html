@@ -122,7 +122,7 @@
           <a class="sub-item-link sub-nav-item" routerLink="/personal/turnos" routerLinkActive="active">Malla de
             turnos</a>
           <a class="sub-item-link sub-nav-item" routerLink="/personal/horas-extra"
-            routerLinkActive="active" #overtimeNav="routerLinkActive">Horas extra</a>
+            routerLinkActive="active">Horas extra</a>
         </div>
       </div>
 
@@ -165,7 +165,7 @@
             routerLinkActive="active" #performanceNav="routerLinkActive"
             [attr.aria-current]="performanceNav.isActive ? 'page' : null">Rendimiento</a>
           <a class="sub-item-link sub-nav-item" routerLink="/resultados/incentivos"
-            routerLinkActive="active" #incentivesNav="routerLinkActive">Incentivos</a>
+            routerLinkActive="active">Incentivos</a>
         </div>
       </div>
 
@@ -199,7 +199,7 @@
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/productos"
             routerLinkActive="active">Productos</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/parametros"
-            routerLinkActive="active" #parametersNav="routerLinkActive">Parámetros</a>
+            routerLinkActive="active">Parámetros</a>
           <a class="sub-item-link sub-nav-item" routerLink="/configuracion/backup"
             routerLinkActive="active">Respaldos</a>
         </div>
@@ -230,8 +230,7 @@
       <div class="header-trail">
         <a class="trail-root" routerLink="/">Inicio</a>
         <span class="trail-sep">/</span>
-        <span class="trail-active">{{ gastosNav.isActive ? 'Gastos' : alertsNav.isActive ? 'Alertas de inventario' : reconciliationNav.isActive ? 'Resultados / Conciliaciones' : overtimeNav.isActive ? 'Personal / Horas extra' : parametersNav.isActive ? 'Configuración / Parámetros' : statisticsNav.isActive ? 'Resultados / Estadísticas' : performanceNav.isActive ? 'Resultados / Rendimiento' : incentivesNav.isActive ? 'Resultados / Incentivos' : goalsNav.isActive ? 'Resultados / Metas y cumplimiento' : 'Panel principal'
-          }}</span>
+        <span class="trail-active">@if (trail().section) {<span class="trail-section">{{ trail().section + ' / ' }}</span>}{{ trail().page }}</span>
       </div>
 
       <div class="header-action-tray">

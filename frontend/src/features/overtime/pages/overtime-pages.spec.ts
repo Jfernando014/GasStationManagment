@@ -173,7 +173,7 @@ describe('overtime pages', () => {
     expect(paramsService.getHistory).toHaveBeenCalled();
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('1 de 2');
-    expect(text).toContain('Cambio de parámetros en la quincena');
+    expect(text).toContain('Desde el 10 ago se calcula con los parámetros nuevos.');
     expect(text).toContain('v2');
   });
 
