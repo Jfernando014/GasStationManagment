@@ -1,0 +1,51 @@
+<h3>
+  {{ meta().title }}
+  @if (help()) {
+    <app-info-tooltip [inline]="true" [help]="true" [text]="help()">
+      <span class="question" aria-hidden="true">?</span>
+      <span class="jr-sr">Qué es el {{ meta().name }}</span>
+    </app-info-tooltip>
+  }
+</h3>
+
+@switch (state()) {
+  @case ('loading') {
+    <app-skeleton width="45%" height="30px" />
+    <app-skeleton width="75%" />
+    <app-skeleton width="60%" />
+  }
+  @case ('error') {
+    <p class="note" role="alert">No pudimos cargar este valor.</p>
+    <button type="button" appButton variant="secondary" size="sm" class="action" (click)="load()">Intentar de nuevo</button>
+  }
+  @default {
+    <b class="value" [class.is-missing]="summary().missing">{{ summary().value }}</b>
+    <p class="note">
+      {{ summary().since }}@if (summary().since && scope()) { <span> · {{ scope() }}</span> }
+      <span class="second">
+        @if (summary().previous) {
+          {{ summary().previous }} ·
+        }
+        <button type="button" class="link" (click)="historyOpen.set(true)">Historial</button>
+      </span>
+      @if (summary().today) {
+        <span class="second">{{ summary().today }}</span>
+      }
+      @if (summary().next) {
+        <span class="second">{{ summary().next }}</span>
+      }
+    </p>
+    <button type="button" appButton variant="secondary" size="sm" class="action" [disabled]="!canEdit()"
+      [attr.aria-label]="'Nuevo valor de ' + meta().name" (click)="panelOpen.set(true)">Nuevo valor</button>
+  }
+}
+
+<app-side-panel [open]="historyOpen()" heading="Historial" [description]="meta().title" [width]="430"
+  (closed)="historyOpen.set(false)">
+  @if (historyOpen()) {
+    <app-sales-parameter-history [parameterKey]="parameterKey()" [values]="values()" [today]="today" />
+  }
+</app-side-panel>
+
+<app-sales-parameter-panel [open]="panelOpen()" [parameterKey]="parameterKey()" [values]="values()" [today]="today"
+  (closed)="panelOpen.set(false)" (saved)="onSaved($event)" />

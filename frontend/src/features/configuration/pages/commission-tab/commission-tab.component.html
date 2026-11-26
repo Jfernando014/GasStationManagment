@@ -1,0 +1,48 @@
+<header class="title-row">
+  <div>
+    <h1>Comisión de tarjeta (Credibanco)</h1>
+    <p>Lo que cobra Credibanco sobre las ventas con tarjeta. Cada valor rige desde su fecha hasta que cargues otro.</p>
+  </div>
+  @if (!canEdit) {
+    <app-tag variant="gray">Solo lectura</app-tag>
+  }
+  <button type="button" appButton variant="primary" class="new-value" [disabled]="!canEdit || state() !== 'ready'"
+    (click)="panelOpen.set(true)">+ Nuevo valor</button>
+</header>
+
+@switch (state()) {
+  @case ('loading') {
+    <section class="card" aria-busy="true">
+      <app-skeleton width="120px" height="32px" />
+      <app-skeleton width="40%" />
+      <app-skeleton height="30px" />
+      <app-skeleton height="30px" />
+    </section>
+  }
+  @case ('error') {
+    <section class="card">
+      <app-empty-state tone="error" heading="No pudimos cargar la comisión"
+        description="Revisa tu conexión e inténtalo de nuevo.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+        <button type="button" appButton variant="primary" (click)="load()">Intentar de nuevo</button>
+      </app-empty-state>
+    </section>
+  }
+  @default {
+    <section class="card">
+      @if (current(); as value) {
+        <div class="current">
+          <b>{{ value.text }}</b>
+          <span>{{ value.since }}</span>
+        </div>
+      } @else {
+        <p class="none">Hoy no hay una comisión vigente.</p>
+      }
+      <app-sales-parameter-history [parameterKey]="key" [values]="values()" [today]="today" [highlight]="highlight()" />
+    </section>
+  }
+}
+
+<app-sales-parameter-panel [open]="panelOpen()" [parameterKey]="key" [values]="values()" [today]="today"
+  (closed)="panelOpen.set(false)" (saved)="onSaved($event)" />
