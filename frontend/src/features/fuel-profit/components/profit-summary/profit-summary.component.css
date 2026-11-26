@@ -1,0 +1,67 @@
+:host { display: flex; flex-direction: column; gap: 12px; min-width: 0; container-type: inline-size; }
+
+.banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.banner > span { flex: 1 1 320px; min-width: 0; }
+.fix { flex-shrink: 0; border-color: #FDBA74; background: #FFF7F0; color: var(--brand-primary-strong); text-decoration: none; }
+
+/* Narrow: the main figure on top and the other three under it. */
+.figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--border-main);
+  box-shadow: var(--shadow-card);
+  gap: 1px;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--surface-card);
+  animation: figure-in 420ms var(--spring) calc(var(--i) * 60ms) backwards;
+}
+
+.figure--main, .figure:last-child { grid-column: 1 / -1; }
+
+.label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+
+.figure b {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-heading);
+  overflow-wrap: anywhere;
+}
+
+.figure--main b { font-size: 28px; color: var(--semantic-green-strong); }
+.figure--commission b { color: var(--semantic-amber-strong); }
+.figure b.is-negative { color: var(--semantic-red-strong); }
+.figure b.is-undefined { font-family: inherit; font-size: 17px; font-weight: 700; color: var(--text-light); }
+
+small { font-size: 12.5px; line-height: 1.4; color: var(--text-muted); }
+small a { font-weight: 600; color: var(--brand-primary-strong); }
+
+@keyframes figure-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@container (min-width: 860px) {
+  .figures { grid-template-columns: 1.25fr 1fr 1fr 1fr; }
+  .figure--main, .figure:last-child { grid-column: auto; }
+  .figure { padding: 14px 20px; }
+  .figure b { font-size: 22px; }
+  .figure--main b { font-size: 26px; }
+}
+
+@media (max-width: 640px) {
+  .fix { flex: 1 1 100%; min-height: 44px; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure { animation: none; }
+}

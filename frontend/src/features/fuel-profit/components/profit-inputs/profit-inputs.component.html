@@ -1,0 +1,69 @@
+@if (!canEdit()) {
+  <app-warning-panel tone="neutral">
+    <b>Estás en modo consulta.</b> Solo el administrador puede cambiar el flete, el costo financiero y el % con
+    tarjeta. Los valores que ves son los que usa el cálculo.
+  </app-warning-panel>
+}
+
+<div class="columns">
+  <div class="column">
+    <section class="block" style="--i: 0" aria-labelledby="profit-prices-title">
+      <header class="block-head">
+        <h2 id="profit-prices-title">Venta y compra por galón</h2>
+        <a routerLink="/configuracion/precios-combustible">Editar en Precios de combustible →</a>
+      </header>
+      <p class="note">Valores de {{ month() }}. Si cambiaron a mitad de mes, cada día usa el suyo.</p>
+      <div class="prices" role="table" aria-labelledby="profit-prices-title">
+        <div class="price-row head" role="row">
+          <span role="columnheader">Combustible</span>
+          <span role="columnheader">Venta</span>
+          <span role="columnheader">Compra</span>
+          <span role="columnheader">Venta − compra</span>
+        </div>
+        @for (row of prices(); track row.type) {
+          <div class="price-row" role="row">
+            <span role="rowheader" class="fuel"><i [style.background]="row.color" aria-hidden="true"></i>{{ row.name }}</span>
+            <span role="cell" [class.is-missing]="row.saleMissing">{{ row.sale }}</span>
+            <span role="cell" [class.is-missing]="row.purchaseMissing">{{ row.purchase }}</span>
+            <b role="cell">{{ row.difference }}</b>
+            @if (row.note) { <small role="cell">{{ row.note }}</small> }
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="block" style="--i: 1" aria-labelledby="profit-commission-title">
+      <h2 id="profit-commission-title">Comisión Credibanco</h2>
+      <p class="rate">
+        <b>{{ commission().rate }}</b>
+        @if (commission().since) { <span>{{ commission().since }}</span> }
+      </p>
+      <p class="note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        Se cambia en <a routerLink="/configuracion/parametros/comision-tarjeta">Configuración › Parámetros</a>
+      </p>
+    </section>
+  </div>
+
+  <div class="column">
+    <section class="block" style="--i: 2" aria-label="Flete y costo financiero">
+      <div class="pair">
+        <app-sales-parameter-card parameterKey="freight-per-gallon" scope="los 4 combustibles"
+          [asOf]="report().referenceDate" [canEdit]="canEdit()" (changed)="parameterChanged.emit()" />
+        <app-sales-parameter-card parameterKey="financial-cost-per-gallon" scope="los 4 combustibles"
+          help="Costo financiero del combustible por galón; confirmar con administración qué incluye."
+          [asOf]="report().referenceDate" [canEdit]="canEdit()" (changed)="parameterChanged.emit()" />
+      </div>
+      <p class="note">Se muestra el valor vigente al final del mes visto (hoy, si el mes sigue en curso). En el
+        cálculo, cada día del mes usó el suyo.</p>
+    </section>
+
+    <section class="block" style="--i: 3">
+      <app-card-percentage [report]="report()" [canEdit]="canEdit()" [refreshing]="refreshing()"
+        (saved)="cardSettingSaved.emit()" />
+    </section>
+  </div>
+</div>

@@ -1,0 +1,39 @@
+@if (incomplete(); as missing) {
+  <app-warning-panel>
+    <div class="banner">
+      <span><b>La ganancia del mes está sin definir.</b> {{ missing.text }}</span>
+      @if (missing.fix; as fix) {
+        @if (fix.place === 'prices') {
+          <a appButton size="sm" class="fix" [routerLink]="fix.link" [queryParams]="fix.queryParams">{{ fix.label }}</a>
+        } @else {
+          <button type="button" appButton size="sm" class="fix" (click)="openInputs.emit()">{{ fix.label }}</button>
+        }
+      }
+    </div>
+  </app-warning-panel>
+}
+
+<section class="figures" aria-label="Cifras del mes">
+  @for (figure of figures(); track $index) {
+    <div [class]="'figure figure--' + figure.tone" [style.--i]="$index">
+      <span class="label">{{ figure.label }}</span>
+      @if (figure.value !== null) {
+        <b [class.is-negative]="figure.tone !== 'commission' && figure.value < 0">
+          <app-animated-number [value]="figure.value" [format]="figure.format" />
+        </b>
+      } @else {
+        <b class="is-undefined">{{ undefinedFigure }}</b>
+      }
+      <small>
+        {{ figure.note }}
+        @if ($index === 3 && someWithoutTarget()) {
+          · <a routerLink="/resultados/metas">Metas</a>
+        }
+      </small>
+    </div>
+  }
+</section>
+
+<app-profit-fuel-list [report]="report()" (openInputs)="openInputs.emit()" />
+
+<app-profit-formula [report]="report()" />

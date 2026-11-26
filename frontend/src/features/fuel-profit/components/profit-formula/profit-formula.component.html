@@ -1,0 +1,31 @@
+<header>
+  <h2>Cómo se calcula</h2>
+  @if (options().length > 1) {
+    <app-segmented-control label="Combustible del ejemplo" [options]="options()" [value]="selected()"
+      (valueChange)="selected.set($event)" />
+  }
+</header>
+
+@if (parts(); as gallon) {
+  <p class="lead">1 galón de {{ fuel().name }} a <b>{{ gallon.sale }}</b>, con los valores del {{ referenceDate() }}:</p>
+
+  <div class="split" role="img" [attr.aria-label]="gallon.summary">
+    <span class="purchase">Compra</span>
+    <span class="freight"></span>
+    <span class="financial"></span>
+    <span class="left" [class.is-loss]="gallon.loses">{{ gallon.loses ? 'Pierde' : 'Queda' }} {{ gallon.left }}</span>
+  </div>
+
+  <ul class="legend">
+    <li><i class="purchase" aria-hidden="true"></i>Compra <b>{{ gallon.purchase }}</b></li>
+    <li><i class="freight" aria-hidden="true"></i>Flete <b>{{ gallon.freight }}</b></li>
+    <li><i class="financial" aria-hidden="true"></i>Costo financiero <b>{{ gallon.financial }}</b></li>
+    <li><i class="left" [class.is-loss]="gallon.loses" aria-hidden="true"></i>{{ gallon.loses ? 'Pierde' : 'Queda' }}
+      <b>{{ gallon.left }}</b></li>
+  </ul>
+} @else {
+  <p class="unavailable">A {{ fuel().name }} le falta un dato: sin él no se puede mostrar el ejemplo.</p>
+}
+
+<p class="rule">Lo que queda de cada galón, con los precios de cada día, se multiplica por los galones de ese día.
+  A la suma se le resta la comisión: {{ commissionRule() }}.</p>

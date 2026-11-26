@@ -1,0 +1,222 @@
+/* Cards by default; the table needs room for seven columns. */
+:host { display: block; min-width: 0; container-type: inline-size; }
+
+ul { margin: 0; padding: 0; list-style: none; }
+
+.list > ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.item, .total {
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.item, .total { animation: row-in 360ms var(--spring) calc(var(--i) * 45ms + 160ms) backwards; }
+
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'fuel fuel chevron'
+    'gallons gallons gallons'
+    'before commission after';
+  align-items: center;
+  gap: 8px 8px;
+  padding: 12px 14px;
+}
+
+.grid.is-incomplete { grid-template-areas: 'fuel fuel chevron' 'gallons gallons gallons' 'missing missing missing'; }
+.total { grid-template-areas: 'fuel fuel fuel' 'gallons gallons gallons' 'before commission after'; }
+.head { display: none; }
+
+/* Covers the fuel, so a click anywhere opens its days; links and buttons sit above it. */
+.toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.toggle:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
+.row a, .c-missing button { position: relative; z-index: 2; }
+
+h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.c-fuel { grid-area: fuel; }
+.c-fuel i { width: 9px; height: 9px; border-radius: 3px; background: var(--fuel); }
+.c-gallons { grid-area: gallons; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.c-sales { grid-area: sales; }
+.c-before { grid-area: before; }
+.c-commission { grid-area: commission; }
+.c-after { grid-area: after; }
+.c-target { grid-area: target; }
+.c-missing { grid-area: missing; }
+.c-chevron { grid-area: chevron; justify-self: end; color: var(--text-light); transition: transform var(--duration-normal) var(--spring); }
+.item.is-open .c-chevron { transform: rotate(180deg); }
+/* On cards these two only show inside the opened fuel. */
+.grid .c-sales, .grid .c-target { display: none; }
+
+.c-gallons b { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text-heading); }
+.c-gallons small { font-size: 12px; color: var(--text-muted); }
+.row a { font-weight: 600; color: var(--brand-primary-strong); }
+
+.meter { display: block; height: 5px; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-subtle); }
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-primary);
+  transform-origin: left center;
+  animation: meter-grow 640ms var(--spring) calc(var(--i) * 60ms + 260ms) backwards;
+}
+
+.meter span.is-reached { background: var(--semantic-green); }
+
+.figure { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text-heading); }
+.label { font-size: 11px; color: var(--text-muted); }
+.figure > :last-child { overflow-wrap: anywhere; }
+.commission { color: var(--semantic-amber-strong); }
+.figure .is-undefined { color: var(--text-light); font-size: 13px; font-weight: 500; }
+.figure .is-negative { color: var(--semantic-red-strong); }
+
+.c-missing {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--semantic-amber-subtle);
+  font-size: 13px;
+  color: #92400E;
+}
+
+.c-missing app-tag { background: #FEF3C7; }
+.c-missing ul { display: flex; flex: 1 1 200px; flex-direction: column; gap: 4px; min-width: 0; }
+.c-missing li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+
+.c-missing button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-primary-strong);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.c-missing button:focus-visible, .row a:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 4px; }
+
+.detail-body {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--surface-subtle);
+  animation: detail-in var(--duration-normal) var(--spring) backwards;
+}
+
+.extra { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 10px; }
+.extra dt { font-size: 11px; color: var(--text-muted); }
+.extra dd { margin: 0; font-size: 14px; font-weight: 600; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+
+.total { margin-top: 10px; background: #F8FAFC; font-weight: 700; }
+.total .figure > :last-child { font-weight: 700; }
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes meter-grow {
+  from { transform: scaleX(0); }
+}
+
+@keyframes detail-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+/* Tablet: two cards per line. */
+@container (min-width: 620px) {
+  .list > ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (min-width: 900px) {
+  .list {
+    overflow: hidden;
+    border: 1px solid var(--border-main);
+    border-radius: 14px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .list > ul { display: block; }
+
+  .item, .total { border: 0; border-radius: 0; box-shadow: none; }
+  .item { border-bottom: 1px solid var(--surface-subtle); }
+
+  .grid,
+  .grid.is-incomplete,
+  .total {
+    grid-template-columns: minmax(104px, 0.9fr) minmax(150px, 1.3fr) repeat(5, minmax(0, 1fr)) 20px;
+    column-gap: 12px;
+    padding: 10px 16px;
+  }
+
+  .grid, .total { grid-template-areas: 'fuel gallons sales before commission after target chevron'; }
+  .grid.is-incomplete { grid-template-areas: 'fuel gallons sales missing missing missing missing chevron'; }
+  .row { min-height: 64px; box-sizing: border-box; transition: background-color var(--duration-fast) var(--spring-fast); }
+  .row:not(.total):hover { background: #FAFBFC; }
+
+  .head {
+    display: grid;
+    grid-template-areas: 'fuel gallons sales before commission after target chevron';
+    min-height: 44px;
+    border-bottom: 1px solid var(--border-main);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text-muted);
+  }
+
+  .head .c-fuel, .head .c-gallons { display: block; font-size: 12px; }
+  .head.grid .c-sales, .head.grid .c-target { display: block; }
+  .head .c-sales, .head .c-before, .head .c-commission, .head .c-after, .head .c-target { text-align: right; }
+
+  h3 { font-size: 14px; font-weight: 600; }
+  .grid .c-sales, .grid .c-target { display: flex; }
+  .figure { text-align: right; }
+
+  /* The column names are above: each figure keeps its own only for screen readers. */
+  .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .detail-body { padding: 8px 16px 14px; background: #FCFDFE; }
+  .extra { display: none; }
+  .total { margin-top: 0; }
+}
+
+@media (max-width: 640px) {
+  .c-missing button, .c-missing a { min-height: 36px; display: inline-flex; align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item, .total, .meter span, .detail-body { animation: none; }
+  .c-chevron, .row { transition: none; }
+}

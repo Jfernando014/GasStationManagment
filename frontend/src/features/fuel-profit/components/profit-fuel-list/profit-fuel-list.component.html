@@ -1,0 +1,134 @@
+<div class="list">
+  <!-- Only names the columns of the table; each figure also carries its own name. -->
+  <div class="grid head" aria-hidden="true">
+    <span class="c-fuel">Combustible</span>
+    <span class="c-gallons">Galones y meta</span>
+    <span class="c-sales">Ventas</span>
+    <span class="c-before">Antes de comisión</span>
+    <span class="c-commission">Comisión</span>
+    <span class="c-after">Después de comisión</span>
+    <span class="c-target">Si se cumple la meta</span>
+  </div>
+
+  <ul>
+    @for (row of rows(); track row.type) {
+      <li class="item" [class.is-open]="open().has(row.type)" [style.--fuel]="row.color" [style.--i]="$index">
+        <div class="grid row" [class.is-incomplete]="!row.complete">
+          <button type="button" class="toggle" [attr.aria-expanded]="open().has(row.type)"
+            [attr.aria-controls]="'profit-days-' + row.type" [attr.aria-label]="'Ver por día: ' + row.name"
+            (click)="toggle(row.type)"></button>
+
+          <h3 class="c-fuel"><i aria-hidden="true"></i>{{ row.name }}</h3>
+
+          <div class="c-gallons">
+            <span class="label">Galones</span>
+            <b>{{ row.gallons }}</b>
+            @if (row.target; as target) {
+              <span class="meter" aria-hidden="true">
+                <span [class.is-reached]="target.reached" [style.width.%]="target.fill"></span>
+              </span>
+              <small>{{ target.text }}</small>
+            } @else {
+              <small>{{ noTarget }} · <a routerLink="/resultados/metas">Metas</a></small>
+            }
+          </div>
+
+          <div class="c-sales figure">
+            <span class="label">Ventas</span>
+            <span>{{ row.sales }}</span>
+          </div>
+
+          @if (row.complete) {
+            <div class="c-before figure">
+              <span class="label">Antes de comisión</span>
+              <span [class.is-undefined]="isUndefined(row.before)">{{ row.before }}</span>
+            </div>
+            <div class="c-commission figure">
+              <span class="label">Comisión</span>
+              <span class="commission" [class.is-undefined]="isUndefined(row.commission)">{{ row.commission }}</span>
+            </div>
+            <div class="c-after figure">
+              <span class="label">Después de comisión</span>
+              <b [class.is-undefined]="isUndefined(row.after)" [class.is-negative]="row.negative">{{ row.after }}</b>
+            </div>
+            <div class="c-target figure">
+              <span class="label">Si se cumple la meta</span>
+              <span [class.is-undefined]="isUndefined(row.targetProfit)">{{ row.targetProfit }}</span>
+            </div>
+          } @else {
+            <div class="c-missing">
+              <app-tag variant="amber">Incompleto</app-tag>
+              <ul>
+                @for (note of row.missing; track note.datum) {
+                  <li>
+                    <span>Falta <b>{{ note.text }}</b></span>
+                    @if (note.fix.place === 'prices') {
+                      <a [routerLink]="note.fix.link" [queryParams]="note.fix.queryParams">Cargar en Precios →</a>
+                    } @else {
+                      <button type="button" (click)="openInputs.emit()">Ir a Datos del cálculo →</button>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <svg class="c-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </div>
+
+        <div class="detail" [id]="'profit-days-' + row.type">
+          @if (open().has(row.type)) {
+            <div class="detail-body">
+              <!-- On cards these two figures only show here. -->
+              <dl class="extra">
+                <div><dt>Ventas</dt><dd>{{ row.sales }}</dd></div>
+                @if (row.complete) {
+                  <div><dt>Si se cumple la meta</dt><dd>{{ row.targetProfit }}</dd></div>
+                }
+              </dl>
+              <app-profit-day-detail [days]="row.source.days" [fuelName]="row.name" />
+            </div>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (total(); as sum) {
+    <div class="grid row total" [style.--i]="rows().length">
+      <h3 class="c-fuel">Total del mes</h3>
+      <div class="c-gallons">
+        <span class="label">Galones</span>
+        <b>{{ sum.gallons }}</b>
+        @if (sum.target; as target) {
+          <span class="meter" aria-hidden="true">
+            <span [class.is-reached]="target.reached" [style.width.%]="target.fill"></span>
+          </span>
+          <small>{{ target.text }}</small>
+        } @else {
+          <small>{{ sum.targetCount }}</small>
+        }
+      </div>
+      <div class="c-sales figure"><span class="label">Ventas</span><span>{{ sum.sales }}</span></div>
+      <div class="c-before figure">
+        <span class="label">Antes de comisión</span>
+        <span [class.is-undefined]="isUndefined(sum.before)">{{ sum.before }}</span>
+      </div>
+      <div class="c-commission figure">
+        <span class="label">Comisión</span>
+        <span class="commission" [class.is-undefined]="isUndefined(sum.commission)">{{ sum.commission }}</span>
+      </div>
+      <div class="c-after figure">
+        <span class="label">Después de comisión</span>
+        <b [class.is-undefined]="isUndefined(sum.after)">{{ sum.after }}</b>
+      </div>
+      <div class="c-target figure">
+        <span class="label">Si se cumple la meta</span>
+        <span [class.is-undefined]="isUndefined(sum.targetProfit)">{{ sum.targetProfit }}</span>
+      </div>
+    </div>
+  }
+</div>
