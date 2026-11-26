@@ -1,0 +1,84 @@
+:host { display: flex; flex-direction: column; gap: 14px; min-width: 0; container-type: inline-size; }
+
+.columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  animation: block-in 380ms var(--spring) calc(var(--i) * 55ms) backwards;
+}
+
+h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+p { margin: 0; }
+a { font-weight: 600; color: var(--brand-primary-strong); }
+
+.block-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
+.block-head a { font-size: 13.5px; }
+.note { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+.note svg { margin-right: 4px; vertical-align: -2px; }
+
+.price-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 1.1fr) repeat(3, minmax(0, 1fr));
+  align-items: center;
+  column-gap: 10px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--surface-subtle);
+  font-size: 14px;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-row > :not(:first-child) { text-align: right; }
+.price-row.head { min-height: 32px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.price-row small { grid-column: 1 / -1; padding-bottom: 6px; font-size: 11.5px; color: var(--semantic-amber-strong); }
+.price-row .is-missing { font-weight: 600; color: var(--semantic-amber-strong); }
+.fuel { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.fuel i { width: 9px; height: 9px; border-radius: 3px; }
+
+.rate { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+
+.rate b {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.rate span { font-size: 13px; color: var(--text-muted); }
+
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pair > * + * { padding-left: 16px; border-left: 1px solid var(--surface-subtle); }
+
+/* Only the opacity: a transform would trap the side panels opened from a block while it comes in. */
+@keyframes block-in {
+  from { opacity: 0; }
+}
+
+@container (min-width: 880px) {
+  .columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 400px) {
+  .pair { grid-template-columns: minmax(0, 1fr); }
+  .pair > * + * { padding: 14px 0 0; border-top: 1px solid var(--surface-subtle); border-left: 0; }
+  .price-row { grid-template-columns: minmax(80px, 1fr) repeat(3, minmax(0, 1fr)); column-gap: 6px; font-size: 12.5px; }
+}
+
+@media (max-width: 640px) {
+  .block { padding: 14px 12px; }
+  .block-head a, .note a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block { animation: none; }
+}

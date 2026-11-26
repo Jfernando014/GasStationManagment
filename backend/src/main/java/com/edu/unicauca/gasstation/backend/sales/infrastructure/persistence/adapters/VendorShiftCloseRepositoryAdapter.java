@@ -85,6 +85,15 @@ public class VendorShiftCloseRepositoryAdapter implements VendorShiftCloseReposi
 
     @Override
     @Transactional(readOnly = true)
+    public List<VendorShiftClose> findByJournalDateBetween(LocalDate from, LocalDate to) {
+        return jpaRepository.findByJournalDateBetweenOrderByJournalDateAscShiftNameAscPumpNumberAsc(from, to)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<VendorShiftClose> findByJournalDateAndVendorDocument(LocalDate journalDate, String vendorDocument) {
         return jpaRepository.findByJournalDateAndVendorDocument(journalDate, vendorDocument)
                 .map(this::toDomain);

@@ -1,4 +1,12 @@
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
+
+/** A complete date; while the year is being typed a date field holds values like "0002-12-01". */
+export const CALENDAR_DAY = /^20\d{2}-\d{2}-\d{2}$/;
+
+/** For the date from which a new value rules. */
+export function startDateValidator(control: AbstractControl<string>): ValidationErrors | null {
+  return CALENDAR_DAY.test(control.value) ? null : { startDate: 'Escribe la fecha completa desde la que rige.' };
+}
 
 /** Error key that holds a message sent by the backend for a field. */
 export const SERVER_ERROR_KEY = 'server';

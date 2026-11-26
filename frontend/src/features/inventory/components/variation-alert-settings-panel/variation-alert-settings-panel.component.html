@@ -1,0 +1,143 @@
+<div class="content" [attr.aria-busy]="status() === 'loading'">
+  @switch (status()) {
+    @case ('loading') {
+      <span class="jr-sr" role="status">Cargando las alertas de variación…</span>
+      <div class="layout">
+        <div class="skeleton-list">
+          @for (card of skeletonCards; track card) {
+            <div class="box skeleton-card">
+              <app-skeleton width="55%" height="18px" />
+              <app-skeleton width="75%" />
+            </div>
+          }
+        </div>
+        @if (!phone()) {
+          <div class="box skeleton-editor">
+            <app-skeleton width="35%" height="20px" />
+            <app-skeleton height="42px" />
+            <app-skeleton height="92px" />
+            <app-skeleton width="50%" height="38px" />
+          </div>
+        }
+      </div>
+    }
+    @case ('error') {
+      <div class="box">
+        <app-empty-state tone="error" heading="No pudimos cargar las alertas de variación"
+          description="Revisa tu conexión e inténtalo de nuevo.">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01" />
+          </svg>
+          <button type="button" appButton variant="primary" (click)="load()">Intentar de nuevo</button>
+        </app-empty-state>
+      </div>
+    }
+    @default {
+      <div class="layout">
+        <app-variation-validity-list [items]="items()" [selectedId]="selectedId()" [disabled]="busy()"
+          (chosen)="choose($event)" (create)="startNew()" />
+
+        @if (!phone()) {
+          <section class="box editor" aria-labelledby="variation-editor-title">
+            <header class="editor-title">
+              <h2 id="variation-editor-title">{{ title() }}</h2>
+              <ng-container *ngTemplateOutlet="recommended" />
+            </header>
+            <ng-container *ngTemplateOutlet="body" />
+            <div class="editor-actions">
+              <ng-container *ngTemplateOutlet="actions" />
+            </div>
+          </section>
+        }
+      </div>
+    }
+  }
+</div>
+
+@if (phone()) {
+  <app-side-panel [open]="sheetOpen()" [heading]="title()" [sheet]="true" (closed)="closeSheet()">
+    <div class="sheet-content">
+      <ng-container *ngTemplateOutlet="recommended" />
+      <ng-container *ngTemplateOutlet="body" />
+    </div>
+    <div slot="footer" class="sheet-footer">
+      <ng-container *ngTemplateOutlet="actions" />
+    </div>
+  </app-side-panel>
+}
+
+@if (deleteTarget()) {
+  <app-confirm-dialog [heading]="deleteHeading()" [message]="deleteText()" confirmLabel="Eliminar"
+    (confirmed)="confirmDelete()" (cancelled)="cancelDelete()" />
+}
+
+<app-toast />
+
+<ng-template #recommended>
+  <button type="button" appButton variant="ghost" size="sm" class="recommended" [disabled]="busy()"
+    (click)="useRecommended()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
+    </svg>
+    Usar valores recomendados
+  </button>
+</ng-template>
+
+<ng-template #body>
+  <form id="variation-setting-form" class="setting-form" [formGroup]="form" novalidate (ngSubmit)="save()">
+    @if (conflict(); as taken) {
+      <app-warning-panel tone="danger" class="banner">
+        <b>Ya existe una configuración desde el {{ formatDate(taken.validFrom) }}.</b> Elige otra fecha o edita esa
+        vigencia.
+        <button type="button" class="banner-link" (click)="choose(taken.id)">
+          Editar la del {{ formatDate(taken.validFrom) }}
+        </button>
+      </app-warning-panel>
+    }
+    @if (generalError()) {
+      <app-warning-panel tone="danger" class="banner">{{ generalError() }}</app-warning-panel>
+    }
+    <app-variation-alert-setting-fields [form]="form" [value]="formValue()" [base]="isBase()"
+      [dateTaken]="conflict() !== null" [dateNote]="dateNote()" />
+  </form>
+</ng-template>
+
+<ng-template #actions>
+  <div class="actions">
+    @if (editing()) {
+      @if (isBase()) {
+        <span class="base-note">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          La base no se puede eliminar
+        </span>
+      } @else {
+        <button type="button" appButton variant="danger" class="delete" [loading]="deleting()" [disabled]="busy()"
+          (click)="requestDelete()">
+          @if (deleting()) {
+            <app-spinner />
+            Eliminando…
+          } @else {
+            Eliminar vigencia
+          }
+        </button>
+      }
+    }
+    <button type="button" appButton variant="secondary" class="cancel" [disabled]="busy()" (click)="cancel()">
+      Cancelar
+    </button>
+    <button type="submit" form="variation-setting-form" appButton variant="primary" class="save"
+      [loading]="saving()" [disabled]="busy()">
+      @if (saving()) {
+        <app-spinner />
+        Guardando…
+      } @else {
+        Guardar
+      }
+    </button>
+  </div>
+</ng-template>

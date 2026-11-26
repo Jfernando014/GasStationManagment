@@ -13,6 +13,11 @@ public interface VendorShiftCloseRepository {
 
     List<VendorShiftClose> findByJournalDate(LocalDate journalDate);
 
+    /** Closes of the journal dates between both (inclusive). The JPA persistence adapter reads them at once. */
+    default List<VendorShiftClose> findByJournalDateBetween(LocalDate from, LocalDate to) {
+        return from.datesUntil(to.plusDays(1)).flatMap(date -> findByJournalDate(date).stream()).toList();
+    }
+
     Optional<VendorShiftClose> findByJournalDateAndVendorDocument(LocalDate journalDate, String vendorDocument);
 
     boolean existsByJournalDate(LocalDate journalDate);

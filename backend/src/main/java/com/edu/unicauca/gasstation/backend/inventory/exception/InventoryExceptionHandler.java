@@ -92,6 +92,11 @@ public class InventoryExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(FuelPurchasePriceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleFuelPurchasePriceNotFound(
+            FuelPurchasePriceNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleProductNotFound(

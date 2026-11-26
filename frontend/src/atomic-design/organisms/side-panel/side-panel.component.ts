@@ -20,6 +20,8 @@ export class SidePanelComponent {
   readonly description = input('');
   /** Ancho del panel en px; el asistente de rotación necesita más espacio que un formulario simple. */
   readonly width = input(420);
+  /** En celular sale desde abajo como una hoja, dejando ver el borde superior de la pantalla. */
+  readonly sheet = input(false);
 
   @Output() readonly closed = new EventEmitter<void>();
   @ViewChild('panel') private readonly panelRef?: ElementRef<HTMLElement>;

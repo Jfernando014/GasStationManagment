@@ -23,7 +23,7 @@ function storedCollapsed(): boolean {
 }
 
 /** Pantallas que ya se adaptan al celular: en ellas la barra lateral pasa a ser un menú desplegable. */
-const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/resultados/rendimiento', '/resultados/conciliaciones', '/personal/turnos', '/jornada/personal'];
+const MOBILE_READY_ROUTES = ['/resultados/estadisticas', '/resultados/rendimiento', '/resultados/conciliaciones', '/personal/turnos', '/jornada/personal', '/configuracion/umbrales', '/resultados/variacion'];
 
 function usesMobileLayout(url: string): boolean {
   return MOBILE_READY_ROUTES.includes(url.split(/[?#]/)[0]);
@@ -40,6 +40,8 @@ const TRAILS: [path: string, section: string, page: string][] = [
   ['/personal/horas-extra', 'Personal', 'Horas extra'],
   ['/resultados/metas', 'Resultados', 'Metas y cumplimiento'],
   ['/resultados/conciliaciones', 'Resultados', 'Conciliaciones'],
+  ['/resultados/ganancia', 'Resultados', 'Ganancia'],
+  ['/resultados/variacion', 'Resultados', 'Variación'],
   ['/resultados/estadisticas', 'Resultados', 'Estadísticas'],
   ['/resultados/rendimiento', 'Resultados', 'Rendimiento'],
   ['/resultados/incentivos', 'Resultados', 'Incentivos'],
@@ -49,6 +51,7 @@ const TRAILS: [path: string, section: string, page: string][] = [
   ['/configuracion/recepciones', 'Configuración', 'Recepciones'],
   ['/configuracion/inspecciones', 'Configuración', 'Inspecciones'],
   ['/configuracion/productos', 'Configuración', 'Productos'],
+  ['/configuracion/precios-combustible', 'Configuración', 'Precios de combustible'],
   ['/configuracion/parametros', 'Configuración', 'Parámetros'],
   ['/configuracion/backup', 'Configuración', 'Respaldos']
 ];

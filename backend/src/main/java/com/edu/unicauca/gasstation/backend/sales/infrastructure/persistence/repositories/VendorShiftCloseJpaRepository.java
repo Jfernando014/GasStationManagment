@@ -16,6 +16,10 @@ public interface VendorShiftCloseJpaRepository extends JpaRepository<VendorShift
     List<VendorShiftCloseEntity> findByJournalDateOrderByShiftNameAscPumpNumberAsc(LocalDate journalDate);
 
     @EntityGraph(attributePaths = {"products"})
+    List<VendorShiftCloseEntity> findByJournalDateBetweenOrderByJournalDateAscShiftNameAscPumpNumberAsc(
+            LocalDate from, LocalDate to);
+
+    @EntityGraph(attributePaths = {"products"})
     Optional<VendorShiftCloseEntity> findByJournalDateAndVendorDocument(LocalDate journalDate, String vendorDocument);
 
     boolean existsByJournalDate(LocalDate journalDate);

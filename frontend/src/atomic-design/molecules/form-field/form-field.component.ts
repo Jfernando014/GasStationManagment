@@ -3,7 +3,10 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { getControlErrorMessage } from '../../../shared/helpers/form-control.helpers';
 
-/** Label + text input + error text (or hint) bound to a reactive form control. */
+/**
+ * Label + text input + error text (or hint) bound to a reactive form control.
+ * Projected content goes under the field, e.g. an error with a link; name its id in `describedBy`.
+ */
 @Component({
   selector: 'app-form-field',
   standalone: true,
@@ -27,6 +30,8 @@ export class FormFieldComponent {
   readonly digitsOnly = input(false);
   readonly placeholder = input('');
   readonly hint = input('');
+  /** Unit written inside the field, at its right end, e.g. "%". The label should name it too. */
+  readonly suffix = input('');
   /** Lowest and highest value for `date`, `month` and `number` fields. */
   readonly min = input<string | null>(null);
   readonly max = input<string | null>(null);
@@ -35,6 +40,8 @@ export class FormFieldComponent {
   readonly autocomplete = input<string | null>(null);
   /** Accessible name of the input when the visible label is shared by several rows, e.g. "Fecha de observación 3". */
   readonly ariaLabel = input<string | null>(null);
+  /** Id of a projected text that explains the field, used when it shows no error or hint of its own. */
+  readonly describedBy = input<string | null>(null);
 
   errorMessage(): string | null {
     return getControlErrorMessage(this.control());

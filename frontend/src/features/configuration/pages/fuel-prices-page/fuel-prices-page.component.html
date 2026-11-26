@@ -1,0 +1,89 @@
+<div class="page">
+  <header class="title-row">
+    <div>
+      <h1>Precios de combustible</h1>
+      <p>Precio de venta y costo de compra por galón. Cada valor rige desde su fecha hasta que cargues otro.</p>
+    </div>
+    @if (status() === 'ready') {
+      <button type="button" appButton variant="primary" class="new-value" (click)="openNew()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        Nuevo valor
+      </button>
+    }
+  </header>
+
+  <div class="content" [attr.aria-busy]="status() === 'loading'">
+    @switch (status()) {
+      @case ('loading') {
+        <span class="jr-sr" role="status">Cargando los precios…</span>
+        <div class="cards">
+          @for (card of skeletonCards; track card) {
+            <div class="box skeleton-card">
+              <app-skeleton width="55%" height="22px" />
+              <app-skeleton height="28px" />
+              <app-skeleton height="28px" />
+              <app-skeleton width="70%" />
+            </div>
+          }
+        </div>
+        <div class="box history columns">
+          @for (column of [0, 1]; track column) {
+            <div class="skeleton-column">
+              <app-skeleton width="40%" height="18px" />
+              @for (row of skeletonRows; track row) {
+                <app-skeleton height="30px" />
+              }
+            </div>
+          }
+        </div>
+      }
+      @case ('error') {
+        <div class="box">
+          <app-empty-state tone="error" heading="No pudimos cargar los precios"
+            description="Revisa tu conexión e inténtalo de nuevo.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01" />
+            </svg>
+            <button type="button" appButton variant="primary" (click)="load()">Intentar de nuevo</button>
+          </app-empty-state>
+        </div>
+      }
+      @default {
+        <div class="cards">
+          @for (fuel of summaries(); track fuel.type) {
+            <app-fuel-price-card [style.--i]="$index" [fuel]="fuel" [selected]="fuel.type === selected()"
+              (chosen)="selectFuel(fuel.type)" (add)="openNew(fuel.type, $event)" />
+          }
+        </div>
+
+        <section class="box history" aria-labelledby="fuel-history-title">
+          <header class="history-title">
+            <h2 id="fuel-history-title">Historial de {{ selectedName() }}</h2>
+            <span>El de arriba es el que rige hoy o el que viene.</span>
+          </header>
+          <div class="columns">
+            <app-fuel-value-history data-history="sale" heading="Precio de venta" kind="sale" [today]="today"
+              [values]="selectedSales()" [highlightId]="highlight()?.kind === 'sale' ? highlight()!.id : null"
+              [emptyHeading]="'Todavía no hay precios de venta para ' + selectedName()"
+              [emptyText]="'Sin este valor no se compara la tirilla en el cierre del vendedor y la ganancia de ' + selectedName() + ' queda sin definir.'"
+              (edit)="openEdit('sale', $event)" (add)="openNew(selected(), 'sale')" />
+            <app-fuel-value-history data-history="purchase" heading="Costo de compra" kind="purchase" [today]="today"
+              [values]="selectedPurchases()"
+              [highlightId]="highlight()?.kind === 'purchase' ? highlight()!.id : null"
+              [emptyHeading]="'Todavía no hay costos de compra para ' + selectedName()"
+              [emptyText]="'Sin este valor, la ganancia de ' + selectedName() + ' y los totales del mes quedan sin definir.'"
+              (edit)="openEdit('purchase', $event)" (add)="openNew(selected(), 'purchase')" />
+          </div>
+        </section>
+      }
+    }
+  </div>
+</div>
+
+<app-fuel-value-panel [open]="panelOpen()" [request]="panelRequest()" [sales]="sales()" [purchases]="purchases()"
+  [today]="today" (closed)="closePanel()" (saved)="onSaved($event)" (editRequested)="openPanel($event)"
+  (outdated)="refresh()" />
+
+<app-toast />

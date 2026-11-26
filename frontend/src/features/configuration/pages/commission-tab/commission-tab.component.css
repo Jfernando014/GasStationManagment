@@ -1,0 +1,36 @@
+:host { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; }
+.title-row > div { flex: 1 1 280px; min-width: 0; }
+h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
+.title-row p { margin: 2px 0 0; font-size: 14px; color: var(--text-muted); }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.current { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
+
+.current b {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.current span { font-size: 13px; color: var(--text-muted); }
+.none { margin: 0; font-weight: 600; color: var(--semantic-amber-strong); }
+
+@media (max-width: 640px) {
+  .new-value { flex: 1 1 100%; min-height: 46px; justify-content: center; }
+  .card { padding: 16px 12px; }
+}

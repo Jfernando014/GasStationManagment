@@ -1,0 +1,84 @@
+:host { display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
+
+.top {
+  display: grid;
+  /* The third column is a bit wider so the escalation chain fits in one line. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 16px 18px;
+}
+
+.top > * { min-width: 0; }
+
+.item-label,
+.top ::ng-deep .item-label { font-size: 13.5px; }
+
+.top p { margin: 0; }
+.top .field-hint { font-size: 12.5px; line-height: 1.4; }
+.top ::ng-deep .field-error { font-size: 12.5px; }
+
+.top ::ng-deep .flat-input { border-color: var(--jr-cell-border); font-size: 15px; font-variant-numeric: tabular-nums; }
+.top ::ng-deep .flat-input:focus { border-color: var(--brand-primary); }
+
+.top ::ng-deep .flat-input.is-invalid {
+  border-color: var(--semantic-red);
+  box-shadow: 0 0 0 3px #FEE2E2;
+  animation: field-shake 300ms var(--spring-fast);
+}
+
+app-number-stepper.is-invalid { border-color: var(--semantic-red); box-shadow: 0 0 0 3px #FEE2E2; }
+
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px dashed var(--jr-cell-border);
+  border-radius: var(--radius-md);
+  background: #F8FAFC;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.review { color: var(--semantic-amber-strong); }
+
+.chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.step { display: inline-flex; align-items: center; height: 22px; padding: 0 6px; border-radius: 6px; white-space: nowrap; }
+.step--review { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); }
+.step--help { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
+.step--alarm { background: var(--semantic-red-subtle); color: var(--semantic-red-strong); }
+
+@keyframes field-shake {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@container (max-width: 540px) {
+  .top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 420px) {
+  .top { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .locked { height: 46px; font-size: 16px; }
+  .top ::ng-deep .flat-input { height: 46px; font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top ::ng-deep .flat-input.is-invalid { animation: none; }
+}

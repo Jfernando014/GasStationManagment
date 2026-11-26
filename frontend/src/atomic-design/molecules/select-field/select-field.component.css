@@ -31,6 +31,14 @@
   white-space: nowrap;
 }
 
+.select-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 3px;
+}
+
 .select-chevron {
   flex-shrink: 0;
   color: var(--text-muted);

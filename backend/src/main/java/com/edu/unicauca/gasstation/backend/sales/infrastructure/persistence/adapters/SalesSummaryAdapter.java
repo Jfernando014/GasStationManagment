@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,6 +33,14 @@ public class SalesSummaryAdapter implements SalesSummaryPort {
             return Optional.empty();
         }
         return sellerCloseQuery.findDaySummary(journalDate).map(this::toSummary);
+    }
+
+    @Override
+    public List<SalesSummary> findByJournalDateRange(LocalDate from, LocalDate to) {
+        if (from == null || to == null) {
+            return List.of();
+        }
+        return sellerCloseQuery.findDaySummaries(from, to).stream().map(this::toSummary).toList();
     }
 
     private SalesSummary toSummary(DaySummary day) {

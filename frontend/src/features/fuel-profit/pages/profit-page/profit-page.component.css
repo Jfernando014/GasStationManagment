@@ -1,0 +1,73 @@
+:host { display: block; min-width: 0; }
+
+.page {
+  /* Keeps the texts that only screen readers get inside the scrolling area. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1192px;
+  margin: 0 auto;
+  padding: 22px 36px 36px;
+}
+
+.title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.titles { flex: 1 1 320px; min-width: 0; }
+h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
+.titles p { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+
+.month { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+.month app-month-stepper { order: 1; }
+
+.panel { min-width: 0; }
+
+/* The content of a tab or of a new month fades in. */
+.enter { animation: panel-in var(--duration-normal) var(--spring) backwards; }
+/* "Datos del cálculo" holds side panels, which a transform would trap: it only fades. */
+app-profit-inputs.enter { animation-name: panel-fade; }
+
+.box {
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.state app-empty-state { display: flex; padding: 56px 24px; }
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.skeleton-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; padding: 16px 20px; }
+.skeleton-figures > div { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-rows { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; }
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes panel-fade {
+  from { opacity: 0; }
+}
+
+@media (max-width: 1024px) {
+  .page { padding: 18px 16px 28px; }
+}
+
+@media (max-width: 640px) {
+  .page { gap: 12px; padding: 14px 0 28px; }
+  .title-row, .titles { padding: 0 4px; }
+  .titles { flex-basis: auto; padding: 0; }
+  .titles p { display: none; }
+  .month { width: 100%; justify-content: space-between; }
+  .month app-month-stepper { order: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter, app-profit-inputs.enter { animation: none; }
+}

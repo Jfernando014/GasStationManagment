@@ -1,0 +1,27 @@
+:host { display: block; height: 110px; }
+
+svg { display: block; width: 100%; height: 100%; }
+
+.zero { stroke: #CBD5E1; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.gap { stroke: #CBD5E1; stroke-width: 1.5; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+
+.bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-grow 560ms var(--spring) backwards;
+}
+
+.bar--down { fill: var(--shortage-bar); transform-origin: top; }
+.bar--up { fill: var(--surplus-bar); }
+.bar--zero { fill: #CBD5E1; }
+
+.hit { fill: transparent; }
+g:hover .bar { opacity: 0.75; }
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { animation: none; }
+}

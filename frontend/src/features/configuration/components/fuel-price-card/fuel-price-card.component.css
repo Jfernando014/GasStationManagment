@@ -1,0 +1,156 @@
+:host {
+  display: block;
+  min-width: 0;
+  animation: card-in 380ms var(--spring) calc(var(--i, 0) * 60ms) backwards;
+  --sparkline-delay: calc(var(--i, 0) * 90ms + 250ms);
+}
+
+.card {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 180ms var(--spring),
+    box-shadow 180ms var(--spring),
+    border-color var(--duration-fast) var(--spring-fast);
+}
+
+.card.is-selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px #FFE3CC;
+}
+
+@media (hover: hover) {
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(11, 25, 44, 0.1); }
+  .card.is-selected:hover { box-shadow: 0 0 0 3px #FFE3CC, 0 10px 24px rgba(11, 25, 44, 0.1); }
+}
+
+/* Covers the card, so a click or a tap anywhere picks the fuel. */
+.pick {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pick:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 3px; }
+
+.top { display: flex; align-items: center; gap: 10px; }
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--fuel) 13%, white);
+  color: color-mix(in srgb, var(--fuel) 80%, black);
+}
+
+.names { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.names h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.names small { font-size: 11px; color: var(--text-muted); }
+
+.line { margin-left: auto; color: var(--fuel); }
+
+/* Name and figure share a line; how it changed goes under them, across the whole card. */
+.value {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
+  min-height: 42px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.trend { grid-column: 1 / -1; font-style: normal; font-size: 11px; font-weight: 600; line-height: 1.3; }
+
+.value b {
+  justify-self: end;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-heading);
+  white-space: nowrap;
+}
+
+.missing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: 4px 6px 4px 10px;
+  border-radius: 9px;
+  background: var(--semantic-amber-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--semantic-amber-strong);
+}
+
+.missing small { display: block; font-size: 11px; font-weight: 500; }
+
+.missing button {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--brand-primary-strong);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.missing button:hover { background: var(--surface-card); }
+.missing button:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+
+.margin {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-main);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.margin b { font-size: 14px; color: var(--semantic-green-strong); font-variant-numeric: tabular-nums; }
+.margin b.is-negative { color: var(--semantic-red-strong); }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@media (max-width: 640px) {
+  .missing button { min-height: 44px; padding: 0 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host { animation: none; }
+  .card { transition: none; }
+  .card:hover { transform: none; }
+}

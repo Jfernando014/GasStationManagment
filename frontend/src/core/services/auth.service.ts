@@ -6,6 +6,14 @@ import { getApiBaseUrl } from '../config/api-base';
 
 const TOKEN_KEY = 'token';
 
+interface TokenClaims {
+  sub?: string;
+  exp?: number;
+  role?: unknown;
+  roles?: unknown;
+  authorities?: unknown;
+}
+
 export interface UserProfileSummary {
   username: string;
   displayName: string;
@@ -85,6 +93,19 @@ export class AuthService {
     };
   }
 
+  /**
+   * Whether the user may change what only the administrator can. It is the single place that knows the role: when the
+   * token names one (`role`, `roles` or `authorities`) it must include ADMIN. Today the backend sends none and
+   * ADMIN is its only role, so a token without a role counts as administrator. The backend checks every write.
+   */
+  isAdmin(): boolean {
+    const claims = this.readClaims();
+    const named = [claims?.role, claims?.roles, claims?.authorities]
+      .flat()
+      .filter((role): role is string => typeof role === 'string');
+    return named.length === 0 || named.some(role => role.replace(/^ROLE_/, '') === 'ADMIN');
+  }
+
   /** Reads the `exp` claim of the JWT payload without verifying the signature. */
   private isExpired(token: string): boolean {
     const claims = this.decodePayload(token);
@@ -92,18 +113,18 @@ export class AuthService {
     return claims.exp * 1000 <= Date.now();
   }
 
-  private readClaims(): { sub?: string; exp?: number } | null {
+  private readClaims(): TokenClaims | null {
     const token = this.getToken();
     return token ? this.decodePayload(token) : null;
   }
 
-  private decodePayload(token: string): { sub?: string; exp?: number } | null {
+  private decodePayload(token: string): TokenClaims | null {
     const payload = token.split('.')[1];
     if (!payload) return null;
     try {
       const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-      return JSON.parse(atob(padded)) as { sub?: string; exp?: number };
+      return JSON.parse(atob(padded)) as TokenClaims;
     } catch {
       return null;
     }

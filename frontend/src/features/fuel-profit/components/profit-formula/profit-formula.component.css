@@ -1,0 +1,70 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  max-width: 760px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
+h2 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-heading); }
+header app-segmented-control { max-width: 100%; }
+
+p { margin: 0; }
+.lead { font-size: 13px; color: var(--text-muted); }
+.lead b { color: var(--text-heading); }
+
+/* The purchase is cut short on purpose: drawn to scale, the small costs could not be seen. */
+.split { display: flex; gap: 2px; height: 24px; overflow: hidden; border-radius: 7px; }
+
+.split span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #FFFFFF;
+  transform-origin: left center;
+  animation: split-grow 640ms var(--spring) both;
+}
+
+.split .purchase { flex: 0 0 40%; color: #334155; }
+.split .freight { flex: 0 0 12%; animation-delay: 110ms; }
+.split .financial { flex: 0 0 8%; animation-delay: 220ms; }
+.split .left { flex: 1; animation-delay: 330ms; }
+
+.purchase { background: repeating-linear-gradient(135deg, #CBD5E1 0 5px, #E2E8F0 5px 10px); }
+.freight { background: #94A3B8; }
+.financial { background: #475569; }
+.left { background: var(--semantic-green-strong); }
+.left.is-loss { background: var(--semantic-red-strong); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--text-muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; }
+.legend b { color: var(--text-heading); }
+
+.unavailable {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--semantic-amber-subtle);
+  font-size: 13px;
+  color: var(--semantic-amber-strong);
+}
+
+.rule { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+
+@keyframes split-grow {
+  from { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split span { animation: none; }
+}

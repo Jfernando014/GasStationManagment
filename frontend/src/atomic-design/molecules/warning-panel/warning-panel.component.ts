@@ -31,9 +31,19 @@ let nextId = 0;
     </div>
   `,
   styleUrl: './warning-panel.component.css',
-  host: { role: 'status', '[class.warning-panel--touch]': 'touchTarget()' }
+  host: {
+    role: 'status',
+    '[class.warning-panel--touch]': 'touchTarget()',
+    '[class.warning-panel--neutral]': "tone() === 'neutral'",
+    '[class.warning-panel--danger]': "tone() === 'danger'"
+  }
 })
 export class WarningPanelComponent {
+  /**
+   * Gray dot for a notice that warns about nothing, e.g. that the screen is read only; red bar for an action that
+   * was refused.
+   */
+  readonly tone = input<'warning' | 'neutral' | 'danger'>('warning');
   /** Adds the button that folds the details. */
   readonly collapsible = input(false);
   /** On a phone the button that folds the details is at least 44 px high. */

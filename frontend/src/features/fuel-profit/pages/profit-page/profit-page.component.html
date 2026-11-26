@@ -1,0 +1,86 @@
+<div class="page">
+  <header class="title-row">
+    <div class="titles">
+      <h1>Ganancia por combustible</h1>
+      <p>Lo que dejó cada galón vendido después de la compra, el flete, el costo financiero y la comisión de tarjeta.</p>
+    </div>
+    <div class="month">
+      <app-month-stepper [month]="month()" [min]="firstMonth()" [max]="currentMonth"
+        (monthChange)="selectMonth($event)" />
+      @if (chip(); as state) {
+        <app-tag [variant]="state.tone">{{ state.text }}</app-tag>
+      }
+    </div>
+  </header>
+
+  <app-tabs idPrefix="profit" label="Secciones de ganancia" [tabs]="tabs" [active]="view()"
+    (activeChange)="selectView($event)" />
+
+  <div class="panel" role="tabpanel" [id]="'profit-panel-' + view()" [attr.aria-labelledby]="'profit-tab-' + view()"
+    [attr.aria-busy]="status() === 'loading' || refreshing()">
+    @switch (status()) {
+      @case ('loading') {
+        <div class="stack">
+          <span class="jr-sr" role="status">Calculando la ganancia del mes…</span>
+          <div class="box skeleton-figures">
+            @for (figure of skeletonRows; track figure) {
+              <div><app-skeleton width="60%" /><app-skeleton width="80%" height="26px" /><app-skeleton width="45%" height="12px" /></div>
+            }
+          </div>
+          <div class="box skeleton-rows">
+            @for (row of skeletonRows; track row) {
+              <app-skeleton height="40px" />
+            }
+          </div>
+        </div>
+      }
+      @case ('error') {
+        <div class="box state">
+          <app-empty-state tone="error" [heading]="errorHeading()"
+            description="Puede ser la conexión o el servidor. Tus datos no se perdieron; intenta de nuevo en un momento.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+            <button type="button" appButton variant="primary" (click)="retry()">Intentar de nuevo</button>
+          </app-empty-state>
+        </div>
+      }
+      @case ('no-rate') {
+        <div class="box state">
+          <app-empty-state heading="No se puede calcular la ganancia de este mes."
+            description="Todavía no hay una tasa de comisión de tarjeta vigente para esas fechas.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
+            <button type="button" appButton variant="primary" (click)="goToCurrentMonth()">Ir al mes actual</button>
+          </app-empty-state>
+        </div>
+      }
+      @default {
+        @if (report(); as data) {
+          @if (view() === 'datos') {
+            <app-profit-inputs class="enter" [report]="data" [canEdit]="canEdit" [refreshing]="refreshing()"
+              (parameterChanged)="refresh()" (cardSettingSaved)="onCardSettingSaved()" />
+          } @else if (empty()) {
+            <div class="box state enter">
+              <app-empty-state heading="Este mes no tiene ventas registradas."
+                description="La ganancia aparece cuando hay jornadas cerradas.">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M3 22h12M4 9h10M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18" />
+                  <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5" />
+                </svg>
+                @if (month() !== currentMonth) {
+                  <button type="button" appButton (click)="goToCurrentMonth()">Ir al mes actual</button>
+                }
+              </app-empty-state>
+            </div>
+          } @else {
+            <app-profit-summary class="enter" [report]="data" [monthInProgress]="data.month === currentMonth"
+              (openInputs)="selectView('datos')" />
+          }
+        }
+      }
+    }
+  </div>
+</div>
+
+<app-toast />

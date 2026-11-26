@@ -1,0 +1,54 @@
+<article class="card" [class.is-selected]="selected()">
+  <button type="button" class="pick" [attr.aria-pressed]="selected()"
+    [attr.aria-label]="'Ver el historial de ' + fuel().name" (click)="chosen.emit()"></button>
+
+  <header class="top">
+    <span class="icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.5c-.3 0-.6.1-.8.4C9.6 5 5 11 5 15a7 7 0 0 0 14 0c0-4-4.6-10-6.2-12.1-.2-.3-.5-.4-.8-.4Z" />
+      </svg>
+    </span>
+    <span class="names">
+      <h2>{{ fuel().name }}</h2>
+      <small>Vigente hoy</small>
+    </span>
+    @if (fuel().saleLine.length > 0) {
+      <app-sparkline class="line" [values]="fuel().saleLine" [label]="'Historial del precio de venta de ' + fuel().name" />
+    }
+  </header>
+
+  @for (side of sides(); track side.kind) {
+    @if (side.value !== null) {
+      <div class="value">
+        <span>{{ side.label }}</span>
+        <b><app-animated-number [value]="side.value" [format]="side.format" /></b>
+        @if (side.trend; as trend) {
+          <em class="trend">
+            @if (trend.direction === 'up') {<span aria-hidden="true">↑</span>}
+            @if (trend.direction === 'down') {<span aria-hidden="true">↓</span>}
+            {{ trend.text }}
+          </em>
+        }
+      </div>
+    } @else {
+      <div class="missing">
+        <span>
+          {{ side.missing }}
+          @if (side.scheduledFrom) {
+            <small>{{ scheduledText(side.scheduledFrom) }}</small>
+          }
+        </span>
+        <button type="button" [attr.aria-label]="side.addLabel" (click)="add.emit(side.kind)">Agregar</button>
+      </div>
+    }
+  }
+
+  <footer class="margin">
+    <span>Venta − compra</span>
+    @if (margin(); as text) {
+      <b [class.is-negative]="(fuel().margin ?? 0) < 0">≈ {{ text }} /gal</b>
+    } @else {
+      <span class="margin-missing">Falta un valor</span>
+    }
+  </footer>
+</article>

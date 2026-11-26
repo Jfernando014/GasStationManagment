@@ -1,0 +1,114 @@
+:host { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.head h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+
+.short-rule { display: none; }
+
+.cards { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.cards li {
+  animation: card-in 380ms var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  font-family: inherit;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--spring-fast), box-shadow var(--duration-fast) var(--spring-fast);
+}
+
+.card:hover:not(:disabled) { border-color: var(--jr-cell-border); }
+.card.is-selected { border-color: var(--brand-primary); box-shadow: 0 0 0 3px #FFE3CC; }
+.card:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 3px; }
+.card:disabled { cursor: default; }
+
+.title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+.title b { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.title app-tag svg { margin-right: 4px; vertical-align: -1px; }
+
+.months { justify-self: end; font-size: 12px; color: var(--text-muted); text-align: right; }
+.summary { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-muted); }
+
+.month-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.month-rule > b { font-size: 13.5px; color: var(--text-heading); }
+.month-rule p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
+.month-rule p strong { color: var(--text-heading); }
+
+.calendar { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 3px; padding: 2px; }
+
+.calendar i {
+  display: block;
+  height: 14px;
+  border-radius: 3px;
+  background: #FFE3CC;
+  animation: card-in 300ms var(--spring) backwards;
+  animation-delay: calc(var(--i, 0) * 12ms + 300ms);
+}
+
+.calendar i.is-marked {
+  background: var(--brand-primary);
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3.5px var(--brand-primary);
+}
+
+.calendar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.calendar-labels .mark { font-weight: 700; color: var(--brand-primary-strong); }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* Teléfono: la lista ocupa la pantalla, la explicación se resume en una línea y el botón va bajo las tarjetas. */
+@media (max-width: 640px) {
+  .head { display: contents; }
+
+  .head h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  :host { position: relative; }
+  .short-rule { display: block; order: -1; margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
+  .new { order: 1; justify-content: center; width: 100%; height: 46px; font-size: 15px; }
+  .month-rule { display: none; }
+  .card { grid-template-columns: minmax(0, 1fr); }
+  .card.is-base:not(.is-selected) { background: #F8FAFC; }
+  .months { justify-self: start; text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards li, .calendar i { animation: none; }
+  .card { transition: none; }
+}

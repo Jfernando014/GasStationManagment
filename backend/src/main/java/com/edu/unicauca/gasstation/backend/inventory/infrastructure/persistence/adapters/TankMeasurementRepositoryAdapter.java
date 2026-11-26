@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -44,6 +46,23 @@ public class TankMeasurementRepositoryAdapter implements TankMeasurementReposito
     @Transactional(readOnly = true)
     public Optional<TankMeasurement> findByJournalDate(LocalDate journalDate) {
         return measurementRepository.findByJournalDate(journalDate).map(this::withReadings);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TankMeasurement> findByJournalDateBetween(LocalDate from, LocalDate to) {
+        List<TankMeasurementEntity> measurements =
+                measurementRepository.findByJournalDateBetweenOrderByJournalDate(from, to);
+        if (measurements.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, List<TankReadingEntity>> readings = readingRepository
+                .findByMeasurementIdInOrderByTankId(measurements.stream().map(TankMeasurementEntity::getId).toList())
+                .stream()
+                .collect(Collectors.groupingBy(TankReadingEntity::getMeasurementId));
+        return measurements.stream()
+                .map(m -> mapper.toDomain(m, readings.getOrDefault(m.getId(), List.of())))
+                .toList();
     }
 
     @Override

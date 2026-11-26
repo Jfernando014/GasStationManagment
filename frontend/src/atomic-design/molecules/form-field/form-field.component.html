@@ -4,24 +4,31 @@
     <span class="star">*</span>
   }
 </label>
-<input
-  class="flat-input"
-  [class.is-invalid]="invalid() || errorMessage()"
-  [id]="fieldId()"
-  [type]="type()"
-  [placeholder]="placeholder()"
-  [formControl]="control()"
-  [attr.maxlength]="nativeMaxLength()"
-  [attr.inputmode]="inputMode()"
-  [attr.min]="min()"
-  [attr.max]="max()"
-  [attr.autocomplete]="autocomplete()"
-  [attr.aria-label]="ariaLabel()"
-  [attr.aria-invalid]="invalid() || errorMessage() ? true : null"
-  [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : null"
-  (input)="onInput($event)">
+<!-- Without a suffix the wrapper takes no part in the layout. -->
+<div [class.input-with-suffix]="suffix()" [style.display]="suffix() ? null : 'contents'">
+  <input
+    class="flat-input"
+    [class.is-invalid]="invalid() || errorMessage()"
+    [id]="fieldId()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [formControl]="control()"
+    [attr.maxlength]="nativeMaxLength()"
+    [attr.inputmode]="inputMode()"
+    [attr.min]="min()"
+    [attr.max]="max()"
+    [attr.autocomplete]="autocomplete()"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-invalid]="invalid() || errorMessage() ? true : null"
+    [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : describedBy()"
+    (input)="onInput($event)">
+  @if (suffix()) {
+    <span class="input-suffix" aria-hidden="true">{{ suffix() }}</span>
+  }
+</div>
 @if (errorMessage(); as message) {
   <p class="field-error" [id]="fieldId() + '-help'">{{ message }}</p>
 } @else if (hint()) {
   <p class="field-hint" [id]="fieldId() + '-help'">{{ hint() }}</p>
 }
+<ng-content />

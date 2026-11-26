@@ -12,6 +12,8 @@ public interface JpaTankReadingRepository extends JpaRepository<TankReadingEntit
 
     List<TankReadingEntity> findByMeasurementIdOrderByTankId(Long measurementId);
 
+    List<TankReadingEntity> findByMeasurementIdInOrderByTankId(List<Long> measurementIds);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from TankReadingEntity r where r.measurementId = :measurementId")
     void deleteByMeasurementId(@Param("measurementId") Long measurementId);

@@ -31,7 +31,7 @@ export interface TabItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tabs.component.html',
   styleUrl: './tabs.component.css',
-  host: { '(window:resize)': 'measure()' }
+  host: { '(window:resize)': 'measure()', '[class.chips-on-phone]': 'chipsOnPhone()' }
 })
 export class TabsComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -43,6 +43,8 @@ export class TabsComponent {
   readonly label = input('');
   /** Prefix of the ids of the tabs and panels, so several tab lists can live on one page. */
   readonly idPrefix = input('tabs');
+  /** On a phone the tabs become a row of pills that scrolls sideways. */
+  readonly chipsOnPhone = input(false);
   readonly activeChange = output<string>();
 
   protected readonly indicator = signal({ left: 0, width: 0 });

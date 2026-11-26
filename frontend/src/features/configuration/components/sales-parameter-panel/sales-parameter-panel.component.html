@@ -1,0 +1,31 @@
+<app-side-panel [open]="open()" heading="Nuevo valor" [description]="meta().title" [width]="430" (closed)="close()">
+  <form id="parameter-form" class="form" [formGroup]="form" novalidate (ngSubmit)="save()">
+    <app-form-field fieldId="parameter-value" [label]="meta().fieldLabel" inputMode="decimal" autocomplete="off"
+      [placeholder]="meta().placeholder" [hint]="meta().hint" [control]="form.controls.value" (focusout)="tidyValue()" />
+
+    <app-form-field fieldId="parameter-date" label="Rige desde" type="date" [control]="form.controls.validFrom"
+      describedBy="parameter-date-note">
+      <div id="parameter-date-note" aria-live="polite">
+        @if (replacement()) {
+          <p class="field-hint">{{ replacement() }}</p>
+        }
+      </div>
+    </app-form-field>
+
+    @if (generalError()) {
+      <p class="general-error" role="alert">{{ generalError() }}</p>
+    }
+  </form>
+
+  <div slot="footer" class="footer">
+    <button type="button" appButton variant="secondary" [disabled]="saving()" (click)="close()">Cancelar</button>
+    <button type="submit" form="parameter-form" appButton variant="primary" [loading]="saving()" [disabled]="saving()">
+      @if (saving()) {
+        <app-spinner />
+        Guardando…
+      } @else {
+        Guardar
+      }
+    </button>
+  </div>
+</app-side-panel>

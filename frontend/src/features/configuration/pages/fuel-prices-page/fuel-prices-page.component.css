@@ -1,0 +1,94 @@
+:host { display: block; min-width: 0; }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1192px;
+  margin: 0 auto;
+  padding: 24px 36px 36px;
+}
+
+.title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title-row h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
+.title-row p { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+.new-value { flex-shrink: 0; }
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  container-type: inline-size;
+}
+
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+
+.box {
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.skeleton-card { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.skeleton-column { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; }
+
+.history { scroll-margin-top: 8px; }
+
+.history-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 14px 18px 0;
+}
+
+.history-title h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-heading); }
+.history-title span { font-size: 13px; color: var(--text-muted); }
+
+.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.columns > * { padding: 14px 18px 16px; }
+.columns > * + * { border-left: 1px solid var(--surface-subtle); }
+
+@container (max-width: 920px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 760px) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .columns > * + * { border-top: 1px solid var(--border-main); border-left: 0; }
+}
+
+@container (max-width: 540px) {
+  .cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .page { padding: 20px 16px 28px; }
+}
+
+/* Teléfono: el botón principal queda fijo abajo, al alcance del pulgar, y el aviso sube por encima de él. */
+@media (max-width: 640px) {
+  .page { gap: 14px; padding: 16px 0 calc(84px + env(safe-area-inset-bottom)); }
+  .title-row { padding: 0 4px; }
+  .columns > * { padding: 14px 12px 16px; }
+  .history-title { padding: 14px 12px 0; }
+
+  .new-value {
+    position: fixed;
+    right: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    left: 14px;
+    z-index: 30;
+    height: 48px;
+    justify-content: center;
+  }
+
+  app-toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

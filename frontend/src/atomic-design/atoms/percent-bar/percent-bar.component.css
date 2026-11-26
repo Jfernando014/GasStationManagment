@@ -14,11 +14,14 @@
   border-radius: inherit;
   background: var(--semantic-green);
   transform-origin: left center;
-  animation: percent-bar-grow var(--duration-normal) var(--spring) backwards;
+  animation: percent-bar-grow var(--duration-normal) var(--spring) var(--percent-bar-delay, 0ms) backwards;
 }
 
 :host(.is-below) .fill { background: var(--brand-primary); }
 :host(.is-muted) .fill { background: var(--text-light); }
+:host([data-tone='ok']) .fill { background: var(--semantic-green); }
+:host([data-tone='warning']) .fill { background: var(--semantic-amber); }
+:host([data-tone='alarm']) .fill { background: #DC2626; }
 
 /* The tick that marks 100 %: taller than the track so it reads as a reference line */
 .mark {

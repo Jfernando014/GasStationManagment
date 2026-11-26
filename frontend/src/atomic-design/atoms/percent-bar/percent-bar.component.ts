@@ -13,6 +13,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   host: {
     '[class.is-below]': 'value() < reference()',
     '[class.is-muted]': 'muted()',
+    '[attr.data-tone]': 'tone()',
     'aria-hidden': 'true'
   }
 })
@@ -25,6 +26,8 @@ export class PercentBarComponent {
   readonly scaleMax = input(150);
   /** Gray instead of colored, for values that are not reliable yet. */
   readonly muted = input(false);
+  /** Color of the fill when it does not depend on being below the reference, e.g. a count against its limit. */
+  readonly tone = input<'ok' | 'warning' | 'alarm' | null>(null);
 
   protected readonly fillWidth = computed(() => this.toPosition(this.value()));
   protected readonly markPosition = computed(() => this.toPosition(this.reference()));

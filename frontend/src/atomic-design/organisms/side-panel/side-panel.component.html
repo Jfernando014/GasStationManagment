@@ -5,11 +5,15 @@
   #panel
   class="side-panel"
   [class.side-panel--open]="open()"
+  [class.side-panel--sheet]="sheet()"
   [style.width.px]="width()"
   role="dialog"
   aria-modal="false"
   [attr.aria-label]="heading()"
   [attr.inert]="open() ? null : ''">
+  @if (sheet()) {
+    <span class="side-panel-grabber" aria-hidden="true"></span>
+  }
   <header class="side-panel-header">
     <div class="side-panel-titles">
       <h2>{{ heading() }}</h2>

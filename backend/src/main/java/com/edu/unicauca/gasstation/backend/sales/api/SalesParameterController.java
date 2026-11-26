@@ -7,12 +7,17 @@ import com.edu.unicauca.gasstation.backend.sales.domain.models.SalesParameterKey
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,7 +30,8 @@ public class SalesParameterController {
 
     @GetMapping("/{key}")
     @Operation(summary = "Value in force on a date",
-            description = "key: daily-savings | credibanco-commission-rate. Date defaults to today (Bogotá).")
+            description = "key: daily-savings | credibanco-commission-rate | freight-per-gallon | "
+                    + "financial-cost-per-gallon. Date defaults to today (Bogotá).")
     public SalesParameterResponse effective(@PathVariable String key,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return SalesParameterResponse.from(service.effective(SalesParameterKey.fromSlug(key),
@@ -43,8 +49,21 @@ public class SalesParameterController {
             description = "ADMIN only. Registering the same date again replaces that value. The commission is a fraction (2,65 % = 0.0265).")
     public SalesParameterResponse register(@PathVariable String key, @Valid @RequestBody SalesParameterRequest request,
                                            Authentication authentication) {
+        SalesParameterKey parameter = SalesParameterKey.fromSlug(key);
+        requireValidSign(parameter, request.value());
         SalesAdminAuthorization.requireAdmin(authentication);
-        return SalesParameterResponse.from(service.register(SalesParameterKey.fromSlug(key), request.value(),
-                request.validFrom()));
+        return SalesParameterResponse.from(service.register(parameter, request.value(), request.validFrom()));
+    }
+
+    /** The minimum depends on the key, so it is checked here and reported like any other invalid field. */
+    private static void requireValidSign(SalesParameterKey key, BigDecimal value) {
+        if (key.acceptsSignOf(value)) {
+            return;
+        }
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "La solicitud contiene datos no válidos");
+        problem.setProperty("code", "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(Map.of("field", "value", "message", key.signMessage())));
+        throw new ErrorResponseException(HttpStatus.BAD_REQUEST, problem, null);
     }
 }

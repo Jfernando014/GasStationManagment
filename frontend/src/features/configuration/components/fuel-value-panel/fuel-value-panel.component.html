@@ -1,0 +1,65 @@
+<app-side-panel [open]="open()" [heading]="heading()" [width]="430" (closed)="close()">
+  <form id="fuel-value-form" class="form" [formGroup]="form" novalidate (ngSubmit)="save()">
+    <app-select-field fieldId="fuel-value-fuel" label="Combustible" [control]="form.controls.fuelType"
+      [options]="fuelOptions" />
+
+    <div class="form-item">
+      <span class="item-label" aria-hidden="true">Qué valor</span>
+      <app-segmented-control label="Qué valor" [options]="kindOptions" [value]="kind()" [stretch]="true"
+        [disabled]="editing() !== null || saving()" (valueChange)="setKind($event)" />
+    </div>
+
+    <app-form-field fieldId="fuel-value-price" label="Valor por galón ($)" inputMode="decimal" autocomplete="off"
+      placeholder="Ej.: 15.036,31" hint="Hasta 2 decimales." [control]="form.controls.price"
+      (focusout)="tidyValue()" />
+
+    <app-form-field fieldId="fuel-value-date" label="Rige desde" type="date" [control]="form.controls.validFrom"
+      [invalid]="duplicate() !== null || refused()" describedBy="fuel-value-date-note">
+      <div id="fuel-value-date-note" aria-live="polite">
+        @if (duplicate(); as taken) {
+          <div class="date-error">
+            <span><b>{{ taken.title }}</b> ({{ taken.amount }}). Elige otra fecha o edita ese valor.</span>
+            <button type="button" class="link" (click)="editExisting(taken.source)">{{ taken.link }}</button>
+          </div>
+        } @else if (refused()) {
+          <p class="date-error"><b>Ya hay un valor desde esa fecha. Elige otra.</b></p>
+        } @else if (replacement()) {
+          <p class="field-hint">{{ replacement() }}</p>
+        }
+      </div>
+    </app-form-field>
+
+    <div class="preview" aria-live="polite">
+      @if (preview(); as result) {
+        @if (result.margin; as margin) {
+          <span>{{ result.when }}, venta − compra de {{ fuelLabel() }} quedaría en</span>
+          <span><b [class.is-negative]="result.negative">≈ {{ margin }}</b> por galón
+            <span class="today">({{ result.today }})</span></span>
+        } @else {
+          <span>Venta − compra de {{ fuelLabel() }}</span>
+          <span class="today">{{ result.missing }}</span>
+        }
+      } @else {
+        <span>Venta − compra de {{ fuelLabel() }}</span>
+        <span class="today">Escribe un valor y una fecha libre para ver cómo queda.</span>
+      }
+    </div>
+
+    @if (generalError()) {
+      <p class="general-error" role="alert">{{ generalError() }}</p>
+    }
+  </form>
+
+  <div slot="footer" class="footer">
+    <button type="button" appButton variant="secondary" [disabled]="saving()" (click)="close()">Cancelar</button>
+    <button type="submit" form="fuel-value-form" appButton variant="primary" [loading]="saving()"
+      [disabled]="saving() || duplicate() !== null">
+      @if (saving()) {
+        <app-spinner />
+        Guardando…
+      } @else {
+        Guardar
+      }
+    </button>
+  </div>
+</app-side-panel>

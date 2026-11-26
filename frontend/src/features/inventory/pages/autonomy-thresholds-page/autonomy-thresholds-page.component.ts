@@ -1,10 +1,11 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
 import { TagComponent } from '../../../../atomic-design/atoms/tag/tag.component';
+import { TabItem, TabsComponent } from '../../../../atomic-design/molecules/tabs/tabs.component';
 import { ConfirmModalComponent } from '../../../../atomic-design/organisms/confirm-modal/confirm-modal.component';
 import { AutonomyThresholdsService } from '../../../../core/services/autonomy-thresholds.service';
 import { getErrorMessage, getFieldErrors, isApiError } from '../../../../shared/helpers/problem-details.helpers';
@@ -12,8 +13,12 @@ import {
   AutonomyThresholdRequest,
   AutonomyThresholdResponse
 } from '../../../../shared/models/dtos/autonomy-threshold.dto';
+import {
+  VariationAlertSettingsPanelComponent
+} from '../../components/variation-alert-settings-panel/variation-alert-settings-panel.component';
 
 type ThresholdField = 'validFrom' | 'warningDays' | 'criticalDays';
+type ThresholdsTab = 'autonomia' | 'variacion';
 
 interface ThresholdForm {
   validFrom: string;
@@ -25,16 +30,33 @@ const TOAST_DURATION_MS = 3000;
 
 const emptyThresholdForm: ThresholdForm = { validFrom: '', warningDays: null, criticalDays: null };
 
-/** Configuración › Umbrales: days of autonomy that raise a warning or a critical alert. */
+/**
+ * Configuración › Umbrales: days of autonomy that raise a warning or a critical alert and, in the other tab
+ * (`?tab=variacion`), the rules of the monthly variation alerts.
+ */
 @Component({
   selector: 'app-autonomy-thresholds-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, ActionButtonDirective, TagComponent, ConfirmModalComponent],
-  templateUrl: './autonomy-thresholds-page.component.html'
+  imports: [
+    FormsModule, ActionButtonDirective, TagComponent, TabsComponent, ConfirmModalComponent,
+    VariationAlertSettingsPanelComponent
+  ],
+  templateUrl: './autonomy-thresholds-page.component.html',
+  styleUrl: './autonomy-thresholds-page.component.css'
 })
 export class AutonomyThresholdsPageComponent {
   private readonly thresholdsService = inject(AutonomyThresholdsService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly tabs: TabItem[] = [
+    { id: 'autonomia', label: 'Autonomía del inventario' },
+    { id: 'variacion', label: 'Alertas de variación' }
+  ];
+  protected readonly tab = signal<ThresholdsTab>('autonomia');
+  /** The variation panel is created the first time its tab opens and then stays, so its form is not lost. */
+  protected readonly variationOpened = signal(false);
 
   readonly thresholds = signal<AutonomyThresholdResponse[]>([]);
   readonly form = signal<ThresholdForm>({ ...emptyThresholdForm });
@@ -52,7 +74,21 @@ export class AutonomyThresholdsPageComponent {
 
   constructor() {
     this.destroyRef.onDestroy(() => clearTimeout(this.toastTimer));
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+      const tab: ThresholdsTab = params.get('tab') === 'variacion' ? 'variacion' : 'autonomia';
+      this.tab.set(tab);
+      if (tab === 'variacion') this.variationOpened.set(true);
+    });
     this.loadThresholds();
+  }
+
+  protected changeTab(id: string): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: id === 'variacion' ? id : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   updateForm(field: ThresholdField, value: string | number | null): void {

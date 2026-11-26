@@ -13,6 +13,8 @@ public interface JpaTankMeasurementRepository extends JpaRepository<TankMeasurem
 
     Optional<TankMeasurementEntity> findByJournalDate(LocalDate journalDate);
 
+    List<TankMeasurementEntity> findByJournalDateBetweenOrderByJournalDate(LocalDate from, LocalDate to);
+
     boolean existsByJournalDate(LocalDate journalDate);
 
     Optional<TankMeasurementEntity> findFirstByJournalDateLessThanOrderByJournalDateDesc(LocalDate journalDate);

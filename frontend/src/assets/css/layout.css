@@ -235,7 +235,8 @@
     }
 
     .collapsible-group.open .collapsible-sub-menu {
-      max-height: 380px;
+      /* Enough for the longest group on a phone, where each link is 44 px high. */
+      max-height: 440px;
       margin-bottom: 6px;
     }
 

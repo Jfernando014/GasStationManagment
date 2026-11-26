@@ -1,0 +1,66 @@
+<header>
+  <h2>% de ventas con tarjeta · {{ month() }}</h2>
+  <app-segmented-control label="Cómo se calcula el % con tarjeta" [options]="modes" [value]="mode()"
+    [disabled]="!canEdit() || busy()" (valueChange)="mode.set($event)" />
+</header>
+
+<form novalidate (submit)="$event.preventDefault(); save()">
+  @if (mode() === 'REAL') {
+    <div class="real">
+      @if (card().real; as real) {
+        <b class="big">{{ real }}</b>
+        <span class="muted">lo calcula el sistema</span>
+      } @else {
+        <b class="big is-missing">Sin dato</b>
+        <span class="muted">No hay ventas para calcularlo.</span>
+      }
+    </div>
+    <p class="account">Credibanco del Paso 2 <b>{{ card().cardSales }}</b> ÷ ventas por tirilla
+      <b>{{ card().totalSales }}</b></p>
+    <p class="aside">{{ card().note }}</p>
+    @if (card().savedManual; as manual) {
+      <p class="pending">Hoy se usa {{ manual }} manual. Guarda para volver al real.</p>
+    }
+  } @else {
+    <div class="manual">
+      <app-form-field fieldId="card-percentage" label="Porcentaje con tarjeta (%)" inputMode="decimal"
+        autocomplete="off" placeholder="Ej.: 25" [control]="control" />
+      <div class="reference">
+        <span>Real del mes: <b>{{ card().real ?? 'sin dato' }}</b></span>
+        <button type="button" class="link" [disabled]="!canEdit() || busy() || card().real === null"
+          (click)="useReal()">Usar el real</button>
+      </div>
+    </div>
+    <div aria-live="polite">
+      @if (preview(); as change) {
+        <p class="preview" [class.is-rise]="change.rises">
+          @if (change.amount) {
+            {{ change.start }} <b>{{ change.amount }}</b>{{ change.end }}
+          } @else {
+            {{ change.start }}{{ change.end }}
+          }
+        </p>
+      }
+    </div>
+  }
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <!-- In real mode there is something to save only when the month is saved as manual. -->
+  @if (mode() === 'MANUAL' || card().savedManual) {
+    <div class="actions">
+      <button type="button" appButton variant="secondary" size="sm" [disabled]="!canEdit() || busy() || !dirty()"
+        (click)="restore()">Cancelar</button>
+      <button type="submit" appButton variant="primary" size="sm" [loading]="busy()" [disabled]="!canSave()">
+        @if (busy()) {
+          <app-spinner />
+          Guardando…
+        } @else {
+          Guardar para {{ month() }}
+        }
+      </button>
+    </div>
+  }
+</form>

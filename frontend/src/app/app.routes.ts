@@ -101,6 +101,16 @@ export const routes: Routes = [
         loadComponent: () => import('../features/annual-goals/pages/annual-goals-page.component').then(m => m.AnnualGoalsPageComponent)
       },
       {
+        path: 'resultados/ganancia',
+        loadComponent: () => import('../features/fuel-profit/pages/profit-page/profit-page.component')
+          .then(m => m.ProfitPageComponent)
+      },
+      {
+        path: 'resultados/variacion',
+        loadComponent: () => import('../features/variation/pages/variation-page/variation-page.component')
+          .then(m => m.VariationPageComponent)
+      },
+      {
         path: 'resultados/rendimiento',
         loadComponent: () => import('../features/performance/pages/performance-page.component').then(m => m.PerformancePageComponent)
       },
@@ -150,6 +160,11 @@ export const routes: Routes = [
         loadComponent: () => import('../features/configuration/pages/products-page/products-page.component').then(m => m.ProductsPageComponent)
       },
       {
+        path: 'configuracion/precios-combustible',
+        loadComponent: () => import('../features/configuration/pages/fuel-prices-page/fuel-prices-page.component')
+          .then(m => m.FuelPricesPageComponent)
+      },
+      {
         path: 'configuracion/recepciones',
         loadComponent: () => import('../features/configuration/pages/receptions-page/receptions-page.component').then(m => m.ReceptionsPageComponent)
       },
@@ -166,6 +181,11 @@ export const routes: Routes = [
             path: 'horas-extra',
             loadComponent: () => import('../features/overtime/pages/overtime-parameters-tab/overtime-parameters-tab.component')
               .then(m => m.OvertimeParametersTabComponent)
+          },
+          {
+            path: 'comision-tarjeta',
+            loadComponent: () => import('../features/configuration/pages/commission-tab/commission-tab.component')
+              .then(m => m.CommissionTabComponent)
           },
           { path: '', pathMatch: 'full', redirectTo: 'horas-extra' }
         ]
