@@ -28,8 +28,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  */
 public final class ExcelWorkbookStyles {
 
-    /** Currency of the station. Two decimals, as the cash balances are handled. */
-    public static final String MONEY_FORMAT = "\"$\" #,##0.00";
+    /**
+     * Currency of the station: Colombian pesos without cents, the same format used by the rest of
+     * the application and by the client's template ({@code $#,##0}).
+     */
+    public static final String MONEY_FORMAT = "\"$\" #,##0";
 
     /** Gallons and other measured volumes. */
     public static final String GALLONS_FORMAT = "#,##0.00";
@@ -48,6 +51,11 @@ public final class ExcelWorkbookStyles {
     private static final byte[] GREY_FILL = {(byte) 0xED, (byte) 0xED, (byte) 0xED};
     private static final byte[] GREY_TEXT = {0x59, 0x59, 0x59};
     private static final byte[] BORDER = {(byte) 0xD9, (byte) 0xD9, (byte) 0xD9};
+
+    private static final String RESULT_BALANCED = "CUADRA";
+    /** Status of the migrated days: it means the same as CUADRA. */
+    private static final String RESULT_BALANCED_LEGACY = "OK";
+    private static final String RESULT_SHORTFALL = "FALTA";
 
     private ExcelWorkbookStyles() {
     }
@@ -95,6 +103,36 @@ public final class ExcelWorkbookStyles {
         cell.setCellStyle(style);
     }
 
+    /** Result of a vendor close: CUADRA/OK green, SOBRA amber and FALTA red. */
+    public static CellStyle resultStyle(String resultStatus, Styles styles) {
+        if (isBalanced(resultStatus)) {
+            return styles.ok();
+        }
+        return RESULT_SHORTFALL.equalsIgnoreCase(resultStatus) ? styles.error() : styles.warning();
+    }
+
+    /** Money difference of a vendor close, with the same colours as its result. */
+    public static CellStyle differenceStyle(String resultStatus, Styles styles) {
+        if (isBalanced(resultStatus)) {
+            return styles.okMoney();
+        }
+        return RESULT_SHORTFALL.equalsIgnoreCase(resultStatus) ? styles.errorMoney() : styles.warningMoney();
+    }
+
+    /** Cash difference of the day: zero is balanced, any other value needs the attention of the reader. */
+    public static CellStyle cashDifferenceStyle(BigDecimal value, Styles styles) {
+        if (value == null) {
+            return styles.money();
+        }
+        return value.signum() == 0 ? styles.okMoney() : styles.warningMoney();
+    }
+
+    private static boolean isBalanced(String resultStatus) {
+        return resultStatus == null
+                || RESULT_BALANCED.equalsIgnoreCase(resultStatus)
+                || RESULT_BALANCED_LEGACY.equalsIgnoreCase(resultStatus);
+    }
+
     /**
      * Cell styles of one workbook. A workbook has a hard limit of cell styles, so they are created
      * once per file and reused in every row.
@@ -114,6 +152,10 @@ public final class ExcelWorkbookStyles {
             CellStyle totalNumber,
             CellStyle totalInteger,
             CellStyle totalMoney,
+            CellStyle subtotalText,
+            CellStyle subtotalNumber,
+            CellStyle subtotalInteger,
+            CellStyle subtotalMoney,
             CellStyle ok,
             CellStyle warning,
             CellStyle error,
@@ -160,6 +202,10 @@ public final class ExcelWorkbookStyles {
                     total(workbook, boldFont, GALLONS_FORMAT),
                     total(workbook, boldFont, WHOLE_FORMAT),
                     total(workbook, boldFont, MONEY_FORMAT),
+                    bordered(workbook, boldFont, null, GREEN_FILL),
+                    bordered(workbook, boldFont, GALLONS_FORMAT, GREEN_FILL),
+                    bordered(workbook, boldFont, WHOLE_FORMAT, GREEN_FILL),
+                    bordered(workbook, boldFont, MONEY_FORMAT, GREEN_FILL),
                     bordered(workbook, okFont, null, GREEN_FILL),
                     bordered(workbook, warningFont, null, AMBER_FILL),
                     bordered(workbook, errorFont, null, RED_FILL),
@@ -183,6 +229,7 @@ public final class ExcelWorkbookStyles {
             style.setFont(font);
             if (format != null) {
                 style.setDataFormat(workbook.createDataFormat().getFormat(format));
+                style.setAlignment(HorizontalAlignment.RIGHT);
             }
             return style;
         }

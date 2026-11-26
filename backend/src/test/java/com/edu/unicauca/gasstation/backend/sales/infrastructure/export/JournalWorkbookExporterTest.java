@@ -1,6 +1,8 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.AMBER_FILL;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.GREEN_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.RED_FILL;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertFill;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertHeader;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertNumberFormat;
@@ -31,6 +33,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -84,7 +87,12 @@ class JournalWorkbookExporterTest {
                         "CORRIENTE",
                         new BigDecimal("5000.00"), new BigDecimal("1000.00"), new BigDecimal("300.50"),
                         new BigDecimal("5699.50"), new BigDecimal("5759.40"), new BigDecimal("59.90"),
-                        new BigDecimal("100.00"), false, "NORMAL")),
+                        new BigDecimal("100.00"), false, "NORMAL"),
+                        new FuelVariationSummary(
+                                "EXTRA",
+                                new BigDecimal("1000.00"), new BigDecimal("200.00"), new BigDecimal("50.00"),
+                                new BigDecimal("1150.00"), new BigDecimal("1200.00"), new BigDecimal("50.00"),
+                                new BigDecimal("10.00"), true, "FUERA DE TOLERANCIA")),
                 List.of(new InventoryAlertSummary(
                         1L, "AUTONOMY", "EXTRA", "WARNING", "OPEN", new BigDecimal("2.5"), date)));
 
@@ -127,10 +135,14 @@ class JournalWorkbookExporterTest {
 
             XSSFSheet cashSheet = wb.getSheet("Saldo en Caja");
             assertTrue(cashSheet.getLastRowNum() >= 15);
+            assertNumberFormat(cashSheet.getRow(12).getCell(1), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertFill(cashSheet.getRow(12).getCell(1), AMBER_FILL);
 
             XSSFSheet invSheet = wb.getSheet("Inventario y Variación");
             assertEquals("CORRIENTE", invSheet.getRow(1).getCell(0).getStringCellValue());
             assertEquals(59.90, invSheet.getRow(1).getCell(6).getNumericCellValue(), 0.01);
+            assertFill(invSheet.getRow(2).getCell(6), RED_FILL);
+            assertFill(invSheet.getRow(2).getCell(8), RED_FILL);
 
             XSSFSheet summarySheet = wb.getSheet("Jornada");
             assertEquals(
@@ -146,6 +158,12 @@ class JournalWorkbookExporterTest {
             assertTrue(stepsSheet.getPaneInformation().isFreezePane(), "Headers must stay frozen");
 
             assertNumberFormat(vendorSheet.getRow(1).getCell(15), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertEquals(HorizontalAlignment.RIGHT, vendorSheet.getRow(1).getCell(15).getCellStyle().getAlignment(),
+                    "Numeric cells must be right aligned");
+            assertEquals(30f, vendorSheet.getRow(0).getHeightInPoints(), 0.01f,
+                    "The header row needs room for two lines");
+            assertFill(vendorSheet.getRow(1).getCell(17), GREEN_FILL);
+            assertFill(vendorSheet.getRow(1).getCell(18), GREEN_FILL);
             assertTotal(vendorSheet.getRow(2).getCell(0));
             assertNumberFormat(vendorSheet.getRow(2).getCell(15), ExcelWorkbookStyles.MONEY_FORMAT);
         }

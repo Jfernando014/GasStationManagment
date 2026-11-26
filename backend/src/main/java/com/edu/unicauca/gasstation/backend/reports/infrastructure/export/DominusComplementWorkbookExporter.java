@@ -8,6 +8,7 @@ import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -27,9 +28,6 @@ public class DominusComplementWorkbookExporter {
             "Vendedor", "Documento", "Turno", "Galones", "Canastilla",
             "Total entregado", "Tirilla Dominus", "Diferencia", "Resultado"};
 
-    private static final String RESULT_BALANCED = "CUADRA";
-    private static final String RESULT_SHORTFALL = "FALTA";
-
     public byte[] export(DominusComplementReport report) throws IOException {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Styles styles = Styles.of(workbook);
@@ -43,7 +41,7 @@ public class DominusComplementWorkbookExporter {
 
             for (ReportDay.VendorRow vendor : report.vendors()) {
                 Row row = sheet.createRow(rowIndex++);
-                CellStyle differenceStyle = differenceStyle(vendor.resultStatus(), styles);
+                CellStyle differenceStyle = ExcelWorkbookStyles.differenceStyle(vendor.resultStatus(), styles);
                 ExcelWorkbookStyles.text(row, 0, vendor.vendorName(), styles.text());
                 ExcelWorkbookStyles.text(row, 1, vendor.vendorDocument(), styles.text());
                 ExcelWorkbookStyles.text(row, 2, CustomShiftCode.displayText(vendor.shiftName()), styles.text());
@@ -52,15 +50,28 @@ public class DominusComplementWorkbookExporter {
                 ExcelWorkbookStyles.number(row, 5, vendor.totalDelivered(), styles.money());
                 ExcelWorkbookStyles.number(row, 6, vendor.dominusTirilla(), styles.money());
                 ExcelWorkbookStyles.number(row, 7, vendor.discrepancy(), differenceStyle);
-                ExcelWorkbookStyles.text(row, 8, vendor.resultStatus(), resultStyle(vendor.resultStatus(), styles));
+                ExcelWorkbookStyles.text(row, 8, vendor.resultStatus(),
+                        ExcelWorkbookStyles.resultStyle(vendor.resultStatus(), styles));
             }
 
             Row totals = sheet.createRow(rowIndex);
             ExcelWorkbookStyles.text(totals, 0, "TOTAL DEL DÍA", styles.totalText());
+            ExcelWorkbookStyles.text(totals, 1, "", styles.totalText());
+            ExcelWorkbookStyles.text(totals, 2, "", styles.totalText());
+            ExcelWorkbookStyles.number(totals, 3, null, styles.totalInteger());
             ExcelWorkbookStyles.number(totals, 4, report.totalBasket(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 5, report.totalDelivered(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 6, report.totalDominusTirilla(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 7, report.totalDiscrepancy(), styles.totalMoney());
+            ExcelWorkbookStyles.text(totals, 8, "", styles.totalText());
+            // Ensure all total-row cells have borders so there are no unstyled gaps (cols 1–3 and 8).
+            for (int varCol = 0; varCol <= 8; varCol++) {
+                Cell objCell = totals.getCell(varCol);
+                if (objCell == null) {
+                    objCell = totals.createCell(varCol);
+                }
+                objCell.setCellStyle(objCell.getCellStyle());
+            }
 
             ExcelWorkbookStyles.finish(sheet, HEADERS.length);
             workbook.write(output);
@@ -95,29 +106,11 @@ public class DominusComplementWorkbookExporter {
         Row row = sheet.createRow(rowIndex++);
         ExcelWorkbookStyles.text(row, 0, label, styles.section());
         if (value instanceof BigDecimal decimal) {
-            ExcelWorkbookStyles.number(row, 1, decimal, alert ? cashStyle(decimal, styles) : styles.money());
+            ExcelWorkbookStyles.number(row, 1, decimal,
+                    alert ? ExcelWorkbookStyles.cashDifferenceStyle(decimal, styles) : styles.money());
         } else {
             ExcelWorkbookStyles.text(row, 1, value == null ? "No disponible" : value.toString(), styles.text());
         }
         return rowIndex;
-    }
-
-    /** A cash difference of zero is balanced; any other value needs the attention of the reader. */
-    private static CellStyle cashStyle(BigDecimal value, Styles styles) {
-        return value.signum() == 0 ? styles.okMoney() : styles.warningMoney();
-    }
-
-    private static CellStyle resultStyle(String resultStatus, Styles styles) {
-        if (resultStatus == null || RESULT_BALANCED.equalsIgnoreCase(resultStatus)) {
-            return styles.ok();
-        }
-        return RESULT_SHORTFALL.equalsIgnoreCase(resultStatus) ? styles.error() : styles.warning();
-    }
-
-    private static CellStyle differenceStyle(String resultStatus, Styles styles) {
-        if (resultStatus == null || RESULT_BALANCED.equalsIgnoreCase(resultStatus)) {
-            return styles.okMoney();
-        }
-        return RESULT_SHORTFALL.equalsIgnoreCase(resultStatus) ? styles.errorMoney() : styles.warningMoney();
     }
 }

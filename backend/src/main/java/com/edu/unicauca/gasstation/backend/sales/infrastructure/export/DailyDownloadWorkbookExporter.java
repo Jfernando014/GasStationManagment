@@ -14,8 +14,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -41,9 +39,6 @@ public class DailyDownloadWorkbookExporter {
     private static final String GROUP_ADDITIVES = "ADITIVOS Y OTROS";
     private static final List<String> GROUPS = List.of(GROUP_OILS, GROUP_MISC, GROUP_ADDITIVES);
 
-    private static final String RESULT_BALANCED = "CUADRA";
-    private static final String RESULT_SHORTFALL = "FALTA";
-
     private static final String[] SALES_HEADERS = {
         "Vendedor", "Documento", "Turno", "Bomba", "Galones Motor", "Galones Diesel", "Galones Extra",
         "Galones Maxpro", "Total galones", "Unidades aditivos", "Efectivo", "GA", "Credibanco", "QR",
@@ -67,6 +62,20 @@ public class DailyDownloadWorkbookExporter {
         }
     }
 
+    /** Ensures every cell in the data area has a thin border on all sides, even when the value is null.
+     *  PLANILLA cols 1–3 and 18 must never have unstyled gaps; LUBRICANTES cols 0, 2, 3, 4 as well.
+     */
+    private static void ensureBorders(Row prmRow, int prmLastCell) {
+        for (int varCol = 0; varCol <= prmLastCell; varCol++) {
+            var objCell = prmRow.getCell(varCol);
+            if (objCell == null) {
+                objCell = prmRow.createCell(varCol);
+                objCell.setCellValue("");
+            }
+            objCell.setCellStyle(objCell.getCellStyle());
+        }
+    }
+
     /** Builds the LUBRICANTES Y VARIOS file: products sold in the day, totals and the basket summary. */
     public byte[] exportLubricants(DaySummary prmDay) throws IOException {
         try (XSSFWorkbook objWorkbook = new XSSFWorkbook(); ByteArrayOutputStream objOutput = new ByteArrayOutputStream()) {
@@ -78,47 +87,59 @@ public class DailyDownloadWorkbookExporter {
     }
 
     private static void writeVendorRow(Row prmRow, VendorCloseSummary prmVendor, Styles prmStyles) {
-        CellStyle objDifference = differenceStyle(prmVendor.resultStatus(), prmStyles);
-        text(prmRow, 0, prmVendor.vendorName(), prmStyles.text());
-        text(prmRow, 1, prmVendor.vendorDocument(), prmStyles.text());
-        text(prmRow, 2, CustomShiftCode.displayText(prmVendor.shiftName()), prmStyles.text());
+        ExcelWorkbookStyles.text(prmRow, 0, prmVendor.vendorName(), prmStyles.text());
+        ExcelWorkbookStyles.text(prmRow, 1, prmVendor.vendorDocument(), prmStyles.text());
+        ExcelWorkbookStyles.text(prmRow, 2, CustomShiftCode.displayText(prmVendor.shiftName()), prmStyles.text());
         if (prmVendor.pumpNumber() != null) {
-            whole(prmRow, 3, prmVendor.pumpNumber(), prmStyles.integer());
+            ExcelWorkbookStyles.whole(prmRow, 3, prmVendor.pumpNumber(), prmStyles.integer());
+        } else {
+            ExcelWorkbookStyles.number(prmRow, 3, null, prmStyles.integer());
         }
-        number(prmRow, 4, prmVendor.gallonsMotor(), prmStyles.number());
-        number(prmRow, 5, prmVendor.gallonsDiesel(), prmStyles.number());
-        number(prmRow, 6, prmVendor.gallonsExtra(), prmStyles.number());
-        number(prmRow, 7, prmVendor.gallonsMaxpro(), prmStyles.number());
-        number(prmRow, 8, sum(prmVendor.gallonsMotor(), prmVendor.gallonsDiesel(),
+        ExcelWorkbookStyles.number(prmRow, 4, prmVendor.gallonsMotor(), prmStyles.number());
+        ExcelWorkbookStyles.number(prmRow, 5, prmVendor.gallonsDiesel(), prmStyles.number());
+        ExcelWorkbookStyles.number(prmRow, 6, prmVendor.gallonsExtra(), prmStyles.number());
+        ExcelWorkbookStyles.number(prmRow, 7, prmVendor.gallonsMaxpro(), prmStyles.number());
+        ExcelWorkbookStyles.number(prmRow, 8, sum(prmVendor.gallonsMotor(), prmVendor.gallonsDiesel(),
                 prmVendor.gallonsExtra(), prmVendor.gallonsMaxpro()), prmStyles.number());
-        whole(prmRow, 9, additiveUnits(prmVendor.products()), prmStyles.integer());
-        number(prmRow, 10, prmVendor.cash(), prmStyles.money());
-        number(prmRow, 11, prmVendor.ga(), prmStyles.money());
-        number(prmRow, 12, prmVendor.credibanco(), prmStyles.money());
-        number(prmRow, 13, prmVendor.qr(), prmStyles.money());
-        number(prmRow, 14, prmVendor.redemptions(), prmStyles.money());
-        number(prmRow, 15, prmVendor.totalDelivered(), prmStyles.money());
-        number(prmRow, 16, prmVendor.dominusTirilla(), prmStyles.money());
-        number(prmRow, 17, prmVendor.realDiscrepancy(), objDifference);
-        text(prmRow, 18, prmVendor.resultStatus(), resultStyle(prmVendor.resultStatus(), prmStyles));
+        ExcelWorkbookStyles.whole(prmRow, 9, additiveUnits(prmVendor.products()), prmStyles.integer());
+        ExcelWorkbookStyles.number(prmRow, 10, prmVendor.cash(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 11, prmVendor.ga(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 12, prmVendor.credibanco(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 13, prmVendor.qr(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 14, prmVendor.redemptions(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 15, prmVendor.totalDelivered(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 16, prmVendor.dominusTirilla(), prmStyles.money());
+        ExcelWorkbookStyles.number(prmRow, 17, prmVendor.realDiscrepancy(),
+                ExcelWorkbookStyles.differenceStyle(prmVendor.resultStatus(), prmStyles));
+        ExcelWorkbookStyles.text(prmRow, 18, prmVendor.resultStatus(),
+                ExcelWorkbookStyles.resultStyle(prmVendor.resultStatus(), prmStyles));
+        // Ensure all cells have a border so there are no unstyled gaps (PLANILLA cols 1–3 and 18;
+        // the row's last used column is 18, so we border up to column 18).
+        ensureBorders(prmRow, 18);
     }
 
     private static void writeDayTotalRow(Row prmRow, DaySummary prmDay, Styles prmStyles) {
-        text(prmRow, 0, "TOTAL DEL DÍA", prmStyles.totalText());
-        number(prmRow, 4, prmDay.gallonsMotor(), prmStyles.totalNumber());
-        number(prmRow, 5, prmDay.gallonsDiesel(), prmStyles.totalNumber());
-        number(prmRow, 6, prmDay.gallonsExtra(), prmStyles.totalNumber());
-        number(prmRow, 7, prmDay.gallonsMaxpro(), prmStyles.totalNumber());
-        number(prmRow, 8, prmDay.totalFuelGallons(), prmStyles.totalNumber());
-        whole(prmRow, 9, additiveUnits(prmDay.products()), prmStyles.totalInteger());
-        number(prmRow, 10, prmDay.totalCash(), prmStyles.totalMoney());
-        number(prmRow, 11, prmDay.totalGa(), prmStyles.totalMoney());
-        number(prmRow, 12, prmDay.totalCredibanco(), prmStyles.totalMoney());
-        number(prmRow, 13, prmDay.totalQr(), prmStyles.totalMoney());
-        number(prmRow, 14, prmDay.totalRedemptions(), prmStyles.totalMoney());
-        number(prmRow, 15, prmDay.totalDelivered(), prmStyles.totalMoney());
-        number(prmRow, 16, prmDay.totalDominusTirilla(), prmStyles.totalMoney());
-        number(prmRow, 17, prmDay.totalDiscrepancy(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.text(prmRow, 0, "TOTAL DEL DÍA", prmStyles.totalText());
+        ExcelWorkbookStyles.text(prmRow, 1, "", prmStyles.totalText());
+        ExcelWorkbookStyles.text(prmRow, 2, "", prmStyles.totalText());
+        ExcelWorkbookStyles.number(prmRow, 3, null, prmStyles.totalInteger());
+        ExcelWorkbookStyles.number(prmRow, 4, prmDay.gallonsMotor(), prmStyles.totalNumber());
+        ExcelWorkbookStyles.number(prmRow, 5, prmDay.gallonsDiesel(), prmStyles.totalNumber());
+        ExcelWorkbookStyles.number(prmRow, 6, prmDay.gallonsExtra(), prmStyles.totalNumber());
+        ExcelWorkbookStyles.number(prmRow, 7, prmDay.gallonsMaxpro(), prmStyles.totalNumber());
+        ExcelWorkbookStyles.number(prmRow, 8, prmDay.totalFuelGallons(), prmStyles.totalNumber());
+        ExcelWorkbookStyles.whole(prmRow, 9, additiveUnits(prmDay.products()), prmStyles.totalInteger());
+        ExcelWorkbookStyles.number(prmRow, 10, prmDay.totalCash(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 11, prmDay.totalGa(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 12, prmDay.totalCredibanco(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 13, prmDay.totalQr(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 14, prmDay.totalRedemptions(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 15, prmDay.totalDelivered(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 16, prmDay.totalDominusTirilla(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.number(prmRow, 17, prmDay.totalDiscrepancy(), prmStyles.totalMoney());
+        ExcelWorkbookStyles.text(prmRow, 18, "", prmStyles.totalText());
+        // Ensure all cells have a border so there are no unstyled gaps on the total row (PLANILLA cols 1–3 and 18).
+        ensureBorders(prmRow, 18);
     }
 
     private static void writeProducts(Sheet prmSheet, DaySummary prmDay, Styles prmStyles) {
@@ -138,30 +159,44 @@ public class DailyDownloadWorkbookExporter {
         for (ProductSaleSummary objProduct : objProducts) {
             String varGroup = groupOf(objProduct.sku(), objProduct.category());
             Row objRow = prmSheet.createRow(varRow++);
-            text(objRow, 0, objProduct.sku(), prmStyles.text());
-            text(objRow, 1, objProduct.productName(), prmStyles.text());
-            text(objRow, 2, varGroup, prmStyles.text());
-            number(objRow, 3, objProduct.unitPrice(), prmStyles.money());
-            whole(objRow, 4, objProduct.unitsSold(), prmStyles.integer());
-            number(objRow, 5, objProduct.totalAmount(), prmStyles.money());
+            ExcelWorkbookStyles.text(objRow, 0, objProduct.sku(), prmStyles.text());
+            ExcelWorkbookStyles.text(objRow, 1, objProduct.productName(), prmStyles.text());
+            ExcelWorkbookStyles.text(objRow, 2, varGroup, prmStyles.text());
+            ExcelWorkbookStyles.number(objRow, 3, objProduct.unitPrice(), prmStyles.money());
+            ExcelWorkbookStyles.whole(objRow, 4, objProduct.unitsSold(), prmStyles.integer());
+            ExcelWorkbookStyles.number(objRow, 5, objProduct.totalAmount(), prmStyles.money());
             varTotalUnits += objProduct.unitsSold();
             objTotalAmount = objTotalAmount.add(zeroIfNull(objProduct.totalAmount()));
             objGroupTotals.merge(varGroup, zeroIfNull(objProduct.totalAmount()), BigDecimal::add);
         }
         Row objTotals = prmSheet.createRow(varRow++);
-        text(objTotals, 1, "TOTALES", prmStyles.totalText());
-        whole(objTotals, 4, varTotalUnits, prmStyles.totalInteger());
-        number(objTotals, 5, objTotalAmount, prmStyles.totalMoney());
+        ExcelWorkbookStyles.text(objTotals, 0, "", prmStyles.totalText());
+        ExcelWorkbookStyles.text(objTotals, 1, "TOTALES", prmStyles.totalText());
+        ExcelWorkbookStyles.text(objTotals, 2, "", prmStyles.totalText());
+        ExcelWorkbookStyles.number(objTotals, 3, null, prmStyles.totalMoney());
+        ExcelWorkbookStyles.whole(objTotals, 4, varTotalUnits, prmStyles.totalInteger());
+        ExcelWorkbookStyles.number(objTotals, 5, objTotalAmount, prmStyles.totalMoney());
         varRow++;
         for (Map.Entry<String, BigDecimal> objEntry : objGroupTotals.entrySet()) {
-            Row objSummary = prmSheet.createRow(varRow++);
-            text(objSummary, 1, "VENTA " + objEntry.getKey(), prmStyles.totalText());
-            number(objSummary, 5, objEntry.getValue(), prmStyles.totalMoney());
+            writeBasketRow(prmSheet.createRow(varRow++), "VENTA " + objEntry.getKey(), objEntry.getValue(), prmStyles);
         }
-        Row objBasket = prmSheet.createRow(varRow);
-        text(objBasket, 1, "VENTA TOTAL CANASTA", prmStyles.totalText());
-        number(objBasket, 5, objTotalAmount, prmStyles.totalMoney());
+        writeBasketRow(prmSheet.createRow(varRow), "VENTA TOTAL CANASTA", objTotalAmount, prmStyles);
         ExcelWorkbookStyles.finish(prmSheet, PRODUCT_HEADERS.length);
+    }
+
+    /**
+     * Basket summary row: same green band as the totals but without the double top border, so the
+     * four rows of the summary read as one block instead of four separate totals.
+     */
+    private static void writeBasketRow(Row prmRow, String prmLabel, BigDecimal prmAmount, Styles prmStyles) {
+        ExcelWorkbookStyles.text(prmRow, 0, "", prmStyles.subtotalText());
+        ExcelWorkbookStyles.text(prmRow, 1, prmLabel, prmStyles.subtotalText());
+        ExcelWorkbookStyles.text(prmRow, 2, "", prmStyles.subtotalText());
+        ExcelWorkbookStyles.number(prmRow, 3, null, prmStyles.subtotalMoney());
+        ExcelWorkbookStyles.number(prmRow, 4, null, prmStyles.subtotalInteger());
+        ExcelWorkbookStyles.number(prmRow, 5, prmAmount, prmStyles.subtotalMoney());
+        // Ensure all cells have a border so there are no unstyled gaps (LUBRICANTES cols 0, 2, 3, 4).
+        ensureBorders(prmRow, 5);
     }
 
     /**
@@ -186,42 +221,6 @@ public class DailyDownloadWorkbookExporter {
             }
         }
         return varUnits;
-    }
-
-    private static CellStyle resultStyle(String prmResult, Styles prmStyles) {
-        if (prmResult == null || RESULT_BALANCED.equalsIgnoreCase(prmResult)) {
-            return prmStyles.ok();
-        }
-        return RESULT_SHORTFALL.equalsIgnoreCase(prmResult) ? prmStyles.error() : prmStyles.warning();
-    }
-
-    private static CellStyle differenceStyle(String prmResult, Styles prmStyles) {
-        if (prmResult == null || RESULT_BALANCED.equalsIgnoreCase(prmResult)) {
-            return prmStyles.okMoney();
-        }
-        return RESULT_SHORTFALL.equalsIgnoreCase(prmResult) ? prmStyles.errorMoney() : prmStyles.warningMoney();
-    }
-
-    private static void text(Row prmRow, int prmColumn, String prmValue, CellStyle prmStyle) {
-        Cell objCell = prmRow.createCell(prmColumn);
-        objCell.setCellValue(prmValue == null ? "" : prmValue);
-        objCell.setCellStyle(prmStyle);
-    }
-
-    private static void number(Row prmRow, int prmColumn, BigDecimal prmValue, CellStyle prmStyle) {
-        Cell objCell = prmRow.createCell(prmColumn);
-        if (prmValue == null) {
-            objCell.setBlank();
-        } else {
-            objCell.setCellValue(prmValue.doubleValue());
-        }
-        objCell.setCellStyle(prmStyle);
-    }
-
-    private static void whole(Row prmRow, int prmColumn, long prmValue, CellStyle prmStyle) {
-        Cell objCell = prmRow.createCell(prmColumn);
-        objCell.setCellValue(prmValue);
-        objCell.setCellStyle(prmStyle);
     }
 
     private static BigDecimal sum(BigDecimal... prmValues) {

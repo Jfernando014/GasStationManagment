@@ -54,6 +54,11 @@ class DominusComplementWorkbookExporterTest {
             assertFill(sheet.getRow(14).getCell(7), RED_FILL);
             assertFill(sheet.getRow(14).getCell(8), RED_FILL);
             assertTotal(sheet.getRow(15).getCell(0));
+            assertTotal(sheet.getRow(15).getCell(1));
+            assertTotal(sheet.getRow(15).getCell(2));
+            assertTotal(sheet.getRow(15).getCell(3));
+            assertTotal(sheet.getRow(15).getCell(8));
+            assertNumberFormat(sheet.getRow(15).getCell(3), ExcelWorkbookStyles.WHOLE_FORMAT);
             assertNumberFormat(sheet.getRow(15).getCell(5), ExcelWorkbookStyles.MONEY_FORMAT);
         }
     }

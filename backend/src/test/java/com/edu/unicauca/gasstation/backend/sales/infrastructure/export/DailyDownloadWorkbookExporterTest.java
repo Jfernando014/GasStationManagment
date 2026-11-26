@@ -5,6 +5,7 @@ import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.RED
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertFill;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertHeader;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertNumberFormat;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertThinBorders;
 import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertTotal;
 import static com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.bd;
 import static com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.day;
@@ -18,6 +19,7 @@ import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -91,8 +93,27 @@ class DailyDownloadWorkbookExporterTest {
             assertFill(objSheet.getRow(5).getCell(17), RED_FILL);
             assertFill(objSheet.getRow(5).getCell(18), RED_FILL);
             assertTotal(objSheet.getRow(6).getCell(0));
+            assertTotal(objSheet.getRow(6).getCell(1));
+            assertTotal(objSheet.getRow(6).getCell(2));
+            assertTotal(objSheet.getRow(6).getCell(3));
+            assertTotal(objSheet.getRow(6).getCell(18));
+            assertNumberFormat(objSheet.getRow(6).getCell(3), ExcelWorkbookStyles.WHOLE_FORMAT);
             assertNumberFormat(objSheet.getRow(6).getCell(10), ExcelWorkbookStyles.MONEY_FORMAT);
             assertTrue(((XSSFSheet) objSheet).getPaneInformation().isFreezePane(), "The header must stay frozen");
+        }
+    }
+
+    @Test
+    void keepsTheBorderOfThePumpColumnWhenTheVendorHasNoPump() throws Exception {
+        VendorCloseSummary objWithoutPump = new VendorCloseSummary(day().date(), "1063", "Vendedor Sin Surtidor", "DIA",
+                null, bd("0"), bd("0"), bd("0"), bd("0"), bd("0"), bd("0"), bd("0"), bd("0"), bd("0"),
+                bd("0"), bd("0"), bd("0"), bd("0"), "CUADRA", List.of());
+        byte[] varBytes = atrExporter.exportSalesSheet(day(), List.of(objWithoutPump));
+
+        try (Workbook objWorkbook = new XSSFWorkbook(new ByteArrayInputStream(varBytes))) {
+            Sheet objSheet = objWorkbook.getSheet("PLANILLA VENTAS");
+            assertThinBorders(objSheet.getRow(4).getCell(3));
+            assertNumberFormat(objSheet.getRow(4).getCell(3), ExcelWorkbookStyles.WHOLE_FORMAT);
         }
     }
 
@@ -106,7 +127,15 @@ class DailyDownloadWorkbookExporterTest {
             assertNumberFormat(objSheet.getRow(4).getCell(3), ExcelWorkbookStyles.MONEY_FORMAT);
             assertNumberFormat(objSheet.getRow(4).getCell(4), ExcelWorkbookStyles.WHOLE_FORMAT);
             assertTotal(objSheet.getRow(8).getCell(1));
+            assertTotal(objSheet.getRow(8).getCell(0));
+            assertTotal(objSheet.getRow(8).getCell(2));
+            assertTotal(objSheet.getRow(8).getCell(3));
+            assertNumberFormat(objSheet.getRow(8).getCell(3), ExcelWorkbookStyles.MONEY_FORMAT);
             assertNumberFormat(objSheet.getRow(8).getCell(5), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertFill(objSheet.getRow(10).getCell(0), GREEN_FILL);
+            assertFill(objSheet.getRow(10).getCell(3), GREEN_FILL);
+            assertEquals(BorderStyle.THIN, objSheet.getRow(10).getCell(5).getCellStyle().getBorderTop(),
+                    "The basket rows must not repeat the double top border of the totals");
         }
     }
 }

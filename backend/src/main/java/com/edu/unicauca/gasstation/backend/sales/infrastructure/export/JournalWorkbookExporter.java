@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -309,8 +310,10 @@ public class JournalWorkbookExporter {
             writeDecimalCell(row, 14, nz(close.redemptions()), styles.currency);
             writeDecimalCell(row, 15, nz(close.totalDelivered()), styles.currencyBold);
             writeDecimalCell(row, 16, nz(close.dominusTirilla()), styles.currency);
-            writeDecimalCell(row, 17, nz(close.realDiscrepancy()), styles.currency);
-            writeTextCell(row, 18, close.resultStatus(), styles.text);
+            writeDecimalCell(row, 17, nz(close.realDiscrepancy()),
+                    ExcelWorkbookStyles.differenceStyle(close.resultStatus(), styles.shared));
+            writeTextCell(row, 18, close.resultStatus(),
+                    ExcelWorkbookStyles.resultStyle(close.resultStatus(), styles.shared));
 
             if (drawing != null && close.vendorDocument() != null) {
                 attachVendorRowComments(
@@ -439,7 +442,8 @@ public class JournalWorkbookExporter {
         writeDecimalRow(sheet, rowIdx++, "Efectivo del día (vendedores)", cash.dailyCash(), styles.currency, styles);
         writeDecimalRow(sheet, rowIdx++, "Saldo efectivo en planilla", cash.planillaCashBalance(), styles.currencyBold, styles);
         writeDecimalRow(sheet, rowIdx++, "Saldo acumulado Dominus", cash.dominusAccumulatedBalance(), styles.currency, styles);
-        writeDecimalRow(sheet, rowIdx++, "Diferencia (Dominus - Planilla)", cash.difference(), styles.currencyBold, styles);
+        writeDecimalRow(sheet, rowIdx++, "Diferencia (Dominus - Planilla)", cash.difference(),
+                ExcelWorkbookStyles.cashDifferenceStyle(cash.difference(), styles.shared), styles);
         rowIdx++;
 
         writeSectionRow(sheet, rowIdx++, "Gastos administrativos del día", 3, styles);
@@ -491,9 +495,10 @@ public class JournalWorkbookExporter {
                 writeDecimalCell(row, 3, nz(item.soldGallons()), styles.gallons);
                 writeDecimalCell(row, 4, nz(item.theoreticalGallons()), styles.gallons);
                 writeDecimalCell(row, 5, nz(item.measuredGallons()), styles.gallons);
-                writeDecimalCell(row, 6, nz(item.varianceGallons()), styles.gallonsBold);
+                writeDecimalCell(row, 6, nz(item.varianceGallons()),
+                        item.outOfTolerance() ? styles.errorNumber : styles.gallonsBold);
                 writeDecimalCell(row, 7, nz(item.toleranceGallons()), styles.gallons);
-                writeTextCell(row, 8, item.status(), styles.text);
+                writeTextCell(row, 8, item.status(), item.outOfTolerance() ? styles.error : styles.ok);
             }
         }
 
@@ -693,6 +698,7 @@ public class JournalWorkbookExporter {
     }
 
     private static void writeHeaderCell(Row row, int column, String value, Styles styles) {
+        row.setHeightInPoints(30);
         Cell cell = row.createCell(column);
         cell.setCellValue(value);
         cell.setCellStyle(styles.header);
@@ -752,6 +758,7 @@ public class JournalWorkbookExporter {
      * looks like the daily downloads.
      */
     private static final class Styles {
+        final ExcelWorkbookStyles.Styles shared;
         final CellStyle header;
         final CellStyle section;
         final CellStyle text;
@@ -767,9 +774,11 @@ public class JournalWorkbookExporter {
         final CellStyle totalGallons;
         final CellStyle ok;
         final CellStyle warning;
+        final CellStyle error;
+        final CellStyle errorNumber;
 
         Styles(XSSFWorkbook workbook) {
-            ExcelWorkbookStyles.Styles shared = ExcelWorkbookStyles.Styles.of(workbook);
+            shared = ExcelWorkbookStyles.Styles.of(workbook);
             header = shared.header();
             section = shared.section();
             text = shared.text();
@@ -785,6 +794,8 @@ public class JournalWorkbookExporter {
             totalGallons = shared.totalNumber();
             ok = shared.ok();
             warning = shared.warning();
+            error = shared.error();
+            errorNumber = shared.errorNumber();
         }
     }
 }

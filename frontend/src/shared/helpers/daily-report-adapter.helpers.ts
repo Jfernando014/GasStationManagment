@@ -37,7 +37,7 @@ interface ColumnSpec {
   width?: number;
   /** Number format of the column. Omitted for text columns. */
   format?: ColumnFormat;
-  /** True for the columns that must stand out when they are not zero (discrepancies). */
+  /** True for the columns painted with the vendor result (CUADRA/SOBRA/FALTA). */
   alert?: boolean;
 }
 
@@ -108,17 +108,21 @@ export async function loadExcelJs(): Promise<typeof import('exceljs')> {
 /** PLANILLA VENTAS of the backend -> PLANILLA VENTAS of the prototype. */
 export async function adaptSalesSheet(prmContent: Blob, prmDate: string): Promise<DownloadedFile> {
   const objSheet = await openSheet(prmContent, SALES_TITLE);
-  const objRecords = readRecords(objSheet, SALES_TITLE, 'Vendedor', requiredSources(SALES_COLUMNS));
-  const objRows = objRecords
-    .filter((prmRecord) => prmRecord['Vendedor'] !== BACKEND_SALES_TOTAL)
-    .map((prmRecord) => toRow(SALES_COLUMNS, prmRecord));
+  const objRecords = readRecords(objSheet, SALES_TITLE, 'Vendedor',
+    [...requiredSources(SALES_COLUMNS), 'Resultado']);
+  const objVendors = objRecords.filter((prmRecord) => prmRecord['Vendedor'] !== BACKEND_SALES_TOTAL);
+  const objRows = objVendors.map((prmRecord) => toRow(SALES_COLUMNS, prmRecord));
+  // Colours only apply to vendor rows; the total row gets its own styling (green) and is skipped
+  // by the varTotalRow guard in styleSheet.  Index the statuses only for vendors.
+  const objStatuses = objVendors.map((prmRecord) => resultStatusOf(prmRecord['Resultado']));
   const objTotal = objRecords.find((prmRecord) => prmRecord['Vendedor'] === BACKEND_SALES_TOTAL);
   if (objTotal) {
     const objTotalRow = toRow(SALES_COLUMNS, objTotal);
     objTotalRow[0] = PROTOTYPE_SALES_TOTAL;
     objRows.push(objTotalRow);
+    objStatuses.push(null);
   }
-  return buildFile(SALES_TITLE, prmDate, SALES_COLUMNS, objRows, []);
+  return buildFile(SALES_TITLE, prmDate, SALES_COLUMNS, objRows, [], objStatuses);
 }
 
 /** LUBRICANTES Y VARIOS of the backend -> LUBRICANTES Y VARIOS of the prototype. */
@@ -134,6 +138,16 @@ export async function adaptLubricantsFile(prmContent: Blob, prmDate: string): Pr
 
 function requiredSources(prmColumns: readonly ColumnSpec[]): string[] {
   return prmColumns.map((prmColumn) => prmColumn.source).filter((prmSource): prmSource is string => prmSource !== null);
+}
+
+/** Result column of the backend: CUADRA, SOBRA or FALTA. */
+function resultStatusOf(prmValue: CellOut): string | null {
+  return typeof prmValue === 'string' && prmValue.trim() !== '' ? prmValue.trim() : null;
+}
+
+/** True when the record corresponds to the day-total row. */
+function isResultRow(prmRecord: RowRecord): boolean {
+  return prmRecord['Vendedor'] === BACKEND_SALES_TOTAL;
 }
 
 async function openSheet(prmContent: Blob, prmSheetName: string): Promise<Worksheet> {
@@ -211,7 +225,8 @@ async function buildFile(
   prmDate: string,
   prmColumns: readonly ColumnSpec[],
   prmRows: CellOut[][],
-  prmFooter: CellOut[][]
+  prmFooter: CellOut[][],
+  prmStatuses: readonly (string | null)[] = []
 ): Promise<DownloadedFile> {
   const [varYear, varMonth, varDay] = prmDate.split('-');
   const objExcelJs = await loadExcelJs();
@@ -231,7 +246,7 @@ async function buildFile(
       MAX_COLUMN_WIDTH
     );
   });
-  styleSheet(objSheet, prmColumns, prmRows.length);
+  styleSheet(objSheet, prmColumns, prmRows.length, prmStatuses);
   const objBuffer = await objWorkbook.xlsx.writeBuffer();
   return {
     fileName: `${prmTitle.replace(/\s+/g, '-')}-${prmDate}.xlsx`,
@@ -250,19 +265,29 @@ const PALETTE = {
   border: 'FFD9D9D9',
   greenFill: 'FFE2EFDA',
   greenText: 'FF1E4620',
+  amberFill: 'FFFFF2CC',
+  amberText: 'FF7F6000',
   redFill: 'FFFFC7CE',
   redText: 'FF9C0006',
   greyText: 'FF595959'
 } as const;
 
 const NUMBER_FORMATS: Record<ColumnFormat, string> = {
-  money: '"$" #,##0.00',
+  money: '"$" #,##0',
   gallons: '#,##0.00',
   integer: '#,##0'
 };
 
 /** Characters the number format adds: currency symbol, decimals and thousand separators. */
-const FORMAT_PADDING: Record<ColumnFormat, number> = { money: 6, gallons: 3, integer: 2 };
+const FORMAT_PADDING: Record<ColumnFormat, number> = { money: 4, gallons: 3, integer: 2 };
+
+/** Colours of the vendor result: balanced green, surplus amber and shortfall red. */
+const RESULT_COLOURS: Record<string, { fill: string; text: string }> = {
+  CUADRA: { fill: PALETTE.greenFill, text: PALETTE.greenText },
+  OK: { fill: PALETTE.greenFill, text: PALETTE.greenText },
+  SOBRA: { fill: PALETTE.amberFill, text: PALETTE.amberText },
+  FALTA: { fill: PALETTE.redFill, text: PALETTE.redText }
+};
 
 const THIN_BORDER = {
   top: { style: 'thin' as const, color: { argb: PALETTE.border } },
@@ -272,7 +297,12 @@ const THIN_BORDER = {
 };
 
 /** Applies the palette and the formats to the title, the header, the data and the note rows. */
-function styleSheet(prmSheet: Worksheet, prmColumns: readonly ColumnSpec[], prmDataRows: number): void {
+function styleSheet(
+  prmSheet: Worksheet,
+  prmColumns: readonly ColumnSpec[],
+  prmDataRows: number,
+  prmStatuses: readonly (string | null)[]
+): void {
   prmSheet.views = [{ state: 'frozen', ySplit: 3 }];
 
   const objTitle = prmSheet.getRow(1);
@@ -305,15 +335,13 @@ function styleSheet(prmSheet: Worksheet, prmColumns: readonly ColumnSpec[], prmD
         objCell.font = { bold: true, color: { argb: PALETTE.greenText } };
         objCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.greenFill } };
         objCell.border = { ...THIN_BORDER, top: { style: 'double', color: { argb: PALETTE.greenText } } };
-      }
-      if (objColumn.alert && typeof objCell.value === 'number') {
-        const varBalanced = objCell.value === 0;
-        objCell.font = { bold: true, color: { argb: varBalanced ? PALETTE.greenText : PALETTE.redText } };
-        objCell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: varBalanced ? PALETTE.greenFill : PALETTE.redFill }
-        };
+      } else if (objColumn.alert && typeof objCell.value === 'number') {
+        // Only vendor rows carry a result, and the result decides the colour: a tolerance is green.
+        const objColours = resultColours(prmStatuses[varRow - 4] ?? null);
+        if (objColours) {
+          objCell.font = { bold: true, color: { argb: objColours.text } };
+          objCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: objColours.fill } };
+        }
       }
     });
   }
@@ -327,6 +355,11 @@ function styleSheet(prmSheet: Worksheet, prmColumns: readonly ColumnSpec[], prmD
 /** True when the given row starts with the total label of the prototype. */
 function isTotalRow(prmSheet: Worksheet, prmRow: number): boolean {
   return prmRow > 3 && prmSheet.getRow(prmRow).getCell(1).value === PROTOTYPE_SALES_TOTAL;
+}
+
+/** Colours of a vendor result, or null when the row has no result (for example the total row). */
+function resultColours(prmStatus: string | null): { fill: string; text: string } | null {
+  return prmStatus ? RESULT_COLOURS[prmStatus.trim().toUpperCase()] ?? null : null;
 }
 
 function plain(prmValue: CellValue): CellOut {
