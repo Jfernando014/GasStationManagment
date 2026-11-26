@@ -1,0 +1,107 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  container-type: inline-size;
+  scroll-margin-top: 12px;
+}
+
+h3 { margin: 0 0 4px; font-size: 13.5px; font-weight: 700; color: var(--text-body); }
+
+ul { margin: 0; padding: 0; list-style: none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) minmax(0, 1fr) 100px 32px;
+  grid-template-areas: 'date amount state edit';
+  align-items: center;
+  column-gap: 12px;
+  padding: 0 6px;
+}
+
+.date { grid-area: date; }
+.amount { grid-area: amount; }
+.state { grid-area: state; justify-self: start; }
+.edit { grid-area: edit; }
+
+.head {
+  min-height: 30px;
+  border-bottom: 1px solid var(--surface-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.row {
+  min-height: 46px;
+  border-bottom: 1px solid var(--surface-subtle);
+  font-size: 14px;
+  color: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--duration-normal) ease, box-shadow var(--duration-normal) ease;
+  animation: row-in 320ms var(--spring) calc(var(--i) * 40ms + 150ms) backwards;
+}
+
+.row b { color: var(--text-heading); white-space: nowrap; }
+
+.row.is-new {
+  border-radius: 8px;
+  background: var(--semantic-green-subtle);
+  box-shadow: 0 0 0 1px #A7F3D0;
+  animation: row-in 320ms var(--spring) backwards, row-flash 1600ms var(--spring);
+}
+
+.edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.edit:hover { background: var(--surface-subtle); color: var(--text-heading); }
+.edit:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+
+.empty {
+  margin-top: 6px;
+  border: 1.5px dashed var(--border-main);
+  border-radius: var(--radius-md);
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes row-flash {
+  0%, 35% { background: #D1FAE5; }
+}
+
+/* A narrow column: the state goes under the date. */
+@container (max-width: 400px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
+    grid-template-areas:
+      'date amount edit'
+      'state amount edit';
+    column-gap: 10px;
+  }
+
+  .head { grid-template-areas: 'date amount edit'; }
+  .row { min-height: 60px; padding-top: 6px; padding-bottom: 6px; row-gap: 3px; }
+  .amount { justify-self: end; }
+  .edit { width: 44px; height: 44px; }
+}
+
+@media (max-width: 640px) {
+  .grid:not(.head) .edit { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row, .row.is-new { animation: none; transition: none; }
+}

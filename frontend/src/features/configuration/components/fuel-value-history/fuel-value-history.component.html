@@ -1,0 +1,36 @@
+<h3>{{ heading() }}</h3>
+
+@if (rows().length === 0) {
+  <div class="empty">
+    <app-empty-state [heading]="emptyHeading()" [description]="emptyText()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+      <button type="button" appButton variant="primary" size="sm" (click)="add.emit()">Agregar el primero</button>
+    </app-empty-state>
+  </div>
+} @else {
+  <div class="grid head" aria-hidden="true">
+    <span class="date">Rige desde</span>
+    <span class="amount">Valor por galón</span>
+  </div>
+  <ul>
+    @for (row of rows(); track row.source.id) {
+      <li class="grid row" [class.is-new]="row.source.id === highlightId()" [attr.data-value-id]="row.source.id"
+        [style.--i]="$index">
+        <span class="date">{{ row.date }}</span>
+        <b class="amount">{{ row.amount }}</b>
+        <app-tag class="state" [variant]="row.tone">{{ row.label }}</app-tag>
+        <button type="button" class="edit" [attr.aria-label]="'Editar el valor del ' + row.date"
+          [attr.title]="'Editar el valor del ' + row.date" (click)="edit.emit(row.source)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </button>
+      </li>
+    }
+  </ul>
+}
