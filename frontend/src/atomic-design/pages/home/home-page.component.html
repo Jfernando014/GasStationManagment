@@ -1,14 +1,10 @@
 <div class="inv-subview active home-page">
-  <div class="subview-breadcrumb">INVENTARIO <span class="bc-sep">/</span> PANEL DE INVENTARIO</div>
-
-  <header class="inv-header-bar">
-    <div class="inv-header-left">
-      <span class="inv-header-title">
-        Panel de inventario
-      </span>
-      <span class="inv-header-sub">Existencias por combustible y tanque desde la última medición registrada.</span>
+  <header class="cf-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Panel principal</h1>
+      <p>Existencias por combustible y tanque desde la última medición registrada.</p>
     </div>
-    <div class="inv-header-actions">
+    <div class="cf-acciones">
       <button appButton variant="secondary" size="sm" type="button" [disabled]="loading()" (click)="loadHome()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
       </button>

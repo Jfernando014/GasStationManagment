@@ -1,19 +1,16 @@
 .journal-page-container {
-  padding: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.header h2 {
-  margin: 0;
-  color: var(--text-color, #212529);
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-bottom: 16px;
 }
 
 .journal-info {
@@ -91,16 +88,13 @@
 }
 
 @media (max-width: 1024px) {
-  .journal-page-container { padding: 16px; }
   .step-content-container { padding: 16px; }
 }
 
 /* Teléfono: el body ya aporta su margen, así que el contenedor no suma otro a los lados. */
 @media (max-width: 640px) {
-  .journal-page-container { padding: 8px 0; }
   .step-content-container { padding: 12px; }
-  .header { flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
-  .header h2 { font-size: 20px; }
+  .header { align-items: stretch; flex-direction: column; gap: 8px 12px; margin-bottom: 12px; }
   .journal-info { flex-wrap: wrap; gap: 6px 10px; }
   .readonly-banner { flex-direction: column; align-items: stretch; }
   .readonly-banner-links { flex-wrap: wrap; gap: 0 14px; }

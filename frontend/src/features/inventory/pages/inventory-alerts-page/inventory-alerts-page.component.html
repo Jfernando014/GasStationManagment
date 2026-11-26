@@ -1,17 +1,13 @@
 <div class="inv-subview active alerts-page">
-  <div class="subview-breadcrumb">INVENTARIO <span class="bc-sep">/</span> ALERTAS DE INVENTARIO</div>
-
-  <header class="inv-header-bar">
-    <div class="inv-header-left">
-      <span class="inv-header-title">
-        Alertas de inventario
-      </span>
-      <span class="inv-header-sub">
+  <header class="cf-cabecera">
+    <div class="jr-paso-cabecera">
+      <h1>Alertas de inventario</h1>
+      <p>
         Alertas de autonomía detectadas por el sistema. Atenderlas no las cierra: se resuelven cuando el
         combustible vuelve a estar sobre el umbral.
-      </span>
+      </p>
     </div>
-    <div class="inv-header-actions">
+    <div class="cf-acciones">
       <a appButton variant="secondary" size="sm" routerLink="/">Volver al panel</a>
       <button appButton variant="primary" size="sm" type="button" [disabled]="loading()" (click)="loadAlerts()">
         {{ loading() ? 'Actualizando…' : 'Actualizar' }}
