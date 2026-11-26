@@ -27,11 +27,16 @@
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform var(--duration-normal) var(--spring);
+  transition: transform var(--duration-normal) var(--spring), box-shadow var(--duration-normal) var(--spring);
 }
 
 .side-panel--open {
   transform: translateX(0);
+}
+
+/* Closed panels wait outside the screen: their shadows would still darken its edge. */
+.side-panel:not(.side-panel--open) {
+  box-shadow: none;
 }
 
 .side-panel-header {
