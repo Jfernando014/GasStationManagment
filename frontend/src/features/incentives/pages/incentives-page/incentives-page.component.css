@@ -3,10 +3,8 @@
 .incentives-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 1192px;
-  margin: 0 auto;
-  padding: 24px 36px 36px;
+  gap: 16px;
+  min-width: 0;
 }
 
 .incentives-tabs {
@@ -35,12 +33,8 @@ a.incentives-tab:focus-visible { outline: 2px solid var(--border-focus); outline
 .incentives-tab.is-active { color: var(--text-heading); border-bottom-color: var(--brand-primary); }
 .incentives-tab.is-disabled { color: var(--text-light); }
 
-@media (max-width: 1024px) {
-  .incentives-page { padding: 20px 16px 28px; }
-}
-
 @media (max-width: 640px) {
-  .incentives-page { gap: 14px; padding: 16px 0 28px; }
+  .incentives-page { gap: 14px; }
   .incentives-tabs { gap: 16px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
   .incentives-tabs::-webkit-scrollbar { display: none; }
 }

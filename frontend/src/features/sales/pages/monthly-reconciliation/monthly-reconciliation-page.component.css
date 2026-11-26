@@ -1,8 +1,6 @@
 :host { display: block; min-width: 0; container-type: inline-size; }
 [hidden] { display: none !important; }
 .monthly-reconciliation-page { display: flex; flex-direction: column; gap: 16px; }
-.monthly-eyebrow { margin: 0 0 5px; color: var(--brand-primary); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
-.monthly-eyebrow span { padding: 0 4px; color: var(--text-muted); }
 .monthly-header-status { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--border-main); border-radius: 999px; background: var(--surface-main); color: var(--text-muted); font-size: 12px; font-weight: 650; }
 .monthly-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--semantic-green); }
 .monthly-status-separator { color: var(--border-strong); }
