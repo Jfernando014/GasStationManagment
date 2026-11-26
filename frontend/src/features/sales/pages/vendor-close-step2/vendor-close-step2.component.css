@@ -768,6 +768,14 @@
   }
 }
 
+/* ---- Sin precio de venta: nota en lugar de la diferencia contra la tirilla ---- */
+.jr-grid .jr-p2-sin-precio td:not(.jr-grid-concepto) { text-align: left; white-space: normal; background: #f8fafc; }
+.jr-p2-sin-precio-nota { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 12px; line-height: 1.5; color: #64748b; }
+.jr-p2-sin-precio-nota svg { flex-shrink: 0; margin-top: 2.5px; }
+.jr-p2-sin-precio-nota a { margin-left: 4px; font-weight: 600; color: var(--brand-primary-strong); text-decoration: none; }
+.jr-p2-sin-precio-nota a:hover { text-decoration: underline; }
+.jr-p2-sin-precio-nota a:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 4px; }
+
 /* ---- Teléfono (≤ 640px): la matriz conserva todas las columnas y tiene su propio scroll ---- */
 @media (max-width: 640px) {
   .jr-p2-ayuda, .jr-leyenda-sep { display: none; }
@@ -789,6 +797,9 @@
   .jr-grid-bloque td { height: 44px; }
   .jr-grid-toggle { min-height: 44px; }
   .jr-bloque-flex { position: sticky; left: 8px; width: calc(100vw - 64px); }
+  /* La nota se queda a la vista al desplazar la matriz hacia los lados. */
+  .jr-p2-sin-precio-nota { position: sticky; left: 118px; max-width: calc(100vw - 190px); }
+  .jr-p2-sin-precio-nota a { display: block; margin-left: 0; padding: 13px 0; }
   .jr-p2-buscar { flex: 1 1 180px; width: 100%; height: 44px; font-size: 16px; }
   .jr-input { height: 44px; padding: 0 8px; font-size: 16px; }
   .jr-chip { max-width: 100%; padding: 2px 7px; font-size: 10.5px; white-space: normal; overflow-wrap: anywhere; }

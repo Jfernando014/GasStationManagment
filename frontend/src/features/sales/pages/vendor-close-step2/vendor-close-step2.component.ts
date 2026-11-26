@@ -11,6 +11,9 @@ import { ShiftHoursService } from '../../../../core/services/shift-hours.service
 import { JournalStepChangesService, StepDirtyHandler } from '../../../../core/services/journal-step-changes.service';
 import { ProductsService } from '../../../../core/services/products.service';
 import { getErrorMessage } from '../../../../shared/helpers/problem-details.helpers';
+import { formatShortDate } from '../../../../shared/helpers/format.helpers';
+import { FUELS } from '../../../../shared/helpers/fuel-price.helpers';
+import { FuelType } from '../../../../shared/models/dtos/tank.dto';
 import { JournalCellNoteResponse, JournalStatus, StepStatus } from '../../../../shared/models/journal.model';
 import {
   AssignedVendorDto,
@@ -73,12 +76,20 @@ export const DENOMINATIONS: [keyof DenominationsBreakdown, number][] = [
   ['b2k', 2000]
 ];
 
-export const FUEL_PRICES: Record<string, number> = {
-  motor: 16330,
-  diesel: 11930,
-  extra: 20390,
-  maxpro: 12790
+/** Name of each fuel of the backend in the effective prices of the grid. */
+const FUEL_PRICE_KEYS: Record<FuelType, string> = {
+  MOTOR: 'motor',
+  DIESEL: 'diesel',
+  EXTRA: 'extra',
+  MAX_PRO: 'maxpro'
 };
+
+/** Why the difference against the slip is not calculated. */
+export interface FuelPriceNotice {
+  text: string;
+  /** Fuel to open in the prices screen; null when the prices could not be read. */
+  fuelType: FuelType | null;
+}
 
 @Component({
   selector: 'app-vendor-close-step2',
@@ -111,7 +122,9 @@ export class VendorCloseStep2Component implements OnInit {
   captures: Record<string, VendorGridCapture> = {};
 
   tolerance = 0.5;
-  fuelPrices: Record<string, number> = { ...FUEL_PRICES };
+  /** Sale prices that rule on the journal date; a fuel without one is absent. */
+  fuelPrices: Record<string, number> = {};
+  private fuelPricesState: 'loading' | 'ready' | 'error' = 'loading';
   catalogProducts: CatalogProductItem[] = [];
   private readonly defaultProductSkus: readonly string[] = ['76102', '75089', '74063', '80266'];
   visibleProductSkus: string[] = [...this.defaultProductSkus];
@@ -233,35 +246,59 @@ export class VendorCloseStep2Component implements OnInit {
   }
 
   loadFuelPrices(): void {
-    this.fuelPrices = { ...FUEL_PRICES };
+    this.fuelPrices = {};
+    this.fuelPricesState = 'loading';
     const loader = (this.salesService as { getEffectiveFuelPrices?: (date: string) => ReturnType<SalesVendorCloseService['getEffectiveFuelPrices']> }).getEffectiveFuelPrices;
     if (!loader) return;
-    loader.call(this.salesService, this.journalDate).subscribe({
+    const date = this.journalDate;
+    loader.call(this.salesService, date).subscribe({
       next: prices => {
-        if (!prices) return;
-        this.applyEffectiveFuelPrices(prices);
+        // A late answer for a day that is no longer on screen is ignored.
+        if (date !== this.journalDate) return;
+        this.applyEffectiveFuelPrices(prices ?? {});
+        this.fuelPricesState = 'ready';
         this.recalculateAll();
       },
       error: () => {
+        if (date !== this.journalDate) return;
+        this.fuelPricesState = 'error';
         this.recalculateAll();
       }
     });
   }
 
   private applyEffectiveFuelPrices(prices: Record<string, number>): void {
-    const keyMap: Record<string, string> = {
-      MOTOR: 'motor',
-      DIESEL: 'diesel',
-      EXTRA: 'extra',
-      MAX_PRO: 'maxpro'
-    };
     for (const [rawKey, value] of Object.entries(prices)) {
-      const normalized = keyMap[rawKey.toUpperCase()] ?? rawKey.toLowerCase();
+      const key = FUEL_PRICE_KEYS[rawKey.toUpperCase() as FuelType];
       const numeric = Number(value);
-      if (normalized in this.fuelPrices && Number.isFinite(numeric) && numeric > 0) {
-        this.fuelPrices[normalized] = numeric;
+      if (key && Number.isFinite(numeric) && numeric > 0) {
+        this.fuelPrices[key] = numeric;
       }
     }
+  }
+
+  private missingFuelPrices() {
+    return FUELS.filter(fuel => this.fuelPrices[FUEL_PRICE_KEYS[fuel.type]] === undefined);
+  }
+
+  /** Note of the "Diferencia contra la tirilla" row; null while loading and when every fuel has a price. */
+  get fuelPriceNotice(): FuelPriceNotice | null {
+    if (this.fuelPricesState === 'loading') return null;
+    if (this.fuelPricesState === 'error') {
+      return {
+        text: 'No se pudieron consultar los precios de venta, así que no se calcula esta diferencia.',
+        fuelType: null
+      };
+    }
+    const missing = this.missingFuelPrices();
+    if (missing.length === 0) return null;
+    const names = missing.map(fuel => fuel.name);
+    const listed = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+    const which = missing.length === FUELS.length ? '' : ` de ${listed}`;
+    return {
+      text: `No hay precio de venta${which} cargado para el ${formatShortDate(this.journalDate)}, así que no se calcula esta diferencia.`,
+      fuelType: missing[0].type
+    };
   }
 
   loadTolerance(): void {
@@ -569,8 +606,8 @@ export class VendorCloseStep2Component implements OnInit {
       }
     }
 
-    // Validación tirilla vs galones
-    if (tirilla > 0) {
+    // Validación tirilla vs galones: solo con el precio de venta de todos los combustibles
+    if (tirilla > 0 && this.missingFuelPrices().length === 0) {
       const fuelSales = (Number(cap.galMotor) || 0) * this.fuelPrices['motor'] +
         (Number(cap.galDiesel) || 0) * this.fuelPrices['diesel'] +
         (Number(cap.galExtra) || 0) * this.fuelPrices['extra'] +
