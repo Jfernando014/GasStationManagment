@@ -3481,6 +3481,7 @@
 
     @media (max-width: 640px) {
       .jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera { flex-direction: column; align-items: stretch; }
+      :is(.jr-p3-cabecera, .jr-p5-cabecera, .jr-p6-cabecera, .rs-cabecera, .cf-cabecera, .ps-cabecera) > .jr-paso-cabecera { flex: 0 1 auto; }
 
       .jr-p3-cabecera .ep-acciones[class],
       .jr-p5-cabecera .jr-p5-acciones[class],
