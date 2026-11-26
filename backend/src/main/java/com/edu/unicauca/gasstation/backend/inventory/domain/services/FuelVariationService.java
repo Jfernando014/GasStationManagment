@@ -5,6 +5,7 @@ import com.edu.unicauca.gasstation.backend.inventory.SalesSummary;
 import com.edu.unicauca.gasstation.backend.inventory.SalesSummaryPort;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelReception;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.FuelVariation;
+import com.edu.unicauca.gasstation.backend.inventory.domain.models.GaugeTable;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.Tank;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankMeasurement;
 import com.edu.unicauca.gasstation.backend.inventory.domain.models.TankReading;
@@ -13,6 +14,7 @@ import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.FuelRec
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankMeasurementRepository;
 import com.edu.unicauca.gasstation.backend.inventory.domain.repositories.TankRepository;
 import com.edu.unicauca.gasstation.backend.inventory.exception.HeightExceedsGaugeException;
+import com.edu.unicauca.gasstation.backend.inventory.exception.TankWithoutGaugeTableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +22,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,28 +50,66 @@ public class FuelVariationService {
      * sales of the days in between would be missing.
      */
     public List<FuelVariation> calculate(LocalDate journalDate) {
-        Map<FuelType, List<Tank>> tanksByFuel = tankRepository.findAllOrderByCode().stream()
-                .collect(Collectors.groupingBy(Tank::getFuelType,
-                        () -> new EnumMap<>(FuelType.class), Collectors.toList()));
+        Map<FuelType, List<Tank>> tanksByFuel = tanksByFuel();
 
         TankMeasurement current = measurementRepository.findByJournalDate(journalDate).orElse(null);
         TankMeasurement previous = measurementRepository.findByJournalDate(journalDate.minusDays(1)).orElse(null);
         Map<FuelType, BigDecimal> sold = salesSummaryPort.findByJournalDate(journalDate)
                 .map(SalesSummary::gallonsByFuel)
                 .orElse(Map.of());
-        Map<Long, BigDecimal> receivedByTank = receptionRepository.search(null, journalDate, journalDate).stream()
+        List<FuelReception> receptions = receptionRepository.search(null, journalDate, journalDate);
+
+        return calculateDay(tanksByFuel, current, previous, sold, receptions, gaugeTableService::calculateVolume);
+    }
+
+    /**
+     * The same variation as {@link #calculate} for every date between both (inclusive), reading the measurements,
+     * receptions, sales and gauge tables of the whole range once.
+     */
+    public Map<LocalDate, List<FuelVariation>> calculateRange(LocalDate from, LocalDate to) {
+        Map<FuelType, List<Tank>> tanksByFuel = tanksByFuel();
+
+        // The day before the range holds the initial stock of its first day
+        Map<LocalDate, TankMeasurement> measurements = measurementRepository
+                .findByJournalDateBetween(from.minusDays(1), to).stream()
+                .collect(Collectors.toMap(TankMeasurement::getJournalDate, Function.identity()));
+        Map<LocalDate, Map<FuelType, BigDecimal>> sales = salesSummaryPort.findByJournalDateRange(from, to).stream()
+                .collect(Collectors.toMap(SalesSummary::journalDate, SalesSummary::gallonsByFuel));
+        Map<LocalDate, List<FuelReception>> receptions = receptionRepository.search(null, from, to).stream()
+                .collect(Collectors.groupingBy(FuelReception::getReceptionDate));
+        BiFunction<Long, BigDecimal, BigDecimal> volumes = volumesReadingEachTableOnce(tanksByFuel);
+
+        Map<LocalDate, List<FuelVariation>> variations = new LinkedHashMap<>();
+        from.datesUntil(to.plusDays(1)).forEach(date -> variations.put(date, calculateDay(tanksByFuel,
+                measurements.get(date), measurements.get(date.minusDays(1)), sales.getOrDefault(date, Map.of()),
+                receptions.getOrDefault(date, List.of()), volumes)));
+        return variations;
+    }
+
+    private Map<FuelType, List<Tank>> tanksByFuel() {
+        return tankRepository.findAllOrderByCode().stream()
+                .collect(Collectors.groupingBy(Tank::getFuelType,
+                        () -> new EnumMap<>(FuelType.class), Collectors.toList()));
+    }
+
+    private List<FuelVariation> calculateDay(Map<FuelType, List<Tank>> tanksByFuel, TankMeasurement current,
+                                             TankMeasurement previous, Map<FuelType, BigDecimal> sold,
+                                             List<FuelReception> receptions,
+                                             BiFunction<Long, BigDecimal, BigDecimal> volumes) {
+        Map<Long, BigDecimal> receivedByTank = receptions.stream()
                 .collect(Collectors.groupingBy(FuelReception::getTankId,
                         Collectors.reducing(BigDecimal.ZERO, FuelReception::getGallons, BigDecimal::add)));
 
         return tanksByFuel.entrySet().stream()
                 .map(entry -> calculateFuel(entry.getKey(), entry.getValue(), current, previous,
-                        sold.get(entry.getKey()), receivedByTank))
+                        sold.get(entry.getKey()), receivedByTank, volumes))
                 .toList();
     }
 
     private FuelVariation calculateFuel(FuelType fuelType, List<Tank> tanks, TankMeasurement current,
                                         TankMeasurement previous, BigDecimal sold,
-                                        Map<Long, BigDecimal> receivedByTank) {
+                                        Map<Long, BigDecimal> receivedByTank,
+                                        BiFunction<Long, BigDecimal, BigDecimal> volumes) {
         BigDecimal entries = tanks.stream()
                 .map(tank -> receivedByTank.getOrDefault(tank.getId(), BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -88,7 +132,7 @@ public class FuelVariationService {
 
         BigDecimal theoretical = initial.add(entries).subtract(sold);
         BigDecimal variance = measured.subtract(theoretical);
-        BigDecimal tolerance = toleranceGallons(tanks, current);
+        BigDecimal tolerance = toleranceGallons(tanks, current, volumes);
         return builder
                 .theoreticalGallons(theoretical)
                 .varianceGallons(variance)
@@ -137,7 +181,8 @@ public class FuelVariationService {
      * height: half of V(h + tol) - V(h - tol), since the curve is not linear. The tolerances are
      * added up, which is the worst case (every tank wrong in the same direction).
      */
-    private BigDecimal toleranceGallons(List<Tank> tanks, TankMeasurement current) {
+    private BigDecimal toleranceGallons(List<Tank> tanks, TankMeasurement current,
+                                        BiFunction<Long, BigDecimal, BigDecimal> volumes) {
         BigDecimal total = BigDecimal.ZERO;
         for (Tank tank : tanks) {
             BigDecimal toleranceCm = tank.getToleranceCm();
@@ -146,8 +191,8 @@ public class FuelVariationService {
             }
             BigDecimal height = current.readingOf(tank.getId()).orElseThrow().getHeightCm();
             BigDecimal low = height.subtract(toleranceCm).max(BigDecimal.ZERO);
-            BigDecimal span = volumeAbove(tank.getId(), height.add(toleranceCm), height)
-                    .subtract(gaugeTableService.calculateVolume(tank.getId(), low));
+            BigDecimal span = volumeAbove(tank.getId(), height.add(toleranceCm), height, volumes)
+                    .subtract(volumes.apply(tank.getId(), low));
             total = total.add(span.multiply(HALF));
         }
         return total.setScale(TOLERANCE_SCALE, RoundingMode.HALF_UP);
@@ -156,11 +201,29 @@ public class FuelVariationService {
     /**
      * Volume at the upper bound, or at the measured height if the bound is beyond the gauge table.
      */
-    private BigDecimal volumeAbove(Long tankId, BigDecimal upper, BigDecimal height) {
+    private BigDecimal volumeAbove(Long tankId, BigDecimal upper, BigDecimal height,
+                                   BiFunction<Long, BigDecimal, BigDecimal> volumes) {
         try {
-            return gaugeTableService.calculateVolume(tankId, upper);
+            return volumes.apply(tankId, upper);
         } catch (HeightExceedsGaugeException e) {
-            return gaugeTableService.calculateVolume(tankId, height);
+            return volumes.apply(tankId, height);
         }
+    }
+
+    /** Volume of a tank at a height, keeping each gauge table in memory after reading it. */
+    private BiFunction<Long, BigDecimal, BigDecimal> volumesReadingEachTableOnce(
+            Map<FuelType, List<Tank>> tanksByFuel) {
+        Map<Long, Tank> tanksById = tanksByFuel.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toMap(Tank::getId, Function.identity()));
+        Map<Long, GaugeTable> tables = new HashMap<>();
+        return (tankId, height) -> {
+            Long tableId = tanksById.get(tankId).getGaugeTableId();
+            if (tableId == null) {
+                throw new TankWithoutGaugeTableException(tankId);
+            }
+            return gaugeTableService.calculateVolume(
+                    tables.computeIfAbsent(tableId, gaugeTableService::findById), height);
+        };
     }
 }

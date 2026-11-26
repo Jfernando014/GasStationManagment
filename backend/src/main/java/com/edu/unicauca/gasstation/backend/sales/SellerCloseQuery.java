@@ -18,6 +18,12 @@ public interface SellerCloseQuery {
     Optional<DaySummary> findDaySummary(LocalDate journalDate);
 
     /**
+     * Retrieves at once the daily totals of the journal dates between both (inclusive) that have closes, ordered by
+     * date.
+     */
+    List<DaySummary> findDaySummaries(LocalDate from, LocalDate to);
+
+    /**
      * Retrieves the list of individual vendor closes for a given journal date.
      */
     List<VendorCloseSummary> findVendorClosesByDate(LocalDate journalDate);

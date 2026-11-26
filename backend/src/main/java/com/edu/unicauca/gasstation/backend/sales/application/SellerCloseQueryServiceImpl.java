@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -76,6 +78,19 @@ public class SellerCloseQueryServiceImpl implements SellerCloseQuery {
             return Optional.empty();
         }
         return Optional.of(calculationEngine.aggregateDaySummary(journalDate, closes));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DaySummary> findDaySummaries(LocalDate from, LocalDate to) {
+        if (from == null || to == null) {
+            return List.of();
+        }
+        return vendorShiftCloseRepository.findByJournalDateBetween(from, to).stream()
+                .collect(Collectors.groupingBy(VendorShiftClose::journalDate, TreeMap::new, Collectors.toList()))
+                .entrySet().stream()
+                .map(day -> calculationEngine.aggregateDaySummary(day.getKey(), day.getValue()))
+                .toList();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.edu.unicauca.gasstation.backend.inventory;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,4 +14,10 @@ public interface SalesSummaryPort {
      * @return the sales of the journal date, or empty if step 2 has no data for it
      */
     Optional<SalesSummary> findByJournalDate(LocalDate journalDate);
+
+    /**
+     * @return the sales of the journal dates between both (inclusive) that have step 2 data, read at once and
+     * ordered by date; the dates without data are absent
+     */
+    List<SalesSummary> findByJournalDateRange(LocalDate from, LocalDate to);
 }
