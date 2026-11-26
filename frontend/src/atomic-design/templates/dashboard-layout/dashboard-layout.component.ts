@@ -5,6 +5,7 @@ import { RouterOutlet, Router, RouterLink, RouterLinkActive, NavigationEnd } fro
 import { filter } from 'rxjs';
 import { ActionButtonDirective } from '../../atoms/action-button/action-button.directive';
 import { AuthService } from '../../../core/services/auth.service';
+import { ColorThemeService } from '../../../core/services/color-theme.service';
 import { InventoryAlertsService } from '../../../core/services/inventory-alerts.service';
 import { ChangePasswordModalComponent } from '../../organisms/change-password-modal/change-password-modal.component';
 
@@ -81,6 +82,7 @@ export class DashboardLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private readonly alertsService = inject(InventoryAlertsService);
+  private readonly colorTheme = inject(ColorThemeService);
   readonly configurationOpen = signal(true);
   readonly resultsOpen = signal(true);
   readonly personalOpen = signal(true);
@@ -143,6 +145,7 @@ export class DashboardLayoutComponent {
     this.alertsService.pending$.pipe(takeUntilDestroyed())
       .subscribe(pending => this.pendingAlerts.set(pending));
     this.alertsService.refreshPending();
+    this.colorTheme.load();
   }
 
   /** El logo contrae y expande la barra; el ancho que suelta lo toma el contenido de la derecha. */
@@ -263,6 +266,7 @@ export class DashboardLayoutComponent {
 
   logout(): void {
     this.closeProfileMenu();
+    this.colorTheme.clearSessionState();
     this.authService.logout();
     void this.router.navigate(['/login']);
   }

@@ -25,12 +25,12 @@
   font-size: 10.5px;
 }
 
-:host(.shift-chip--dia) { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); }
-:host(.shift-chip--dia6) { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); }
-:host(.shift-chip--nueve-seis) { background: var(--surface-card); color: var(--brand-primary-strong); border: 1.5px solid var(--brand-primary); }
-:host(.shift-chip--noche) { background: var(--surface-navy); color: var(--surface-navy-text); }
-:host(.shift-chip--descanso) { background: var(--surface-subtle); color: var(--text-muted); box-shadow: inset 0 0 0 1px var(--border-main); }
-:host(.shift-chip--apoyo) { background: var(--shift-support-subtle); color: var(--shift-support-strong); }
+:host(.shift-chip--dia) { background: var(--shift-dia-subtle); color: var(--shift-dia-strong); }
+:host(.shift-chip--dia6) { background: var(--shift-dia6-subtle); color: var(--shift-dia6-strong); }
+:host(.shift-chip--nueve-seis) { background: var(--surface-card); color: var(--shift-nueve-seis-strong); border: 1.5px solid var(--shift-nueve-seis); }
+:host(.shift-chip--noche) { background: var(--shift-noche); color: var(--shift-noche-text); }
+:host(.shift-chip--descanso) { background: var(--shift-descanso-subtle); color: var(--shift-descanso-strong); box-shadow: inset 0 0 0 1px var(--shift-descanso-border); }
+:host(.shift-chip--apoyo) { background: var(--shift-apoyo-subtle); color: var(--shift-apoyo-strong); }
 :host(.shift-chip--vacio) { background: transparent; border: 1px dashed var(--jr-cell-border); color: var(--text-light); }
 
 :host(.shift-chip--changed) { box-shadow: inset 0 0 0 1.5px var(--brand-primary); }
