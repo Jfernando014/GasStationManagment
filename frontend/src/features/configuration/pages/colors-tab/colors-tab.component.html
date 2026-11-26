@@ -1,0 +1,349 @@
+<header class="title-row">
+  <div>
+    <h2>Personalización de colores</h2>
+    <p>Define los colores de combustibles, familias de turno y vendedores. Los cambios se reflejan en todo el sistema.</p>
+  </div>
+  <div class="header-actions">
+    @if (!canEdit) {
+      <app-tag variant="gray">Solo lectura</app-tag>
+    } @else {
+      <button type="button" appButton variant="secondary" size="sm"
+        [disabled]="state() !== 'ready' || saving() || !hasAnyCustomization()"
+        (click)="requestResetAll()">
+        Restablecer todo
+      </button>
+      @if (dirty()) {
+        <button type="button" appButton variant="ghost" size="sm" [disabled]="saving()" (click)="discardChanges()">
+          Descartar
+        </button>
+      }
+      <button type="button" appButton variant="primary" size="sm" class="save-btn"
+        [disabled]="state() !== 'ready' || saving() || !dirty() || hasErrors()"
+        (click)="saveChanges()">
+        @if (saving()) {
+          Guardando…
+        } @else if (dirty()) {
+          Guardar cambios ({{ pendingChanges().length }})
+        } @else {
+          Guardar cambios
+        }
+      </button>
+    }
+  </div>
+</header>
+
+@if (resetConfirmOpen()) {
+  <div class="confirm-banner" role="alertdialog" aria-label="Confirmar restablecimiento de colores">
+    <div class="confirm-copy">
+      <strong>¿Restablecer todos los colores predeterminados?</strong>
+      <span>Se eliminarán las personalizaciones de combustibles, turnos y vendedores.</span>
+    </div>
+    <div class="confirm-actions">
+      <button type="button" appButton variant="secondary" size="sm" [disabled]="saving()" (click)="cancelResetAll()">Cancelar</button>
+      <button type="button" appButton variant="destructive" size="sm" [disabled]="saving()" (click)="confirmResetAll()">
+        Sí, restablecer
+      </button>
+    </div>
+  </div>
+}
+
+@if (errorMessage(); as err) {
+  <div class="error-banner" role="alert">{{ err }}</div>
+}
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="cards-grid" aria-busy="true">
+      <section class="card">
+        <app-skeleton width="150px" height="20px" />
+        <app-skeleton height="44px" />
+        <app-skeleton height="44px" />
+        <app-skeleton height="44px" />
+      </section>
+      <section class="card">
+        <app-skeleton width="160px" height="20px" />
+        <app-skeleton height="44px" />
+        <app-skeleton height="44px" />
+        <app-skeleton height="44px" />
+      </section>
+    </div>
+  }
+
+  @case ('error') {
+    <section class="card">
+      <app-empty-state tone="error" heading="No pudimos cargar los colores"
+        description="Revisa tu conexión e inténtalo de nuevo.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
+        <button type="button" appButton variant="primary" (click)="load()">Intentar de nuevo</button>
+      </app-empty-state>
+    </section>
+  }
+
+  @default {
+    <div class="cards-grid">
+      <!-- 1. COMBUSTIBLES -->
+      <section class="card" aria-labelledby="colors-fuels-heading">
+        <div class="card-head">
+          <div>
+            <h3 id="colors-fuels-heading">Combustibles</h3>
+            <p>Tarjetas, tanques, precios, ganancia, variación y gráficas.</p>
+          </div>
+        </div>
+
+        <ul class="color-list">
+          @for (fuel of theme().fuels; track fuel.key) {
+            @let draft = fuelDraftValue(fuel);
+            @let previewHex = pickerHex(draft, fuel.defaultHex);
+            @let err = fuelErrors()[fuel.key];
+            @let paletteId = 'FUEL:' + fuel.key;
+            <li class="color-item" [class.has-error]="!!err">
+              <div class="color-row">
+                <div class="entity-preview">
+                  <span class="fuel-bar" [style.background]="previewHex" aria-hidden="true"></span>
+                  <div class="entity-text">
+                    <strong>{{ fuel.label }}</strong>
+                    <small>Base {{ fuel.defaultHex }}</small>
+                  </div>
+                </div>
+
+                <div class="color-controls">
+                  <label class="swatch-picker" [attr.title]="'Elegir color para ' + fuel.label">
+                    <span class="swatch-dot" [style.background]="previewHex" aria-hidden="true"></span>
+                    <input type="color" [disabled]="!canEdit || saving()"
+                      [value]="previewHex"
+                      [attr.aria-label]="'Selector de color para ' + fuel.label"
+                      (input)="onPickerChange('FUEL', fuel.key, $any($event.target).value)" />
+                  </label>
+
+                  <input type="text" class="hex-input" maxlength="7" spellcheck="false" autocomplete="off"
+                    [disabled]="!canEdit || saving()"
+                    [value]="draft"
+                    [attr.aria-label]="'Código hexadecimal para ' + fuel.label"
+                    [attr.aria-invalid]="!!err"
+                    (input)="onColorInput('FUEL', fuel.key, $any($event.target).value)" />
+
+                  @if (canEdit) {
+                    <button type="button" class="palette-btn" [class.is-open]="activePaletteId() === paletteId"
+                      [disabled]="saving()" [attr.aria-expanded]="activePaletteId() === paletteId"
+                      (click)="togglePalette(paletteId)">
+                      Paleta
+                    </button>
+                    <button type="button" class="reset-link"
+                      [disabled]="saving() || !isFuelCustomized(fuel)"
+                      (click)="resetSingleDraft('FUEL', fuel.key, fuel.defaultHex)">
+                      Base
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (err) {
+                <p class="field-error" role="alert">{{ err }}</p>
+              }
+
+              @if (canEdit && activePaletteId() === paletteId) {
+                <div class="palette-drawer" role="group" [attr.aria-label]="'Paleta sugerida para ' + fuel.label">
+                  @for (swatch of palette(); track swatch.hex) {
+                    <button type="button" class="preset-chip"
+                      [class.is-selected]="previewHex === swatch.hex"
+                      [style.background]="swatch.hex"
+                      [attr.title]="swatch.name + ' (' + swatch.hex + ')'"
+                      [attr.aria-label]="swatch.name + ' ' + swatch.hex"
+                      [attr.aria-pressed]="previewHex === swatch.hex"
+                      (click)="pickPreset('FUEL', fuel.key, swatch.hex)"></button>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      <!-- 2. FAMILIAS DE TURNO -->
+      <section class="card" aria-labelledby="colors-shifts-heading">
+        <div class="card-head">
+          <div>
+            <h3 id="colors-shifts-heading">Familias de turno</h3>
+            <p>Malla de turnos, personal del día, horas extra, rendimiento y estadísticas.</p>
+          </div>
+        </div>
+
+        <ul class="color-list">
+          @for (shift of theme().shifts; track shift.key) {
+            @let draft = shiftDraftValue(shift);
+            @let previewHex = pickerHex(draft, shift.defaultHex);
+            @let chip = shiftPreview(shift);
+            @let err = shiftErrors()[shift.key];
+            @let paletteId = 'SHIFT:' + shift.key;
+            <li class="color-item" [class.has-error]="!!err">
+              <div class="color-row">
+                <div class="entity-preview">
+                  <span class="shift-preview-chip"
+                    [style.background]="chip.background"
+                    [style.color]="chip.color"
+                    [style.border-color]="chip.borderColor">{{ chip.sampleCode }}</span>
+                  <div class="entity-text">
+                    <strong>{{ shift.label }}</strong>
+                    <small>Base {{ shift.defaultHex }}</small>
+                  </div>
+                </div>
+
+                <div class="color-controls">
+                  <label class="swatch-picker" [attr.title]="'Elegir color para turno ' + shift.label">
+                    <span class="swatch-dot" [style.background]="previewHex" aria-hidden="true"></span>
+                    <input type="color" [disabled]="!canEdit || saving()"
+                      [value]="previewHex"
+                      [attr.aria-label]="'Selector de color para turno ' + shift.label"
+                      (input)="onPickerChange('SHIFT', shift.key, $any($event.target).value)" />
+                  </label>
+
+                  <input type="text" class="hex-input" maxlength="7" spellcheck="false" autocomplete="off"
+                    [disabled]="!canEdit || saving()"
+                    [value]="draft"
+                    [attr.aria-label]="'Código hexadecimal para turno ' + shift.label"
+                    [attr.aria-invalid]="!!err"
+                    (input)="onColorInput('SHIFT', shift.key, $any($event.target).value)" />
+
+                  @if (canEdit) {
+                    <button type="button" class="palette-btn" [class.is-open]="activePaletteId() === paletteId"
+                      [disabled]="saving()" [attr.aria-expanded]="activePaletteId() === paletteId"
+                      (click)="togglePalette(paletteId)">
+                      Paleta
+                    </button>
+                    <button type="button" class="reset-link"
+                      [disabled]="saving() || !isShiftCustomized(shift)"
+                      (click)="resetSingleDraft('SHIFT', shift.key, shift.defaultHex)">
+                      Base
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (err) {
+                <p class="field-error" role="alert">{{ err }}</p>
+              }
+
+              @if (canEdit && activePaletteId() === paletteId) {
+                <div class="palette-drawer" role="group" [attr.aria-label]="'Paleta sugerida para turno ' + shift.label">
+                  @for (swatch of palette(); track swatch.hex) {
+                    <button type="button" class="preset-chip"
+                      [class.is-selected]="previewHex === swatch.hex"
+                      [style.background]="swatch.hex"
+                      [attr.title]="swatch.name + ' (' + swatch.hex + ')'"
+                      [attr.aria-label]="swatch.name + ' ' + swatch.hex"
+                      [attr.aria-pressed]="previewHex === swatch.hex"
+                      (click)="pickPreset('SHIFT', shift.key, swatch.hex)"></button>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    <!-- 3. VENDEDORES -->
+    <section class="card card--full" aria-labelledby="colors-workers-heading">
+      <div class="card-head card-head--workers">
+        <div>
+          <h3 id="colors-workers-heading">Vendedores</h3>
+          <p>Avatares, cierre por vendedor (Paso 2), malla, personal del día, rendimiento, metas, estadísticas e incentivos.</p>
+        </div>
+        <div class="workers-toolbar">
+          <app-search-field class="workers-search" fieldId="colors-worker-search" label="Buscar vendedor"
+            placeholder="Buscar por nombre o cédula" (searchChange)="workerQuery.set($event)" />
+          @if (canEdit && workers().length > 0) {
+            <button type="button" appButton variant="secondary" size="sm" [disabled]="saving()"
+              (click)="assignDistinctActiveWorkerColors()">
+              Asignar paleta a activos
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (workersLoadFailed()) {
+        <p class="inline-note">No se pudo cargar la lista de vendedores. Los colores de combustibles y turnos siguen editables.</p>
+      } @else if (filteredWorkers().length === 0) {
+        <p class="inline-note">
+          {{ workerQuery().trim() ? 'Ningún vendedor coincide con la búsqueda.' : 'Aún no hay vendedores registrados.' }}
+        </p>
+      } @else {
+        <ul class="color-list color-list--workers">
+          @for (worker of filteredWorkers(); track worker.id) {
+            @let draft = workerDraftValue(worker.id);
+            @let previewHex = pickerHex(draft, '#0B192C');
+            @let hasCustom = isWorkerCustomized(worker.id);
+            @let err = workerErrors()[worker.id];
+            @let paletteId = 'WORKER:' + worker.id;
+            <li class="color-item" [class.has-error]="!!err" [class.is-inactive]="!worker.active">
+              <div class="color-row">
+                <div class="entity-preview">
+                  <app-avatar [name]="worker.fullName" [color]="hasCustom ? previewHex : null" />
+                  <div class="entity-text">
+                    <strong>
+                      {{ worker.fullName }}
+                      @if (!worker.active) {
+                        <span class="inactive-pill">Inactivo</span>
+                      }
+                    </strong>
+                    <small>{{ worker.roleName }} · C.C. {{ worker.document }}</small>
+                  </div>
+                </div>
+
+                <div class="color-controls">
+                  <label class="swatch-picker" [attr.title]="'Elegir color para ' + worker.fullName">
+                    <span class="swatch-dot" [class.is-default]="!hasCustom" [style.background]="previewHex" aria-hidden="true"></span>
+                    <input type="color" [disabled]="!canEdit || saving()"
+                      [value]="previewHex"
+                      [attr.aria-label]="'Selector de color para ' + worker.fullName"
+                      (input)="onPickerChange('WORKER', worker.id, $any($event.target).value)" />
+                  </label>
+
+                  <input type="text" class="hex-input" maxlength="7" spellcheck="false" autocomplete="off"
+                    placeholder="Base"
+                    [disabled]="!canEdit || saving()"
+                    [value]="draft"
+                    [attr.aria-label]="'Código hexadecimal para ' + worker.fullName"
+                    [attr.aria-invalid]="!!err"
+                    (input)="onColorInput('WORKER', worker.id, $any($event.target).value)" />
+
+                  @if (canEdit) {
+                    <button type="button" class="palette-btn" [class.is-open]="activePaletteId() === paletteId"
+                      [disabled]="saving()" [attr.aria-expanded]="activePaletteId() === paletteId"
+                      (click)="togglePalette(paletteId)">
+                      Paleta
+                    </button>
+                    <button type="button" class="reset-link"
+                      [disabled]="saving() || !hasCustom"
+                      (click)="resetSingleDraft('WORKER', worker.id, '')">
+                      Base
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (err) {
+                <p class="field-error" role="alert">{{ err }}</p>
+              }
+
+              @if (canEdit && activePaletteId() === paletteId) {
+                <div class="palette-drawer" role="group" [attr.aria-label]="'Paleta sugerida para ' + worker.fullName">
+                  @for (swatch of palette(); track swatch.hex) {
+                    <button type="button" class="preset-chip"
+                      [class.is-selected]="hasCustom && previewHex === swatch.hex"
+                      [style.background]="swatch.hex"
+                      [attr.title]="swatch.name + ' (' + swatch.hex + ')'"
+                      [attr.aria-label]="swatch.name + ' ' + swatch.hex"
+                      [attr.aria-pressed]="hasCustom && previewHex === swatch.hex"
+                      (click)="pickPreset('WORKER', worker.id, swatch.hex)"></button>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+}
