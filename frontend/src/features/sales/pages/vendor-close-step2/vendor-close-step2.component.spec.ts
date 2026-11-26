@@ -864,4 +864,66 @@ describe('VendorCloseStep2Component', () => {
     );
     expect(localFixture.nativeElement.querySelector('#jr-p2-note-textarea')).toBeNull();
   });
+
+  it('omits tirilla mismatch and shows missing-price notice when backend has no effective fuel prices', async () => {
+    const emptyPricesMock = {
+      ...salesServiceMock,
+      getEffectiveFuelPrices: () => of({})
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: emptyPricesMock },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-11-19' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    const noticeEl = localFixture.nativeElement.querySelector('.jr-p2-sin-precio-nota') as HTMLElement | null;
+    expect(noticeEl?.textContent).toContain('No hay precio de venta cargado');
+    expect(noticeEl?.querySelector('a')?.textContent).toContain('Cargar en Precios de combustible');
+
+    localComponent.captures['52875796'].galMotor = 10;
+    localComponent.captures['52875796'].tirilla = 150000;
+    localComponent.onFieldChange('52875796');
+
+    expect(localComponent.captures['52875796'].avisoTirilla).toBeNull();
+    expect(localComponent.fuelPriceNotice?.fuelType).toBe('MOTOR');
+  });
+
+  it('shows fuel-price error notice and suppresses tirilla mismatch when fuel prices request fails', async () => {
+    const failingPricesMock = {
+      ...salesServiceMock,
+      getEffectiveFuelPrices: () => throwError(() => new Error('network error'))
+    };
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [VendorCloseStep2Component],
+      providers: [
+        { provide: SalesVendorCloseService, useValue: failingPricesMock },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ date: '2026-11-19' }) } }
+      ]
+    }).compileComponents();
+
+    const localFixture = TestBed.createComponent(VendorCloseStep2Component);
+    const localComponent = localFixture.componentInstance;
+    localFixture.detectChanges();
+
+    const noticeEl = localFixture.nativeElement.querySelector('.jr-p2-sin-precio-nota') as HTMLElement | null;
+    expect(noticeEl?.textContent).toContain('No se pudieron consultar los precios de venta');
+
+    localComponent.captures['52875796'].galMotor = 10;
+    localComponent.captures['52875796'].tirilla = 150000;
+    localComponent.onFieldChange('52875796');
+
+    expect(localComponent.captures['52875796'].avisoTirilla).toBeNull();
+    expect(localComponent.fuelPriceNotice?.fuelType).toBeNull();
+    expect(localComponent.fuelPriceNotice?.text).toContain('No se pudieron consultar los precios de venta');
+  });
 });

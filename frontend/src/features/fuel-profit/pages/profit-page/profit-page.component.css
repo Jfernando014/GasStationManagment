@@ -20,8 +20,8 @@
 }
 
 .titles { flex: 1 1 320px; min-width: 0; }
-h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
-.titles p { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-heading); }
+.titles p { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
 
 .month { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
 .month app-month-stepper { order: 1; }
