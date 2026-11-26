@@ -1,6 +1,9 @@
 <div class="journal-page-container">
-  <div class="header">
-    <h2>Jornada Diaria</h2>
+  <header class="header">
+    <div class="jr-paso-cabecera">
+      <h1>Jornada del día</h1>
+      <p>Flujo operativo diario en 6 pasos hasta el cuadre y cierre de la planilla.</p>
+    </div>
     @if (journal) {
       <div class="journal-info">
         @if (journal.status === 'OPEN') {
@@ -13,7 +16,7 @@
         <span class="date">{{ journal.date }}</span>
       </div>
     }
-  </div>
+  </header>
 
   @if (errorMessage) {
     <div class="error-alert">
