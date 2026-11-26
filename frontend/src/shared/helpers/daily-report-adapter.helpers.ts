@@ -24,6 +24,9 @@ export class ReportAdaptationError extends Error {
 type CellOut = string | number | null;
 type RowRecord = Record<string, CellOut>;
 
+/** Number format of a column, applied when the file is written. */
+type ColumnFormat = 'money' | 'gallons' | 'integer';
+
 /** A column of the prototype and the column of the backend that feeds it (null = not sent yet). */
 interface ColumnSpec {
   header: string;
@@ -32,6 +35,10 @@ interface ColumnSpec {
   negate?: boolean;
   /** Width in characters, for a column whose text does not fit in the default one. */
   width?: number;
+  /** Number format of the column. Omitted for text columns. */
+  format?: ColumnFormat;
+  /** True for the columns that must stand out when they are not zero (discrepancies). */
+  alert?: boolean;
 }
 
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -44,6 +51,10 @@ const BACKEND_LUBRICANTS_TOTAL = 'TOTALES';
 const PROTOTYPE_SALES_TOTAL = 'Total del día';
 const PROTOTYPE_NOTE = 'Precios provisionales: pendientes de confirmar con el cliente.';
 
+/** ExcelJS has no auto-fit: the width follows the longest text of the column, within these limits. */
+const MIN_COLUMN_WIDTH = 10;
+const MAX_COLUMN_WIDTH = 42;
+
 /**
  * PLANILLA VENTAS. The discrepancy of the prototype is Dominus - delivered, and the backend sends
  * delivered - Dominus, so the sign changes.
@@ -53,22 +64,22 @@ const SALES_COLUMNS: readonly ColumnSpec[] = [
   // The longest shift is a support one written as two blocks of hours: "06:00–09:00 y 17:00–24:00"
   { header: 'Turno', source: 'Turno', width: 27 },
   { header: 'Rol', source: null },
-  { header: 'Surtidor', source: 'Bomba' },
-  { header: 'Gal. Motor', source: 'Galones Motor' },
-  { header: 'Gal. Diésel', source: 'Galones Diesel' },
-  { header: 'Gal. Extra', source: 'Galones Extra' },
-  { header: 'Gal. Max Pro', source: 'Galones Maxpro' },
-  { header: 'Canastilla', source: null },
-  { header: 'Total tirilla', source: 'Tirilla Dominus' },
-  { header: 'Parciales (sobres)', source: null },
-  { header: 'Pico', source: null },
-  { header: 'Total efectivo', source: 'Efectivo' },
-  { header: 'G.A.', source: 'GA' },
-  { header: 'Credibanco', source: 'Credibanco' },
-  { header: 'QR', source: 'QR' },
-  { header: 'Redenciones', source: 'Redenciones' },
-  { header: 'Total entregado', source: 'Total entregado' },
-  { header: 'Descuadre (Dominus − entregado)', source: 'Diferencia', negate: true }
+  { header: 'Surtidor', source: 'Bomba', format: 'integer' },
+  { header: 'Gal. Motor', source: 'Galones Motor', format: 'gallons' },
+  { header: 'Gal. Diésel', source: 'Galones Diesel', format: 'gallons' },
+  { header: 'Gal. Extra', source: 'Galones Extra', format: 'gallons' },
+  { header: 'Gal. Max Pro', source: 'Galones Maxpro', format: 'gallons' },
+  { header: 'Canastilla', source: null, format: 'money' },
+  { header: 'Total tirilla', source: 'Tirilla Dominus', format: 'money' },
+  { header: 'Parciales (sobres)', source: null, format: 'money' },
+  { header: 'Pico', source: null, format: 'money' },
+  { header: 'Total efectivo', source: 'Efectivo', format: 'money' },
+  { header: 'G.A.', source: 'GA', format: 'money' },
+  { header: 'Credibanco', source: 'Credibanco', format: 'money' },
+  { header: 'QR', source: 'QR', format: 'money' },
+  { header: 'Redenciones', source: 'Redenciones', format: 'money' },
+  { header: 'Total entregado', source: 'Total entregado', format: 'money' },
+  { header: 'Descuadre (Dominus − entregado)', source: 'Diferencia', negate: true, format: 'money', alert: true }
 ];
 
 /**
@@ -79,13 +90,13 @@ const SALES_COLUMNS: readonly ColumnSpec[] = [
 const LUBRICANTS_COLUMNS: readonly ColumnSpec[] = [
   { header: 'Código', source: 'Código' },
   { header: 'Producto', source: 'Producto' },
-  { header: 'Total unidades', source: 'Unidades' },
-  { header: 'Precio', source: 'Precio unidad' },
-  { header: 'Valor', source: 'Valor venta' },
-  { header: 'Traslado a mostrador', source: null },
-  { header: 'Queda en oficina', source: null },
-  { header: 'Queda en mostrador', source: null },
-  { header: 'Existencia', source: null }
+  { header: 'Total unidades', source: 'Unidades', format: 'integer' },
+  { header: 'Precio', source: 'Precio unidad', format: 'money' },
+  { header: 'Valor', source: 'Valor venta', format: 'money' },
+  { header: 'Traslado a mostrador', source: null, format: 'integer' },
+  { header: 'Queda en oficina', source: null, format: 'integer' },
+  { header: 'Queda en mostrador', source: null, format: 'integer' },
+  { header: 'Existencia', source: null, format: 'integer' }
 ];
 
 /** Loads ExcelJS only when it is needed, so it is not part of the main bundle. */
@@ -211,13 +222,111 @@ async function buildFile(
   objSheet.addRow(prmColumns.map((prmColumn) => prmColumn.header));
   [...prmRows, ...prmFooter].forEach((prmRow) => objSheet.addRow(prmRow));
   prmColumns.forEach((prmColumn, prmIndex) => {
-    objSheet.getColumn(prmIndex + 1).width = prmColumn.width ?? (prmIndex === 0 ? 30 : 16);
+    const varLongest = Math.max(
+      prmColumn.header.length,
+      ...prmRows.map((prmRow) => textWidth(prmRow[prmIndex], prmColumn.format))
+    );
+    objSheet.getColumn(prmIndex + 1).width = prmColumn.width ?? Math.min(
+      Math.max(varLongest + 2, MIN_COLUMN_WIDTH),
+      MAX_COLUMN_WIDTH
+    );
   });
+  styleSheet(objSheet, prmColumns, prmRows.length);
   const objBuffer = await objWorkbook.xlsx.writeBuffer();
   return {
     fileName: `${prmTitle.replace(/\s+/g, '-')}-${prmDate}.xlsx`,
     content: new Blob([objBuffer as BlobPart], { type: XLSX_MIME })
   };
+}
+
+/**
+ * Visual identity of the client's template (BELLAVISTA.xlsx): navy header with white text,
+ * light green for the total row, thin borders on every cell and the number formats of each column.
+ * It is the same palette the backend uses, so both files of the day look alike.
+ */
+const PALETTE = {
+  navy: 'FF1B365D',
+  white: 'FFFFFFFF',
+  border: 'FFD9D9D9',
+  greenFill: 'FFE2EFDA',
+  greenText: 'FF1E4620',
+  redFill: 'FFFFC7CE',
+  redText: 'FF9C0006',
+  greyText: 'FF595959'
+} as const;
+
+const NUMBER_FORMATS: Record<ColumnFormat, string> = {
+  money: '"$" #,##0.00',
+  gallons: '#,##0.00',
+  integer: '#,##0'
+};
+
+/** Characters the number format adds: currency symbol, decimals and thousand separators. */
+const FORMAT_PADDING: Record<ColumnFormat, number> = { money: 6, gallons: 3, integer: 2 };
+
+const THIN_BORDER = {
+  top: { style: 'thin' as const, color: { argb: PALETTE.border } },
+  bottom: { style: 'thin' as const, color: { argb: PALETTE.border } },
+  left: { style: 'thin' as const, color: { argb: PALETTE.border } },
+  right: { style: 'thin' as const, color: { argb: PALETTE.border } }
+};
+
+/** Applies the palette and the formats to the title, the header, the data and the note rows. */
+function styleSheet(prmSheet: Worksheet, prmColumns: readonly ColumnSpec[], prmDataRows: number): void {
+  prmSheet.views = [{ state: 'frozen', ySplit: 3 }];
+
+  const objTitle = prmSheet.getRow(1);
+  objTitle.height = 24;
+  objTitle.getCell(1).font = { bold: true, size: 14, color: { argb: PALETTE.navy } };
+
+  const objHeader = prmSheet.getRow(3);
+  objHeader.height = 30;
+  prmColumns.forEach((_prmColumn, prmIndex) => {
+    const objCell = objHeader.getCell(prmIndex + 1);
+    objCell.font = { bold: true, size: 11, color: { argb: PALETTE.white } };
+    objCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.navy } };
+    objCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    objCell.border = THIN_BORDER;
+  });
+
+  const varTotalRow = isTotalRow(prmSheet, 3 + prmDataRows) ? 3 + prmDataRows : 0;
+  for (let varRow = 4; varRow <= 3 + prmDataRows; varRow++) {
+    const objRow = prmSheet.getRow(varRow);
+    prmColumns.forEach((objColumn, prmIndex) => {
+      const objCell = objRow.getCell(prmIndex + 1);
+      objCell.border = THIN_BORDER;
+      if (objColumn.format) {
+        objCell.numFmt = NUMBER_FORMATS[objColumn.format];
+      }
+      if (objColumn.format && typeof objCell.value === 'number') {
+        objCell.alignment = { horizontal: 'right' };
+      }
+      if (varRow === varTotalRow) {
+        objCell.font = { bold: true, color: { argb: PALETTE.greenText } };
+        objCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.greenFill } };
+        objCell.border = { ...THIN_BORDER, top: { style: 'double', color: { argb: PALETTE.greenText } } };
+      }
+      if (objColumn.alert && typeof objCell.value === 'number') {
+        const varBalanced = objCell.value === 0;
+        objCell.font = { bold: true, color: { argb: varBalanced ? PALETTE.greenText : PALETTE.redText } };
+        objCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: varBalanced ? PALETTE.greenFill : PALETTE.redFill }
+        };
+      }
+    });
+  }
+
+  const objLastRow = prmSheet.getRow(prmSheet.rowCount);
+  if (objLastRow.getCell(1).value === PROTOTYPE_NOTE) {
+    objLastRow.getCell(1).font = { italic: true, size: 10, color: { argb: PALETTE.greyText } };
+  }
+}
+
+/** True when the given row starts with the total label of the prototype. */
+function isTotalRow(prmSheet: Worksheet, prmRow: number): boolean {
+  return prmRow > 3 && prmSheet.getRow(prmRow).getCell(1).value === PROTOTYPE_SALES_TOTAL;
 }
 
 function plain(prmValue: CellValue): CellOut {
@@ -244,6 +353,15 @@ function plain(prmValue: CellValue): CellOut {
 
 function text(prmValue: CellValue): string {
   return String(plain(prmValue) ?? '').trim();
+}
+
+/** Approximate width in characters of a cell value, used to fit the columns without ExcelJS auto-fit. */
+function textWidth(prmValue: CellOut, prmFormat?: ColumnFormat): number {
+  if (prmValue === null) {
+    return 0;
+  }
+  const varLength = String(prmValue).length;
+  return typeof prmValue === 'number' && prmFormat ? varLength + FORMAT_PADDING[prmFormat] : varLength;
 }
 
 /** Blob.arrayBuffer is not in every browser or test environment, so FileReader is the fallback. */

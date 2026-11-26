@@ -1,9 +1,15 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.GREEN_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertFill;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertHeader;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertNumberFormat;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertTotal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpenseItemInfo;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpensesInfo;
@@ -130,6 +136,18 @@ class JournalWorkbookExporterTest {
             assertEquals(
                     "Surtidor 2 presentó reinicio breve en la tarde.",
                     summarySheet.getRow(summarySheet.getLastRowNum()).getCell(1).getStringCellValue());
+
+            assertHeader(summarySheet.getRow(0).getCell(0));
+            assertNumberFormat(summarySheet.getRow(9).getCell(1), ExcelWorkbookStyles.MONEY_FORMAT);
+
+            XSSFSheet stepsSheet = wb.getSheet("Pasos");
+            assertHeader(stepsSheet.getRow(0).getCell(2));
+            assertFill(stepsSheet.getRow(1).getCell(2), GREEN_FILL);
+            assertTrue(stepsSheet.getPaneInformation().isFreezePane(), "Headers must stay frozen");
+
+            assertNumberFormat(vendorSheet.getRow(1).getCell(15), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertTotal(vendorSheet.getRow(2).getCell(0));
+            assertNumberFormat(vendorSheet.getRow(2).getCell(15), ExcelWorkbookStyles.MONEY_FORMAT);
         }
     }
 

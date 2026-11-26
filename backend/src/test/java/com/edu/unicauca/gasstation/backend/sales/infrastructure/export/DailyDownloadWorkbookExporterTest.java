@@ -1,15 +1,26 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.GREEN_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.RED_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertFill;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertHeader;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertNumberFormat;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertTotal;
+import static com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.bd;
 import static com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.day;
 import static com.edu.unicauca.gasstation.backend.sales.DailyDownloadTestData.vendor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
+import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSummary;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +71,42 @@ class DailyDownloadWorkbookExporterTest {
             assertEquals(35000.0, objSheet.getRow(12).getCell(5).getNumericCellValue());
             assertEquals("VENTA TOTAL CANASTA", objSheet.getRow(13).getCell(1).getStringCellValue());
             assertEquals(100000.0, objSheet.getRow(13).getCell(5).getNumericCellValue());
+        }
+    }
+
+    @Test
+    void paintsTheHeaderTheNumberFormatsAndTheVendorResult() throws Exception {
+        VendorCloseSummary objShortfall = new VendorCloseSummary(day().date(), "1062", "Vendedor Falta", "NOCHE", 2,
+                bd("100000"), bd("0"), bd("0"), bd("0"), bd("0"), bd("100000"), bd("10"), bd("0"), bd("0"),
+                bd("0"), bd("0"), bd("90000"), bd("-10000"), "FALTA", List.of());
+        byte[] varBytes = atrExporter.exportSalesSheet(day(), List.of(vendor(), objShortfall));
+
+        try (Workbook objWorkbook = new XSSFWorkbook(new ByteArrayInputStream(varBytes))) {
+            Sheet objSheet = objWorkbook.getSheet("PLANILLA VENTAS");
+            assertHeader(objSheet.getRow(3).getCell(0));
+            assertNumberFormat(objSheet.getRow(4).getCell(8), ExcelWorkbookStyles.GALLONS_FORMAT);
+            assertNumberFormat(objSheet.getRow(4).getCell(9), ExcelWorkbookStyles.WHOLE_FORMAT);
+            assertNumberFormat(objSheet.getRow(4).getCell(10), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertFill(objSheet.getRow(4).getCell(18), GREEN_FILL);
+            assertFill(objSheet.getRow(5).getCell(17), RED_FILL);
+            assertFill(objSheet.getRow(5).getCell(18), RED_FILL);
+            assertTotal(objSheet.getRow(6).getCell(0));
+            assertNumberFormat(objSheet.getRow(6).getCell(10), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertTrue(((XSSFSheet) objSheet).getPaneInformation().isFreezePane(), "The header must stay frozen");
+        }
+    }
+
+    @Test
+    void paintsTheLubricantsHeaderAndItsTotals() throws Exception {
+        byte[] varBytes = atrExporter.exportLubricants(day());
+
+        try (Workbook objWorkbook = new XSSFWorkbook(new ByteArrayInputStream(varBytes))) {
+            Sheet objSheet = objWorkbook.getSheet("LUBRICANTES Y VARIOS");
+            assertHeader(objSheet.getRow(3).getCell(1));
+            assertNumberFormat(objSheet.getRow(4).getCell(3), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertNumberFormat(objSheet.getRow(4).getCell(4), ExcelWorkbookStyles.WHOLE_FORMAT);
+            assertTotal(objSheet.getRow(8).getCell(1));
+            assertNumberFormat(objSheet.getRow(8).getCell(5), ExcelWorkbookStyles.MONEY_FORMAT);
         }
     }
 }

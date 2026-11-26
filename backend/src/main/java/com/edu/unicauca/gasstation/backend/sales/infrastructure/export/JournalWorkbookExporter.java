@@ -1,5 +1,6 @@
 package com.edu.unicauca.gasstation.backend.sales.infrastructure.export;
 
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo;
 import com.edu.unicauca.gasstation.backend.sales.CashBalanceTableInfo.ExpenseItemInfo;
 import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.DaySummary;
@@ -8,6 +9,7 @@ import com.edu.unicauca.gasstation.backend.sales.SellerCloseQuery.VendorCloseSum
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalCellNote;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalFullWorkbookData;
 import com.edu.unicauca.gasstation.backend.sales.domain.JournalSnapshot;
+import com.edu.unicauca.gasstation.backend.sales.domain.StepStatus;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.DayStaffReadPort.AssignedVendor;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.ClosingInventorySnapshot;
 import com.edu.unicauca.gasstation.backend.sales.domain.repositories.InventoryClosingReadPort.FuelVariationSummary;
@@ -22,18 +24,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Drawing;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -95,7 +91,7 @@ public class JournalWorkbookExporter {
     }
 
     public byte[] export(JournalFullWorkbookData data) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Styles styles = new Styles(workbook);
             createSummarySheet(workbook, data, styles);
             createStepsSheet(workbook, data.journal(), styles);
@@ -184,7 +180,7 @@ public class JournalWorkbookExporter {
             Row row = sheet.createRow(rowNumber++);
             writeIntCell(row, 0, step.stepNumber(), styles.integer);
             writeTextCell(row, 1, step.name(), styles.text);
-            writeTextCell(row, 2, step.status().name(), styles.text);
+            writeTextCell(row, 2, step.status().name(), stepStatusStyle(step.status(), styles));
             writeTextCell(row, 3, format(step.completedAt()), styles.text);
             writeTextCell(row, 4, step.observations(), styles.text);
         }
@@ -599,7 +595,7 @@ public class JournalWorkbookExporter {
             if (step.observations() != null && !step.observations().isBlank()) {
                 Row row = sheet.createRow(rowIdx++);
                 writeTextCell(row, 0, stepLabel(step.stepNumber(), step.name()), styles.text);
-                writeTextCell(row, 1, step.status().name(), styles.text);
+                writeTextCell(row, 1, step.status().name(), stepStatusStyle(step.status(), styles));
                 writeTextCell(row, 2, step.observations(), styles.text);
                 wroteAnyObservation = true;
             }
@@ -742,6 +738,19 @@ public class JournalWorkbookExporter {
         return value == null ? "" : value.format(DATE_TIME_FORMAT);
     }
 
+    /** Completed steps are green, in-progress amber and pending keep the plain style. */
+    private static CellStyle stepStatusStyle(StepStatus status, Styles styles) {
+        if (status == StepStatus.COMPLETED) {
+            return styles.ok;
+        }
+        return status == StepStatus.IN_PROGRESS ? styles.warning : styles.text;
+    }
+
+    /**
+     * Adapter of the shared visual identity. The exporter names its styles after the role they play
+     * in the journal sheets; all of them come from {@link ExcelWorkbookStyles}, so this workbook
+     * looks like the daily downloads.
+     */
     private static final class Styles {
         final CellStyle header;
         final CellStyle section;
@@ -756,94 +765,26 @@ public class JournalWorkbookExporter {
         final CellStyle totalInteger;
         final CellStyle totalCurrency;
         final CellStyle totalGallons;
+        final CellStyle ok;
+        final CellStyle warning;
 
-        Styles(Workbook workbook) {
-            DataFormat dataFormat = workbook.createDataFormat();
-            short copFmt = dataFormat.getFormat("$#,##0;-$#,##0;$0");
-            short galFmt = dataFormat.getFormat("#,##0.00");
-            short intFmt = dataFormat.getFormat("#,##0");
-
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setColor(IndexedColors.WHITE.getIndex());
-
-            Font boldFont = workbook.createFont();
-            boldFont.setBold(true);
-
-            Font mutedFont = workbook.createFont();
-            mutedFont.setItalic(true);
-            mutedFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
-
-            header = workbook.createCellStyle();
-            header.setFont(headerFont);
-            header.setFillForegroundColor(IndexedColors.DARK_TEAL.getIndex());
-            header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            header.setBorderBottom(BorderStyle.THIN);
-
-            section = workbook.createCellStyle();
-            section.setFont(boldFont);
-            section.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            section.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            section.setBorderBottom(BorderStyle.THIN);
-
-            text = bordered(workbook);
-
-            muted = workbook.createCellStyle();
-            muted.setFont(mutedFont);
-
-            integer = bordered(workbook);
-            integer.setAlignment(HorizontalAlignment.RIGHT);
-            integer.setDataFormat(intFmt);
-
-            currency = bordered(workbook);
-            currency.setAlignment(HorizontalAlignment.RIGHT);
-            currency.setDataFormat(copFmt);
-
-            currencyBold = bordered(workbook);
-            currencyBold.setFont(boldFont);
-            currencyBold.setAlignment(HorizontalAlignment.RIGHT);
-            currencyBold.setDataFormat(copFmt);
-
-            gallons = bordered(workbook);
-            gallons.setAlignment(HorizontalAlignment.RIGHT);
-            gallons.setDataFormat(galFmt);
-
-            gallonsBold = bordered(workbook);
-            gallonsBold.setFont(boldFont);
-            gallonsBold.setAlignment(HorizontalAlignment.RIGHT);
-            gallonsBold.setDataFormat(galFmt);
-
-            totalLabel = totalStyle(workbook, boldFont, null, HorizontalAlignment.LEFT);
-            totalInteger = totalStyle(workbook, boldFont, intFmt, HorizontalAlignment.RIGHT);
-            totalCurrency = totalStyle(workbook, boldFont, copFmt, HorizontalAlignment.RIGHT);
-            totalGallons = totalStyle(workbook, boldFont, galFmt, HorizontalAlignment.RIGHT);
-        }
-
-        private static CellStyle bordered(Workbook workbook) {
-            CellStyle style = workbook.createCellStyle();
-            style.setBorderBottom(BorderStyle.HAIR);
-            style.setBorderTop(BorderStyle.HAIR);
-            style.setBorderLeft(BorderStyle.HAIR);
-            style.setBorderRight(BorderStyle.HAIR);
-            return style;
-        }
-
-        private static CellStyle totalStyle(
-                Workbook workbook,
-                Font boldFont,
-                Short format,
-                HorizontalAlignment alignment) {
-            CellStyle style = workbook.createCellStyle();
-            style.setFont(boldFont);
-            style.setAlignment(alignment);
-            style.setFillForegroundColor(IndexedColors.PALE_BLUE.getIndex());
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            style.setBorderTop(BorderStyle.THIN);
-            style.setBorderBottom(BorderStyle.DOUBLE);
-            if (format != null) {
-                style.setDataFormat(format);
-            }
-            return style;
+        Styles(XSSFWorkbook workbook) {
+            ExcelWorkbookStyles.Styles shared = ExcelWorkbookStyles.Styles.of(workbook);
+            header = shared.header();
+            section = shared.section();
+            text = shared.text();
+            muted = shared.subtitle();
+            integer = shared.integer();
+            currency = shared.money();
+            currencyBold = shared.boldMoney();
+            gallons = shared.number();
+            gallonsBold = shared.boldNumber();
+            totalLabel = shared.totalText();
+            totalInteger = shared.totalInteger();
+            totalCurrency = shared.totalMoney();
+            totalGallons = shared.totalNumber();
+            ok = shared.ok();
+            warning = shared.warning();
         }
     }
 }
