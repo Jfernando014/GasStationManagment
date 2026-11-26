@@ -126,6 +126,19 @@
         </div>
       </div>
 
+      <div class="nav-label-pill">Control de combustible</div>
+      <a class="sidebar-action-btn" routerLink="/resultados/variacion" routerLinkActive="active"
+        #variationNav="routerLinkActive" [attr.aria-current]="variationNav.isActive ? 'page' : null">
+        <div class="btn-prefix-stack">
+          <svg class="sidebar-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M12 2.7C9.6 5.3 6 10 6 14a6 6 0 0 0 12 0c0-4-3.6-8.7-6-11.3Z" />
+            <path d="M9 14.5h6" />
+          </svg>
+          <span>Variación</span>
+        </div>
+        <span class="active-notch"></span>
+      </a>
+
       <div class="nav-label-pill">Resultados</div>
       <a class="sidebar-action-btn" routerLink="/resultados/metas" routerLinkActive="active"
         #goalsNav="routerLinkActive" [attr.aria-current]="goalsNav.isActive ? 'page' : null">

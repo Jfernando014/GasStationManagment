@@ -106,6 +106,11 @@ export const routes: Routes = [
           .then(m => m.ProfitPageComponent)
       },
       {
+        path: 'resultados/variacion',
+        loadComponent: () => import('../features/variation/pages/variation-page/variation-page.component')
+          .then(m => m.VariationPageComponent)
+      },
+      {
         path: 'resultados/rendimiento',
         loadComponent: () => import('../features/performance/pages/performance-page.component').then(m => m.PerformancePageComponent)
       },
