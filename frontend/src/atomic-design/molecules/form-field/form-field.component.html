@@ -18,10 +18,11 @@
   [attr.autocomplete]="autocomplete()"
   [attr.aria-label]="ariaLabel()"
   [attr.aria-invalid]="invalid() || errorMessage() ? true : null"
-  [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : null"
+  [attr.aria-describedby]="errorMessage() || hint() ? fieldId() + '-help' : describedBy()"
   (input)="onInput($event)">
 @if (errorMessage(); as message) {
   <p class="field-error" [id]="fieldId() + '-help'">{{ message }}</p>
 } @else if (hint()) {
   <p class="field-hint" [id]="fieldId() + '-help'">{{ hint() }}</p>
 }
+<ng-content />

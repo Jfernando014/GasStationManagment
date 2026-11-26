@@ -7,6 +7,8 @@ import { getControlErrorMessage } from '../../../shared/helpers/form-control.hel
 export interface SelectOption<T> {
   value: T;
   label: string;
+  /** CSS color of a small square before the label, e.g. the color of a fuel. */
+  color?: string;
 }
 
 /**
@@ -55,6 +57,11 @@ export class SelectFieldComponent<T> {
   selectedLabel(): string {
     const value = this.control().value;
     return this.options().find(option => option.value === value)?.label ?? this.placeholder();
+  }
+
+  selectedColor(): string | null {
+    const value = this.control().value;
+    return this.options().find(option => option.value === value)?.color ?? null;
   }
 
   /** True when nothing is chosen in a required field (the placeholder is only a prompt). */

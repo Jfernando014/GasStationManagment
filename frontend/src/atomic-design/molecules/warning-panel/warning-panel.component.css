@@ -19,6 +19,8 @@
   box-shadow: 0 0 0 4px #FFF4DB;
 }
 
+:host(.warning-panel--neutral) .dot { background: var(--text-muted); box-shadow: 0 0 0 4px var(--surface-subtle); }
+
 .message { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
 .message ::ng-deep b { color: var(--text-heading); }
 
