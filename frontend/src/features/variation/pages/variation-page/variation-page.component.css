@@ -13,8 +13,8 @@
 
 .title-row { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; }
 .titles { flex: 1 1 320px; min-width: 0; }
-h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
-.titles p { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-heading); }
+.titles p { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
 
 .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
 .rules ::ng-deep .popover-trigger { border-radius: var(--radius-pill); font-variant-numeric: tabular-nums; }

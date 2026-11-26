@@ -4,9 +4,11 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
   max-width: 1192px;
   margin: 0 auto;
-  padding: 24px 36px 36px;
+  min-width: 0;
+  padding: 22px 32px 40px;
 }
 
 .title-row {
@@ -16,8 +18,8 @@
   gap: 16px;
 }
 
-.title-row h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text-heading); }
-.title-row p { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+.title-row h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-heading); }
+.title-row p { margin: 3px 0 0; font-size: 13px; color: var(--text-muted); }
 .new-value { flex-shrink: 0; }
 
 .content {
@@ -69,8 +71,8 @@
   .cards { grid-template-columns: minmax(0, 1fr); }
 }
 
-@media (max-width: 1024px) {
-  .page { padding: 20px 16px 28px; }
+@media (max-width: 900px) {
+  .page { padding: 18px 16px 32px; }
 }
 
 /* Teléfono: el botón principal queda fijo abajo, al alcance del pulgar, y el aviso sube por encima de él. */
