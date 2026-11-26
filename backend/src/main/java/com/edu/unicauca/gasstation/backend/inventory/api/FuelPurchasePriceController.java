@@ -16,12 +16,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/inventory/fuel-purchase-prices")
 @Tag(name = "Fuel purchase prices", description = "Fuel purchase costs per gallon with validity start dates")
 public class FuelPurchasePriceController {
+
+    private static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
 
     private final FuelPurchasePriceService fuelPurchasePriceService;
     private final FuelPurchasePriceMapper fuelPurchasePriceMapper;
@@ -58,7 +61,7 @@ public class FuelPurchasePriceController {
     public FuelPurchasePriceResponse findEffective(
             @RequestParam FuelType fuelType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        LocalDate queryDate = date != null ? date : LocalDate.now();
+        LocalDate queryDate = date != null ? date : LocalDate.now(BOGOTA);
         return fuelPurchasePriceMapper.toResponse(fuelPurchasePriceService.findEffective(fuelType, queryDate));
     }
 
