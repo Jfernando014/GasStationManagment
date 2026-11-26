@@ -3388,13 +3388,13 @@
        Shared chrome of the two inventory configuration screens. Scoped under
        .configuration-page so generic names (.form-grid, .field-error, .muted)
        keep working for the rest of the app. */
-    .configuration-page { width: 100%; min-width: 0; padding: 0 0 24px; color: var(--text-body); }
+    .configuration-page { width: 100%; max-width: 1192px; margin: 0 auto; min-width: 0; padding: 22px 32px 40px; color: var(--text-body); }
     .configuration-page .configuration-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
     .configuration-page h1 { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-heading); font-size: 18px; font-weight: 700; }
     .configuration-page .configuration-header p { margin: 3px 0 0; color: var(--text-muted); font-size: 13px; }
     .configuration-page .configuration-actions,
     .configuration-page .card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
-    .configuration-page .configuration-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-main); margin-bottom: 18px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .configuration-page .configuration-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-main); margin-bottom: 16px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
     .configuration-page .configuration-tabs::-webkit-scrollbar { display: none; }
     .configuration-page .configuration-tabs a { color: var(--text-muted); padding: 11px 2px; text-decoration: none; font-size: 13px; font-weight: 700; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; }
     .configuration-page .configuration-tabs a.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
@@ -3433,7 +3433,7 @@
     .configuration-page .configuration-hint a { color: var(--brand-primary-strong); font-weight: 700; text-decoration: underline; }
 
     @media (max-width:900px) {
-        .configuration-page { padding: 0 0 20px; }
+        .configuration-page { padding: 18px 16px 32px; }
         .configuration-page .configuration-header { align-items: stretch; flex-direction: column; }
         .configuration-page .configuration-actions { justify-content: flex-start; flex-wrap: wrap; }
         .configuration-page .form-grid,
@@ -3441,7 +3441,7 @@
     }
 
     @media (max-width:640px) {
-        .configuration-page { padding: 0 0 20px; }
+        .configuration-page { padding: 12px 4px 28px; }
         .configuration-page .configuration-tabs { gap: 18px; }
         .configuration-page .configuration-tabs a { display: inline-flex; align-items: center; min-height: 44px; }
         .configuration-page .card-heading,

@@ -1,7 +1,9 @@
 .receptions-page {
   width: 100%;
+  max-width: 1192px;
+  margin: 0 auto;
   min-width: 0;
-  padding: 0 0 24px;
+  padding: 22px 32px 40px;
   color: var(--text-body);
 }
 
@@ -182,12 +184,12 @@
 }
 
 @media (max-width: 900px) {
-  .receptions-page { padding: 0 0 20px; }
+  .receptions-page { padding: 18px 16px 32px; }
   .receptions-header { flex-direction: column; align-items: stretch; gap: 14px; }
 }
 
 @media (max-width: 640px) {
-  .receptions-page { padding: 0 0 20px; }
+  .receptions-page { padding: 12px 4px 28px; }
   .receptions-card { padding: 14px; }
   .receptions-form-grid { grid-template-columns: 1fr; }
   .receptions-form-grid input,

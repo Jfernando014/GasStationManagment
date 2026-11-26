@@ -1,7 +1,9 @@
 .backup-page {
   width: 100%;
+  max-width: 1192px;
+  margin: 0 auto;
   min-width: 0;
-  padding: 0 0 24px;
+  padding: 22px 32px 40px;
   color: var(--text-body);
 }
 
@@ -298,8 +300,12 @@
   text-overflow: ellipsis;
 }
 
+@media (max-width: 900px) {
+  .backup-page { padding: 18px 16px 32px; }
+}
+
 @media (max-width: 640px) {
-  .backup-page { padding: 0 0 20px; }
+  .backup-page { padding: 12px 4px 28px; }
   .backup-grid { grid-template-columns: 1fr; }
   .backup-card { padding: 16px; }
   .backup-confirm input { min-height: 44px; font-size: 16px; }
