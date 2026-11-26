@@ -1,34 +1,24 @@
 .backup-page {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 26px 30px 48px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 24px;
   color: var(--text-body);
 }
 
 .backup-header {
-  margin-bottom: 18px;
-}
-
-.backup-breadcrumb {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.backup-breadcrumb span {
-  margin: 0 8px;
-  color: var(--text-light);
+  margin-bottom: 16px;
 }
 
 .backup-header h1 {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--text-heading);
-  font-size: 28px;
-  letter-spacing: -.03em;
-  margin-bottom: 6px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .backup-header p {
+  margin: 3px 0 0;
   color: var(--text-muted);
   font-size: 13px;
 }
@@ -309,9 +299,8 @@
 }
 
 @media (max-width: 640px) {
-  .backup-page { padding: 12px 4px 28px; }
+  .backup-page { padding: 0 0 20px; }
   .backup-grid { grid-template-columns: 1fr; }
-  .backup-header h1 { font-size: 23px; }
   .backup-card { padding: 16px; }
   .backup-confirm input { min-height: 44px; font-size: 16px; }
   .backup-action { min-height: 44px; }

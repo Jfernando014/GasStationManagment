@@ -3,10 +3,8 @@
 .parameters-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-width: 1192px;
-  margin: 0 auto;
-  padding: 22px 36px 32px;
+  gap: 16px;
+  min-width: 0;
 }
 
 .parameters-tabs {
@@ -34,8 +32,10 @@
 .parameters-tab:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 4px; }
 .parameters-tab.is-active { color: var(--text-heading); border-bottom-color: var(--brand-primary); }
 
-@media (max-width: 900px) {
-  .parameters-page { padding-left: 16px; padding-right: 16px; }
+@media (max-width: 640px) {
+  .parameters-page { gap: 14px; }
+  .parameters-tabs { gap: 16px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .parameters-tabs::-webkit-scrollbar { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
