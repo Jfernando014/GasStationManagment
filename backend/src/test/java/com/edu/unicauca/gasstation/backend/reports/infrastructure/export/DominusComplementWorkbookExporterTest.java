@@ -1,9 +1,16 @@
 package com.edu.unicauca.gasstation.backend.reports.infrastructure.export;
 
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.AMBER_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.RED_FILL;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertFill;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertHeader;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertNumberFormat;
+import static com.edu.unicauca.gasstation.backend.excel.ExcelStyleAssertions.assertTotal;
 import static com.edu.unicauca.gasstation.backend.reports.ReportTestData.dominusReport;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
 import java.io.ByteArrayInputStream;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -30,6 +37,29 @@ class DominusComplementWorkbookExporterTest {
             assertEquals(310.0, sheet.getRow(14).getCell(3).getNumericCellValue());
             assertEquals("TOTAL DEL DÍA", sheet.getRow(15).getCell(0).getStringCellValue());
             assertEquals(569469.0, sheet.getRow(15).getCell(5).getNumericCellValue());
+        }
+    }
+
+    @Test
+    void paintsHeadersTotalsTheCashBalanceAndTheVendorResult() throws Exception {
+        byte[] bytes = new DominusComplementWorkbookExporter().export(dominusReport());
+
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            Sheet sheet = workbook.getSheet("COMPLEMENTO DOMINUS");
+            assertHeader(sheet.getRow(3).getCell(0));
+            assertNumberFormat(sheet.getRow(6).getCell(1), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertNumberFormat(sheet.getRow(10).getCell(1), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertFill(sheet.getRow(10).getCell(1), AMBER_FILL);
+            assertNumberFormat(sheet.getRow(14).getCell(7), ExcelWorkbookStyles.MONEY_FORMAT);
+            assertFill(sheet.getRow(14).getCell(7), RED_FILL);
+            assertFill(sheet.getRow(14).getCell(8), RED_FILL);
+            assertTotal(sheet.getRow(15).getCell(0));
+            assertTotal(sheet.getRow(15).getCell(1));
+            assertTotal(sheet.getRow(15).getCell(2));
+            assertTotal(sheet.getRow(15).getCell(3));
+            assertTotal(sheet.getRow(15).getCell(8));
+            assertNumberFormat(sheet.getRow(15).getCell(3), ExcelWorkbookStyles.WHOLE_FORMAT);
+            assertNumberFormat(sheet.getRow(15).getCell(5), ExcelWorkbookStyles.MONEY_FORMAT);
         }
     }
 }

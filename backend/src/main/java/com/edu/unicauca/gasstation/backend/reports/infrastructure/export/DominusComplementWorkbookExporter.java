@@ -1,19 +1,23 @@
 package com.edu.unicauca.gasstation.backend.reports.infrastructure.export;
 
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles;
+import com.edu.unicauca.gasstation.backend.excel.ExcelWorkbookStyles.Styles;
 import com.edu.unicauca.gasstation.backend.reports.domain.models.DominusComplementReport;
 import com.edu.unicauca.gasstation.backend.reports.domain.models.ReportDay;
-import com.edu.unicauca.gasstation.backend.reports.infrastructure.export.ReportWorkbookSupport.Styles;
 import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 /**
  * Builds the COMPLEMENTO DOMINUS Excel workbook with Apache POI.
+ * Balanced vendors are painted green, surplus amber and shortfall red.
  *
  * @author javiersolanop777
  */
@@ -25,37 +29,51 @@ public class DominusComplementWorkbookExporter {
             "Total entregado", "Tirilla Dominus", "Diferencia", "Resultado"};
 
     public byte[] export(DominusComplementReport report) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Styles styles = Styles.of(workbook);
             Sheet sheet = workbook.createSheet("COMPLEMENTO DOMINUS");
-            int rowIndex = ReportWorkbookSupport.writeHeading(sheet, "COMPLEMENTO DOMINUS", report.date(),
+            int rowIndex = ExcelWorkbookStyles.writeHeading(sheet, "COMPLEMENTO DOMINUS", report.date(),
                     HEADERS, styles);
-            ReportWorkbookSupport.text(sheet.createRow(2), 0, "Origen: " + report.source(), styles.text());
+            ExcelWorkbookStyles.text(sheet.createRow(2), 0, "Origen: " + report.source(), styles.subtitle());
 
             rowIndex = writeCashSummary(sheet, rowIndex, report, styles);
             rowIndex++;
 
             for (ReportDay.VendorRow vendor : report.vendors()) {
                 Row row = sheet.createRow(rowIndex++);
-                ReportWorkbookSupport.text(row, 0, vendor.vendorName(), styles.text());
-                ReportWorkbookSupport.text(row, 1, vendor.vendorDocument(), styles.text());
-                ReportWorkbookSupport.text(row, 2, CustomShiftCode.displayText(vendor.shiftName()), styles.text());
-                ReportWorkbookSupport.number(row, 3, vendor.gallons(), styles.number());
-                ReportWorkbookSupport.number(row, 4, vendor.basketAmount(), styles.number());
-                ReportWorkbookSupport.number(row, 5, vendor.totalDelivered(), styles.number());
-                ReportWorkbookSupport.number(row, 6, vendor.dominusTirilla(), styles.number());
-                ReportWorkbookSupport.number(row, 7, vendor.discrepancy(), styles.number());
-                ReportWorkbookSupport.text(row, 8, vendor.resultStatus(), styles.text());
+                CellStyle differenceStyle = ExcelWorkbookStyles.differenceStyle(vendor.resultStatus(), styles);
+                ExcelWorkbookStyles.text(row, 0, vendor.vendorName(), styles.text());
+                ExcelWorkbookStyles.text(row, 1, vendor.vendorDocument(), styles.text());
+                ExcelWorkbookStyles.text(row, 2, CustomShiftCode.displayText(vendor.shiftName()), styles.text());
+                ExcelWorkbookStyles.number(row, 3, vendor.gallons(), styles.number());
+                ExcelWorkbookStyles.number(row, 4, vendor.basketAmount(), styles.money());
+                ExcelWorkbookStyles.number(row, 5, vendor.totalDelivered(), styles.money());
+                ExcelWorkbookStyles.number(row, 6, vendor.dominusTirilla(), styles.money());
+                ExcelWorkbookStyles.number(row, 7, vendor.discrepancy(), differenceStyle);
+                ExcelWorkbookStyles.text(row, 8, vendor.resultStatus(),
+                        ExcelWorkbookStyles.resultStyle(vendor.resultStatus(), styles));
             }
 
             Row totals = sheet.createRow(rowIndex);
-            ReportWorkbookSupport.text(totals, 0, "TOTAL DEL DÍA", styles.totalText());
-            ReportWorkbookSupport.number(totals, 4, report.totalBasket(), styles.totalNumber());
-            ReportWorkbookSupport.number(totals, 5, report.totalDelivered(), styles.totalNumber());
-            ReportWorkbookSupport.number(totals, 6, report.totalDominusTirilla(), styles.totalNumber());
-            ReportWorkbookSupport.number(totals, 7, report.totalDiscrepancy(), styles.totalNumber());
+            ExcelWorkbookStyles.text(totals, 0, "TOTAL DEL DÍA", styles.totalText());
+            ExcelWorkbookStyles.text(totals, 1, "", styles.totalText());
+            ExcelWorkbookStyles.text(totals, 2, "", styles.totalText());
+            ExcelWorkbookStyles.number(totals, 3, null, styles.totalInteger());
+            ExcelWorkbookStyles.number(totals, 4, report.totalBasket(), styles.totalMoney());
+            ExcelWorkbookStyles.number(totals, 5, report.totalDelivered(), styles.totalMoney());
+            ExcelWorkbookStyles.number(totals, 6, report.totalDominusTirilla(), styles.totalMoney());
+            ExcelWorkbookStyles.number(totals, 7, report.totalDiscrepancy(), styles.totalMoney());
+            ExcelWorkbookStyles.text(totals, 8, "", styles.totalText());
+            // Ensure all total-row cells have borders so there are no unstyled gaps (cols 1–3 and 8).
+            for (int varCol = 0; varCol <= 8; varCol++) {
+                Cell objCell = totals.getCell(varCol);
+                if (objCell == null) {
+                    objCell = totals.createCell(varCol);
+                }
+                objCell.setCellStyle(objCell.getCellStyle());
+            }
 
-            ReportWorkbookSupport.finish(sheet, HEADERS.length);
+            ExcelWorkbookStyles.finish(sheet, HEADERS.length);
             workbook.write(output);
             return output.toByteArray();
         }
@@ -65,8 +83,8 @@ public class DominusComplementWorkbookExporter {
         ReportDay.CashSummary cash = report.cash();
         if (cash == null) {
             Row row = sheet.createRow(rowIndex++);
-            ReportWorkbookSupport.text(row, 0, "Saldo en caja", styles.totalText());
-            ReportWorkbookSupport.text(row, 1, "No disponible", styles.text());
+            ExcelWorkbookStyles.text(row, 0, "Saldo en caja", styles.section());
+            ExcelWorkbookStyles.text(row, 1, "No disponible", styles.text());
             return rowIndex;
         }
         rowIndex = cashRow(sheet, rowIndex, "Planilla No.", cash.planilla() == null ? null : cash.planilla().toString(), styles);
@@ -75,18 +93,23 @@ public class DominusComplementWorkbookExporter {
         rowIndex = cashRow(sheet, rowIndex, "Efectivo del día", cash.dailyCash(), styles);
         rowIndex = cashRow(sheet, rowIndex, "Saldo planilla", cash.planillaCashBalance(), styles);
         rowIndex = cashRow(sheet, rowIndex, "Saldo Dominus", cash.dominusAccumulatedBalance(), styles);
-        rowIndex = cashRow(sheet, rowIndex, "Diferencia", cash.difference(), styles);
+        rowIndex = cashRow(sheet, rowIndex, "Diferencia", cash.difference(), styles, true);
         rowIndex = cashRow(sheet, rowIndex, "Saldo anterior ahorro", cash.previousCash(), styles);
         return cashRow(sheet, rowIndex, "Ahorro acumulado", cash.accumulatedSavings(), styles);
     }
 
     private static int cashRow(Sheet sheet, int rowIndex, String label, Object value, Styles styles) {
+        return cashRow(sheet, rowIndex, label, value, styles, false);
+    }
+
+    private static int cashRow(Sheet sheet, int rowIndex, String label, Object value, Styles styles, boolean alert) {
         Row row = sheet.createRow(rowIndex++);
-        ReportWorkbookSupport.text(row, 0, label, styles.totalText());
-        if (value instanceof java.math.BigDecimal decimal) {
-            ReportWorkbookSupport.number(row, 1, decimal, styles.totalNumber());
+        ExcelWorkbookStyles.text(row, 0, label, styles.section());
+        if (value instanceof BigDecimal decimal) {
+            ExcelWorkbookStyles.number(row, 1, decimal,
+                    alert ? ExcelWorkbookStyles.cashDifferenceStyle(decimal, styles) : styles.money());
         } else {
-            ReportWorkbookSupport.text(row, 1, value == null ? "No disponible" : value.toString(), styles.text());
+            ExcelWorkbookStyles.text(row, 1, value == null ? "No disponible" : value.toString(), styles.text());
         }
         return rowIndex;
     }

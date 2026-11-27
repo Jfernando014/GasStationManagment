@@ -2,7 +2,8 @@ import { loadExcelJs } from './daily-report-adapter.helpers';
 
 /**
  * Builds Excel files with the SAME layout as the ones of the backend (DailyDownloadWorkbookExporter),
- * for the tests of the adapter. Data: Andres (CUADRA) and Milena (FALTA 5000).
+ * for the tests of the adapter. Data: Andres (CUADRA with a tolerance), Milena (FALTA 5000) and
+ * Sofia (SOBRA 8000).
  *
  * @author javiersolanop777
  */
@@ -35,9 +36,10 @@ export function buildBackendSalesSheet(prmHeaders: string[] = BACKEND_SALES_HEAD
     ['Fecha: 2026-10-24'],
     [],
     prmHeaders,
-    pick(['Andres', '1061', 'DIA', 1, 10, 20, 5, 0, 35, 2, 100000, 20000, 30000, 10000, 5000, 165000, 165000, 0, 'CUADRA']),
+    pick(['Andres', '1061', 'DIA', 1, 10, 20, 5, 0, 35, 2, 100000, 20000, 30000, 10000, 5000, 165000, 163000, 2000, 'CUADRA']),
     pick(['Milena', '1062', 'NOCHE', 2, 5, 5, 0, 2, 12, 0, 80000, 0, 0, 0, 0, 80000, 85000, -5000, 'FALTA']),
-    pick(['TOTAL DEL DÍA', null, null, null, 15, 25, 5, 2, 47, 2, 180000, 20000, 30000, 10000, 5000, 245000, 250000, -5000, null])
+    pick(['Sofia', '1063', 'DIA', 3, 6, 6, 1, 0, 13, 1, 90000, 0, 0, 0, 0, 95000, 87000, 8000, 'SOBRA']),
+    pick(['TOTAL DEL DÍA', null, null, null, 21, 31, 6, 2, 60, 3, 270000, 20000, 30000, 10000, 5000, 340000, 335000, 5000, null])
   ]);
 }
 

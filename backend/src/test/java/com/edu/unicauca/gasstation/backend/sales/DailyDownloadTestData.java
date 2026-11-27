@@ -38,7 +38,7 @@ public final class DailyDownloadTestData {
     public static VendorCloseSummary vendor() {
         return new VendorCloseSummary(DATE, "1061", "Vendedor Test", "DIA", 1, bd("100000"), bd("20000"),
                 bd("30000"), bd("10000"), bd("5000"), bd("100000"), bd("10"), bd("20"), bd("5"), bd("0"),
-                bd("100000"), bd("165000"), bd("0"), "OK", products());
+                bd("100000"), bd("165000"), bd("0"), "CUADRA", products());
     }
 
     public static BigDecimal bd(String prmValue) {

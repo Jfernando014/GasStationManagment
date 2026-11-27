@@ -1,4 +1,4 @@
-import type { Worksheet } from 'exceljs';
+import type { Cell, Worksheet } from 'exceljs';
 import {
   ReportAdaptationError,
   adaptLubricantsFile,
@@ -52,21 +52,21 @@ describe('daily report adapter', () => {
       // Vendedor, Turno, Rol(empty), Surtidor, 4 gallons, Canastilla(empty), Total tirilla, Parciales(empty), Pico(empty),
       // Total efectivo, G.A., Credibanco, QR, Redenciones, Total entregado, Descuadre
       expect(values(objSheet, 4)).toEqual([
-        'Andres', 'DIA', null, 1, 10, 20, 5, 0, null, 165000, null, null, 100000, 20000, 30000, 10000, 5000, 165000, 0
+        'Andres', 'DIA', null, 1, 10, 20, 5, 0, null, 163000, null, null, 100000, 20000, 30000, 10000, 5000, 165000, -2000
       ]);
     });
 
     it('changes the sign of the discrepancy to Dominus - delivered', async () => {
       const objSheet = await sheetOf((await adaptSalesSheet(await buildBackendSalesSheet(), '2026-10-24')).content, 'PLANILLA VENTAS');
       expect(objSheet.getRow(5).getCell(19).value).toBe(5000);
-      expect(objSheet.getRow(4).getCell(19).value).toBe(0);
+      expect(objSheet.getRow(4).getCell(19).value).toBe(-2000);
     });
 
     it('writes the total row as "Total del día"', async () => {
       const objSheet = await sheetOf((await adaptSalesSheet(await buildBackendSalesSheet(), '2026-10-24')).content, 'PLANILLA VENTAS');
-      expect(objSheet.getRow(6).getCell(1).value).toBe('Total del día');
-      expect(objSheet.getRow(6).getCell(18).value).toBe(245000);
-      expect(objSheet.getRow(6).getCell(19).value).toBe(5000);
+      expect(objSheet.getRow(7).getCell(1).value).toBe('Total del día');
+      expect(objSheet.getRow(7).getCell(18).value).toBe(340000);
+      expect(objSheet.getRow(7).getCell(19).value).toBe(-5000);
     });
 
     it('fails with the names of the missing columns', async () => {
@@ -116,6 +116,81 @@ describe('daily report adapter', () => {
       expect(objSheet.getRow(7).getCell(2).value).toBeNull();
       expect(objSheet.getRow(8).getCell(1).value).toBe('Precios provisionales: pendientes de confirmar con el cliente.');
       expect(objSheet.rowCount).toBe(8);
+    });
+  });
+
+  describe('visual identity', () => {
+    const argbOf = (prmColor: unknown): string | undefined =>
+      (prmColor as { argb?: string } | undefined)?.argb;
+
+    const fillArgb = (prmCell: Cell): string | undefined =>
+      argbOf((prmCell.fill as { fgColor?: unknown } | undefined)?.fgColor);
+
+    async function salesSheet(): Promise<Worksheet> {
+      const objFile = await adaptSalesSheet(await buildBackendSalesSheet(), '2026-10-24');
+      return sheetOf(objFile.content, 'PLANILLA VENTAS');
+    }
+
+    it('paints the header navy with white text, thin borders and a frozen header', async () => {
+      const objSheet = await salesSheet();
+      const objHeader = objSheet.getRow(3).getCell(1);
+      expect(objHeader.font).toMatchObject({ bold: true });
+      expect(argbOf(objHeader.font.color)).toBe('FFFFFFFF');
+      expect(objHeader.fill).toMatchObject({ type: 'pattern', pattern: 'solid' });
+      expect(fillArgb(objHeader)).toBe('FF1B365D');
+      expect(objHeader.border).toMatchObject({ top: { style: 'thin' }, left: { style: 'thin' } });
+      expect(objSheet.views[0]).toMatchObject({ state: 'frozen', ySplit: 3 });
+    });
+
+    it('formats money, gallons and counts', async () => {
+      const objSheet = await salesSheet();
+      expect(objSheet.getRow(4).getCell(5).numFmt).toBe('#,##0.00');
+      expect(objSheet.getRow(4).getCell(4).numFmt).toBe('#,##0');
+      expect(objSheet.getRow(4).getCell(13).numFmt).toBe('"$" #,##0');
+    });
+
+    it('fits each column to its content, within readable limits', async () => {
+      const objSheet = await salesSheet();
+      const varTurno = objSheet.getColumn(2).width ?? 0;
+      const varDescuadre = objSheet.getColumn(19).width ?? 0;
+      expect(varTurno).toBeGreaterThanOrEqual(10);
+      expect(varDescuadre).toBeGreaterThan(varTurno);
+      expect(varDescuadre).toBeLessThanOrEqual(42);
+    });
+
+    it('paints the total row green with a double top border', async () => {
+      const objSheet = await salesSheet();
+      const objTotal = objSheet.getRow(7).getCell(1);
+      expect(objTotal.value).toBe('Total del día');
+      expect(fillArgb(objTotal)).toBe('FFE2EFDA');
+      expect(argbOf(objTotal.font.color)).toBe('FF1E4620');
+      expect(objTotal.border?.top?.style).toBe('double');
+    });
+
+    it('paints the discrepancy green when it balances, amber on a surplus and red on a shortfall', async () => {
+      const objSheet = await salesSheet();
+      // CUADRA with a tolerance inside the threshold is still green.
+      expect(fillArgb(objSheet.getRow(4).getCell(19))).toBe('FFE2EFDA');
+      expect(fillArgb(objSheet.getRow(5).getCell(19))).toBe('FFFFC7CE');
+      expect(argbOf(objSheet.getRow(5).getCell(19).font.color)).toBe('FF9C0006');
+      expect(fillArgb(objSheet.getRow(6).getCell(19))).toBe('FFFFF2CC');
+      expect(argbOf(objSheet.getRow(6).getCell(19).font.color)).toBe('FF7F6000');
+    });
+
+    it('keeps the total row green even when the day is not balanced', async () => {
+      const objSheet = await salesSheet();
+      const objTotalDifference = objSheet.getRow(7).getCell(19);
+      expect(objTotalDifference.value).toBe(-5000);
+      expect(fillArgb(objTotalDifference)).toBe('FFE2EFDA');
+      expect(argbOf(objTotalDifference.font.color)).toBe('FF1E4620');
+    });
+
+    it('applies the same header and formats to LUBRICANTES Y VARIOS', async () => {
+      const objFile = await adaptLubricantsFile(await buildBackendLubricantsSheet(), '2026-10-24');
+      const objSheet = await sheetOf(objFile.content, 'LUBRICANTES Y VARIOS');
+      expect(fillArgb(objSheet.getRow(3).getCell(1))).toBe('FF1B365D');
+      expect(objSheet.getRow(4).getCell(3).numFmt).toBe('#,##0');
+      expect(objSheet.getRow(4).getCell(4).numFmt).toBe('"$" #,##0');
     });
   });
 });
