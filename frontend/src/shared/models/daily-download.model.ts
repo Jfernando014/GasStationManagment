@@ -29,6 +29,6 @@ export const DAILY_DOWNLOAD_ITEMS: readonly DailyDownloadItem[] = [
   { id: 'pdf', type: 'PDF', name: 'Dominus con saldo en caja', enabled: false },
   { id: 'planilla', type: 'XLSX', name: 'PLANILLA VENTAS', enabled: true },
   { id: 'lubricantes', type: 'XLSX', name: 'LUBRICANTES Y VARIOS', enabled: true },
-  { id: 'variacion', type: 'XLSX', name: 'VARIACIÓN', enabled: false },
-  { id: 'complemento', type: 'XLSX', name: 'COMPLEMENTO DOMINUS', enabled: false }
+  { id: 'variacion', type: 'XLSX', name: 'VARIACIÓN', enabled: true },
+  { id: 'complemento', type: 'XLSX', name: 'COMPLEMENTO DOMINUS', enabled: true }
 ];

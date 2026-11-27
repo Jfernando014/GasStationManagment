@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, switchMap } from 'rxjs';
+import { Observable, from, map, switchMap } from 'rxjs';
 import { DownloadedFile } from '../../shared/models/daily-download.model';
 import { adaptLubricantsFile, adaptSalesSheet } from '../../shared/helpers/daily-report-adapter.helpers';
 import { getApiBaseUrl } from '../config/api-base';
 
 /**
- * Downloads the daily Excel files of one journal (end-of-day step).
+ * Downloads the daily Excel files of one journal (end-of-day step): the files built by the sales
+ * module and the VARIACIÓN and COMPLEMENTO DOMINUS reports.
  * The backend file is adapted to the layout of the prototype before it is returned.
  * The token is added by authInterceptor.
  *
@@ -18,6 +19,7 @@ import { getApiBaseUrl } from '../config/api-base';
 export class DailyDownloadService {
   private readonly atrHttp = inject(HttpClient);
   private readonly atrBaseUrl = `${getApiBaseUrl()}/api/v1/sales/downloads`;
+  private readonly atrReportsUrl = `${getApiBaseUrl()}/api/v1/reports`;
 
   /** PLANILLA VENTAS of the journal of a date (yyyy-MM-dd), in the layout of the prototype. */
   downloadSalesSheet(prmDate: string): Observable<DownloadedFile> {
@@ -33,7 +35,23 @@ export class DailyDownloadService {
     );
   }
 
+  /** VARIACIÓN of the journal of a date (yyyy-MM-dd), built by the reports module. */
+  downloadVariation(prmDate: string): Observable<DownloadedFile> {
+    return this.fetchReportFile('variation', prmDate, `variacion-${prmDate}.xlsx`);
+  }
+
+  /** COMPLEMENTO DOMINUS of the journal of a date (yyyy-MM-dd), built by the reports module. */
+  downloadDominusComplement(prmDate: string): Observable<DownloadedFile> {
+    return this.fetchReportFile('dominus-complement', prmDate, `complemento-dominus-${prmDate}.xlsx`);
+  }
+
   private fetchBackendFile(prmDate: string, prmPath: string): Observable<Blob> {
     return this.atrHttp.get(`${this.atrBaseUrl}/${encodeURIComponent(prmDate)}/${prmPath}`, { responseType: 'blob' });
+  }
+
+  private fetchReportFile(prmPath: string, prmDate: string, prmFileName: string): Observable<DownloadedFile> {
+    return this.atrHttp
+      .get(`${this.atrReportsUrl}/${prmPath}/${encodeURIComponent(prmDate)}`, { responseType: 'blob' })
+      .pipe(map((prmContent) => ({ fileName: prmFileName, content: prmContent })));
   }
 }
