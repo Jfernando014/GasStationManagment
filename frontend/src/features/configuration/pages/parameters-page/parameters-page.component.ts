@@ -21,6 +21,7 @@ interface ParameterTab {
 export class ParametersPageComponent {
   readonly tabs: ParameterTab[] = [
     { label: 'Horas extra', path: 'horas-extra' },
-    { label: 'Comisión de tarjeta', path: 'comision-tarjeta' }
+    { label: 'Comisión de tarjeta', path: 'comision-tarjeta' },
+    { label: 'Colores', path: 'colores' }
   ];
 }

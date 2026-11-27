@@ -5,6 +5,7 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { ActionButtonDirective } from '../../../../atomic-design/atoms/action-button/action-button.directive';
+import { ColorThemeService } from '../../../../core/services/color-theme.service';
 import { SalesVendorCloseService } from '../../../../core/services/sales-vendor-close.service';
 import { JournalService } from '../../../../core/services/journal.service';
 import { ShiftHoursService } from '../../../../core/services/shift-hours.service';
@@ -107,6 +108,7 @@ export class VendorCloseStep2Component implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
   private readonly shiftHours = inject(ShiftHoursService);
+  private readonly colorTheme = inject(ColorThemeService, { optional: true });
   private savedInputSnapshot = '';
   private readonly dirtyHandler: StepDirtyHandler = {
     hasUnsavedChanges: () => this.hasUnsavedChanges(),
@@ -115,6 +117,10 @@ export class VendorCloseStep2Component implements OnInit {
 
   readonly denominations = DENOMINATIONS;
   readonly packetValue = 200000;
+
+  vendorColor(vendor: AssignedVendorDto): string | null {
+    return this.colorTheme?.resolveWorkerColor({ document: vendor.document, name: vendor.name })?.background ?? null;
+  }
 
   journalDate = '2026-08-05';
   isReadOnly = false;

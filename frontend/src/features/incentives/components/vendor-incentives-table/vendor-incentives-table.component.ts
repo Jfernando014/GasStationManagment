@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
+import { AvatarComponent } from '../../../../atomic-design/atoms/avatar/avatar.component';
 import { InfoTooltipComponent } from '../../../../atomic-design/atoms/info-tooltip/info-tooltip.component';
 import { SearchFieldComponent } from '../../../../atomic-design/atoms/search-field/search-field.component';
 import { SkeletonComponent } from '../../../../atomic-design/atoms/skeleton/skeleton.component';
@@ -98,7 +99,7 @@ function toRowView(vendor: VendorIncentive): VendorRowView {
   selector: 'app-vendor-incentives-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [InfoTooltipComponent, SearchFieldComponent, SkeletonComponent],
+  imports: [AvatarComponent, InfoTooltipComponent, SearchFieldComponent, SkeletonComponent],
   templateUrl: './vendor-incentives-table.component.html',
   styleUrl: './vendor-incentives-table.component.css'
 })

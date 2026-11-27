@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActionButtonDirective } from '../../../atomic-design/atoms/action-button/action-button.directive';
 import { TabsComponent } from '../../../atomic-design/molecules/tabs/tabs.component';
+import { ColorThemeService } from '../../../core/services/color-theme.service';
 import { formatStatistics, weekday } from '../../../shared/helpers/sales-statistics.helpers';
 import { basketSellers } from '../../../shared/helpers/statistics-contracts.helpers';
 import { StatisticsChartSeries, StatisticsTab } from '../../../shared/models/dtos/sales-statistics.dto';
@@ -21,6 +22,7 @@ import { StatisticsBalanceComponent } from '../components/statistics-balance.com
 })
 export class StatisticsPageComponent {
   readonly workspace = inject(StatisticsWorkspace);
+  private readonly colorTheme = inject(ColorThemeService, { optional: true });
   readonly format = formatStatistics;
   readonly tab = signal<StatisticsTab>('promedios');
   readonly tabs: { id: StatisticsTab; label: string }[] = [
@@ -39,16 +41,33 @@ export class StatisticsPageComponent {
     if (this.tab() === 'competencia') return this.chartKind() === 'bars' ? this.workspace.competitionBars() : this.workspace.competitionLines();
     if (this.tab() === 'canastas') {
       const data = this.workspace.basket(); if (!data || data.charts.availability !== 'AVAILABLE') return [];
-      return this.chartKind() === 'bars' ? basketSellers(data).map((s, index) => ({ label: s.name, color: index % 2 ? '#0B192C' : '#0284C7', points: [{ label: s.name, value: s.amount }] }))
-        : data.charts.series.filter(s => s.chartType === 'LINE' && s.metric === 'RECORDED_AMOUNT').map((s, index) => ({ label: s.label, color: index % 2 ? '#0B192C' : '#0284C7', points: s.points.map(p => ({ label: p.periodStart ?? p.key, value: p.value })) }));
+      return this.chartKind() === 'bars'
+        ? basketSellers(data).map((s, index) => ({
+            label: s.name,
+            color: this.colorTheme?.resolveWorkerColor({ workerId: s.workerId, document: s.document, name: s.name })?.background ?? (index % 2 ? '#0B192C' : '#0284C7'),
+            points: [{ label: s.name, value: s.amount }]
+          }))
+        : data.charts.series.filter(s => s.chartType === 'LINE' && s.metric === 'RECORDED_AMOUNT').map((s, index) => ({
+            label: s.label,
+            color: this.colorTheme?.resolveWorkerColor({ name: s.label })?.background ?? (index % 2 ? '#0B192C' : '#0284C7'),
+            points: s.points.map(p => ({ label: p.periodStart ?? p.key, value: p.value }))
+          }));
     }
     const analysis = this.analysis();
     if (!analysis) return [];
-    return analysis.series.filter(row => row.available && row.average !== null).map((row, index) => ({
-      label: row.label, color: index === 0 ? '#0284C7' : '#0B192C',
-      points: this.chartKind() === 'bars' ? [{ label: row.label, value: row.average! }]
-        : this.workspace.selected().filter(point => point.journey === row.journey && (row.dayOfWeek === null || weekday(point.date) === row.dayOfWeek))
-          .sort((a, b) => a.date.localeCompare(b.date)).map(point => ({ label: point.date, value: point.value }))
-    }));
+    const shiftEntries = this.colorTheme?.theme().shifts ?? [];
+    const customDay = shiftEntries.find(e => e.key === 'DIA' && e.customized)?.colorHex;
+    const customNight = shiftEntries.find(e => e.key === 'NOCHE' && e.customized)?.colorHex;
+    return analysis.series.filter(row => row.available && row.average !== null).map((row, index) => {
+      const fallback = index === 0 ? '#0284C7' : '#0B192C';
+      const color = row.journey === 'DAY' ? (customDay ?? fallback) : row.journey === 'NIGHT' ? (customNight ?? fallback) : fallback;
+      return {
+        label: row.label,
+        color,
+        points: this.chartKind() === 'bars' ? [{ label: row.label, value: row.average! }]
+          : this.workspace.selected().filter(point => point.journey === row.journey && (row.dayOfWeek === null || weekday(point.date) === row.dayOfWeek))
+            .sort((a, b) => a.date.localeCompare(b.date)).map(point => ({ label: point.date, value: point.value }))
+      };
+    });
   });
 }

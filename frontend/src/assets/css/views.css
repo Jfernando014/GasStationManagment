@@ -3134,10 +3134,10 @@
 
     /* Chips de turno (perfil, sábana y malla) */
     .ps-turno { display: inline-block; padding: 1px 8px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
-    .ps-turno--dia { background: var(--brand-primary-subtle); color: var(--brand-primary-strong); border-color: #FED7AA; }
-    .ps-turno--noche { background: var(--surface-navy); color: #FFFFFF; }
-    .ps-turno--apoyo { background: var(--semantic-amber-subtle); color: var(--semantic-amber-strong); border-color: #FDE68A; }
-    .ps-turno--descanso { background: var(--surface-subtle); color: var(--text-muted); border-color: var(--border-main); }
+    .ps-turno--dia { background: var(--shift-dia-subtle); color: var(--shift-dia-strong); border-color: var(--shift-dia-border); }
+    .ps-turno--noche { background: var(--shift-noche); color: var(--shift-noche-text); }
+    .ps-turno--apoyo { background: var(--shift-apoyo-subtle); color: var(--shift-apoyo-strong); border-color: var(--shift-apoyo-border); }
+    .ps-turno--descanso { background: var(--shift-descanso-subtle); color: var(--shift-descanso-strong); border-color: var(--shift-descanso-border); }
     .ps-turno--otro { background: var(--surface-card); color: var(--text-body); border-color: var(--jr-cell-border); }
     .ps-novedad { display: inline-block; padding: 1px 7px; border-radius: var(--radius-pill); background: var(--semantic-red-subtle); color: var(--semantic-red-strong); font-size: 11px; font-weight: 600; }
     .ps-max { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: var(--semantic-green-subtle); color: var(--semantic-green-strong); font-size: 10px; font-weight: 700; }

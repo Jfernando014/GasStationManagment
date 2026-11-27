@@ -72,7 +72,7 @@
 } @else {
   <div class="ps-perfil-cab">
     @if (worker(); as current) {
-      <app-avatar [name]="current.fullName" size="lg" />
+      <app-avatar [name]="current.fullName" [workerId]="current.id" [document]="current.document" size="lg" />
       <div class="ps-perfil-id">
         <div>
           <b>{{ current.fullName }}</b>

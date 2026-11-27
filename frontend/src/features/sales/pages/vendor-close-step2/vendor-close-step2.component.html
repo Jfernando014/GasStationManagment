@@ -141,8 +141,14 @@
                 </small>
               </th>
               @for (vendor of assignedVendors; track vendor.document) {
-                <th class="jr-grid-vendor-col">
-                  <div class="th-vendor-title">{{ vendor.name }}</div>
+                @let accent = vendorColor(vendor);
+                <th class="jr-grid-vendor-col" [class.has-vendor-color]="!!accent" [style.border-top-color]="accent">
+                  <div class="th-vendor-title">
+                    @if (accent) {
+                      <span class="th-vendor-dot" [style.background]="accent" aria-hidden="true"></span>
+                    }
+                    <span>{{ vendor.name }}</span>
+                  </div>
                   <small>{{ vendor.role }} &middot; Surtidor {{ vendor.pumpNumber || '-' }} &middot; {{ shiftText(vendor.shiftName) }}</small>
                 </th>
               }

@@ -61,7 +61,7 @@
           @for (seller of complianceRows(); track seller.workerId) {
             <tr class="compliance-seller">
               <td class="rank" data-label="Posición">{{ seller.rank ?? '—' }}</td>
-              <td class="tc-title"><div class="compliance-person"><app-avatar [name]="seller.recordedName" /><b>{{ seller.recordedName }}</b></div></td>
+              <td class="tc-title"><div class="compliance-person"><app-avatar [name]="seller.recordedName" [workerId]="seller.workerId" /><b>{{ seller.recordedName }}</b></div></td>
               <td class="right tnum" data-label="Galones vendidos">{{ formatCompliance(seller.sales) }} gal</td>
               <td class="right tnum" data-label="Meta del periodo">{{ formatCompliance(seller.applicableTarget) }}{{ seller.applicableTarget !== null ? ' gal' : '' }}</td>
               <td data-label="Cumplimiento">

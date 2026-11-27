@@ -75,7 +75,7 @@
               [class.is-inactivo]="!worker.active"
               [attr.aria-pressed]="worker.id === selected()?.id"
               (click)="select(worker)">
-              <app-avatar [name]="worker.fullName" />
+              <app-avatar [name]="worker.fullName" [workerId]="worker.id" [document]="worker.document" />
               <span class="ps-vend-nombre"><b>{{ worker.fullName }}</b><small>{{ worker.document }}</small></span>
               <span class="ps-etiqueta">{{ worker.roleName }}</span>
               <app-status-badge [active]="worker.active" />

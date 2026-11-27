@@ -187,6 +187,11 @@ export const routes: Routes = [
             loadComponent: () => import('../features/configuration/pages/commission-tab/commission-tab.component')
               .then(m => m.CommissionTabComponent)
           },
+          {
+            path: 'colores',
+            loadComponent: () => import('../features/configuration/pages/colors-tab/colors-tab.component')
+              .then(m => m.ColorsTabComponent)
+          },
           { path: '', pathMatch: 'full', redirectTo: 'horas-extra' }
         ]
       },

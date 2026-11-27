@@ -101,7 +101,8 @@
 .row { min-height: 62px; padding-top: 8px; padding-bottom: 8px; }
 .row.is-clickable { cursor: pointer; }
 
-.who { min-width: 0; }
+.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who-meta { min-width: 0; }
 .who b {
   display: block;
   overflow: hidden;

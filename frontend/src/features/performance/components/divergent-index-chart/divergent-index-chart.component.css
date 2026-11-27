@@ -27,7 +27,9 @@ h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight:
 .skeletons { display: flex; flex-direction: column; }
 .skeletons .end { justify-self: end; }
 
-.name { overflow: hidden; font-size: 14px; font-weight: 600; color: var(--text-heading); text-overflow: ellipsis; white-space: nowrap; }
+.name { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 14px; font-weight: 600; color: var(--text-heading); }
+.name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seller-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 .track { position: relative; display: block; height: 100%; }
 .track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--surface-subtle); }

@@ -22,7 +22,7 @@
           <li class="item" [style.--i]="$index">
             <div class="row" [class.is-resting]="row.resting">
               <span class="who">
-                <app-avatar [name]="row.name" />
+                <app-avatar [name]="row.name" [workerId]="row.workerId" />
                 <span class="who-text">
                   <span class="name">{{ row.name }}</span>
                   @if (row.resting) { <span class="role">Descansó</span> }

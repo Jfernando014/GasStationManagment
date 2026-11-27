@@ -47,8 +47,11 @@
             (keydown.enter)="canOpen && toggle(row.document)"
             (keydown.space)="$event.preventDefault(); canOpen && toggle(row.document)">
             <div class="who">
-              <b [attr.title]="row.name">{{ row.name }}</b>
-              <span><span class="jr-sr">Documento </span>{{ row.document }}</span>
+              <app-avatar [name]="row.name" [document]="row.document" />
+              <div class="who-meta">
+                <b [attr.title]="row.name">{{ row.name }}</b>
+                <span><span class="jr-sr">Documento </span>{{ row.document }}</span>
+              </div>
             </div>
             <div class="month-total end">
               <span class="cell-label">Total del mes</span>
