@@ -20,11 +20,11 @@ describe('SCRUM-108 C-09 page', () => {
   const api = { readReport: vi.fn() };
   const dayStaff = { getStep: vi.fn() };
   const downloads = {
-  downloadSalesSheet: vi.fn(),
-  downloadLubricantsAndMisc: vi.fn(),
-  downloadVariation: vi.fn(),
-  downloadDominusComplement: vi.fn()
-};
+    downloadSalesSheet: vi.fn(),
+    downloadLubricantsAndMisc: vi.fn(),
+    downloadVariation: vi.fn(),
+    downloadDominusComplement: vi.fn()
+  };
   const decode = (q: PerformanceQuery, data = fullPerformanceFixture(q)) => parsePerformanceReport(JSON.stringify(data), q);
   const text = () => fixture.nativeElement.textContent as string;
   /** The filters ask the server 250 ms after the last change: let that time pass and draw the answer. */

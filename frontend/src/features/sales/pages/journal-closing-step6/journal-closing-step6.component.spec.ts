@@ -26,7 +26,9 @@ describe('JournalClosingStep6Component (C-08, S3-05, S3-07)', () => {
 
   const dailyDownloadServiceMock = {
     downloadSalesSheet: vi.fn(),
-    downloadLubricantsAndMisc: vi.fn()
+    downloadLubricantsAndMisc: vi.fn(),
+    downloadVariation: vi.fn(),
+    downloadDominusComplement: vi.fn()
   };
 
   const mockJournal: JournalResponse = {

@@ -7,8 +7,8 @@ import { getApiBaseUrl } from '../config/api-base';
 
 /**
  * Downloads the daily Excel files of one journal (end-of-day step): the files built by the sales
- * module and the VARIACIÓN and COMPLEMENTO DOMINUS reports.
- * The backend file is adapted to the layout of the prototype before it is returned.
+ * module (adapted to the prototype layout) and the VARIACIÓN and COMPLEMENTO DOMINUS reports
+ * served already styled by the reports module.
  * The token is added by authInterceptor.
  *
  * @author javiersolanop777
