@@ -64,7 +64,7 @@ public final class ReportTestData {
 
     public static DominusComplementReport dominusReport() {
         return new DominusComplementReport(DATE, ReportDay.Source.LIVE, cash(), List.of(vendor()),
-                bd("569469"), bd("570000"), bd("-531"), bd("900000"), bd("57000"));
+                bd("310"), bd("569469"), bd("570000"), bd("-531"), bd("900000"), bd("57000"));
     }
 
     public static BalanceReport balanceReport() {

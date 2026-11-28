@@ -126,4 +126,80 @@ class ReportDataServiceTest {
 
         assertEquals(1, service.findDays(DATE, NEXT_DATE).size());
     }
+
+    @Test
+    void ignoresIncompleteInventoryVariationsWhenNoLiveMeasurementExists() {
+        SellerCloseQuery sellerCloseQuery = mock(SellerCloseQuery.class);
+        when(sellerCloseQuery.findDaySummary(DATE)).thenReturn(Optional.empty());
+        when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of());
+
+        InventoryClosingSnapshot incompleteSnapshot = new InventoryClosingSnapshot(
+                false,
+                List.of(incompleteVariation("MOTOR"), incompleteVariation("DIESEL")),
+                List.of());
+
+        ReportDataService service = new ReportDataService(
+                sellerCloseQuery,
+                date -> incompleteSnapshot,
+                date -> Optional.empty(),
+                date -> Optional.empty());
+
+        assertTrue(service.findDay(DATE).isEmpty());
+    }
+
+    @Test
+    void fallsBackToMigratedDayWhenInventoryHasOnlyIncompleteStubsWithoutMeasurement() {
+        SellerCloseQuery sellerCloseQuery = mock(SellerCloseQuery.class);
+        when(sellerCloseQuery.findDaySummary(NEXT_DATE)).thenReturn(Optional.empty());
+        when(sellerCloseQuery.findVendorClosesByDate(NEXT_DATE)).thenReturn(List.of());
+
+        InventoryClosingSnapshot incompleteSnapshot = new InventoryClosingSnapshot(
+                false,
+                List.of(incompleteVariation("MOTOR")),
+                List.of());
+
+        ReportDataService service = new ReportDataService(
+                sellerCloseQuery,
+                date -> incompleteSnapshot,
+                date -> Optional.empty(),
+                date -> Optional.of(migratedQueryDay()));
+
+        ReportDay day = service.findDay(NEXT_DATE).orElseThrow();
+
+        assertEquals(ReportDay.Source.MIGRATED, day.source());
+        assertEquals(1, day.vendors().size());
+        assertEquals(1, day.variations().size());
+        assertEquals("DIESEL", day.variations().get(0).fuelType());
+        assertEquals("OK", day.variations().get(0).status());
+    }
+
+    @Test
+    void usesMigratedVariationsOnLiveDayWhenTankMeasurementHasNotBeenRecorded() {
+        SellerCloseQuery sellerCloseQuery = mock(SellerCloseQuery.class);
+        when(sellerCloseQuery.findDaySummary(DATE)).thenReturn(Optional.of(daySummary()));
+        when(sellerCloseQuery.findVendorClosesByDate(DATE)).thenReturn(List.of(vendorClose()));
+
+        InventoryClosingSnapshot incompleteSnapshot = new InventoryClosingSnapshot(
+                false,
+                List.of(incompleteVariation("MOTOR")),
+                List.of());
+
+        ReportDataService service = new ReportDataService(
+                sellerCloseQuery,
+                date -> incompleteSnapshot,
+                date -> Optional.empty(),
+                date -> Optional.of(migratedQueryDay()));
+
+        ReportDay day = service.findDay(DATE).orElseThrow();
+
+        assertEquals(ReportDay.Source.LIVE, day.source());
+        assertEquals(1, day.variations().size());
+        assertEquals("DIESEL", day.variations().get(0).fuelType());
+        assertEquals("OK", day.variations().get(0).status());
+    }
+
+    private static InventoryClosingSnapshot.FuelVariationData incompleteVariation(String fuelType) {
+        return new InventoryClosingSnapshot.FuelVariationData(
+                fuelType, null, bd("0"), null, null, null, null, null, false, "INCOMPLETE_MEASUREMENT");
+    }
 }

@@ -29,11 +29,12 @@ public class DominusComplementReportService {
         if (day.vendors().isEmpty() && day.cash() == null) {
             throw new ReportNoDataException(NO_DATA);
         }
+        BigDecimal gallons = sum(day.vendors().stream().map(ReportDay.VendorRow::gallons).toList());
         BigDecimal delivered = sum(day.vendors().stream().map(ReportDay.VendorRow::totalDelivered).toList());
         BigDecimal tirilla = sum(day.vendors().stream().map(ReportDay.VendorRow::dominusTirilla).toList());
         BigDecimal discrepancy = sum(day.vendors().stream().map(ReportDay.VendorRow::discrepancy).toList());
         return new DominusComplementReport(date, day.source(), day.cash(), day.vendors(),
-                delivered, tirilla, discrepancy, day.totalCash(), day.totalBasket());
+                gallons, delivered, tirilla, discrepancy, day.totalCash(), day.totalBasket());
     }
 
     private static BigDecimal sum(java.util.List<BigDecimal> values) {

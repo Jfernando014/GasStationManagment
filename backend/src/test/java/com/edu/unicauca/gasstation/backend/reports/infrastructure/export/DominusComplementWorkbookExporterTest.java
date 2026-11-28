@@ -36,6 +36,7 @@ class DominusComplementWorkbookExporterTest {
             assertEquals("Carlos M.", sheet.getRow(14).getCell(0).getStringCellValue());
             assertEquals(310.0, sheet.getRow(14).getCell(3).getNumericCellValue());
             assertEquals("TOTAL DEL DÍA", sheet.getRow(15).getCell(0).getStringCellValue());
+            assertEquals(310.0, sheet.getRow(15).getCell(3).getNumericCellValue());
             assertEquals(569469.0, sheet.getRow(15).getCell(5).getNumericCellValue());
         }
     }
@@ -58,7 +59,7 @@ class DominusComplementWorkbookExporterTest {
             assertTotal(sheet.getRow(15).getCell(2));
             assertTotal(sheet.getRow(15).getCell(3));
             assertTotal(sheet.getRow(15).getCell(8));
-            assertNumberFormat(sheet.getRow(15).getCell(3), ExcelWorkbookStyles.WHOLE_FORMAT);
+            assertNumberFormat(sheet.getRow(15).getCell(3), ExcelWorkbookStyles.GALLONS_FORMAT);
             assertNumberFormat(sheet.getRow(15).getCell(5), ExcelWorkbookStyles.MONEY_FORMAT);
         }
     }

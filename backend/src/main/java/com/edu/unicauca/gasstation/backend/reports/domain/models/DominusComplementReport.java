@@ -14,6 +14,7 @@ public record DominusComplementReport(
         ReportDay.Source source,
         ReportDay.CashSummary cash,
         List<ReportDay.VendorRow> vendors,
+        BigDecimal totalGallons,
         BigDecimal totalDelivered,
         BigDecimal totalDominusTirilla,
         BigDecimal totalDiscrepancy,

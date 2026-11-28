@@ -8,7 +8,6 @@ import com.edu.unicauca.gasstation.backend.shifts.catalog.CustomShiftCode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -58,20 +57,12 @@ public class DominusComplementWorkbookExporter {
             ExcelWorkbookStyles.text(totals, 0, "TOTAL DEL DÍA", styles.totalText());
             ExcelWorkbookStyles.text(totals, 1, "", styles.totalText());
             ExcelWorkbookStyles.text(totals, 2, "", styles.totalText());
-            ExcelWorkbookStyles.number(totals, 3, null, styles.totalInteger());
+            ExcelWorkbookStyles.number(totals, 3, report.totalGallons(), styles.totalNumber());
             ExcelWorkbookStyles.number(totals, 4, report.totalBasket(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 5, report.totalDelivered(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 6, report.totalDominusTirilla(), styles.totalMoney());
             ExcelWorkbookStyles.number(totals, 7, report.totalDiscrepancy(), styles.totalMoney());
             ExcelWorkbookStyles.text(totals, 8, "", styles.totalText());
-            // Ensure all total-row cells have borders so there are no unstyled gaps (cols 1–3 and 8).
-            for (int varCol = 0; varCol <= 8; varCol++) {
-                Cell objCell = totals.getCell(varCol);
-                if (objCell == null) {
-                    objCell = totals.createCell(varCol);
-                }
-                objCell.setCellStyle(objCell.getCellStyle());
-            }
 
             ExcelWorkbookStyles.finish(sheet, HEADERS.length);
             workbook.write(output);
