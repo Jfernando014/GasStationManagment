@@ -11,7 +11,7 @@ export const DOWNLOAD_ERROR_MESSAGES = {
   badRequest: 'La fecha de la jornada no es válida.',
   unauthorized: 'Tu sesión expiró. Inicia sesión de nuevo.',
   forbidden: 'No tienes permiso para descargar este archivo.',
-  noData: 'Esta jornada aún no tiene cierres de vendedores para descargar.',
+  noData: 'Esta jornada no tiene datos suficientes para generar este archivo.',
   default: 'No se pudo generar el archivo. Intenta de nuevo.',
   save: 'No se pudo guardar el archivo en tu equipo.',
   format: 'El archivo recibido del servidor no tiene el formato esperado.'

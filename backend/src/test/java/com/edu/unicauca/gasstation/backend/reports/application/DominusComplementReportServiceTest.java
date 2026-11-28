@@ -28,6 +28,7 @@ class DominusComplementReportServiceTest {
 
         assertEquals(DATE, report.date());
         assertEquals(1, report.vendors().size());
+        assertEquals(bd("310"), report.totalGallons());
         assertEquals(bd("569469"), report.totalDelivered());
         assertEquals(bd("570000"), report.totalDominusTirilla());
         assertEquals(bd("-531"), report.totalDiscrepancy());

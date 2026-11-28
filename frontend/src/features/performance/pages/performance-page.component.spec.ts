@@ -19,7 +19,12 @@ describe('SCRUM-108 C-09 page', () => {
   let params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   const api = { readReport: vi.fn() };
   const dayStaff = { getStep: vi.fn() };
-  const downloads = { downloadSalesSheet: vi.fn(), downloadLubricantsAndMisc: vi.fn() };
+  const downloads = {
+    downloadSalesSheet: vi.fn(),
+    downloadLubricantsAndMisc: vi.fn(),
+    downloadVariation: vi.fn(),
+    downloadDominusComplement: vi.fn()
+  };
   const decode = (q: PerformanceQuery, data = fullPerformanceFixture(q)) => parsePerformanceReport(JSON.stringify(data), q);
   const text = () => fixture.nativeElement.textContent as string;
   /** The filters ask the server 250 ms after the last change: let that time pass and draw the answer. */
@@ -180,7 +185,7 @@ describe('SCRUM-108 C-09 page', () => {
     page.openDownloads(); fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(DailyDownloadsComponent)).componentInstance.atrDate).toBe('2026-08-03');
     const buttons = fixture.nativeElement.querySelectorAll('app-daily-downloads button') as NodeListOf<HTMLButtonElement>;
-    expect([...buttons].filter(b => b.disabled)).toHaveLength(3);
+    expect([...buttons].filter(b => b.disabled)).toHaveLength(1);
     fixture.nativeElement.querySelector('button[aria-label="Descargar PLANILLA VENTAS"]').click();
     expect(downloads.downloadSalesSheet).toHaveBeenCalledWith('2026-08-03');
     page.dialog.set(null); page.setMode('mes'); page.setMonth('2026-08'); settle(); page.openDownloads(); fixture.detectChanges();

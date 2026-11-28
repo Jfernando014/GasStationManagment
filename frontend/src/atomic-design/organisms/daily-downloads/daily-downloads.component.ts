@@ -82,6 +82,10 @@ export class DailyDownloadsComponent {
         return this.atrService.downloadSalesSheet(this.atrDate);
       case 'lubricantes':
         return this.atrService.downloadLubricantsAndMisc(this.atrDate);
+      case 'variacion':
+        return this.atrService.downloadVariation(this.atrDate);
+      case 'complemento':
+        return this.atrService.downloadDominusComplement(this.atrDate);
       default:
         return null;
     }

@@ -69,7 +69,6 @@ public class ReportDataService {
         boolean hasLive = liveDay.isPresent()
                 || !liveVendors.isEmpty()
                 || inventory.hasMeasurement()
-                || !inventory.variations().isEmpty()
                 || liveCash.isPresent();
         if (hasLive) {
             return Optional.of(buildLive(date, liveDay.orElse(null), liveVendors, inventory,
@@ -89,7 +88,7 @@ public class ReportDataService {
                 new FuelSale("MAXPRO", day.gallonsMaxpro())
         );
         List<VendorRow> vendorRows = vendors.stream().map(this::toVendorRow).toList();
-        List<FuelVariation> variations = !inventory.variations().isEmpty()
+        List<FuelVariation> variations = inventory.hasMeasurement() && !inventory.variations().isEmpty()
                 ? inventory.variations().stream().map(this::toVariation).toList()
                 : migrated != null ? migrated.variations().stream().map(this::toVariation).toList() : List.of();
         if (fuelSales.isEmpty() && !variations.isEmpty()) {
